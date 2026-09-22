@@ -131,7 +131,7 @@ Its product boundary is the **human approval and execution-control layer**.
 
 This repository follows the canonical [Data Relay Labs Engineering System](https://github.com/datarelay-labs/engineering-system).
 
-The current repository baseline identifies Engineering System **1.6.1** and keeps patent-described concepts, accepted product requirements, implemented behavior, and roadmap behavior explicitly separated.
+The current repository baseline identifies Engineering System **1.6.3** and keeps patent-described concepts, accepted product requirements, implemented behavior, and roadmap behavior explicitly separated.
 
 ## Documentation
 
