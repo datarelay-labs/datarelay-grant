@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/datarelay-grant-icon.svg" width="88" height="88" alt="DataRelay Grant icon">
+</p>
+
 <h1 align="center">DataRelay Grant</h1>
 
 <p align="center">
