@@ -25,7 +25,7 @@ operations:
   production_oriented: false
   runbook_required: false
   incident_response_required: false
-  persistent_state: true
+  persistent_state: false
   runbook_paths: []
   health_command: ""
   backup_command: ""

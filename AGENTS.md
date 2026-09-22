@@ -41,6 +41,8 @@ Any future implementation must distinguish clearly between:
 ## Execution rules
 
 - Follow the canonical Engineering System for design, implementation, validation, release, and operations work.
+- For material design-bearing changes, apply the canonical `standards/DESIGN.md` minimal design gate before implementation.
+- For production-impacting incidents or recovery, apply the canonical `standards/OPERATIONS.md` lifecycle and preserve evidence before mutation.
 - Make the smallest correct change and do not silently expand scope.
 - Do not report planned, mocked, or unimplemented behavior as current product capability.
 - Before implementation begins, add task-appropriate tests and release configuration rather than inventing validation evidence.
