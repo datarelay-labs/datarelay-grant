@@ -1,34 +1,30 @@
 engineering_system:
-  version: "1.6.0"
+  version: 1.6.1
   mode: adopted
-  baseline: "673c3b339a0765657214d40a22400a04ed54425b"
+  baseline: fe0c05d0508564512b3eaae96e35a84699d4c728
   ci_mode: shared
   native_ci_workflows: []
   merge_gate_status: unknown
-
 project:
-  name: "datarelay-grant"
-  type: "approval-execution-control"
-  maturity: "development"
-
+  name: datarelay-grant
+  type: approval-execution-control
+  maturity: development
 domains:
-  - approval
-  - automation
-  - integrations
-  - api
-  - documentation
-
+- approval
+- automation
+- integrations
+- api
+- documentation
 platforms:
-  - web
-
+- web
 operations:
   production_oriented: false
   runbook_required: false
   incident_response_required: false
-  persistent_state: true
+  persistent_state: false
   runbook_paths: []
-  health_command: ""
-  backup_command: ""
-  restore_test_command: ""
-  upgrade_command: ""
-  rollback_command: ""
+  health_command: ''
+  backup_command: ''
+  restore_test_command: ''
+  upgrade_command: ''
+  rollback_command: ''

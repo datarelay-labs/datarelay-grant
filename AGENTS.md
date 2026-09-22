@@ -3,7 +3,7 @@
 This repository follows the canonical Data Relay Labs Engineering System:
 https://github.com/datarelay-labs/engineering-system
 
-Adoption baseline: Engineering System version 1.6.0 at immutable commit `673c3b339a0765657214d40a22400a04ed54425b`.
+Adoption baseline: Engineering System version 1.6.1 at immutable commit `fe0c05d0508564512b3eaae96e35a84699d4c728`.
 
 ## Minimum context first
 
@@ -41,6 +41,8 @@ Any future implementation must distinguish clearly between:
 ## Execution rules
 
 - Follow the canonical Engineering System for design, implementation, validation, release, and operations work.
+- For material design-bearing changes, apply the canonical `standards/DESIGN.md` minimal design gate before implementation.
+- For production-impacting incidents or recovery, apply the canonical `standards/OPERATIONS.md` lifecycle and preserve evidence before mutation.
 - Make the smallest correct change and do not silently expand scope.
 - Do not report planned, mocked, or unimplemented behavior as current product capability.
 - Before implementation begins, add task-appropriate tests and release configuration rather than inventing validation evidence.
