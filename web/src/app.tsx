@@ -3,6 +3,7 @@ import {
   AuthLayout,
   Button,
   Card,
+  LoginForm,
   MfaChallengeForm,
   ProductShell,
   ThemeRoot,
@@ -13,7 +14,6 @@ import { useTask } from './common';
 import { authAdapter, productConfig, readSession } from './foundation.config';
 import { Home } from './home';
 import { Integrations } from './integrations';
-import { GrantLoginForm } from './login';
 import { Notifications } from './notifications';
 import { Profiles } from './policies';
 import { NewRequest, RequestDetail, RequestList } from './requests';
@@ -91,29 +91,27 @@ export function App() {
   if (loading) {
     return (
       <ThemeRoot theme={theme}>
-        <div className="grant-auth-centered">
-          <AuthLayout
-            productName="DataRelay Grant"
-            productSubtitle="Approval Control Platform"
-            description="Request. Approve. Execute. Control sensitive actions with explicit human authorization."
-            title="Connecting to DataRelay"
-            subtitle="Verifying your current Grant session."
-            resources={AUTH_RESOURCES}
+        <AuthLayout
+          productName="DataRelay Grant"
+          productSubtitle="Approval Control Platform"
+          description="Request. Approve. Execute. Control sensitive actions with explicit human authorization."
+          title="Connecting to DataRelay"
+          subtitle="Verifying your current Grant session."
+          resources={AUTH_RESOURCES}
+        >
+          {task.feedback}
+          <Button
+            variant="secondary"
+            onClick={() =>
+              void task.run(async () => {
+                await refresh();
+                setLoading(false);
+              })
+            }
           >
-            {task.feedback}
-            <Button
-              variant="secondary"
-              onClick={() =>
-                void task.run(async () => {
-                  await refresh();
-                  setLoading(false);
-                })
-              }
-            >
-              Retry
-            </Button>
-          </AuthLayout>
-        </div>
+            Retry
+          </Button>
+        </AuthLayout>
       </ThemeRoot>
     );
   }
@@ -123,42 +121,42 @@ export function App() {
     const mfa = session?.state === 'mfa_required';
     return (
       <ThemeRoot theme={theme}>
-        <div className="grant-auth-centered">
-          <AuthLayout
-            productName="DataRelay Grant"
-            productSubtitle="Approval Control Platform"
-            description="Request. Approve. Execute. Control sensitive actions with explicit human authorization."
-            title={mfa ? 'Verify your identity' : 'Welcome to DataRelay'}
-            subtitle={mfa ? 'Complete multi-factor authentication to continue.' : 'Please sign in to continue.'}
-            resources={AUTH_RESOURCES}
-          >
-            {task.feedback}
-            {mfa ? (
-              <>
-                <MfaChallengeForm
-                  busy={task.busy}
-                  methods={['totp', 'recovery_code']}
-                  onSubmit={(input) =>
-                    task.run(async () => {
-                      await authAdapter.verifyMfa!(input);
-                      await refresh();
-                    })
-                  }
-                />
-                <Button
-                  variant="ghost"
-                  onClick={() =>
-                    void task.run(async () => {
-                      await authAdapter.signOut();
-                      signedOut();
-                    })
-                  }
-                >
-                  Back to sign in
-                </Button>
-              </>
-            ) : (
-              <GrantLoginForm
+        <AuthLayout
+          productName="DataRelay Grant"
+          productSubtitle="Approval Control Platform"
+          description="Request. Approve. Execute. Control sensitive actions with explicit human authorization."
+          title={mfa ? 'Verify your identity' : 'Welcome to DataRelay'}
+          subtitle={mfa ? 'Complete multi-factor authentication to continue.' : 'Please sign in to continue.'}
+          resources={AUTH_RESOURCES}
+        >
+          {task.feedback}
+          {mfa ? (
+            <>
+              <MfaChallengeForm
+                busy={task.busy}
+                methods={['totp', 'recovery_code']}
+                onSubmit={(input) =>
+                  task.run(async () => {
+                    await authAdapter.verifyMfa!(input);
+                    await refresh();
+                  })
+                }
+              />
+              <Button
+                variant="ghost"
+                onClick={() =>
+                  void task.run(async () => {
+                    await authAdapter.signOut();
+                    signedOut();
+                  })
+                }
+              >
+                Back to sign in
+              </Button>
+            </>
+          ) : (
+            <>
+              <LoginForm
                 busy={task.busy}
                 onSubmit={(input) =>
                   task.run(async () => {
@@ -167,9 +165,12 @@ export function App() {
                   })
                 }
               />
-            )}
-          </AuthLayout>
-        </div>
+              <p className="dr-auth-form__guidance">
+                Accounts are created by an administrator. Self-service registration is not available.
+              </p>
+            </>
+          )}
+        </AuthLayout>
       </ThemeRoot>
     );
   }
