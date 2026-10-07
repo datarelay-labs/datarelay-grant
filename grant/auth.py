@@ -124,7 +124,10 @@ class Auth:
         return {"id": user_id, "username": username, "email": email, "role": role}
 
     def login(self, username: str, password: str, peer: str) -> tuple[str, bool]:
-        self.rate("login-peer:" + peer, 30, 300)
+        # In supported HTTPS deployments the direct peer is the loopback reverse proxy,
+        # not a trustworthy browser identity. Keep brute-force protection per account
+        # and use only a short, coarse installation-wide breaker for Argon2 load.
+        self.rate("login-installation", 120, 60)
         self.rate("login-user:" + username.lower(), 15, 300)
         with self.db.transaction(write=False) as conn:
             row = conn.execute(
@@ -200,6 +203,7 @@ class Auth:
         actor.require_admin()
         raw, token_id = secrets.token_urlsafe(40), uid()
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
             if not conn.execute(
                 "SELECT id FROM integrations WHERE id=? AND enabled=1", (integration_id,)
             ).fetchone():

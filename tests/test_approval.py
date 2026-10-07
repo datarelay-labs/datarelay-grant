@@ -139,3 +139,35 @@ def test_cancel_consume_race_has_one_winner(env):
     assert sum(success for success, _ in results) == 1
     final = env.core.get(principal, row["id"])
     assert (final["state"] == "CANCELLED") != bool(final["execution_id"])
+
+
+def test_cancel_after_deadline_commits_expiry_instead(env):
+    row = create(env)
+    with env.db.transaction() as conn:
+        conn.execute("UPDATE requests SET deadline=? WHERE id=?", (time.time() - 1, row["id"]))
+
+    response = env.api.post(
+        f"/api/v1/requests/{row['id']}/cancel",
+        json={"expected_revision": row["revision"], "reason": "too late"},
+    )
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "REQUEST_EXPIRED"
+    current = env.api.get(f"/api/v1/requests/{row['id']}").json()
+    assert current["state"] == "EXPIRED"
+    assert current["decision"] is None
+
+
+def test_cancel_after_execution_grant_expiry_preserves_human_decision(env):
+    row = approve(env, create(env))
+    with env.db.transaction() as conn:
+        conn.execute("UPDATE requests SET grant_until=? WHERE id=?", (time.time() - 1, row["id"]))
+
+    response = env.api.post(
+        f"/api/v1/requests/{row['id']}/cancel",
+        json={"expected_revision": row["revision"], "reason": "too late"},
+    )
+    assert response.status_code == 409
+    assert response.json()["error"]["code"] == "REQUEST_EXPIRED"
+    current = env.api.get(f"/api/v1/requests/{row['id']}").json()
+    assert current["state"] == "EXPIRED"
+    assert current["decision"] == "APPROVED"

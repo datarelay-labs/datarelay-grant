@@ -101,6 +101,12 @@ class Worker:
         self.db, self.settings = db, settings
 
     def tick(self, limit: int = 20) -> int:
+        # A restored database is deliberately frozen until the operator completes
+        # reconciliation. Maintenance is state mutation too (expiry/reminders), so
+        # it must respect the same pause as outbound delivery and execution consume.
+        with self.db.transaction(write=False) as conn:
+            if conn.execute("SELECT value FROM runtime WHERE key='paused'").fetchone()[0] == "1":
+                return 0
         Core(self.db, self.settings).maintenance()
         count = 0
         for _ in range(limit):

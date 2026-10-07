@@ -2,6 +2,7 @@ import pyotp
 import pytest
 from fastapi.testclient import TestClient
 
+from grant.errors import GrantError
 from grant.models import Integration, Profile
 
 
@@ -216,3 +217,19 @@ def test_mfa_enabled_during_login_cannot_create_password_only_session(env, monke
     client = env.human("requester")
     assert client.get("/api/v1/auth/session").json()["state"] == "mfa_required"
     assert client.get("/api/v1/requests").status_code == 401
+
+
+def test_login_limiter_does_not_treat_the_reverse_proxy_as_user_identity(env, monkeypatch):
+    calls = []
+
+    def rate(key, limit=120, seconds=60):
+        calls.append((key, limit, seconds))
+
+    monkeypatch.setattr(env.auth, "rate", rate)
+    with pytest.raises(GrantError, match="INVALID_CREDENTIALS"):
+        env.auth.login("missing-user", "wrong-password", "127.0.0.1")
+
+    assert calls == [
+        ("login-installation", 120, 60),
+        ("login-user:missing-user", 15, 300),
+    ]

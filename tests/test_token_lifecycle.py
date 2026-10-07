@@ -65,3 +65,16 @@ def test_ended_browser_session_cannot_commit_using_stale_principal(env):
         conn.execute("DELETE FROM sessions WHERE id=?", (principal.session_id,))
     with pytest.raises(GrantError, match="AUTHENTICATION_REQUIRED"):
         env.core.decide(principal, row["id"], Decision(decision="APPROVED", expected_revision=1))
+
+
+def test_ended_admin_session_cannot_issue_a_new_integration_token(env):
+    browser = env.human("admin")
+    principal = env.auth.session(browser.cookies["grant_session"])
+    with env.db.transaction() as conn:
+        conn.execute("DELETE FROM sessions WHERE id=?", (principal.session_id,))
+
+    with pytest.raises(GrantError, match="AUTHENTICATION_REQUIRED"):
+        env.auth.issue_token(principal, env.integration["id"], ["grant:consume"])
+
+    with env.db.transaction(write=False) as conn:
+        assert conn.execute("SELECT count(*) FROM api_tokens").fetchone()[0] == 1

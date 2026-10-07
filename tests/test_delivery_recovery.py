@@ -250,3 +250,28 @@ def test_connection_test_is_admin_only_and_never_an_approval(env, receiver):
         == 403
     )
     assert env.api.post(f"/api/v1/integrations/{integration['id']}/test").status_code == 403
+
+
+def test_recovery_pause_freezes_expiry_maintenance(env, tmp_path):
+    pending = env.api.post("/api/v1/requests", json=env.intake()).json()
+    backup = tmp_path / "paused-backup.sqlite"
+    restored = tmp_path / "paused-restored.sqlite"
+    env.db.backup(backup)
+    Database.restore(backup, restored)
+
+    restored_db = Database(restored)
+    with restored_db.transaction() as conn:
+        conn.execute("UPDATE requests SET deadline=0 WHERE id=?", (pending["id"],))
+
+    worker = Worker(restored_db, replace(env.settings, database=restored))
+    assert worker.tick() == 0
+    with restored_db.transaction(write=False) as conn:
+        row = conn.execute("SELECT state FROM requests WHERE id=?", (pending["id"],)).fetchone()
+        assert row["state"] == "AWAITING"
+        assert (
+            conn.execute(
+                "SELECT count(*) FROM audit WHERE request_id=? AND action='request.expired'",
+                (pending["id"],),
+            ).fetchone()[0]
+            == 0
+        )

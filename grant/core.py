@@ -398,6 +398,7 @@ class Core:
         return result
 
     def cancel(self, actor: Principal, ident: str, body: Cancel) -> dict:
+        error = None
         with self.db.transaction() as conn:
             require_current_authority(conn, actor, "request:create")
             row = self._load(conn, ident, actor)
@@ -410,14 +411,21 @@ class Core:
                 raise GrantError("EXECUTION_ALREADY_COMMITTED")
             if row["state"] == "CANCELLED":
                 return self._project(conn, row)
-            if row["revision"] != body.expected_revision or row["state"] in ("DENIED", "EXPIRED"):
+            now = time.time()
+            if self._expire(conn, row, now):
+                error = GrantError("REQUEST_EXPIRED")
+            elif row["revision"] != body.expected_revision or row["state"] in ("DENIED", "EXPIRED"):
                 raise GrantError("STALE_OR_FINAL_REQUEST")
-            conn.execute(
-                "UPDATE requests SET state='CANCELLED',revision=revision+1 WHERE id=?", (ident,)
-            )
-            audit(conn, ident, actor.id, "request.cancelled", {"reason": body.reason})
-            self._event(conn, self._load(conn, ident), time.time(), body.reason)
-            return self._project(conn, self._load(conn, ident))
+            else:
+                conn.execute(
+                    "UPDATE requests SET state='CANCELLED',revision=revision+1 WHERE id=?", (ident,)
+                )
+                audit(conn, ident, actor.id, "request.cancelled", {"reason": body.reason}, now)
+                self._event(conn, self._load(conn, ident), now, body.reason)
+            result = self._project(conn, self._load(conn, ident))
+        if error:
+            raise error
+        return result
 
     def consume(self, actor: Principal, ident: str, body: Consume) -> dict:
         actor.require_scope("grant:consume")
