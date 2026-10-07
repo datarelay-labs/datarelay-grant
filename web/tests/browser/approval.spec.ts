@@ -2,7 +2,7 @@ import {test,expect,type Page} from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 const fixture=()=>JSON.parse(fs.readFileSync(path.resolve('../.e2e/fixture.json'),'utf8'));
-async function login(page:Page,name:string){await page.goto('/requests');await page.getByLabel('Username',{exact:true}).fill(name);await page.getByLabel('Password',{exact:true}).fill(fixture().password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByRole('heading',{name:'Requests',exact:true})).toBeVisible();}
+async function login(page:Page,name:string){await page.goto('/requests');await page.getByLabel('Username',{exact:true}).fill(name);await page.getByLabel('Password',{exact:true}).fill(fixture().password);await page.getByRole('button',{name:'Sign In',exact:true}).click();await expect(page.getByRole('heading',{name:'Requests',exact:true})).toBeVisible();}
 
 // Each pass logs in independently. No borrowed cookie or mocked auth is used.
 for(const pass of [1,2]){
@@ -53,12 +53,21 @@ for(const pass of [1,2]){
  });
 }
 
+
+test('Foundation login and grouped Grant shell follow the DataRelay family layout',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});const page=await context.newPage();
+ await page.goto('/home');await expect(page.locator('.grant-auth-centered')).toBeVisible();await expect(page.getByRole('heading',{name:'Welcome to DataRelay',exact:true})).toBeVisible();await expect(page.getByText('Please sign in to continue.',{exact:true})).toBeVisible();
+ await page.getByLabel('Username',{exact:true}).fill('admin');await page.getByLabel('Password',{exact:true}).fill(fixture().password);await page.getByRole('button',{name:'Sign In',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.getByText('Work',{exact:true})).toBeVisible();await expect(page.getByText('Configuration',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByText('Work that needs a human decision',{exact:true})).toBeVisible();
+ await context.close();
+});
+
 test('Foundation administration and mobile approval page are real adapters',async({browser})=>{
  const context=await browser.newContext({viewport:{width:390,height:844}});const page=await context.newPage();await login(page,'admin');
- await page.goto('/system');await expect(page.getByText('Accounts',{exact:true})).toBeVisible();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
+ await page.goto('/system');await expect(page.getByText('System health',{exact:true})).toBeVisible();await expect(page.getByText('Accounts',{exact:true})).toBeVisible();await page.getByRole('button',{name:'View',exact:true}).first().click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
  await page.goto('/integrations');await expect(page.locator('strong').filter({hasText:/^Isolated DataRelay fixture$/})).toBeVisible();await page.getByRole('button',{name:'Test connection',exact:true}).click();await expect(page.getByText('Test event accepted by the HTTP receiver. This is not approval or execution.')).toBeVisible();
- await page.goto('/notifications');await expect(page.getByRole('heading',{name:'Notifications',exact:true})).toBeVisible();
- await page.goto('/profiles');await expect(page.getByRole('heading',{name:'Approval policies',exact:true})).toBeVisible();
+ await page.goto('/notifications');await expect(page.getByRole('heading',{name:'Notifications',exact:true,level:2})).toBeVisible();
+ await page.goto('/profiles');await expect(page.getByRole('heading',{name:'Approval policies',exact:true,level:2})).toBeVisible();
  await page.goto('/security');await expect(page.getByText('Active sessions',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Set up MFA',exact:true})).toBeVisible();
  await page.screenshot({path:'../.e2e/screenshots/mobile-security.png',fullPage:true});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();await context.close();
@@ -93,6 +102,7 @@ test('requester cancels and creates a newly approved replacement through the UI'
 test('administrator configures accounts/profile and explicitly revokes a scoped credential',async({browser,request})=>{
  const f=fixture();const context=await browser.newContext();const page=await context.newPage();
  await login(page,'admin');await page.goto('/system');
+ const accountsCard=page.locator('.dr-card').filter({hasText:'Accounts'}).first();await accountsCard.getByRole('button',{name:'Manage',exact:true}).click();
  await page.getByLabel('New username',{exact:true}).fill('browser-member');
  await page.getByLabel('New user email',{exact:true}).fill('browser-member@example.invalid');
  await page.getByLabel('Initial password',{exact:true}).fill(f.password);
@@ -117,6 +127,7 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  await expect(page.getByText('Credential revoked. Other credentials remain unchanged.')).toBeVisible();
  expect((await request.get('/api/v1/requests',{headers:{authorization:'Bearer '+credential.token}})).status()).toBe(401);
  await page.goto('/notifications');
+ await page.getByRole('button',{name:'Create template set',exact:true}).click();
  await page.getByLabel('Template set name',{exact:true}).fill('Browser approval notifications');
  await page.getByLabel('Event subject',{exact:true}).fill('[Browser] {{request_title}}');
  await page.getByLabel('Event body',{exact:true}).fill('Approve {{action_kind}} on {{target}}.\n{{request_url}}');
@@ -127,6 +138,7 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  await page.getByRole('button',{name:'Send test to me',exact:true}).click();
  await expect(page.getByText(/Transport accepted: true.*Inbox receipt confirmed: false/)).toBeVisible();
  await page.goto('/profiles');
+ await page.getByRole('button',{name:'Create policy',exact:true}).click();
  await page.getByLabel('Policy name',{exact:true}).fill('Configured browser approval');
  await page.getByLabel('Integration',{exact:true}).selectOption({label:'Configured through browser'});
  await page.getByLabel('Assigned approver',{exact:true}).selectOption({label:'approver'});
@@ -134,16 +146,16 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  await page.getByLabel('Notification template set',{exact:true}).selectOption({label:'Browser approval notifications'});
  await page.getByRole('button',{name:'Create draft',exact:true}).click();
  await expect(page.getByText('Draft saved. It is not live until it passes Testing and is explicitly activated.')).toBeVisible();
- const configuredPolicy=page.locator('.grant-delivery').filter({hasText:'Configured browser approval'});
- await configuredPolicy.getByRole('button',{name:'Test policy',exact:true}).click();
+ await page.getByRole('button',{name:'Test policy',exact:true}).click();
  await expect(page.getByText('Policy moved to Testing. Use isolated test before activation.')).toBeVisible();
+ await page.getByRole('button',{name:'Preview & Test',exact:true}).click();
  await page.getByRole('button',{name:'Run isolated test',exact:true}).click();
  await expect(page.getByText(/Isolated test: Configured browser approval v1/)).toBeVisible();
- await configuredPolicy.getByRole('button',{name:'Activate policy',exact:true}).click();
+ await page.getByRole('button',{name:'Activate policy',exact:true}).click();
  await expect(page.getByText('Policy activated. Existing requests retain their original version snapshot.')).toBeVisible();
  await page.getByRole('button',{name:'Preview active resolution',exact:true}).click();
  await expect(page.getByText(/Resolved policy: Configured browser approval v1/)).toBeVisible();
- await configuredPolicy.getByRole('button',{name:'History',exact:true}).click();
+ await page.getByRole('button',{name:'History',exact:true}).click();
  await expect(page.getByText('Version / change history',{exact:true})).toBeVisible();
  await page.screenshot({path:'../.e2e/screenshots/configured-policy-notifications.png',fullPage:true});
  await context.close();
