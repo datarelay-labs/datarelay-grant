@@ -1,0 +1,57 @@
+{
+  "repository": "https://github.com/datarelay-labs/datarelay-product-foundation.git",
+  "commit": "b04e7d5ae48b61b9316d925cac5860253d220fb1",
+  "version": "0.1.0-grant.r1",
+  "packages": [
+    {
+      "name": "@datarelay-labs/tokens",
+      "path": "tokens",
+      "sha256": "9da6cf077ef490129eba936fc755b8fedb6299dcc10d862e94eb4419f5c7d733"
+    },
+    {
+      "name": "@datarelay-labs/icons",
+      "path": "icons",
+      "sha256": "bb5af1afbdf4b4a612bc7d922a3e44f491ec122f388149f51ad618c1e9650001"
+    },
+    {
+      "name": "@datarelay-labs/ui",
+      "path": "ui",
+      "sha256": "807a9e2563bafb6d0a2560ddc29f25150cedef3e2d9069b401f10b2d447deb0d"
+    },
+    {
+      "name": "@datarelay-labs/product-shell",
+      "path": "product-shell",
+      "sha256": "d91c11bec8bfc3c77d150d7dc3fb03be883f2c4a6f65076844e6ae974b26fb74"
+    },
+    {
+      "name": "@datarelay-labs/auth-ui",
+      "path": "auth-ui",
+      "sha256": "500c99bfeabdc0c45261288aad0fc4875ac3ada8a9ba2ec19d790810f1a0ef7a"
+    },
+    {
+      "name": "@datarelay-labs/system-contracts",
+      "path": "system-contracts",
+      "sha256": "8e49eda3a2d6f7755d4c9ee739177057d2ebfcad4937ae77b150de8cba430742"
+    },
+    {
+      "name": "@datarelay-labs/system-admin-ui",
+      "path": "system-admin-ui",
+      "sha256": "37f6f84e51c591920d345d362568ca6b4ad455295e214699b67210589c3d49ac"
+    },
+    {
+      "name": "@datarelay-labs/testkit",
+      "path": "testkit",
+      "sha256": "bc227aa6d5a16200049bb9e17b563d1044239aaa6852a873d1ecc5daca5e174b"
+    },
+    {
+      "name": "@datarelay-labs/foundation",
+      "path": "foundation",
+      "sha256": "d425796395b7fdc47923d79f92b359af233e9cffdb59c74ae9434d9c65985d5a"
+    },
+    {
+      "name": "@datarelay-labs/foundation-cli",
+      "path": "foundation-cli",
+      "sha256": "09181e072282f774dc0728e6d4633e7d77c6f4120858c79c922f4c10967d4295"
+    }
+  ]
+}

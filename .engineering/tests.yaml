@@ -1,25 +1,37 @@
 version: 1
-
-setup_command: ""
-
+setup_command: "uv sync --frozen"
 paths:
+  "grant/**":
+    domains: [approval, api, automation, integrations]
+  "web/**":
+    domains: [approval, api]
   "**":
-    domains:
-      - "documentation"
-
+    domains: [documentation]
 scenarios:
-  - id: ADOPTED-STATIC-001
-    name: Git whitespace validation
+  - id: GRANT-API-001
+    name: Approval and integration security contracts
+    level: integration
+    domains: [approval, api, automation, integrations]
+    triggers: [pr, preflight, release]
+    platforms: [linux]
+    command: "uv run --frozen pytest"
+    invariants: [explicit human decision, immutable action, scoped authorization, durable state]
+    release_gate: true
+  - id: GRANT-WEB-001
+    name: Foundation consumer typecheck and production build
+    level: integration
+    domains: [approval, api]
+    triggers: [pr, preflight, release]
+    platforms: [linux]
+    command: "npm --prefix web run check"
+    invariants: [Foundation public SDK boundary, real product adapters]
+    release_gate: true
+  - id: GRANT-STATIC-001
+    name: Product lint and diff validation
     level: static
-    domains:
-      - "documentation"
-    triggers:
-      - pr
-      - preflight
-      - release
-    platforms:
-      - "linux"
-    command: "git diff --check"
-    invariants:
-      - "repository diff has no whitespace errors"
+    domains: [documentation, approval, api]
+    triggers: [pr, preflight, release]
+    platforms: [linux]
+    command: "uv run --frozen ruff check grant tests && git diff --check"
+    invariants: [clean deterministic source]
     release_gate: true
