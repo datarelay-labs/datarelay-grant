@@ -136,3 +136,19 @@ Read `docs/USER_SCENARIOS.md` first. These tests use disposable users, a tempora
 actual loopback SMTP/HTTP and browser sessions. They do not prove real customer mail,
 DataRelay operation execution or Stellar Cyber ingestion. Keep fixture credentials
 and browser traces private; do not upload `.e2e/fixture.json` or raw trace archives.
+
+## GitHub CI private dependency access
+
+The mapped `Grant checks` workflow separates public API/static checks from Foundation
+web checks. The latter requires a repository Actions secret `FOUNDATION_READ_TOKEN`
+with Contents: read on `datarelay-labs/datarelay-product-foundation` only. It needs no
+write, administration or organization-secret permissions. A missing secret fails
+explicitly as `FOUNDATION_CI_READ_ACCESS_REQUIRED`; do not bypass that result or copy
+private SDK packages into the public repository. Existing host credentials are never
+exported into Actions automatically. Provisioning this narrowly scoped secret requires
+the owner's credential/permission approval. No such secret has been created here.
+
+The checkout action uses the credential only to retrieve the exact pinned Foundation
+commit with `persist-credentials: false`. Source staging then revalidates all package
+hashes. PR runs perform bounded API/static/frontend checks; workflow_dispatch also
+performs actual browser qualification. Existing shared governance checks remain.

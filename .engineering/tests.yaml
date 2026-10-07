@@ -5,11 +5,20 @@ paths:
     domains: [approval, api, automation, integrations]
   "web/**":
     domains: [approval, api]
+  "tests/**":
+    domains: [approval, api, integrations]
+  "scripts/**":
+    domains: [approval, api, integrations]
+  "uv.lock":
+    domains: [approval, api, integrations]
   "**":
     domains: [documentation]
 scenarios:
   - id: GRANT-API-001
     name: Approval and integration security contracts
+    cost: medium
+    estimated_seconds: 60
+    timeout_seconds: 180
     level: integration
     domains: [approval, api, automation, integrations]
     triggers: [pr, preflight, release]
@@ -19,6 +28,9 @@ scenarios:
     release_gate: true
   - id: GRANT-WEB-001
     name: Foundation consumer typecheck and production build
+    cost: medium
+    estimated_seconds: 10
+    timeout_seconds: 120
     level: integration
     domains: [approval, api]
     triggers: [pr, preflight, release]

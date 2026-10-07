@@ -48,15 +48,18 @@ A Starlette TestClient deprecation warning is observed; tests pass without suppr
 
 ## External prerequisites and remaining work
 
-1. Identify the approved representative DataRelay product operation and its actual
+1. Provision approved read-only Foundation access for the GitHub web-check job.
+   Host GitHub access does not automatically grant the Actions runner that identity.
+   No private dependency is published and no credential copied to bypass this boundary.
+2. Identify the approved representative DataRelay product operation and its actual
    execution boundary/consumer development lane. Grant must not overwrite another
    product's concurrent work or claim the test consumer as that integration.
-2. Use the approved SMTP installation configuration and designated recipient; verify
+3. Use the approved SMTP installation configuration and designated recipient; verify
    real receipt. No passwords or private keys should be pasted into chat/issues.
-3. Confirm deployed Stellar version, existing outgoing responder and actual supported
+4. Confirm deployed Stellar version, existing outgoing responder and actual supported
    webhook receiver with its tenant/auth contract. No permission change, new proxy,
    product upgrade or customer production experiment is implicitly authorized.
-4. Validate the actual round trip and consumer effect on the frozen candidate, then
+5. Validate the actual round trip and consumer effect on the frozen candidate, then
    perform the applicable release/acceptance steps. No tag/publication has been made.
 
 These prerequisites do not invalidate the completed local implementation/tests,

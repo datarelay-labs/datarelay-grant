@@ -2,14 +2,17 @@ engineering_system:
   version: 1.7.0
   mode: adopted
   baseline: 72abaec3ffa4f2e7519ee8067f4b8795acd506ad
-  ci_mode: shared
-  native_ci_workflows: []
+  ci_mode: native
+  native_ci_workflows:
+  - .github/workflows/grant-checks.yml
   merge_gate_status: unknown
   policy_epoch: 14
 project:
   name: datarelay-grant
   type: approval-execution-control
   maturity: development
+  user_facing: true
+  primary_user_surface: browser
 domains:
 - approval
 - automation

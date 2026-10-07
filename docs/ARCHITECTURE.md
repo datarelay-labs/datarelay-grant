@@ -43,3 +43,12 @@ cannot undo a commitment that already won the transaction race.
 Signed event verification rejects duplicate JSON keys, ambiguous header casing,
 missing event identifiers and malformed/non-ASCII signature material. Consumers
 still deduplicate event IDs and revalidate current request state before execution.
+
+CI environment: native mapped Grant checks retain the pinned shared governance,
+adoption and enforcement jobs. API/static checks run without private SDK access;
+web checks independently require read-only access to the private Foundation source.
+No private SDK source is vendored/published into this public repository. Missing
+`FOUNDATION_READ_TOKEN` fails the web job explicitly; it is not skipped or reported
+as success. Creating/expanding that credential remains an operator security boundary.
+Measured bounded API cases (~60s) and frontend unit/type/build (~10s) use medium
+scenario cost; actual browser/full qualification remains a separate expensive gate.
