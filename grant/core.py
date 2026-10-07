@@ -437,6 +437,8 @@ class Core:
                 raise GrantError("TEST_RECIPIENT_NOT_FOUND", 404)
         rendered = render_from_context(template, body.event, body.sample.model_dump())
         event_id = uid()
+        with self.db.transaction(write=False) as conn:
+            require_current_authority(conn, principal)
         send_email(
             self.settings,
             {"email": recipient["email"]},
@@ -1059,9 +1061,15 @@ class Core:
                 ).fetchone()
                 if not selected_profile:
                     raise GrantError("PROFILE_NOT_FOUND", 404)
+                expected_active = active_version(conn, body.profile_id)
+                idempotency_integration_id = (
+                    expected_active["integration_id"]
+                    if expected_active
+                    else selected_profile["integration_id"]
+                )
                 existing = conn.execute(
                     "SELECT * FROM requests WHERE integration_id=? AND external_id=?",
-                    (selected_profile["integration_id"], body.external_id),
+                    (idempotency_integration_id, body.external_id),
                 ).fetchone()
             if existing:
                 self._visible(existing, actor)

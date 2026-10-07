@@ -248,8 +248,16 @@ def test_notification_test_send_revalidates_authority_before_transport(env, monk
     ).json()
     sent = []
     monkeypatch.setattr("grant.transport.send_email", lambda *args: sent.append(args))
-    with env.db.transaction() as conn:
-        conn.execute("UPDATE users SET enabled=0 WHERE id=?", (env.users["admin"]["id"],))
+
+    from grant.core import render_from_context as real_render
+
+    def revoke_after_render(*args, **kwargs):
+        rendered = real_render(*args, **kwargs)
+        with env.db.transaction() as conn:
+            conn.execute("UPDATE users SET enabled=0 WHERE id=?", (env.users["admin"]["id"],))
+        return rendered
+
+    monkeypatch.setattr("grant.core.render_from_context", revoke_after_render)
     response = admin.post(
         f"/api/v1/notification-template-sets/{template_set['id']}/test-send",
         json={

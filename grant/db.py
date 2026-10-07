@@ -207,7 +207,14 @@ class Database:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS profile_versions_active ON profile_versions(lifecycle,integration_id,action_kind)"
         )
-        active_legacy_keys: set[tuple[str, str]] = set()
+        active_legacy_keys = {
+            (row["integration_id"], row["action_kind"])
+            for row in conn.execute(
+                """SELECT integration_id,action_kind
+                   FROM profile_versions
+                   WHERE lifecycle='ACTIVE'"""
+            ).fetchall()
+        }
         for profile in conn.execute("SELECT * FROM profiles ORDER BY rowid").fetchall():
             existing = conn.execute(
                 "SELECT id FROM profile_versions WHERE profile_id=? LIMIT 1", (profile["id"],)

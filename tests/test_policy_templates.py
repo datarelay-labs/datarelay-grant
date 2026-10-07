@@ -240,3 +240,33 @@ def test_schema_v2_migration_keeps_only_one_legacy_policy_active_per_resolver_ke
             (base[0], base[2]),
         ).fetchall()
     assert sum(row["lifecycle"] == "ACTIVE" for row in rows) == 1
+
+def test_schema_v2_migration_reentry_preserves_existing_active_resolver_key(env):
+    path = env.settings.database
+    with sqlite3.connect(path) as conn:
+        base = conn.execute(
+            "SELECT integration_id,approver_id,action_kind,deadline_seconds,reminder_seconds,max_reminders,grant_seconds FROM profiles LIMIT 1"
+        ).fetchone()
+        conn.execute(
+            "INSERT INTO profiles(id,name,integration_id,approver_id,action_kind,deadline_seconds,reminder_seconds,max_reminders,grant_seconds,enabled) VALUES(?,?,?,?,?,?,?,?,?,1)",
+            ("legacy-reentry-collision", "Legacy re-entry collision", *base),
+        )
+        # Simulate an interrupted v2->v3 migration: the original ACTIVE version
+        # already exists, but user_version was not advanced before restart.
+        conn.execute("PRAGMA user_version=2")
+        conn.commit()
+
+    migrated = Database(path)
+    with migrated.transaction(write=False) as conn:
+        rows = conn.execute(
+            """SELECT profile_id,lifecycle
+               FROM profile_versions
+               WHERE integration_id=? AND action_kind=?
+               ORDER BY profile_id""",
+            (base[0], base[2]),
+        ).fetchall()
+    assert sum(row["lifecycle"] == "ACTIVE" for row in rows) == 1
+    assert any(
+        row["profile_id"] == "legacy-reentry-collision" and row["lifecycle"] == "DISABLED"
+        for row in rows
+    )
