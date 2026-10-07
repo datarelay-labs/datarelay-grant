@@ -5,6 +5,13 @@ Status: development candidate, not production/GA or full R1 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## Product direction
+
+The accepted target is now **Grant 1.0**, governed by `docs/PRODUCT_STANDARD.md` and
+sequenced by `ROADMAP.md`. The current branch remains a development baseline, not a
+claim that all 1.0 workstreams are implemented. Existing R1 evidence is retained as
+historical/current baseline evidence and maps into the broader 1.0 roadmap.
+
 ## Implemented candidate
 
 - Pinned unpublished Foundation SDK and public imports; real shell, login,

@@ -11,7 +11,7 @@ explicit decision, delivers correlated outcomes and records reported execution r
 
 ## Status
 
-**R1 development candidate — not a published or production-qualified release.**
+**Grant 1.0 pre-release development candidate — not a published or production-qualified release.**
 
 The repository now contains an authenticated API, durable approval/outbox store,
 Foundation-backed web UI and operator/integration contracts. Read
@@ -20,7 +20,7 @@ qualified. Fixture tests do not prove a real DataRelay or Stellar Cyber integrat
 Production deployment, credentials and immutable release publication need their own
 approved operational procedure.
 
-## Bounded R1 scope
+## Current implemented baseline
 
 | Area | Candidate implementation |
 | --- | --- |
@@ -29,15 +29,14 @@ approved operational procedure.
 | Integration | Scoped input API, reliable outcome webhook, execution commitment and reported result API |
 | Transport | Registered destinations, verified HTTPS, optional HMAC, stable event IDs, bounded retry and resend |
 | Recovery | Persistent SQLite state/outbox, new-path backup/restore, paused reconciliation, no replay of business actions |
-| Management | Profiles, integrations, connection/mail tests, scoped credential metadata and revocation |
+| Management | Approval policies, email templates, integrations, connection/mail tests, scoped credential metadata and revocation |
 
 Approval, notification acceptance and execution success are different states.
 A bare approval webhook cannot enforce an external system that does not check it.
 The configured executor must validate/consume the current action-bound approval and
 preserve its own authorization and durable operation ledger.
 
-No Runner, arbitrary remote execution, generic workflow engine, multi-tenant SaaS,
-AI-inferred approval or competing identity platform is introduced by R1.
+The accepted Grant 1.0 direction expands into policy lifecycle, preview/test, groups and multi-approval, delegation/escalation, collaboration, approval inbox and operational exception handling while explicitly avoiding a generic workflow engine, arbitrary remote execution, SOAR, IAM provisioning, multi-tenant SaaS and AI-inferred approval.
 
 ## Development
 
@@ -57,7 +56,8 @@ There are no default credentials. Keep private installation state outside Git.
 
 | Document | Purpose |
 | --- | --- |
-| [ROADMAP.md](ROADMAP.md) | Accepted solo-developer R1 scope, milestones and deferred work |
+| [Product Standard](docs/PRODUCT_STANDARD.md) | Canonical Grant 1.0 product definition, objects, policy/notification/admin/UX/security standards and scope boundaries |
+| [ROADMAP.md](ROADMAP.md) | Grant 1.0 workstreams, sequencing and release exit criteria |
 | [Architecture](docs/ARCHITECTURE.md) | State, security, transport and Foundation boundaries |
 | [Integration](docs/INTEGRATION.md) | API, webhook, execution contract and Stellar setup prerequisites |
 | [Operations](docs/OPERATIONS.md) | Build, install, diagnostics, recovery and upgrade/rollback |
