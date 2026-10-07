@@ -16,19 +16,50 @@ export function RequestList({ user, mine, navigate }: { user: User; mine: boolea
  <div className="grant-table-scroll"><table className="grant-table"><thead><tr><th>Request</th><th>Decision</th><th>Delivery</th><th>Execution</th><th>Deadline</th></tr></thead><tbody>{shown.map(r => <tr key={r.id}><td><Button variant="ghost" onClick={() => navigate('/requests/' + r.id)}>{r.title}</Button><small>{r.external_id}</small></td><td><State value={r.state}/></td><td><State value={r.delivery_state}/></td><td><State value={r.execution_state}/></td><td>{when(r.deadline)}</td></tr>)}</tbody></table></div>
  {!shown.length && <p>No matching requests on this page.</p>}<div className="grant-actions"><Button variant="secondary" disabled={!offset || task.busy} onClick={() => setOffset(Math.max(0, offset - 50))}>Previous page</Button><Button variant="secondary" disabled={rows.length < 50 || task.busy} onClick={() => setOffset(offset + 50)}>Next page</Button></div></Card></div>;
 }
-export function NewRequest({ navigate }: { navigate: Navigate }) {
- const [profiles, setProfiles] = useState<Profile[]>([]); const [profile, setProfile] = useState(''); const [title, setTitle] = useState(''); const [target, setTarget] = useState(''); const [parameters, setParameters] = useState('{}'); const [reason, setReason] = useState(''); const [external, setExternal] = useState<string>(() => crypto.randomUUID()); const task = useTask();
- useEffect(() => { void task.run(async () => { setProfiles(await api('/profiles')); }); }, []);
- async function submit() {
-  const selected = profiles.find(p => p.id === profile); if (!selected) throw new Error('Select a profile');
-  let parsed; try { parsed = JSON.parse(parameters); } catch { task.setNotice('Parameters must be a JSON object.'); return; }
-  if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') { task.setNotice('Parameters must be a JSON object.'); return; }
-  const row = await api<RequestRow>('/requests','POST',{ external_id: external, profile_id: profile, title, action: { kind: selected.action_kind, target, parameters: parsed }, reason, source: { channel: 'grant.web' } });
-  navigate('/requests/' + row.id);
+export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; predecessorId?: string }) {
+ const [predecessor,setPredecessor] = useState<RequestRow | null>(null);
+ const [profiles,setProfiles] = useState<Profile[]>([]);
+ const [profile,setProfile] = useState('');
+ const [title,setTitle] = useState('');
+ const [target,setTarget] = useState('');
+ const [parameters,setParameters] = useState('{}');
+ const [reason,setReason] = useState('');
+ const [external,setExternal] = useState<string>(()=>crypto.randomUUID());
+ const task=useTask();
+ useEffect(()=>{void task.run(async()=>{
+  setProfiles(await api('/profiles'));
+  if(predecessorId){
+   const previous=await api<RequestRow>('/requests/'+encodeURIComponent(predecessorId));
+   if(previous.state!=='CANCELLED')throw new Error('Cancel the original request before replacing it');
+   setPredecessor(previous);setProfile(previous.profile_id);setTitle(previous.title);
+   setTarget(previous.action.target);setParameters(JSON.stringify(previous.action.parameters,null,2));setReason(previous.reason);
+  }
+ });},[predecessorId]);
+ async function submit(){
+  const selected=profiles.find(p=>p.id===profile);
+  if(!selected)throw new Error('Select a profile');
+  if(predecessorId&&!predecessor)throw new Error('The original request is not available');
+  let parsed;try{parsed=JSON.parse(parameters);}catch{task.setNotice('Parameters must be a JSON object.');return;}
+  if(!parsed||Array.isArray(parsed)||typeof parsed!=='object'){task.setNotice('Parameters must be a JSON object.');return;}
+  const source={...(predecessor?.source??{}),channel:'grant.web',...(selected.tenant?{tenant_id:selected.tenant}:{})};
+  const row=await api<RequestRow>('/requests','POST',{
+   external_id:external,profile_id:profile,title,action:{kind:selected.action_kind,target,parameters:parsed},
+   reason,source,...(predecessorId?{predecessor_id:predecessorId}:{}),
+  });
+  navigate('/requests/'+row.id);
  }
- return <Card title="Create an approval request" description="This creates a request, not an execution. The assigned approver is determined by the profile.">{task.feedback}<Form busy={task.busy} onSubmit={() => void task.run(submit)} label="Submit request">
- <Select label="Approval profile" value={profile} onChange={setProfile}><option value="">Select a configured profile</option>{profiles.map(p => <option key={p.id} value={p.id}>{p.name} · {p.action_kind}</option>)}</Select>
- <TextField label="Request title" required maxLength={250} value={title} onChange={e=>setTitle(e.target.value)}/><TextField label="Target" required maxLength={500} value={target} onChange={e=>setTarget(e.target.value)}/><TextField label="External request ID" required maxLength={200} value={external} onChange={e=>setExternal(e.target.value)}/><TextArea label="Action parameters (JSON object; no credentials)" value={parameters} onChange={setParameters} required/><TextArea label="Reason" value={reason} onChange={setReason}/></Form></Card>;
+ return <Card title="Create an approval request" description="This creates a request, not an execution. The assigned approver is determined by the profile.">
+  {task.feedback}{predecessor&&<p>Replacement for cancelled request <code>{predecessor.id}</code>. A new explicit approval is required.</p>}
+  <Form busy={task.busy} onSubmit={()=>void task.run(submit)} label="Submit request">
+   <Select label="Approval profile" value={profile} onChange={setProfile}><option value="">Select a configured profile</option>{profiles.map(p=><option key={p.id} value={p.id}>{p.name} · {p.action_kind}</option>)}</Select>
+   {profiles.find(p=>p.id===profile)?.tenant&&<p>Tenant scope: {profiles.find(p=>p.id===profile)?.tenant}</p>}
+   <TextField label="Request title" required maxLength={250} value={title} onChange={e=>setTitle(e.target.value)}/>
+   <TextField label="Target" required maxLength={500} value={target} onChange={e=>setTarget(e.target.value)}/>
+   <TextField label="External request ID" required maxLength={200} value={external} onChange={e=>setExternal(e.target.value)}/>
+   <TextArea label="Action parameters (JSON object; no credentials)" value={parameters} onChange={setParameters} required/>
+   <TextArea label="Reason" value={reason} onChange={setReason}/>
+  </Form>
+ </Card>;
 }
 export function RequestDetail({ id, user, navigate }: { id: string; user: User; navigate: Navigate }) {
  const [row, setRow] = useState<RequestRow | null>(null); const [reason, setReason] = useState(''); const [choice, setChoice] = useState<Outcome | 'CANCELLED' | ''>(''); const task = useTask();
@@ -40,7 +71,7 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  const canCancel = row && !row.execution_id && !['CANCELLED','DENIED','EXPIRED'].includes(row.state) && (row.requester_id === user.id || user.role === 'admin');
  return <div className="grant-stack">{task.feedback}<div className="grant-actions"><Button variant="secondary" onClick={()=>navigate('/requests')}>Back to requests</Button><Button variant="secondary" disabled={task.busy} onClick={()=>void task.run(load)}>Refresh</Button></div>{row && <>
  <Card title={row.title} description={row.reason || 'No additional reason supplied.'}><div className="grant-statuses"><div>Decision<br/><State value={row.state}/></div><div>Delivery<br/><State value={row.delivery_state}/></div><div>Execution<br/><State value={row.execution_state}/></div></div><dl className="grant-facts"><dt>External ID</dt><dd>{row.external_id}</dd><dt>Approval deadline</dt><dd>{when(row.deadline)}</dd><dt>Execution validity</dt><dd>{when(row.grant_until)}</dd><dt>Decision by / at</dt><dd>{row.decision_actor ?? 'Not decided'} / {when(row.decision_at)}</dd><dt>Revision</dt><dd>{row.revision}</dd></dl></Card>
- <Card title="Exact action to be approved"><dl className="grant-facts"><dt>Operation</dt><dd>{row.action.kind}</dd><dt>Target</dt><dd>{row.action.target}</dd><dt>Action fingerprint</dt><dd className="grant-mono">{row.action_hash}</dd></dl><pre>{JSON.stringify(row.action.parameters,null,2)}</pre><details><summary>Original source reference</summary><pre>{JSON.stringify(row.source,null,2)}</pre></details><p>Action content cannot be edited. Cancel this request and submit a new linked request when the action changes.</p></Card>
+ <Card title="Exact action to be approved">{row.predecessor_id&&<p>Replaces <Button variant="ghost" onClick={()=>navigate('/requests/'+row.predecessor_id)}>{row.predecessor_id}</Button></p>}<dl className="grant-facts"><dt>Operation</dt><dd>{row.action.kind}</dd><dt>Target</dt><dd>{row.action.target}</dd><dt>Action fingerprint</dt><dd className="grant-mono">{row.action_hash}</dd></dl><pre>{JSON.stringify(row.action.parameters,null,2)}</pre><details><summary>Original source reference</summary><pre>{JSON.stringify(row.source,null,2)}</pre></details><p>Action content cannot be edited. Cancel this request and submit a new linked request when the action changes.</p>{row.state==='CANCELLED'&&(user.role==='admin'||row.requester_id===user.id)&&<Button variant="secondary" onClick={()=>navigate('/requests/'+row.id+'/replace')}>Create replacement request</Button>}</Card>
  {(canDecide || canCancel) && <Card title="Explicit decision"><TextArea label="Decision or cancellation reason" value={reason} onChange={setReason}/><div className="grant-actions">{canDecide && (['APPROVED','HELD','DENIED'] as Outcome[]).map(c => <Button key={c} variant={c==='DENIED'?'danger':'secondary'} disabled={task.busy} onClick={()=>setChoice(c)}>{c==='APPROVED'?'Approve':c==='HELD'?'Hold':'Deny'}</Button>)}{canCancel && <Button variant="danger" disabled={task.busy} onClick={()=>setChoice('CANCELLED')}>Cancel request</Button>}</div>{choice && <Alert tone="warning" title={'Confirm: ' + choice}><p>You are deciding revision {row.revision} for {row.action.target}. Approval does not itself execute the action.</p><Button disabled={task.busy} onClick={()=>void task.run(decide)}>Confirm {choice.toLowerCase()}</Button><Button variant="ghost" disabled={task.busy} onClick={()=>setChoice('')}>Go back</Button></Alert>}</Card>}
  {row.execution_result && <Card title="Reported execution result"><pre>{JSON.stringify(row.execution_result,null,2)}</pre><p>Reported by the connected system; not independently verified by Grant.</p></Card>}
  <Card title="Delivery history" description="HTTP acceptance is not execution success. Resend repeats only the notification.">{row.deliveries?.map(d=><div className="grant-delivery" key={d.id}><div><strong>{d.kind}</strong> · <State value={d.state}/><small>{d.attempts} attempts {d.last_error ? '· '+d.last_error : ''}</small></div>{user.role==='admin' && ['FAILED','PENDING'].includes(d.state) && <Button variant="secondary" disabled={task.busy} onClick={()=>void task.run(async()=>{await api('/deliveries/'+d.id+'/resend','POST');await load();})}>Resend {d.kind}</Button>}</div>)}</Card>

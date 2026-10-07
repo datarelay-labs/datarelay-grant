@@ -1,157 +1,81 @@
-<p align="center">
-  <img src="assets/datarelay-grant-icon.svg" width="88" height="88" alt="DataRelay Grant icon">
-</p>
+<p align="center"><img src="assets/datarelay-grant-icon.svg" width="88" height="88" alt="DataRelay Grant"></p>
 
-<h1 align="center">DataRelay Grant</h1>
+# DataRelay Grant
 
-<p align="center">
-  <strong>Human Approval Before Automation Executes.</strong>
-</p>
+**Request. Approve. Execute.**
 
-<p align="center">
-  Put an explicit human decision between a requested action and its automated execution.
-</p>
+A small human-approval layer between existing workflows and their execution.
+DataRelay products and connected systems retain their execution responsibilities.
+Grant stores the exact requested action, authenticates the assigned person's
+explicit decision, delivers correlated outcomes and records reported execution results.
 
-<p align="center">
-  <a href="https://github.com/datarelay-labs/datarelay-grant-docs">Documentation Source</a> ·
-  <a href="https://patents.google.com/patent/US12056667B1/en">US Patent</a> ·
-  <a href="https://patents.google.com/patent/KR102567118B1/ko">KR Patent</a>
-</p>
+## Status
 
-<p align="center">
-  <img src="https://img.shields.io/badge/status-Coming%20Soon-7C3AED?style=flat-square" alt="Coming Soon">
-  <img src="https://img.shields.io/badge/product-Approval%20Layer-2563EB?style=flat-square" alt="Approval Layer">
-  <img src="https://img.shields.io/badge/US%20Patent-12%2C056%2C667%20B1-16A34A?style=flat-square" alt="US Patent 12,056,667 B1">
-  <img src="https://img.shields.io/badge/KR%20Patent-10--2567118%20B1-16A34A?style=flat-square" alt="KR Patent 10-2567118 B1">
-</p>
+**R1 development candidate — not a published or production-qualified release.**
 
----
+The repository now contains an authenticated API, durable approval/outbox store,
+Foundation-backed web UI and operator/integration contracts. Read
+[the status and evidence boundary](docs/STATUS.md) before treating a capability as
+qualified. Fixture tests do not prove a real DataRelay or Stellar Cyber integration.
+Production deployment, credentials and immutable release publication need their own
+approved operational procedure.
 
-## Approve first. Execute second.
+## Bounded R1 scope
 
-DataRelay Grant is an upcoming approval-driven automation and execution-control product from DataRelay Labs.
+| Area | Candidate implementation |
+| --- | --- |
+| Common product UX | Exact Product Foundation SDK, shell, login/MFA/session, accounts, health and audit adapters |
+| Human approval | Fixed approver, approve/hold/deny, expiry/reminders/cancel, immutable action and linked replacement |
+| Integration | Scoped input API, reliable outcome webhook, execution commitment and reported result API |
+| Transport | Registered destinations, verified HTTPS, optional HMAC, stable event IDs, bounded retry and resend |
+| Recovery | Persistent SQLite state/outbox, new-path backup/restore, paused reconciliation, no replay of business actions |
+| Management | Profiles, integrations, connection/mail tests, scoped credential metadata and revocation |
 
-It is being designed as a reusable **human-approval layer between a requested action and its execution**. A user or another system requests an action, the appropriate human makes an explicit decision, and the connected automation proceeds only when the decision permits it.
+Approval, notification acceptance and execution success are different states.
+A bare approval webhook cannot enforce an external system that does not check it.
+The configured executor must validate/consume the current action-bound approval and
+preserve its own authorization and durable operation ledger.
 
-> **Request → Human Approval → Controlled Execution**
+No Runner, arbitrary remote execution, generic workflow engine, multi-tenant SaaS,
+AI-inferred approval or competing identity platform is introduced by R1.
 
-The initial product direction is based on the approval-management invention represented by **US 12,056,667 B1** and **KR 10-2567118 B1**.
+## Development
 
-## What it is designed to provide
-
-| Capability | DataRelay Grant direction |
-|---|---|
-| **Approval cases** | Turn user or external-system requests into structured approval cases |
-| **Human decision** | Capture explicit approve, pending, or deny outcomes |
-| **Email approval** | Deliver lightweight approval interactions through email |
-| **Pending workflow** | Keep pending as a real state and issue configured reminders |
-| **Templates** | Reuse approval-case, approver, and workflow definitions |
-| **Automation playbooks** | Associate approved requests with defined automated actions |
-| **Composable operations** | Build workflows from reusable modules or unit operations |
-| **External integration** | Exchange approval requests and results with other systems through APIs |
-| **Execution gating** | Keep authorization separate from execution so protected actions do not run before approval |
-
-These are **patent-backed product foundations and design directions**, not a claim that every capability is already implemented.
-
-## Architecture direction
-
-```mermaid
-flowchart LR
-    R["Requester / External System"] --> G["DataRelay Grant<br/>Approval Case"]
-
-    G --> A["Human Approver"]
-    A -->|Approve| E["Controlled Execution"]
-    A -->|Pending| P["Reminder / Pending State"]
-    P --> A
-    A -->|Deny| N["Notify Requester"]
-
-    E --> L["DataRelay Link"]
-    E --> C["DataRelay Control"]
-    E --> X["External System / Automation"]
+```sh
+bash scripts/checks.sh setup
+bash scripts/checks.sh static
+bash scripts/checks.sh api
+bash scripts/checks.sh web
 ```
 
-DataRelay Grant is intended to sit **between intent and execution**. It does not replace the product or system that ultimately performs the approved action.
-
-## Patent foundation
-
-| Jurisdiction | Patent | Title | Priority | Grant / publication |
-|---|---|---|---|---|
-| United States | [US 12,056,667 B1](https://patents.google.com/patent/US12056667B1/en) | System for managing approval request using email and the operating method thereof | 2023-03-13 | 2024-08-06 |
-| Republic of Korea | [KR 10-2567118 B1](https://patents.google.com/patent/KR102567118B1/ko) | 전자메일을 사용하여 간편한 승인요청을 관리하는 시스템 및 그 동작방법 | 2023-03-13 | 2023-08-16 |
-
-Inventor: **Young Oak Lee / 이영옥**
-
-The two patents belong to the same underlying invention lineage and share the same priority foundation. Their issued claim sets are not word-for-word identical, so this repository treats them as the same **product technology foundation** rather than claiming identical legal scope.
-
-## Product role
-
-DataRelay Grant is planned as a common approval layer that can complement:
-
-| System | Planned relationship |
-|---|---|
-| **DataRelay Link** | Add human authorization before selected connectivity or access actions |
-| **DataRelay Control** | Add approval gates before selected governed data-operation changes or actions |
-| **External systems** | Accept approval requests and return decisions through defined integration contracts |
-
-DataRelay Link and DataRelay Control remain separate products with their own responsibilities. DataRelay Grant is intended to provide the reusable approval decision layer.
-
-## Current status
-
-Current project status: **Coming Soon / pre-release product definition**
-
-This repository currently contains the product foundation and Engineering System metadata only.
-
-Not yet published:
-
-- production implementation
-- public API contract
-- authentication and authorization model
-- deployment architecture
-- operator UI
-- release artifacts
-- GA release scope
-
-Planned behavior must not be treated as implemented behavior until code, contracts, tests, and release evidence exist.
-
-## Product boundaries
-
-DataRelay Grant is intentionally **not**:
-
-- a replacement for DataRelay Link
-- a replacement for DataRelay Control
-- an IAM or identity-provider replacement
-- a ticketing system
-- a generic workflow engine
-- a SIEM or SOAR platform
-- an automatic authorization system that infers human approval from ambiguous text
-
-Its product boundary is the **human approval and execution-control layer**.
-
-## Engineering
-
-This repository follows the canonical [Data Relay Labs Engineering System](https://github.com/datarelay-labs/engineering-system).
-
-The current repository baseline identifies Engineering System **1.7.0** and keeps patent-described concepts, accepted product requirements, implemented behavior, and roadmap behavior explicitly separated.
+Read [Operations](docs/OPERATIONS.md) for initialization, separate local accounts,
+SMTP/callback configuration, loopback service operation, recovery and candidate build.
+Read the complete [user scenarios](docs/USER_SCENARIOS.md) before browser testing.
+There are no default credentials. Keep private installation state outside Git.
 
 ## Documentation
 
-| Topic | Link |
-|---|---|
-| Documentation source | [datarelay-grant-docs](https://github.com/datarelay-labs/datarelay-grant-docs) |
-| US patent | [US 12,056,667 B1](https://patents.google.com/patent/US12056667B1/en) |
-| Korean patent | [KR 10-2567118 B1](https://patents.google.com/patent/KR102567118B1/ko) |
-| Engineering System | [datarelay-labs/engineering-system](https://github.com/datarelay-labs/engineering-system) |
+| Document | Purpose |
+| --- | --- |
+| [ROADMAP.md](ROADMAP.md) | Accepted solo-developer R1 scope, milestones and deferred work |
+| [Architecture](docs/ARCHITECTURE.md) | State, security, transport and Foundation boundaries |
+| [Integration](docs/INTEGRATION.md) | API, webhook, execution contract and Stellar setup prerequisites |
+| [Operations](docs/OPERATIONS.md) | Build, install, diagnostics, recovery and upgrade/rollback |
+| [User scenarios](docs/USER_SCENARIOS.md) | Actual browser and external acceptance criteria |
+| [Status](docs/STATUS.md) | Verified scope and still-missing external evidence |
 
-Patent references are provided as product-background information. The official issued patent records and claims control the legal scope of the patents.
+## Patent foundation and engineering
 
----
+The product's technology foundation includes **US 12,056,667 B1** and
+**KR 10-2567118 B1**, concerning email-based approval-request management.
+The patents are a foundation, not a mandatory product feature checklist or an
+assertion that every described embodiment is implemented. Issued records and claims,
+not implementation documentation, determine legal scope.
 
-<p align="center">
-  <strong>Request. Approve. Execute.</strong>
-</p>
+- [US patent](https://patents.google.com/patent/US12056667B1/en)
+- [KR patent](https://patents.google.com/patent/KR102567118B1/ko)
+- [Engineering System](https://github.com/datarelay-labs/engineering-system)
+- [Product Foundation](https://github.com/datarelay-labs/datarelay-product-foundation)
 
-<p align="center">
-  <a href="https://github.com/datarelay-labs/datarelay-grant-docs">Documentation</a> ·
-  <a href="https://patents.google.com/patent/US12056667B1/en">US Patent</a> ·
-  <a href="https://patents.google.com/patent/KR102567118B1/ko">KR Patent</a>
-</p>
+Repository artifacts use English. Grant owns its API, persistence and authorization;
+shared Foundation UI is consumed through the public SDK and typed product adapters.

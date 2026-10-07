@@ -21,6 +21,7 @@ export function App(){
  let page;
  if(path==='/requests'||path==='/approvals')page=<RequestList key={path} user={user} mine={path==='/approvals'} navigate={navigate}/>;
  else if(path==='/requests/new')page=<NewRequest navigate={navigate}/>;
+ else if(/^\/requests\/[a-f0-9-]{36}\/replace$/.test(path))page=<NewRequest key={path} navigate={navigate} predecessorId={path.split('/')[2]!}/>;
  else if(/^\/requests\/[a-f0-9-]{36}$/.test(path))page=<RequestDetail key={path} id={path.split('/')[2]!} user={user} navigate={navigate}/>;
  else if(path==='/security')page=<Security user={user} onSignedOut={signedOut} onRefresh={refresh}/>;
  else if(user.role==='admin'&&path==='/integrations')page=<Integrations/>;

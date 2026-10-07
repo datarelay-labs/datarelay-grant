@@ -1,0 +1,17 @@
+{
+  "external_id": "stable-operation-id-not-a-new-random-id-on-retry",
+  "profile_id": "configured-profile-uuid",
+  "title": "Approve the requested Stellar Cyber response",
+  "action": {
+    "kind": "configured.action.kind",
+    "target": "exact-existing-target",
+    "parameters": {}
+  },
+  "source": {
+    "product": "stellar",
+    "tenant_id": "configured-tenant-id",
+    "case_id": "actual-case-id",
+    "alert_id": "actual-alert-id"
+  },
+  "reason": "Explain purpose and impact"
+}

@@ -1,5 +1,5 @@
 version: 1
-setup_command: "uv sync --frozen"
+setup_command: "bash scripts/checks.sh setup"
 paths:
   "grant/**":
     domains: [approval, api, automation, integrations]
@@ -14,7 +14,7 @@ scenarios:
     domains: [approval, api, automation, integrations]
     triggers: [pr, preflight, release]
     platforms: [linux]
-    command: "uv run --frozen pytest"
+    command: "bash scripts/checks.sh api"
     invariants: [explicit human decision, immutable action, scoped authorization, durable state]
     release_gate: true
   - id: GRANT-WEB-001
@@ -23,7 +23,7 @@ scenarios:
     domains: [approval, api]
     triggers: [pr, preflight, release]
     platforms: [linux]
-    command: "npm --prefix web run check"
+    command: "bash scripts/checks.sh web"
     invariants: [Foundation public SDK boundary, real product adapters]
     release_gate: true
   - id: GRANT-STATIC-001
@@ -32,6 +32,15 @@ scenarios:
     domains: [documentation, approval, api]
     triggers: [pr, preflight, release]
     platforms: [linux]
-    command: "uv run --frozen ruff check grant tests && git diff --check"
+    command: "bash scripts/checks.sh static"
     invariants: [clean deterministic source]
+    release_gate: true
+  - id: GRANT-BROWSER-001
+    name: Actual browser two-user journeys and shared administration
+    level: e2e
+    domains: [approval, api, integrations]
+    triggers: [preflight, release]
+    platforms: [linux]
+    command: "bash scripts/checks.sh browser"
+    invariants: [real authenticated user journeys, explicit confirmation, no fixture proof of external integration]
     release_gate: true

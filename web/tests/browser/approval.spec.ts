@@ -59,3 +59,66 @@ test('Foundation administration and mobile approval page are real adapters',asyn
  await page.screenshot({path:'../.e2e/screenshots/mobile-security.png',fullPage:true});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();await context.close();
 });
+
+
+test('requester cancels and creates a newly approved replacement through the UI',async({browser,request})=>{
+ const f=fixture();const context=await browser.newContext();const page=await context.newPage();
+ await login(page,'requester');await page.getByRole('button',{name:'New request',exact:true}).click();
+ await page.getByLabel('Approval profile',{exact:true}).selectOption(f.profile_id);
+ await page.getByLabel('Request title',{exact:true}).fill('Replace cancelled operation');
+ await page.getByLabel('Target',{exact:true}).fill('old-test-target');
+ await page.getByRole('button',{name:'Submit request',exact:true}).click();
+ await expect(page.getByText('Exact action to be approved',{exact:true})).toBeVisible();
+ const oldId=page.url().split('/').pop()!;
+ await page.getByRole('button',{name:'Cancel request',exact:true}).click();
+ await page.getByRole('button',{name:'Confirm cancelled',exact:true}).click();
+ await page.getByRole('button',{name:'Create replacement request',exact:true}).click();
+ await expect(page.getByLabel('Target',{exact:true})).toHaveValue('old-test-target');
+ await page.getByLabel('Target',{exact:true}).fill('new-test-target');
+ await page.getByRole('button',{name:'Submit request',exact:true}).click();
+ await expect(page.getByText('Exact action to be approved',{exact:true})).toBeVisible();
+ const newId=page.url().split('/').pop()!;expect(newId).not.toBe(oldId);
+ const headers={authorization:'Bearer '+f.token};
+ const row=await(await request.get('/api/v1/requests/'+newId,{headers})).json();
+ expect(row.predecessor_id).toBe(oldId);expect(row.state).toBe('AWAITING');expect(row.action.target).toBe('new-test-target');
+ expect((await request.post('/api/v1/requests/'+newId+'/consume',{headers,data:{execution_id:crypto.randomUUID(),action_hash:row.action_hash}})).status()).toBe(409);
+ await expect(page.getByRole('button',{name:oldId,exact:true})).toBeVisible();
+ await context.close();
+});
+
+test('administrator configures accounts/profile and explicitly revokes a scoped credential',async({browser,request})=>{
+ const f=fixture();const context=await browser.newContext();const page=await context.newPage();
+ await login(page,'admin');await page.goto('/system');
+ await page.getByLabel('New username',{exact:true}).fill('browser-member');
+ await page.getByLabel('New user email',{exact:true}).fill('browser-member@example.invalid');
+ await page.getByLabel('Initial password',{exact:true}).fill(f.password);
+ await page.getByRole('button',{name:'Create account',exact:true}).click();
+ await expect(page.getByText('Account created. Share credentials through an approved secure channel.')).toBeVisible();
+ await page.goto('/integrations');
+ await page.getByLabel('Integration name',{exact:true}).fill('Configured through browser');
+ await page.getByLabel('Registered callback URL',{exact:true}).fill(f.receiver);
+ await page.getByRole('button',{name:'Create integration',exact:true}).click();
+ await expect(page.getByText('Integration created. Assign a profile and use scoped credentials.')).toBeVisible();
+ await page.getByLabel('Token integration',{exact:true}).selectOption({label:'Configured through browser'});
+ const minted=page.waitForResponse(r=>r.url().endsWith('/api/v1/integrations/tokens')&&r.request().method()==='POST');
+ await page.getByRole('button',{name:'Create scoped token',exact:true}).click();
+ const credential=await(await minted).json();
+ await page.getByRole('button',{name:'Hide credential',exact:true}).click();
+ await page.getByLabel('Inspect credential integration',{exact:true}).selectOption({label:'Configured through browser'});
+ await page.getByRole('button',{name:'Revoke credential',exact:true}).click();
+ await page.getByRole('button',{name:'Keep credential',exact:true}).click();
+ expect((await request.get('/api/v1/requests',{headers:{authorization:'Bearer '+credential.token}})).status()).toBe(200);
+ await page.getByRole('button',{name:'Revoke credential',exact:true}).click();
+ await page.getByRole('button',{name:'Confirm revoke',exact:true}).click();
+ await expect(page.getByText('Credential revoked. Other credentials remain unchanged.')).toBeVisible();
+ expect((await request.get('/api/v1/requests',{headers:{authorization:'Bearer '+credential.token}})).status()).toBe(401);
+ await page.goto('/profiles');
+ await page.getByLabel('Profile name',{exact:true}).fill('Configured browser approval');
+ await page.getByLabel('Profile integration',{exact:true}).selectOption({label:'Configured through browser'});
+ await page.getByLabel('Assigned approver',{exact:true}).selectOption({label:'approver'});
+ await page.getByLabel('Allowed action kind',{exact:true}).fill('test.configured');
+ await page.getByRole('button',{name:'Create profile',exact:true}).click();
+ await expect(page.getByText('Profile created. Existing request snapshots are unchanged.')).toBeVisible();
+ await page.screenshot({path:'../.e2e/screenshots/configured-profile.png',fullPage:true});
+ await context.close();
+});

@@ -34,3 +34,12 @@ after the backup). Preserve its prior human decision for audit, and emit a new
 cancellation event. Mark nonfinal committed executions UNKNOWN; never rerun them.
 Then unpause delivery. New work requires a new external request ID and approval.
 The operator still reconciles external effects and credential changes since backup.
+
+Credential lifecycle: administrators can list token identifiers/scopes without
+raw credentials, and idempotently revoke a token. Domain mutation transactions
+revalidate enabled principals/sessions/tokens and current integration scope before
+recording decisions, cancellations, execution commitments or results. Revocation
+cannot undo a commitment that already won the transaction race.
+Signed event verification rejects duplicate JSON keys, ambiguous header casing,
+missing event identifiers and malformed/non-ASCII signature material. Consumers
+still deduplicate event IDs and revalidate current request state before execution.

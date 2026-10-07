@@ -20,12 +20,13 @@ platforms:
 - web
 operations:
   production_oriented: false
-  runbook_required: false
+  runbook_required: true
   incident_response_required: false
-  persistent_state: false
-  runbook_paths: []
-  health_command: ''
-  backup_command: ''
-  restore_test_command: ''
+  persistent_state: true
+  runbook_paths:
+  - docs/OPERATIONS.md
+  health_command: 'uv run --frozen grant check'
+  backup_command: 'uv run --frozen grant backup --output <new-private-backup-path>'
+  restore_test_command: 'uv run --frozen pytest tests/test_delivery_recovery.py'
   upgrade_command: ''
   rollback_command: ''

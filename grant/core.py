@@ -9,7 +9,7 @@ import time
 from typing import Any
 from urllib.parse import urlsplit
 
-from .auth import Principal
+from .auth import Principal, require_current_authority
 from .config import Settings
 from .db import Database, audit, json_text, uid
 from .errors import GrantError
@@ -153,11 +153,13 @@ class Core:
         with self.db.transaction(write=False) as conn:
             if actor.kind == "integration":
                 rows = conn.execute(
-                    "SELECT * FROM profiles WHERE integration_id=? AND enabled=1",
+                    "SELECT p.*,i.kind AS integration_kind,i.tenant FROM profiles p JOIN integrations i ON i.id=p.integration_id WHERE p.integration_id=? AND p.enabled=1 AND i.enabled=1",
                     (actor.integration_id,),
                 ).fetchall()
             else:
-                rows = conn.execute("SELECT * FROM profiles WHERE enabled=1").fetchall()
+                rows = conn.execute(
+                    "SELECT p.*,i.kind AS integration_kind,i.tenant FROM profiles p JOIN integrations i ON i.id=p.integration_id WHERE p.enabled=1 AND i.enabled=1"
+                ).fetchall()
         return [dict(r) for r in rows]
 
     def _visible(self, row: sqlite3.Row, actor: Principal) -> None:
@@ -264,6 +266,7 @@ class Core:
         action_hash, intake_hash = fingerprint(action), fingerprint(data)
         now, ident = time.time(), uid()
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor, "request:create")
             profile = conn.execute(
                 "SELECT p.*,i.enabled AS integration_enabled,i.tenant,i.kind FROM profiles p JOIN integrations i ON i.id=p.integration_id WHERE p.id=?",
                 (body.profile_id,),
@@ -360,6 +363,7 @@ class Core:
         self.get(actor, ident)  # Commit any observed expiry before reporting a conflict.
         error = None
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
             row = self._load(conn, ident, actor)
             now = time.time()
             if actor.id != row["approver_id"] or actor.id == row["requester_id"]:
@@ -395,6 +399,7 @@ class Core:
 
     def cancel(self, actor: Principal, ident: str, body: Cancel) -> dict:
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor, "request:create")
             row = self._load(conn, ident, actor)
             allowed = (actor.kind == "integration" and "request:create" in actor.scopes) or (
                 actor.kind == "human" and (actor.role == "admin" or actor.id == row["requester_id"])
@@ -419,6 +424,7 @@ class Core:
         self.get(actor, ident)
         error = None
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor, "grant:consume")
             row, now = self._load(conn, ident, actor), time.time()
             if conn.execute("SELECT value FROM runtime WHERE key='paused'").fetchone()[0] == "1":
                 raise GrantError("RECOVERY_RECONCILIATION_REQUIRED", 503)
@@ -465,6 +471,7 @@ class Core:
         actor.require_scope("result:write")
         encoded = json_text(body.model_dump())
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor, "result:write")
             row = self._load(conn, ident, actor)
             if row["execution_id"] != body.execution_id or row["action_hash"] != body.action_hash:
                 raise GrantError("EXECUTION_BINDING_MISMATCH")

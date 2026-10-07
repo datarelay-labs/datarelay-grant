@@ -46,7 +46,6 @@ def main():
             "public_url": args.origin,
             "dev_mode": args.dev,
             "callback_urls": [],
-            "web_root": str(Path("web/dist").resolve()),
         }
         Settings(**{**data, "database": Path(data["database"])})
         with config.open("x") as output:

@@ -28,7 +28,7 @@ class Settings:
     session_seconds: int = 28800
     max_body_bytes: int = 65536
     max_delivery_attempts: int = 5
-    web_root: Path = Path("web/dist")
+    web_root: Path = Path(__file__).resolve().parents[1] / "web/dist"
 
     def __post_init__(self) -> None:
         Fernet(self.encryption_key.encode())
@@ -49,6 +49,16 @@ class Settings:
             and parsed.hostname in ("localhost", "127.0.0.1", "::1", "testserver")
         ):
             raise ValueError("HTTPS required outside explicit loopback development")
+        try:
+            port = parsed.port
+        except ValueError as exc:
+            raise ValueError("public_url has an invalid port") from exc
+        if port == 0:
+            raise ValueError("public_url has an invalid port")
+        if not 1 <= self.smtp_port <= 65535:
+            raise ValueError("smtp_port outside supported bounds")
+        if any(c in self.smtp_host + self.smtp_from for c in "\r\n\x00"):
+            raise ValueError("Invalid SMTP header or hostname")
         if not 1 <= self.max_delivery_attempts <= 20:
             raise ValueError("max_delivery_attempts must be between 1 and 20")
         if not 1024 <= self.max_body_bytes <= 1048576:
@@ -83,7 +93,11 @@ class Settings:
             raise ValueError("configuration with secrets must be owner-readable only (0600)")
         data = json.loads(path.read_text())
         data["database"] = Path(data["database"]).expanduser().resolve()
-        data["web_root"] = Path(data.get("web_root", "web/dist")).expanduser().resolve()
+        data["web_root"] = (
+            Path(data.get("web_root", Path(__file__).resolve().parents[1] / "web/dist"))
+            .expanduser()
+            .resolve()
+        )
         data["callback_urls"] = tuple(data.get("callback_urls", []))
         return cls(**data)
 

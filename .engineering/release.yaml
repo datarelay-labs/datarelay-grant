@@ -1,18 +1,18 @@
 version: 1
 exact_head_required: true
-artifact_hash_required: false
+artifact_hash_required: true
 provenance_required: false
 sbom_required: false
-setup_command: ''
-preflight_required: false
-preflight_command: ''
-qualification_command: ''
-artifact_hash_command: ''
+setup_command: 'bash scripts/checks.sh setup'
+preflight_required: true
+preflight_command: 'bash scripts/checks.sh all'
+qualification_command: 'bash scripts/checks.sh all'
+artifact_hash_command: 'python3 tools/build_candidate.py'
 provenance_command: ''
 sbom_command: ''
-operational_e2e_required: false
-operational_e2e_command: ''
-full_e2e_passes: 0
+operational_e2e_required: true
+operational_e2e_command: 'bash scripts/checks.sh browser'
+full_e2e_passes: 2
 public_smoke_required: false
 public_smoke_command: ''
 blockers:

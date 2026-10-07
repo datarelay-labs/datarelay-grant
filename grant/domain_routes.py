@@ -58,6 +58,14 @@ def register_domain(app, actor, human, reader):
     def add_token(body: Token, request: Request):
         return auth.issue_token(actor(request), body.integration_id, body.scopes)
 
+    @app.get("/api/v1/integrations/{ident}/tokens")
+    def list_tokens(ident: str, request: Request):
+        return auth.list_tokens(actor(request), ident)
+
+    @app.post("/api/v1/integrations/tokens/{ident}/revoke")
+    def revoke_token(ident: str, request: Request):
+        return auth.revoke_token(actor(request), ident)
+
     @app.post("/api/v1/deliveries/{ident}/resend")
     def resend(ident: str, request: Request):
         return worker.resend(actor(request), ident)

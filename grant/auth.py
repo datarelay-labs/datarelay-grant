@@ -54,6 +54,33 @@ class Principal:
             raise GrantError("SCOPE_REQUIRED", 403)
 
 
+def require_current_authority(conn: sqlite3.Connection, actor: Principal, scope: str = "") -> None:
+    """Revalidate within the domain transaction, closing revocation/commit races."""
+    if actor.kind == "integration":
+        row = conn.execute(
+            "SELECT t.enabled,t.scopes,i.enabled AS integration_enabled FROM api_tokens t JOIN integrations i ON i.id=t.integration_id WHERE t.id=? AND t.integration_id=?",
+            (actor.id, actor.integration_id),
+        ).fetchone()
+        if not row or not row["enabled"] or not row["integration_enabled"]:
+            raise GrantError("AUTHENTICATION_REQUIRED", 401)
+        if scope and scope not in json.loads(row["scopes"]):
+            raise GrantError("SCOPE_REQUIRED", 403)
+    elif actor.kind == "human":
+        row = conn.execute("SELECT enabled FROM users WHERE id=?", (actor.id,)).fetchone()
+        if not row or not row["enabled"]:
+            raise GrantError("AUTHENTICATION_REQUIRED", 401)
+        if (
+            actor.session_id
+            and not conn.execute(
+                "SELECT id FROM sessions WHERE id=? AND user_id=? AND expires_at>? AND mfa_pending=0",
+                (actor.session_id, actor.id, time.time()),
+            ).fetchone()
+        ):
+            raise GrantError("AUTHENTICATION_REQUIRED", 401)
+    else:
+        raise GrantError("AUTHENTICATION_REQUIRED", 401)
+
+
 class Auth:
     def __init__(self, db: Database, settings: Settings):
         self.db = db
@@ -195,6 +222,33 @@ class Auth:
                 {"token_id": token_id, "integration_id": integration_id, "scopes": scopes},
             )
         return {"id": token_id, "token": raw, "scopes": scopes}
+
+    def list_tokens(self, actor: Principal, integration_id: str) -> list[dict]:
+        actor.require_admin()
+        with self.db.transaction(write=False) as conn:
+            if not conn.execute(
+                "SELECT id FROM integrations WHERE id=?", (integration_id,)
+            ).fetchone():
+                raise GrantError("INTEGRATION_NOT_FOUND", 404)
+            rows = conn.execute(
+                "SELECT id,scopes,enabled,created_at FROM api_tokens WHERE integration_id=? ORDER BY created_at DESC",
+                (integration_id,),
+            ).fetchall()
+        return [
+            {**dict(row), "scopes": json.loads(row["scopes"]), "enabled": bool(row["enabled"])}
+            for row in rows
+        ]
+
+    def revoke_token(self, actor: Principal, ident: str) -> dict:
+        actor.require_admin()
+        with self.db.transaction() as conn:
+            row = conn.execute("SELECT enabled FROM api_tokens WHERE id=?", (ident,)).fetchone()
+            if not row:
+                raise GrantError("TOKEN_NOT_FOUND", 404)
+            if row["enabled"]:
+                conn.execute("UPDATE api_tokens SET enabled=0 WHERE id=?", (ident,))
+                audit(conn, None, actor.id, "integration.token_revoked", {"token_id": ident})
+        return {"id": ident, "enabled": False}
 
     def user(self, principal: Principal) -> dict:
         with self.db.transaction(write=False) as conn:
