@@ -1390,7 +1390,7 @@ class Core:
             ).fetchone()
             if prior and prior["decision"] == body.decision:
                 return self._project(conn, row)
-            if prior:
+            if prior and prior["decision"] != "HELD":
                 raise GrantError("DECISION_ALREADY_RECORDED", 409)
             if self._expire(conn, row, now):
                 error = GrantError("REQUEST_EXPIRED")
@@ -1406,7 +1406,9 @@ class Core:
                     if not pending or pending[0] != represented:
                         raise GrantError("APPROVAL_STEP_NOT_CURRENT", 409)
                 conn.execute(
-                    "INSERT INTO request_decisions(request_id,actor_id,decision,reason,decided_at) VALUES(?,?,?,?,?)",
+                    """INSERT INTO request_decisions(request_id,actor_id,decision,reason,decided_at)
+                       VALUES(?,?,?,?,?) ON CONFLICT(request_id,actor_id) DO UPDATE SET
+                       decision=excluded.decision,reason=excluded.reason,decided_at=excluded.decided_at""",
                     (ident, represented, body.decision, body.reason, now),
                 )
                 decisions[represented] = body.decision
