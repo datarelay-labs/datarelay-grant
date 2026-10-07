@@ -97,6 +97,11 @@ RUNNING, REPORTED_SUCCEEDED, REPORTED_FAILED or UNKNOWN, with a bounded evidence
 reference. Terminal reports cannot be silently replaced. UNKNOWN requires inspecting
 the real system, not blind retry. Reported success is not independent verification.
 
+The client binds returned receipts to the submitted request/profile/action, and
+claim/result replies to request ID, execution ID and action hash. HTTP success alone
+is not permission. Ambiguous or oversized JSON is rejected. No mutation is retried
+automatically on a protocol or transport failure; reconcile instead.
+
 The bundled client only sends API requests. There is intentionally no callback that
 executes arbitrary user code and no generic Runner. Tests with a fixture consumer
 are contract evidence, not completion of R1-M3. That milestone requires one real

@@ -27,7 +27,7 @@ case "${1:-all}" in
   setup) bash scripts/checks.sh setup-api; bash scripts/checks.sh setup-web ;;
   api) uv run --frozen pytest ;;
   web) npm --prefix web test; npm --prefix web run check ;;
-  static) uv run --frozen ruff check grant tests tools/prepare_foundation.py tools/build_candidate.py; git diff --check ;;
+  static) uv run --frozen ruff check grant tests tools/prepare_foundation.py tools/build_candidate.py tools/verify_candidate.py; git diff --check ;;
   browser)
     # A pre-existing user-local runtime can be selected on minimal Linux hosts.
     if [[ -n "${GRANT_BROWSER_LIBRARY_PATH:-}" ]]; then

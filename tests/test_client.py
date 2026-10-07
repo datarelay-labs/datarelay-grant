@@ -16,7 +16,16 @@ def test_client_claim_hashes_the_consumers_actual_action_not_an_event():
 
     def handler(request):
         calls.append(request)
-        return httpx.Response(200, json={"committed": True, "replay": True})
+        return httpx.Response(
+            200,
+            json={
+                "committed": True,
+                "replay": True,
+                "request_id": "00000000-0000-0000-0000-000000000001",
+                "execution_id": "durable-operation-id",
+                "action_hash": fingerprint(action.model_dump()),
+            },
+        )
 
     with GrantClient(
         "https://grant.example.invalid", "test-only", transport=httpx.MockTransport(handler)

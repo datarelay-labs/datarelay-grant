@@ -110,6 +110,16 @@ It produces a local source+compiled-web archive with source HEAD, Foundation pin
 per-file SHA256 manifest and archive SHA256. It neither publishes nor declares GA.
 The archive intentionally excludes `.dev`, databases, caches and test credentials.
 
+Before extraction, verify against the independently recorded source HEAD and archive
+SHA256 (not merely the archive's own manifest):
+
+```sh
+python3 tools/verify_candidate.py /absolute/path/candidate.tar.gz --head <recorded-head> --sha256 <recorded-sha256>
+```
+
+This checks all file hashes and regular-file paths without extraction or execution.
+It verifies integrity, not authenticity, release approval or external acceptance.
+
 Extract into a NEW version directory; use `uv sync --frozen` there. Compiled web
 assets are included. Keep private config/database outside both code directories.
 Stop the old loopback process, take a new backup, run `check` and the candidate

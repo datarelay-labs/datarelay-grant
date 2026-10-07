@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import math
 import re
 import time
 from urllib.parse import urlsplit
@@ -16,11 +17,49 @@ from urllib.parse import urlsplit
 import httpx
 
 from .core import bounded_json, fingerprint
-from .models import Action, Intake
+from .errors import GrantError
+from .models import Action, Consume, Intake, Result
+
+MAX_RESPONSE_BYTES = 1048576
 
 
 class GrantClientError(RuntimeError):
     """Sanitized protocol error. Network ambiguity is deliberately not retried."""
+
+
+def _unique_object(pairs):
+    value = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError("Duplicate JSON key")
+        value[key] = item
+    return value
+
+
+def _reject_constant(_value):
+    raise ValueError("Non-finite JSON constant")
+
+
+def _finite_float(raw):
+    value = float(raw)
+    if not math.isfinite(value):
+        raise ValueError("Non-finite JSON number")
+    return value
+
+
+def _json_object(body: bytes, error_code: str) -> dict:
+    try:
+        value = json.loads(
+            body.decode("utf-8"),
+            object_pairs_hook=_unique_object,
+            parse_constant=_reject_constant,
+            parse_float=_finite_float,
+        )
+    except (ValueError, UnicodeError, RecursionError):
+        raise GrantClientError(error_code) from None
+    if not isinstance(value, dict):
+        raise GrantClientError(error_code)
+    return value
 
 
 class GrantClient:
@@ -62,20 +101,20 @@ class GrantClient:
 
     def _call(self, method: str, path: str, body: dict | None = None) -> dict:
         try:
-            response = self._http.request(method, "/api/v1" + path, json=body)
-        except httpx.HTTPError as exc:
+            with self._http.stream(method, "/api/v1" + path, json=body) as response:
+                if not 200 <= response.status_code < 300:
+                    raise GrantClientError("GRANT_HTTP_" + str(response.status_code))
+                chunks, size = [], 0
+                for chunk in response.iter_bytes(chunk_size=65536):
+                    size += len(chunk)
+                    if size > MAX_RESPONSE_BYTES:
+                        raise GrantClientError("RESPONSE_TOO_LARGE")
+                    chunks.append(chunk)
+        except httpx.HTTPError:
             raise GrantClientError(
                 "TRANSPORT_AMBIGUOUS: reconcile before retrying a mutation"
-            ) from exc
-        if response.status_code >= 300:
-            raise GrantClientError("GRANT_HTTP_" + str(response.status_code))
-        try:
-            value = response.json()
-        except ValueError as exc:
-            raise GrantClientError("INVALID_RESPONSE") from exc
-        if not isinstance(value, dict):
-            raise GrantClientError("INVALID_RESPONSE")
-        return value
+            ) from None
+        return _json_object(b"".join(chunks), "INVALID_RESPONSE")
 
     @staticmethod
     def _id(ident: str) -> str:
@@ -83,20 +122,53 @@ class GrantClient:
 
         return str(uuid.UUID(ident))
 
+    @staticmethod
+    def _require_record(value: dict, request_id: str) -> None:
+        if value.get("id") != request_id:
+            raise GrantClientError("RESPONSE_BINDING_MISMATCH")
+
     def create_request(self, request: Intake) -> dict:
-        return self._call("POST", "/requests", request.model_dump())
+        body = request.model_dump()
+        bounded_json(body)
+        value = self._call("POST", "/requests", body)
+        try:
+            request_id = self._id(value["id"])
+            returned_action = Action.model_validate(value["action"]).model_dump()
+            bounded_json(returned_action)
+            matches = (
+                value.get("external_id") == request.external_id
+                and value.get("profile_id") == request.profile_id
+                and value.get("action_hash") == fingerprint(body["action"])
+                and fingerprint(returned_action) == fingerprint(body["action"])
+            )
+        except (KeyError, TypeError, ValueError, AttributeError, UnicodeError, GrantError):
+            raise GrantClientError("RESPONSE_BINDING_MISMATCH") from None
+        self._require_record(value, request_id)
+        if not matches:
+            raise GrantClientError("RESPONSE_BINDING_MISMATCH")
+        return value
 
     def read(self, request_id: str) -> dict:
-        return self._call("GET", "/requests/" + self._id(request_id))
+        request_id = self._id(request_id)
+        value = self._call("GET", "/requests/" + request_id)
+        self._require_record(value, request_id)
+        return value
 
     def claim(self, request_id: str, execution_id: str, expected_action: Action) -> dict:
+        request_id = self._id(request_id)
         action = expected_action.model_dump()
         bounded_json(action)
-        return self._call(
-            "POST",
-            "/requests/" + self._id(request_id) + "/consume",
-            {"execution_id": execution_id, "action_hash": fingerprint(action)},
-        )
+        body = Consume(execution_id=execution_id, action_hash=fingerprint(action))
+        value = self._call("POST", "/requests/" + request_id + "/consume", body.model_dump())
+        if (
+            value.get("request_id") != request_id
+            or value.get("execution_id") != body.execution_id
+            or value.get("action_hash") != body.action_hash
+            or value.get("committed") is not True
+            or type(value.get("replay")) is not bool
+        ):
+            raise GrantClientError("CLAIM_BINDING_MISMATCH")
+        return value
 
     def report(
         self,
@@ -106,17 +178,24 @@ class GrantClient:
         status: str,
         evidence: str = "",
     ) -> dict:
-        from .models import Result
-
+        request_id = self._id(request_id)
+        action = expected_action.model_dump()
+        bounded_json(action)
         body = Result(
             execution_id=execution_id,
-            action_hash=fingerprint(expected_action.model_dump()),
+            action_hash=fingerprint(action),
             status=status,
             evidence=evidence,
         )
-        return self._call(
-            "POST", "/requests/" + self._id(request_id) + "/result", body.model_dump()
-        )
+        value = self._call("POST", "/requests/" + request_id + "/result", body.model_dump())
+        self._require_record(value, request_id)
+        if (
+            value.get("execution_id") != body.execution_id
+            or value.get("action_hash") != body.action_hash
+            or value.get("execution_state") != body.status
+        ):
+            raise GrantClientError("RESULT_BINDING_MISMATCH")
+        return value
 
 
 def verify_outcome(
@@ -128,10 +207,23 @@ def verify_outcome(
     max_skew_seconds: int = 300,
 ) -> dict:
     """Verify a signed event; receiver-side event-ID dedup/current-state checks still apply."""
-    if not secret or len(body) > 65536 or not 1 <= max_skew_seconds <= 3600:
+    clock = time.time() if now is None else now
+    if (
+        not isinstance(secret, str)
+        or not secret
+        or not isinstance(body, bytes)
+        or len(body) > 65536
+        or type(max_skew_seconds) is not int
+        or not 1 <= max_skew_seconds <= 3600
+        or type(clock) not in (int, float)
+        or not math.isfinite(clock)
+        or not isinstance(headers, dict)
+    ):
         raise GrantClientError("INVALID_SIGNED_EVENT")
     normalized: dict[str, str] = {}
     for key, value in headers.items():
+        if not isinstance(key, str) or not isinstance(value, str):
+            raise GrantClientError("INVALID_SIGNED_EVENT")
         lowered = key.lower()
         if lowered in normalized:
             raise GrantClientError("AMBIGUOUS_EVENT_HEADERS")
@@ -143,7 +235,7 @@ def verify_outcome(
         stamp = int(timestamp)
     except ValueError as exc:
         raise GrantClientError("INVALID_SIGNED_EVENT") from exc
-    if abs((time.time() if now is None else now) - stamp) > max_skew_seconds:
+    if abs(clock - stamp) > max_skew_seconds:
         raise GrantClientError("EVENT_OUTSIDE_TIME_WINDOW")
     signature = (
         "sha256="
@@ -154,12 +246,7 @@ def verify_outcome(
         raise GrantClientError("INVALID_SIGNED_EVENT")
     if not hmac.compare_digest(signature, supplied):
         raise GrantClientError("INVALID_SIGNED_EVENT")
-    try:
-        from .app import unique_object
-
-        event = json.loads(body, object_pairs_hook=unique_object)
-    except (ValueError, UnicodeError, RecursionError) as exc:
-        raise GrantClientError("INVALID_SIGNED_EVENT") from exc
+    event = _json_object(body, "INVALID_SIGNED_EVENT")
     if (
         not isinstance(event, dict)
         or event.get("event_type") != "grant.approval.outcome"
