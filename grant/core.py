@@ -13,7 +13,19 @@ from .auth import Principal, require_current_authority
 from .config import Settings
 from .db import Database, audit, json_text, uid
 from .errors import GrantError
-from .models import Cancel, Consume, Decision, Intake, Integration, Profile, Result
+from .mail_templates import DEFAULT_MAIL_TEMPLATE, render_mail, snapshot
+from .models import (
+    Cancel,
+    Consume,
+    Decision,
+    EmailTemplate,
+    EmailTemplateUpdate,
+    Intake,
+    Integration,
+    Profile,
+    ProfileUpdate,
+    Result,
+)
 
 
 def bounded_json(value: Any, depth: int = 0) -> None:
@@ -121,27 +133,117 @@ class Core:
         parsed = urlsplit(self.settings.unseal(sealed)["url"])
         return f"{parsed.scheme}://{parsed.netloc}"
 
+    def _validate_profile_refs(self, conn: sqlite3.Connection, body: Profile) -> None:
+        if not conn.execute(
+            "SELECT id FROM integrations WHERE id=? AND enabled=1", (body.integration_id,)
+        ).fetchone():
+            raise GrantError("INTEGRATION_NOT_FOUND", 404)
+        if not conn.execute(
+            "SELECT id FROM users WHERE id=? AND enabled=1", (body.approver_id,)
+        ).fetchone():
+            raise GrantError("APPROVER_NOT_FOUND", 404)
+        if body.email_template_id and not conn.execute(
+            "SELECT id FROM email_templates WHERE id=? AND enabled=1",
+            (body.email_template_id,),
+        ).fetchone():
+            raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
+
+    def create_email_template(self, actor: Principal, body: EmailTemplate) -> dict:
+        actor.require_admin()
+        ident, now = uid(), time.time()
+        try:
+            with self.db.transaction() as conn:
+                require_current_authority(conn, actor)
+                conn.execute(
+                    """INSERT INTO email_templates(
+                       id,name,subject_template,body_template,reminder_subject_template,
+                       reminder_body_template,enabled,created_at,updated_at
+                    ) VALUES(?,?,?,?,?,?,1,?,?)""",
+                    (
+                        ident,
+                        body.name,
+                        body.subject_template,
+                        body.body_template,
+                        body.reminder_subject_template,
+                        body.reminder_body_template,
+                        now,
+                        now,
+                    ),
+                )
+                audit(conn, None, actor.id, "email_template.created", {"template_id": ident})
+        except sqlite3.IntegrityError as exc:
+            raise GrantError("EMAIL_TEMPLATE_NAME_EXISTS", 409) from exc
+        return {"id": ident, **body.model_dump(), "enabled": True}
+
+    def email_templates(self, actor: Principal) -> list[dict]:
+        actor.require_admin()
+        with self.db.transaction(write=False) as conn:
+            rows = conn.execute(
+                """SELECT id,name,subject_template,body_template,reminder_subject_template,
+                          reminder_body_template,enabled,created_at,updated_at
+                   FROM email_templates ORDER BY name"""
+            ).fetchall()
+        return [{**dict(row), "enabled": bool(row["enabled"])} for row in rows]
+
+    def update_email_template(
+        self, actor: Principal, ident: str, body: EmailTemplateUpdate
+    ) -> dict:
+        actor.require_admin()
+        try:
+            with self.db.transaction() as conn:
+                require_current_authority(conn, actor)
+                if not conn.execute("SELECT id FROM email_templates WHERE id=?", (ident,)).fetchone():
+                    raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
+                if not body.enabled and conn.execute(
+                    "SELECT 1 FROM profiles WHERE email_template_id=? AND enabled=1 LIMIT 1",
+                    (ident,),
+                ).fetchone():
+                    raise GrantError("EMAIL_TEMPLATE_IN_USE", 409)
+                conn.execute(
+                    """UPDATE email_templates
+                       SET name=?,subject_template=?,body_template=?,reminder_subject_template=?,
+                           reminder_body_template=?,enabled=?,updated_at=?
+                       WHERE id=?""",
+                    (
+                        body.name,
+                        body.subject_template,
+                        body.body_template,
+                        body.reminder_subject_template,
+                        body.reminder_body_template,
+                        int(body.enabled),
+                        time.time(),
+                        ident,
+                    ),
+                )
+                audit(
+                    conn,
+                    None,
+                    actor.id,
+                    "email_template.updated",
+                    {"template_id": ident, "enabled": body.enabled},
+                )
+        except sqlite3.IntegrityError as exc:
+            raise GrantError("EMAIL_TEMPLATE_NAME_EXISTS", 409) from exc
+        return {"id": ident, **body.model_dump()}
+
     def create_profile(self, actor: Principal, body: Profile) -> dict:
         actor.require_admin()
         ident = uid()
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
-            if not conn.execute(
-                "SELECT id FROM integrations WHERE id=? AND enabled=1", (body.integration_id,)
-            ).fetchone():
-                raise GrantError("INTEGRATION_NOT_FOUND", 404)
-            if not conn.execute(
-                "SELECT id FROM users WHERE id=? AND enabled=1", (body.approver_id,)
-            ).fetchone():
-                raise GrantError("APPROVER_NOT_FOUND", 404)
+            self._validate_profile_refs(conn, body)
             conn.execute(
-                "INSERT INTO profiles VALUES(?,?,?,?,?,?,?,?,?,1)",
+                """INSERT INTO profiles(
+                   id,name,integration_id,approver_id,action_kind,email_template_id,
+                   deadline_seconds,reminder_seconds,max_reminders,grant_seconds,enabled
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,1)""",
                 (
                     ident,
                     body.name,
                     body.integration_id,
                     body.approver_id,
                     body.action_kind,
+                    body.email_template_id,
                     body.deadline_seconds,
                     body.reminder_seconds,
                     body.max_reminders,
@@ -149,20 +251,61 @@ class Core:
                 ),
             )
             audit(conn, None, actor.id, "profile.created", {"profile_id": ident})
+        return {"id": ident, **body.model_dump(), "enabled": True}
+
+    def update_profile(self, actor: Principal, ident: str, body: ProfileUpdate) -> dict:
+        actor.require_admin()
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            if not conn.execute("SELECT id FROM profiles WHERE id=?", (ident,)).fetchone():
+                raise GrantError("PROFILE_NOT_FOUND", 404)
+            self._validate_profile_refs(conn, body)
+            conn.execute(
+                """UPDATE profiles
+                   SET name=?,integration_id=?,approver_id=?,action_kind=?,email_template_id=?,
+                       deadline_seconds=?,reminder_seconds=?,max_reminders=?,grant_seconds=?,enabled=?
+                   WHERE id=?""",
+                (
+                    body.name,
+                    body.integration_id,
+                    body.approver_id,
+                    body.action_kind,
+                    body.email_template_id,
+                    body.deadline_seconds,
+                    body.reminder_seconds,
+                    body.max_reminders,
+                    body.grant_seconds,
+                    int(body.enabled),
+                    ident,
+                ),
+            )
+            audit(
+                conn,
+                None,
+                actor.id,
+                "profile.updated",
+                {"profile_id": ident, "enabled": body.enabled},
+            )
         return {"id": ident, **body.model_dump()}
 
     def profiles(self, actor: Principal) -> list[dict]:
+        base = """SELECT p.*,i.kind AS integration_kind,i.tenant,
+                         t.name AS email_template_name
+                  FROM profiles p
+                  JOIN integrations i ON i.id=p.integration_id
+                  LEFT JOIN email_templates t ON t.id=p.email_template_id"""
+        args: tuple = ()
+        if actor.kind == "integration":
+            query = base + " WHERE p.integration_id=? AND p.enabled=1 AND i.enabled=1"
+            args = (actor.integration_id,)
+        elif actor.role == "admin":
+            query = base
+        else:
+            query = base + " WHERE p.enabled=1 AND i.enabled=1"
+        query += " ORDER BY p.name"
         with self.db.transaction(write=False) as conn:
-            if actor.kind == "integration":
-                rows = conn.execute(
-                    "SELECT p.*,i.kind AS integration_kind,i.tenant FROM profiles p JOIN integrations i ON i.id=p.integration_id WHERE p.integration_id=? AND p.enabled=1 AND i.enabled=1",
-                    (actor.integration_id,),
-                ).fetchall()
-            else:
-                rows = conn.execute(
-                    "SELECT p.*,i.kind AS integration_kind,i.tenant FROM profiles p JOIN integrations i ON i.id=p.integration_id WHERE p.enabled=1 AND i.enabled=1"
-                ).fetchall()
-        return [dict(r) for r in rows]
+            rows = conn.execute(query, args).fetchall()
+        return [{**dict(row), "enabled": bool(row["enabled"])} for row in rows]
 
     def _visible(self, row: sqlite3.Row, actor: Principal) -> None:
         if actor.kind == "integration":
@@ -188,15 +331,8 @@ class Core:
             "SELECT email,enabled FROM users WHERE id=?", (row["approver_id"],)
         ).fetchone()
         ident = uid()
-        payload = {
-            "subject": "[Grant] " + ("Reminder: " if reminder else "Approval: ") + row["title"],
-            "body": "Review the exact action and sign in as the assigned approver.\n\n"
-            + self.settings.origin
-            + "/requests/"
-            + row["id"]
-            + "\n\nEmail previews never authorize execution. Deadline: "
-            + str(row["deadline"]),
-        }
+        template = json.loads(row["mail_template"])
+        payload = render_mail(template, row, self.settings.origin, reminder=reminder)
         conn.execute(
             "INSERT INTO outbox(id,request_id,kind,revision,payload,destination,available_at,created_at) VALUES(?,?,'email',?,?,?,?,?)",
             (
@@ -290,6 +426,16 @@ class Core:
                 raise GrantError("OUTCOME_FEEDBACK_LOOP", 422)
             if action["kind"] != profile["action_kind"]:
                 raise GrantError("ACTION_NOT_ALLOWED", 403)
+            if profile["email_template_id"]:
+                template_row = conn.execute(
+                    "SELECT * FROM email_templates WHERE id=? AND enabled=1",
+                    (profile["email_template_id"],),
+                ).fetchone()
+                if not template_row:
+                    raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 409)
+                mail_template = snapshot(template_row)
+            else:
+                mail_template = dict(DEFAULT_MAIL_TEMPLATE)
             requester = actor.id if actor.kind == "human" else None
             if requester == profile["approver_id"]:
                 raise GrantError("SELF_APPROVAL_PROHIBITED", 403)
@@ -325,6 +471,7 @@ class Core:
                 "source": json_text(body.source),
                 "reason": body.reason,
                 "predecessor_id": body.predecessor_id,
+                "mail_template": json_text(mail_template),
                 "state": "AWAITING",
                 "created_at": now,
                 "deadline": now + profile["deadline_seconds"],
@@ -597,7 +744,13 @@ class Core:
         out = dict(row)
         for field in ("action", "source", "execution_result"):
             out[field] = json.loads(out[field]) if out[field] else None
-        for field in ("intake_hash", "next_reminder", "grant_seconds", "reminder_seconds"):
+        for field in (
+            "intake_hash",
+            "next_reminder",
+            "grant_seconds",
+            "reminder_seconds",
+            "mail_template",
+        ):
             out.pop(field, None)
         deliveries = [
             dict(r)

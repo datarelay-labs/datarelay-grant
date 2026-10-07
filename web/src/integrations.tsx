@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Button, Card, TextField, type AccountProjection } from '@datarelay-labs/foundation';
 import { api } from './api';
 import { Form, Select, TextArea, useTask } from './common';
-import type { Integration, Profile } from './types';
+import type { EmailTemplate, Integration, Profile } from './types';
 
 export function Integrations() {
  const [rows,setRows]=useState<Integration[]>([]); const [name,setName]=useState(''); const [kind,setKind]=useState('datarelay'); const [url,setUrl]=useState(''); const [tenant,setTenant]=useState(''); const [headers,setHeaders]=useState('{}'); const [hmac,setHmac]=useState(''); const [selected,setSelected]=useState(''); const [scopes,setScopes]=useState(['request:create','request:read']); const [token,setToken]=useState(''); const task=useTask();
@@ -19,13 +19,63 @@ export function Integrations() {
 }
 
 export function Profiles() {
- const [rows,setRows]=useState<Profile[]>([]);const [integrations,setIntegrations]=useState<Integration[]>([]);const [users,setUsers]=useState<AccountProjection[]>([]);const [name,setName]=useState('');const [integration,setIntegration]=useState('');const [approver,setApprover]=useState('');const [action,setAction]=useState('');const [deadline,setDeadline]=useState('86400');const [reminder,setReminder]=useState('3600');const [count,setCount]=useState('3');const [validity,setValidity]=useState('900');const task=useTask();
- const load=async()=>{const [p,i,u]=await Promise.all([api<Profile[]>('/profiles'),api<Integration[]>('/integrations'),api<AccountProjection[]>('/admin/users')]);setRows(p);setIntegrations(i);setUsers(u);};
+ const [rows,setRows]=useState<Profile[]>([]);const [integrations,setIntegrations]=useState<Integration[]>([]);const [users,setUsers]=useState<AccountProjection[]>([]);const [templates,setTemplates]=useState<EmailTemplate[]>([]);
+ const [editing,setEditing]=useState('');const [name,setName]=useState('');const [integration,setIntegration]=useState('');const [approver,setApprover]=useState('');const [action,setAction]=useState('');const [template,setTemplate]=useState('');const [deadline,setDeadline]=useState('86400');const [reminder,setReminder]=useState('3600');const [count,setCount]=useState('3');const [validity,setValidity]=useState('900');const [enabled,setEnabled]=useState(true);const task=useTask();
+ const load=async()=>{const [p,i,u,t]=await Promise.all([api<Profile[]>('/profiles'),api<Integration[]>('/integrations'),api<AccountProjection[]>('/admin/users'),api<EmailTemplate[]>('/email-templates')]);setRows(p);setIntegrations(i);setUsers(u);setTemplates(t);};
  useEffect(()=>{void task.run(load);},[]);
- async function create(){await api('/profiles','POST',{name,integration_id:integration,approver_id:approver,action_kind:action,deadline_seconds:Number(deadline),reminder_seconds:Number(reminder),max_reminders:Number(count),grant_seconds:Number(validity)});setName('');setAction('');await load();task.setNotice('Profile created. Existing request snapshots are unchanged.');}
- return <div className="grant-stack">{task.feedback}<Card title="Approval profiles" description="One assigned approver per profile. Incoming requests cannot replace the approver or action type.">{rows.map(r=><div className="grant-timeline" key={r.id}><strong>{r.name}</strong><small>{r.action_kind} · Approver: {users.find(u=>u.id===r.approver_id)?.displayName??r.approver_id}</small><code>{r.id}</code><p>Deadline {r.deadline_seconds}s · reminders every {r.reminder_seconds}s, at most {r.max_reminders} · execution validity {r.grant_seconds}s</p></div>)}</Card><Card title="Add approval profile"><Form busy={task.busy} onSubmit={()=>void task.run(create)} label="Create profile"><TextField label="Profile name" required value={name} onChange={e=>setName(e.target.value)}/><Select label="Profile integration" value={integration} onChange={setIntegration}><option value="">Select integration</option>{integrations.map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</Select><Select label="Assigned approver" value={approver} onChange={setApprover}><option value="">Select an enabled user</option>{users.filter(u=>u.status==='enabled').map(u=><option key={u.id} value={u.id}>{u.displayName}</option>)}</Select><TextField label="Allowed action kind" required pattern="[a-zA-Z0-9_.:-]+" value={action} onChange={e=>setAction(e.target.value)}/><div className="grant-grid"><TextField label="Response deadline (seconds)" type="number" min={60} max={604800} required value={deadline} onChange={e=>setDeadline(e.target.value)}/><TextField label="Reminder interval (seconds)" type="number" min={60} max={86400} required value={reminder} onChange={e=>setReminder(e.target.value)}/><TextField label="Maximum reminders" type="number" min={0} max={20} required value={count} onChange={e=>setCount(e.target.value)}/><TextField label="Execution validity (seconds)" type="number" min={30} max={86400} required value={validity} onChange={e=>setValidity(e.target.value)}/></div></Form></Card></div>;
+ function clear(){setEditing('');setName('');setIntegration('');setApprover('');setAction('');setTemplate('');setDeadline('86400');setReminder('3600');setCount('3');setValidity('900');setEnabled(true);}
+ function edit(row:Profile){setEditing(row.id);setName(row.name);setIntegration(row.integration_id);setApprover(row.approver_id);setAction(row.action_kind);setTemplate(row.email_template_id??'');setDeadline(String(row.deadline_seconds));setReminder(String(row.reminder_seconds));setCount(String(row.max_reminders));setValidity(String(row.grant_seconds));setEnabled(row.enabled);}
+ async function save(){
+  const body={name,integration_id:integration,approver_id:approver,action_kind:action,email_template_id:template||null,deadline_seconds:Number(deadline),reminder_seconds:Number(reminder),max_reminders:Number(count),grant_seconds:Number(validity),...(editing?{enabled}:{})};
+  await api(editing?'/profiles/'+editing:'/profiles',editing?'PUT':'POST',body);clear();await load();task.setNotice(editing?'Approval policy updated. Existing request snapshots are unchanged.':'Approval policy created.');
+ }
+ return <div className="grant-stack">{task.feedback}
+  <Card title="Approval policies" description="Policies fix the integration, assigned approver, allowed action, mail template, deadline, reminders and execution-validity window for new requests.">
+   {rows.map(r=><div className="grant-delivery" key={r.id}><div><strong>{r.name}</strong><small>{r.enabled?'Enabled':'Disabled'} · {r.action_kind} · Approver: {users.find(u=>u.id===r.approver_id)?.displayName??r.approver_id}</small><small>Mail: {r.email_template_name??'Built-in default'} · deadline {r.deadline_seconds}s · reminders {r.reminder_seconds}s × {r.max_reminders} · validity {r.grant_seconds}s</small><code>{r.id}</code></div><Button variant="secondary" disabled={task.busy} onClick={()=>edit(r)}>Edit</Button></div>)}
+   {!rows.length&&<p>No approval policies configured.</p>}
+  </Card>
+  <Card title={editing?'Edit approval policy':'Add approval policy'}>
+   <Form busy={task.busy} onSubmit={()=>void task.run(save)} label={editing?'Save policy':'Create policy'}>
+    <TextField label="Policy name" required value={name} onChange={e=>setName(e.target.value)}/>
+    <Select label="Integration" value={integration} onChange={setIntegration}><option value="">Select integration</option>{integrations.filter(i=>i.enabled).map(i=><option key={i.id} value={i.id}>{i.name}</option>)}</Select>
+    <Select label="Assigned approver" value={approver} onChange={setApprover}><option value="">Select an enabled user</option>{users.filter(u=>u.status==='enabled').map(u=><option key={u.id} value={u.id}>{u.displayName}</option>)}</Select>
+    <TextField label="Allowed action kind" required pattern="[a-zA-Z0-9_.:-]+" value={action} onChange={e=>setAction(e.target.value)}/>
+    <Select label="Email template" value={template} onChange={setTemplate} required={false}><option value="">Built-in default</option>{templates.filter(t=>t.enabled||t.id===template).map(t=><option key={t.id} value={t.id}>{t.name}{t.enabled?'':' (disabled)'}</option>)}</Select>
+    <div className="grant-grid"><TextField label="Response deadline (seconds)" type="number" min={60} max={604800} required value={deadline} onChange={e=>setDeadline(e.target.value)}/><TextField label="Reminder interval (seconds)" type="number" min={60} max={86400} required value={reminder} onChange={e=>setReminder(e.target.value)}/><TextField label="Maximum reminders" type="number" min={0} max={20} required value={count} onChange={e=>setCount(e.target.value)}/><TextField label="Execution validity (seconds)" type="number" min={30} max={86400} required value={validity} onChange={e=>setValidity(e.target.value)}/></div>
+    {editing&&<label><input type="checkbox" checked={enabled} onChange={e=>setEnabled(e.target.checked)}/> Policy enabled</label>}
+   </Form>
+   {editing&&<Button variant="ghost" disabled={task.busy} onClick={clear}>Cancel edit</Button>}
+  </Card>
+ </div>;
 }
 
+export function EmailTemplates() {
+ const defaults={subject_template:'[Grant] Approval: {{request_title}}',body_template:'Review and decide this request.\n\n{{request_url}}\n\nAction: {{action_kind}}\nTarget: {{target}}\nReason: {{reason}}\nDeadline: {{deadline}}',reminder_subject_template:'[Grant] Reminder: {{request_title}}',reminder_body_template:'This request is still waiting for your decision.\n\n{{request_url}}\n\nDeadline: {{deadline}}'};
+ const [rows,setRows]=useState<EmailTemplate[]>([]);const [editing,setEditing]=useState('');const [name,setName]=useState('');const [subject,setSubject]=useState(defaults.subject_template);const [body,setBody]=useState(defaults.body_template);const [reminderSubject,setReminderSubject]=useState(defaults.reminder_subject_template);const [reminderBody,setReminderBody]=useState(defaults.reminder_body_template);const [enabled,setEnabled]=useState(true);const task=useTask();
+ const load=async()=>setRows(await api<EmailTemplate[]>('/email-templates'));
+ useEffect(()=>{void task.run(load);},[]);
+ function clear(){setEditing('');setName('');setSubject(defaults.subject_template);setBody(defaults.body_template);setReminderSubject(defaults.reminder_subject_template);setReminderBody(defaults.reminder_body_template);setEnabled(true);}
+ function edit(row:EmailTemplate){setEditing(row.id);setName(row.name);setSubject(row.subject_template);setBody(row.body_template);setReminderSubject(row.reminder_subject_template);setReminderBody(row.reminder_body_template);setEnabled(row.enabled);}
+ async function save(){const payload={name,subject_template:subject,body_template:body,reminder_subject_template:reminderSubject,reminder_body_template:reminderBody,...(editing?{enabled}:{})};await api(editing?'/email-templates/'+editing:'/email-templates',editing?'PUT':'POST',payload);clear();await load();task.setNotice(editing?'Email template updated. Existing requests keep their original snapshot.':'Email template created.');}
+ return <div className="grant-stack">{task.feedback}
+  <Card title="Email templates" description="Plain-text templates are snapshotted when a request is created, so later edits do not change existing approvals or reminders.">
+   <p>Variables: <code>{'{{request_title}}'}</code> <code>{'{{request_url}}'}</code> <code>{'{{external_id}}'}</code> <code>{'{{action_kind}}'}</code> <code>{'{{target}}'}</code> <code>{'{{reason}}'}</code> <code>{'{{deadline}}'}</code></p>
+   {rows.map(r=><div className="grant-delivery" key={r.id}><div><strong>{r.name}</strong><small>{r.enabled?'Enabled':'Disabled'} · {r.subject_template}</small><code>{r.id}</code></div><Button variant="secondary" disabled={task.busy} onClick={()=>edit(r)}>Edit</Button></div>)}
+   {!rows.length&&<p>No custom email templates configured. Policies may use the built-in default.</p>}
+  </Card>
+  <Card title={editing?'Edit email template':'Add email template'}>
+   <Form busy={task.busy} onSubmit={()=>void task.run(save)} label={editing?'Save template':'Create template'}>
+    <TextField label="Template name" required maxLength={100} value={name} onChange={e=>setName(e.target.value)}/>
+    <TextField label="Approval email subject" required maxLength={250} value={subject} onChange={e=>setSubject(e.target.value)}/>
+    <TextArea label="Approval email body" required value={body} onChange={setBody}/>
+    <TextField label="Reminder email subject" required maxLength={250} value={reminderSubject} onChange={e=>setReminderSubject(e.target.value)}/>
+    <TextArea label="Reminder email body" required value={reminderBody} onChange={setReminderBody}/>
+    {editing&&<label><input type="checkbox" checked={enabled} onChange={e=>setEnabled(e.target.checked)}/> Template enabled</label>}
+   </Form>
+   {editing&&<Button variant="ghost" disabled={task.busy} onClick={clear}>Cancel edit</Button>}
+  </Card>
+ </div>;
+}
 
 type Credential = {id:string;scopes:string[];enabled:boolean;created_at:number};
 function CredentialList({integrations}:{integrations:Integration[]}) {

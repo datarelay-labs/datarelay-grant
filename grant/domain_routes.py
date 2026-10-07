@@ -2,7 +2,19 @@
 
 from fastapi import Query, Request
 
-from .models import Cancel, Consume, Decision, Intake, Integration, Profile, Result, Token
+from .models import (
+    Cancel,
+    Consume,
+    Decision,
+    EmailTemplate,
+    EmailTemplateUpdate,
+    Intake,
+    Integration,
+    Profile,
+    ProfileUpdate,
+    Result,
+    Token,
+)
 
 
 def register_domain(app, actor, human, reader):
@@ -45,6 +57,22 @@ def register_domain(app, actor, human, reader):
     @app.post("/api/v1/profiles", status_code=201)
     def add_profile(body: Profile, request: Request):
         return core.create_profile(actor(request), body)
+
+    @app.put("/api/v1/profiles/{ident}")
+    def update_profile(ident: str, body: ProfileUpdate, request: Request):
+        return core.update_profile(actor(request), ident, body)
+
+    @app.get("/api/v1/email-templates")
+    def email_templates(request: Request):
+        return core.email_templates(actor(request))
+
+    @app.post("/api/v1/email-templates", status_code=201)
+    def add_email_template(body: EmailTemplate, request: Request):
+        return core.create_email_template(actor(request), body)
+
+    @app.put("/api/v1/email-templates/{ident}")
+    def update_email_template(ident: str, body: EmailTemplateUpdate, request: Request):
+        return core.update_email_template(actor(request), ident, body)
 
     @app.get("/api/v1/integrations")
     def integrations(request: Request):

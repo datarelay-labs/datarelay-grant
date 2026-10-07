@@ -126,10 +126,13 @@ Stop the old loopback process, take a new backup, run `check` and the candidate
 against an isolated copy before pointing a service at it. The default web path is
 resolved from the active source tree; remove a legacy hard-coded `web_root` only
 after verifying the new compiled assets. Run the same user scenarios on that build.
-Rollback selects the previous exact code directory and lockfiles. Schema version 1
-is currently unchanged. A future schema is rejected, not silently downgraded. Do not
-restore a stale database to roll back code unless performing the full reconciliation
-procedure above. Real upgrade/rollback requires the operator's deployment approval.
+Schema v2 adds administrator-managed mail templates, policy references and immutable
+request template snapshots. Opening a schema-v1 database with this candidate migrates
+it forward to v2 in place; take a backup first for any non-disposable installation.
+Pre-v2 binaries reject schema v2 and therefore are not a valid code-only rollback target.
+Do not downgrade/stamp the database. If a schema rollback is ever required, use the
+protected pre-upgrade backup through the reconciliation procedure above. Real
+upgrade/rollback requires the operator's deployment approval.
 
 ## Browser checks
 

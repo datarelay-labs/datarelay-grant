@@ -41,7 +41,7 @@ Authority: `Foundation UI -> Grant adapter -> Grant API/authorization/state`.
 | Milestone | Priority | Scope | Required exit evidence |
 | --- | --- | --- | --- |
 | R1-M0 | P0 | Real Foundation shell/auth/admin adapters; persistence/configuration/build/deployment baseline; discover first DataRelay action and Stellar prerequisites | Exact SDK build/conformance, real supported auth, tests/release metadata; no mock administration |
-| R1-M1 | P0 | Request creation, one fixed approver/profile, email, mobile decision page, approve/hold/deny, deadlines/reminders/cancel, timeline | Two-user browser flow; wrong-user/self-approval prevention, duplicate/deadline races, restart persistence |
+| R1-M1 | P0 | Request creation, admin-managed approval policies and plain-text email/reminder templates, one fixed approver per policy, mobile decision page, approve/hold/deny, deadlines/reminders/cancel, timeline | Two-user browser flow; policy/template snapshot behavior; wrong-user/self-approval prevention, duplicate/deadline races, restart persistence |
 | R1-M2 | P0 | Common request intake, outcome webhook, status lookup, execution validation/consumption and result intake | Actual HTTP contract tests, scope/auth/correlation/dedup/retry/restart/changed-action/cancel-consume races |
 | R1-M3 | P0 | One actual DataRelay product action using its existing execution boundary | Real consumer approve/execute/result; deny/hold/expire block; no changed-action or duplicate effect under documented consumer contract |
 | R1-M4 | P0 | Stellar request mapping, source/tenant correlation, registered return webhook and test guide | Actual Stellar request and approved/denied outcomes located at the actual receiver; version/endpoint evidence |
@@ -53,12 +53,14 @@ or endpoints are absent, but missing actual evidence must not be marked PASS.
 
 ## Minimal contracts
 
-### Profiles, requests and decisions
+### Approval policies, mail templates, requests and decisions
 
-A profile fixes integration, allowed action type, assigned approver, display
-parameters, response deadline, reminder interval/count and registered destination.
-Inbound payloads cannot override the approver or destination. Action, target and
-parameters are immutable. Changed action content requires cancel plus a new linked
+An approval policy fixes integration, allowed action type, assigned approver,
+optional administrator-managed email template, response deadline, reminder interval/count
+and execution validity. Email templates define bounded plain-text approval and reminder
+subjects/bodies using only documented variables. Policy/template changes affect future
+requests only because each request stores an immutable snapshot. Inbound payloads cannot
+override the approver, template or destination. Action, target and parameters are immutable. Changed action content requires cancel plus a new linked
 request; a revision/diff editor is deferred.
 
 Authenticate the assigned human for every decision. Email GET/previews never
@@ -116,8 +118,8 @@ Preserve source and tenant scope under the authenticated integration.
 
 ## UI budget
 
-Only four Grant-specific areas: Requests/My approvals, Request detail/Decision,
-Integrations/delivery history, and Approval profiles. Reuse Foundation System
+Keep Grant-specific administration bounded: Requests/My approvals, Request detail/Decision,
+Integrations/delivery history, Approval policies, and Email templates. Reuse Foundation System
 Administration. No analytics dashboard, form builder or workflow canvas.
 
 Always distinguish:

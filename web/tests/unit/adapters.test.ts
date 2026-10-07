@@ -50,4 +50,10 @@ describe('Foundation consumer contracts',()=>{
   const result=verifyCapabilityProjection([{id:'backup.disaster_recovery.restore',label:'Restore',availability:'unavailable'}],[{id:'backup.disaster_recovery.restore',visible:false,interactive:false}]);
   expect(result.ok).toBe(true);
  });
+ it('admin navigation exposes approval policy and email-template management',()=>{
+  const admin={...user,role:'admin' as const};const config=productConfig(admin);
+  expect(config.navigation.map(item=>item.path)).toEqual(expect.arrayContaining(['/profiles','/email-templates']));
+  expect(config.navigation.find(item=>item.path==='/profiles')?.label).toBe('Approval policies');
+  expect(config.navigation.find(item=>item.path==='/email-templates')?.label).toBe('Email templates');
+ });
 });

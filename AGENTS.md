@@ -20,7 +20,7 @@ Do not preload unrelated standards, historical discussions, or documentation.
 
 ## Current repository state
 
-DataRelay Grant is currently a **pre-release product definition**. Do not infer implemented behavior from the patent, README, or product-site language.
+DataRelay Grant is currently a **pre-release development candidate**. Do not infer implemented behavior from the patent, README, product-site language, roadmap, or unmerged design; only current code plus deterministic evidence establishes implemented behavior.
 
 Any future implementation must distinguish clearly between:
 - patent-described concepts;

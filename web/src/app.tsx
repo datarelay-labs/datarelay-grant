@@ -4,7 +4,7 @@ import { ApiError, setCsrf } from './api';
 import { authAdapter, productConfig, readSession } from './foundation.config';
 import { useTask } from './common';
 import { RequestList, RequestDetail, NewRequest } from './requests';
-import { Integrations, Profiles } from './integrations';
+import { EmailTemplates, Integrations, Profiles } from './integrations';
 import { Administration, Security } from './administration';
 import type { Session } from './types';
 
@@ -26,6 +26,7 @@ export function App(){
  else if(path==='/security')page=<Security user={user} onSignedOut={signedOut} onRefresh={refresh}/>;
  else if(user.role==='admin'&&path==='/integrations')page=<Integrations/>;
  else if(user.role==='admin'&&path==='/profiles')page=<Profiles/>;
+ else if(user.role==='admin'&&path==='/email-templates')page=<EmailTemplates/>;
  else if(user.role==='admin'&&path==='/system')page=<Administration/>;
  else page=<Card title="Page unavailable"><p>This page does not exist or is not available to your account.</p></Card>;
  return <ThemeRoot theme={theme}><ProductShell product={config.product} navigation={config.navigation} capabilities={config.capabilities} currentPath={path} onNavigate={navigate} pageTitle={title} pageSubtitle="Approval does not equal delivery or execution." principal={{displayName:user.username,detail:user.email}} headerActions={<Button variant="secondary" onClick={()=>setTheme(theme==='light'?'dark':'light')}>Use {theme==='light'?'dark':'light'} theme</Button>} userActions={<Button variant="ghost" disabled={task.busy} onClick={()=>void task.run(async()=>{try{await authAdapter.signOut();}catch(e){if(!(e instanceof ApiError&&e.status===401))throw e;}signedOut();})}>Sign out</Button>}>{task.feedback}{page}</ProductShell></ThemeRoot>;

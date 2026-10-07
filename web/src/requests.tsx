@@ -51,7 +51,7 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
  return <Card title="Create an approval request" description="This creates a request, not an execution. The assigned approver is determined by the profile.">
   {task.feedback}{predecessor&&<p>Replacement for cancelled request <code>{predecessor.id}</code>. A new explicit approval is required.</p>}
   <Form busy={task.busy} onSubmit={()=>void task.run(submit)} label="Submit request">
-   <Select label="Approval profile" value={profile} onChange={setProfile}><option value="">Select a configured profile</option>{profiles.map(p=><option key={p.id} value={p.id}>{p.name} · {p.action_kind}</option>)}</Select>
+   <Select label="Approval profile" value={profile} onChange={setProfile}><option value="">Select a configured profile</option>{profiles.filter(p=>p.enabled).map(p=><option key={p.id} value={p.id}>{p.name} · {p.action_kind}</option>)}</Select>
    {profiles.find(p=>p.id===profile)?.tenant&&<p>Tenant scope: {profiles.find(p=>p.id===profile)?.tenant}</p>}
    <TextField label="Request title" required maxLength={250} value={title} onChange={e=>setTitle(e.target.value)}/>
    <TextField label="Target" required maxLength={500} value={target} onChange={e=>setTarget(e.target.value)}/>

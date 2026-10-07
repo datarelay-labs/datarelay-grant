@@ -14,4 +14,5 @@ export type RequestRow = {
  deliveries?: Delivery[]; timeline?: { id: string; at: number; actor: string; action: string; detail: unknown }[];
 };
 export type Integration = { id: string; name: string; kind: 'datarelay' | 'stellar'; tenant: string; enabled: boolean; callback_origin: string };
-export type Profile = { integration_kind?: 'datarelay' | 'stellar'; tenant?: string; id: string; name: string; integration_id: string; approver_id: string; action_kind: string; deadline_seconds: number; reminder_seconds: number; max_reminders: number; grant_seconds: number; enabled: boolean };
+export type EmailTemplate = { id: string; name: string; subject_template: string; body_template: string; reminder_subject_template: string; reminder_body_template: string; enabled: boolean };
+export type Profile = { integration_kind?: 'datarelay' | 'stellar'; tenant?: string; id: string; name: string; integration_id: string; approver_id: string; action_kind: string; email_template_id: string | null; email_template_name?: string | null; deadline_seconds: number; reminder_seconds: number; max_reminders: number; grant_seconds: number; enabled: boolean };

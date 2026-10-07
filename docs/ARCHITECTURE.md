@@ -8,6 +8,11 @@ for one installation. Network sends occur outside transactions, through a leased
 outbox. This is a bounded local-server choice, not a distributed database contract.
 Atomic state + audit + outbox; stable IDs; cancel/consume/expiry serialize on the same
 row transaction. Action JSON is immutable, hashed using documented canonical encoding.
+Approval policies are mutable administration objects for future requests only. A request
+snapshots its assigned approver, timing policy and selected plain-text email/reminder
+template so later administrative edits cannot alter an approval already in flight.
+Database schema v2 adds email templates, policy-template references and request snapshots;
+schema v1 upgrades forward automatically without changing prior approval semantics.
 The consumer uses the returned fingerprint and must preserve its own authorization.
 Execution commitment is not exactly-once execution or rollback. Results are reported,
 not independently verified. Unknown results require reconciliation, never blind retry.

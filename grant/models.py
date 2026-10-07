@@ -76,15 +76,44 @@ class Integration(Input):
     hmac_secret: str = Field(default="", max_length=256)
 
 
+class EmailTemplate(Input):
+    name: str = Field(min_length=1, max_length=100)
+    subject_template: str = Field(min_length=1, max_length=250)
+    body_template: str = Field(min_length=1, max_length=8000)
+    reminder_subject_template: str = Field(min_length=1, max_length=250)
+    reminder_body_template: str = Field(min_length=1, max_length=8000)
+
+    @field_validator("subject_template", "reminder_subject_template")
+    @classmethod
+    def valid_subject_template(cls, value: str) -> str:
+        from .mail_templates import validate_template_text
+        return validate_template_text(value, subject=True)
+
+    @field_validator("body_template", "reminder_body_template")
+    @classmethod
+    def valid_body_template(cls, value: str) -> str:
+        from .mail_templates import validate_template_text
+        return validate_template_text(value)
+
+
+class EmailTemplateUpdate(EmailTemplate):
+    enabled: bool = True
+
+
 class Profile(Input):
     name: str = Field(min_length=1, max_length=100)
     integration_id: str
     approver_id: str
     action_kind: str = Field(min_length=1, max_length=100)
+    email_template_id: str | None = None
     deadline_seconds: int = Field(default=86400, ge=60, le=604800)
     reminder_seconds: int = Field(default=3600, ge=60, le=86400)
     max_reminders: int = Field(default=3, ge=0, le=20)
     grant_seconds: int = Field(default=900, ge=30, le=86400)
+
+
+class ProfileUpdate(Profile):
+    enabled: bool = True
 
 
 class Token(Input):

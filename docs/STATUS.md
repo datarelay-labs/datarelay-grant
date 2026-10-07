@@ -9,7 +9,10 @@ in a self-referential source commit.
 
 - Pinned unpublished Foundation SDK and public imports; real shell, login,
   MFA/recovery, accounts/sessions, health and audit adapters.
-- One fixed approver per profile; immutable action, explicit approve/hold/deny,
+- Administrator-managed approval policies and bounded plain-text approval/reminder
+  templates. Each request snapshots the assigned approver, timing policy and selected
+  template so later administration changes apply only to new requests.
+- One fixed approver per policy; immutable action, explicit approve/hold/deny,
   expiry, bounded reminders, cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.
   An integration credential cannot make a human decision.
@@ -25,13 +28,14 @@ in a self-referential source commit.
 
 ## Observed development evidence
 
-On dev-atlas the resume ran 109 Python contract/lifecycle cases and 7 new archive
-integrity cases, 11 frontend adapter cases, typecheck/build, and five real browser
-journeys. Final combined exact-HEAD results and CI are recorded in Issue #33.
+The current development tree passes 128 Python contract/lifecycle cases, 12 frontend
+adapter cases, typecheck/build, and five real browser journeys. The browser administration
+journey now creates an email template and binds it to an approval policy. Final exact-HEAD
+confirmation and CI are recorded in Issue #33.
 
 Browser cases include two independently signed-in requester/approver passes,
-mobile shared administration, cancellation/replacement, account/profile creation
-and scoped credential revocation. Screenshots were inspected. Browser tests use
+mobile shared administration, cancellation/replacement, account creation,
+email-template/approval-policy creation and scoped credential revocation. Screenshots were inspected. Browser tests use
 actual loopback SMTP/HTTP and disposable accounts; the executor is explicitly a
 fixture, not the real DataRelay consumer. Never promote these into external PASS.
 Raw fixture credentials and trace archives remain private and untracked.
@@ -42,7 +46,7 @@ A Starlette TestClient deprecation warning is recorded without suppressing it.
 | Milestone | Disposition |
 | --- | --- |
 | M0 | Foundation/auth/admin baseline implemented and locally tested; unsupported lifecycle/TLS mutations stay unavailable |
-| M1 | Core and actual UI paths tested; real designated inbox receipt still requires configured SMTP |
+| M1 | Core/UI plus approval-policy and email-template administration tested; Gmail STARTTLS/AUTH/submission and actual receipt at a distinct designated mailbox verified |
 | M2 | API, strict consumer replies, durable transport and recovery tested on the development server |
 | M3 | Consumer contract/client implemented; actual existing DataRelay operation NOT integrated/accepted |
 | M4 | Stellar request/tenant/callback contract and guide implemented; actual Stellar receiver evidence missing |
@@ -58,12 +62,10 @@ A Starlette TestClient deprecation warning is recorded without suppressing it.
    PR #389. Do not reset/redeploy that database or disturb its browser audit.
    Recheck the dependency and connect one actual operation at the product-owned
    execution boundary. Fixture execution is not M3 completion.
-3. Approved SMTP settings and a designated real recipient are not configured.
-   No passwords or private keys should be pasted into chat/issues.
-4. Stellar's deployed version, outgoing responder, actual supported webhook
+3. Stellar's deployed version, outgoing responder, actual supported webhook
    receiver and tenant/auth contract must be provided or located in the approved
    development environment. No production experiment or new relay is authorized.
-5. Reconcile actual consumer/receiver/inbox evidence on the frozen candidate before
+4. Reconcile actual consumer/receiver evidence on the frozen candidate before
    full R1 acceptance. Publication, production and credential changes stay separate.
 
 Remote dev-atlas execution, source editing, and authenticated GitHub coordination

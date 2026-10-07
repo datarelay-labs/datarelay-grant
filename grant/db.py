@@ -11,6 +11,7 @@ from contextlib import closing, contextmanager
 from pathlib import Path
 
 from .config import private_file
+from .mail_templates import DEFAULT_MAIL_TEMPLATE
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
@@ -34,9 +35,16 @@ CREATE TABLE IF NOT EXISTS api_tokens (
  integration_id TEXT NOT NULL REFERENCES integrations(id), scopes TEXT NOT NULL,
  enabled INTEGER NOT NULL DEFAULT 1, created_at REAL NOT NULL
 );
+CREATE TABLE IF NOT EXISTS email_templates (
+ id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE,
+ subject_template TEXT NOT NULL, body_template TEXT NOT NULL,
+ reminder_subject_template TEXT NOT NULL, reminder_body_template TEXT NOT NULL,
+ enabled INTEGER NOT NULL DEFAULT 1, created_at REAL NOT NULL, updated_at REAL NOT NULL
+);
 CREATE TABLE IF NOT EXISTS profiles (
  id TEXT PRIMARY KEY, name TEXT NOT NULL, integration_id TEXT NOT NULL REFERENCES integrations(id),
  approver_id TEXT NOT NULL REFERENCES users(id), action_kind TEXT NOT NULL,
+ email_template_id TEXT REFERENCES email_templates(id),
  deadline_seconds INTEGER NOT NULL, reminder_seconds INTEGER NOT NULL,
  max_reminders INTEGER NOT NULL, grant_seconds INTEGER NOT NULL, enabled INTEGER NOT NULL DEFAULT 1
 );
@@ -46,7 +54,7 @@ CREATE TABLE IF NOT EXISTS requests (
  requester_id TEXT REFERENCES users(id), approver_id TEXT NOT NULL REFERENCES users(id),
  title TEXT NOT NULL, action TEXT NOT NULL, action_hash TEXT NOT NULL, intake_hash TEXT NOT NULL,
  source TEXT NOT NULL, reason TEXT NOT NULL, predecessor_id TEXT REFERENCES requests(id),
- state TEXT NOT NULL, decision TEXT, decision_actor TEXT, decision_at REAL,
+ mail_template TEXT NOT NULL, state TEXT NOT NULL, decision TEXT, decision_actor TEXT, decision_at REAL,
  revision INTEGER NOT NULL DEFAULT 1, created_at REAL NOT NULL, deadline REAL NOT NULL,
  grant_until REAL, grant_seconds INTEGER NOT NULL,
  next_reminder REAL NOT NULL, reminder_seconds INTEGER NOT NULL,
@@ -71,7 +79,7 @@ CREATE INDEX IF NOT EXISTS outbox_ready ON outbox(state, available_at);
 CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, hits INTEGER NOT NULL, until REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS runtime (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 INSERT OR IGNORE INTO runtime(key,value) VALUES('paused','0');
-PRAGMA user_version=1;
+PRAGMA user_version=2;
 """
 
 
@@ -91,11 +99,37 @@ class Database:
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1):
+            if version not in (0, 1, 2):
                 raise RuntimeError("Unsupported database schema; do not downgrade this binary")
             conn.execute("PRAGMA journal_mode=WAL")
+            if version == 1:
+                self._migrate_v1_to_v2(conn)
             conn.executescript(SCHEMA)
         private_file(path)
+
+    @staticmethod
+    def _migrate_v1_to_v2(conn: sqlite3.Connection) -> None:
+        conn.execute(
+            """CREATE TABLE IF NOT EXISTS email_templates (
+             id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE,
+             subject_template TEXT NOT NULL, body_template TEXT NOT NULL,
+             reminder_subject_template TEXT NOT NULL, reminder_body_template TEXT NOT NULL,
+             enabled INTEGER NOT NULL DEFAULT 1, created_at REAL NOT NULL, updated_at REAL NOT NULL
+            )"""
+        )
+        profile_columns = {row[1] for row in conn.execute("PRAGMA table_info(profiles)")}
+        if "email_template_id" not in profile_columns:
+            conn.execute(
+                "ALTER TABLE profiles ADD COLUMN email_template_id TEXT REFERENCES email_templates(id)"
+            )
+        request_columns = {row[1] for row in conn.execute("PRAGMA table_info(requests)")}
+        if "mail_template" not in request_columns:
+            conn.execute("ALTER TABLE requests ADD COLUMN mail_template TEXT")
+        conn.execute(
+            "UPDATE requests SET mail_template=? WHERE mail_template IS NULL OR mail_template=''",
+            (json_text(DEFAULT_MAIL_TEMPLATE),),
+        )
+        conn.execute("PRAGMA user_version=2")
 
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
@@ -133,7 +167,7 @@ class Database:
         with closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
-            if old.execute("PRAGMA user_version").fetchone()[0] != 1:
+            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2):
                 raise ValueError("Backup schema mismatch")
             with closing(sqlite3.connect(destination)) as new:
                 old.backup(new)

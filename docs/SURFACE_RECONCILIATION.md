@@ -16,7 +16,8 @@ Use the real compiled browser app and real authenticated product API on one cand
 | Request detail | Explicit confirmation, source/action, separate decision/delivery/execution, timeline |
 | Cancellation/replacement | Uncommitted cancellation, linked NEW request and fresh authorization |
 | Integrations | Registered destination, tenant, test event, scoped tokens, explicit revocation |
-| Profiles | Fixed assignee/action, deadline/reminder/validity, snapshot preservation |
+| Approval policies | Create/edit/enable state, fixed assignee/action, template selection, deadline/reminder/validity, snapshot preservation |
+| Email templates | Create/edit/enable state, bounded variables, approval/reminder subject+body, existing-request snapshot preservation |
 | System administration | Real account/health/audit adapters, SMTP acceptance vs receipt |
 | Mobile/shared shell | Usable navigation and controls, no overflow, common Foundation presentation |
 | Unsupported operations | Unavailable controls or documented CLI, never fabricated working UI |
