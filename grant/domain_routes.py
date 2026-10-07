@@ -10,6 +10,7 @@ from .models import (
     Delegation,
     EmailTemplate,
     EmailTemplateUpdate,
+    Escalation,
     Intake,
     Integration,
     NotificationBrandingUpdate,
@@ -54,6 +55,10 @@ def register_domain(app, actor, human, reader):
     @app.post("/api/v1/requests/{ident}/decision")
     def decision(ident: str, body: Decision, request: Request):
         return core.decide(human(request), ident, body)
+
+    @app.post("/api/v1/requests/{ident}/escalation")
+    def escalation(ident: str, body: Escalation, request: Request):
+        return core.configure_escalation(actor(request), ident, body)
 
     @app.post("/api/v1/requests/{ident}/reassign")
     def reassign(ident: str, body: Reassign, request: Request):

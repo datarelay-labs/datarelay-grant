@@ -80,3 +80,20 @@ def test_admin_reassignment_preserves_audit_and_changes_authority(env):
     changed = response.json()
     assert changed["approval_plan"]["members"] == [env.users["stranger"]["id"]]
     assert any(item["action"] == "request.reassigned" for item in changed["timeline"])
+
+
+def test_escalation_adds_target_once_and_audits(env):
+    profile = active_group_profile(env)
+    request = create(env, profile)
+    admin = env.human('admin')
+    configured = admin.post(f"/api/v1/requests/{request['id']}/escalation", json={
+        'target_user_id': env.users['stranger']['id'], 'after_seconds': 60,
+    })
+    assert configured.status_code == 200, configured.text
+    with env.db.transaction() as conn:
+        conn.execute('UPDATE escalations SET due_at=? WHERE request_id=?', (time.time() - 1, request['id']))
+    env.core.maintenance()
+    env.core.maintenance()
+    result = admin.get(f"/api/v1/requests/{request['id']}").json()
+    assert result['approval_plan']['members'].count(env.users['stranger']['id']) == 1
+    assert sum(event['action'] == 'request.escalated' for event in result['timeline']) == 1

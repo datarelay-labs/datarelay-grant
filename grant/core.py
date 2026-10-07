@@ -29,6 +29,7 @@ from .models import (
     Delegation,
     EmailTemplate,
     EmailTemplateUpdate,
+    Escalation,
     Intake,
     Integration,
     NotificationBrandingUpdate,
@@ -601,6 +602,24 @@ class Core:
             (actor_id, now, now),
         ).fetchone()
         return row["delegator_id"] if row and row["delegator_id"] in members else None
+
+    def configure_escalation(self, actor: Principal, ident: str, body: Escalation) -> dict:
+        actor.require_admin()
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            row = self._load(conn, ident)
+            if row["state"] not in ("AWAITING", "HELD") or row["execution_id"]:
+                raise GrantError("ESCALATION_NOT_ALLOWED", 409)
+            target = conn.execute("SELECT enabled FROM users WHERE id=?", (body.target_user_id,)).fetchone()
+            if not target or not target["enabled"] or body.target_user_id == row["requester_id"]:
+                raise GrantError("ESCALATION_TARGET_UNAVAILABLE", 409)
+            due = row["created_at"] + body.after_seconds
+            conn.execute("""INSERT INTO escalations(request_id,target_user_id,due_at,fired_at)
+                VALUES(?,?,?,NULL) ON CONFLICT(request_id) DO UPDATE SET
+                target_user_id=excluded.target_user_id,due_at=excluded.due_at,fired_at=NULL""",
+                (ident, body.target_user_id, due))
+            audit(conn, ident, actor.id, "request.escalation_configured", {"target_user_id": body.target_user_id, "due_at": due})
+            return {"request_id": ident, "target_user_id": body.target_user_id, "due_at": due}
 
     def reassign_request(self, actor: Principal, ident: str, body: Reassign) -> dict:
         actor.require_admin()
@@ -1604,6 +1623,21 @@ class Core:
             rows = conn.execute(
                 "SELECT * FROM requests WHERE state IN ('AWAITING','HELD','APPROVED') AND execution_id IS NULL"
             ).fetchall()
+            for escalation in conn.execute(
+                "SELECT * FROM escalations WHERE fired_at IS NULL AND due_at<=?", (now,)
+            ).fetchall():
+                current = conn.execute("SELECT * FROM requests WHERE id=?", (escalation["request_id"],)).fetchone()
+                if not current or current["state"] not in ("AWAITING", "HELD") or current["deadline"] <= now:
+                    continue
+                plan = json.loads(current["approval_plan"] or "{}")
+                members = plan.get("members", [current["approver_id"]])
+                target = escalation["target_user_id"]
+                if target not in members and target != current["requester_id"]:
+                    members.append(target)
+                    plan["members"] = members
+                    conn.execute("UPDATE requests SET approval_plan=?,revision=revision+1 WHERE id=?", (json_text(plan), current["id"]))
+                conn.execute("UPDATE escalations SET fired_at=? WHERE request_id=?", (now, current["id"]))
+                audit(conn, current["id"], "policy", "request.escalated", {"target_user_id": target}, now)
             for row in rows:
                 if self._expire(conn, row, now):
                     continue

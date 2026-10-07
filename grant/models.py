@@ -61,6 +61,11 @@ class Delegation(Input):
         return value
 
 
+class Escalation(Input):
+    target_user_id: str = Field(min_length=1, max_length=100)
+    after_seconds: int = Field(ge=60, le=604800)
+
+
 class Reassign(Input):
     from_approver_id: str = Field(min_length=1, max_length=100)
     to_approver_id: str = Field(min_length=1, max_length=100)
