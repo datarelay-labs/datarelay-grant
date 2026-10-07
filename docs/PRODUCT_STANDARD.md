@@ -307,7 +307,25 @@ layout or authority controls.
 
 ## 11. User experience standard
 
-### 11.1 Approval Inbox
+Grant follows the DataRelay Product Foundation for shared application identity, semantic
+tokens, authentication presentation, product shell, navigation behavior, account/session
+UX and common System Administration. Grant owns approval-domain pages and adapters; it
+must not fork or independently redesign shared Foundation surfaces.
+
+### 11.1 Home / action center
+
+Home answers **what needs a human to act now?** It is not a SOC/NOC dashboard and does
+not lead with charts.
+
+Priority content:
+
+- needs my decision;
+- overdue or held approval work;
+- notification/delivery failures needing operator attention;
+- approved-but-not-consumed or execution-unknown/failure exceptions;
+- recent requests and direct actions such as New request.
+
+### 11.2 Approval Inbox
 
 The primary approver view prioritizes work that needs action:
 
@@ -317,7 +335,7 @@ The primary approver view prioritizes work that needs action:
 - Delegated to me
 - Recently decided
 
-### 11.2 Requester view
+### 11.3 Requester view
 
 Requesters can see:
 
@@ -330,7 +348,7 @@ Requesters can see:
 - execution state/result;
 - revision history.
 
-### 11.3 Search and filters
+### 11.4 Search and filters
 
 Product 1.0 supports filtering/search by:
 
@@ -344,38 +362,101 @@ Product 1.0 supports filtering/search by:
 - delivery state;
 - execution state.
 
-## 12. Administrator information architecture
+### 11.5 DataRelay-family sign-in and application frame
 
-Canonical Grant administration:
+Grant uses Product Foundation Auth UI and Product Shell rather than a product-local
+parallel implementation.
 
-```text
-Administration
-├── Approval Policies
-│   ├── Policies
-│   ├── Draft / Test / Activate
-│   ├── Preview & Test
-│   └── Version / Change History
+Sign-in follows the DataRelay-family composition:
+
+- the overall sign-in composition is centered in the viewport;
+- product identity/context is on the left and the bounded credential card is on the
+  right on desktop, collapsing to one column on narrow screens;
+- the credential card uses the common `Welcome to DataRelay` /
+  `Please sign in to continue.` framing;
+- username/password, password visibility, MFA/recovery, validation and account guidance
+  use the shared Foundation interaction contract;
+- DataRelay documentation, quick-start, release, website and support resources may be
+  exposed through the shared auth frame;
+- Grant-specific product identity and copy explain approval control without changing
+  authentication authority.
+
+The mature DataRelay Control sign-in/shell is a DataRelay-family reference for
+composition and density, not source authority to copy. Foundation remains the shared UI
+authority and Grant remains the authentication/session/state authority behind its typed
+adapter.
+
+The desktop Product Shell uses the Foundation responsive sidebar baseline (260px
+expanded / 57px collapsed), grouped task navigation, product identity at the top and the
+signed-in user/account actions at the bottom. Mobile navigation is off-canvas and must
+preserve focus/keyboard behavior.
+
+## 12. Application and administrator information architecture
+
+Canonical primary navigation:
+
+~~~text
+Home
+
+Work
+├── My approvals
+└── Requests
+
+Configuration
+├── Approval policies
 ├── Notifications
-│   ├── Template Sets
-│   ├── Delivery Health
-│   └── Branding
-├── Approvers
-│   ├── Users
-│   ├── Groups
-│   ├── Delegation
-│   └── Reassignment
 ├── Integrations
-│   ├── DataRelay
-│   ├── Stellar Cyber
-│   └── Credentials / Health
-└── System
-    ├── Accounts / Sessions / MFA
-    ├── Audit
-    ├── Backup / Recovery guidance
-    └── Health
-```
+└── Approvers          # appears when G3/G4 capabilities exist
 
-Do not grow the top-level navigation for every small setting.
+Administration
+└── Administration
+
+Signed-in user
+└── Account & Security
+~~~
+
+Primary navigation represents user goals, not every configuration object. Account
+security, theme and sign-out live with the signed-in user in the Foundation shell.
+New request is a primary action from Home/Requests rather than a permanent sidebar
+destination.
+
+Canonical Administration content remains task-oriented:
+
+~~~text
+Administration
+├── System health / information
+├── Accounts
+├── Audit history
+├── Mail delivery test
+└── Lifecycle / recovery guidance
+~~~
+
+The Administration landing surface uses Product Foundation capability declarations and
+common administration components. Unsupported backup/restore/TLS/upgrade mutations are
+not made interactive merely to fill a settings page.
+
+Configuration detail:
+
+~~~text
+Approval policies
+├── Policies
+├── Draft / Test / Activate
+├── Preview & Test
+└── Version / Change History
+
+Notifications
+├── Template Sets
+├── Delivery Health
+└── Branding
+
+Integrations
+├── DataRelay
+├── Stellar Cyber
+└── Credentials / Health
+~~~
+
+Do not grow top-level navigation for every small setting and do not turn configuration
+pages into an NOC-style wall of permanently expanded panels.
 
 ## 13. Policy administration standard
 
@@ -503,17 +584,39 @@ A capability is product-conformant only when:
 
 ## 21. Competitive design references
 
-The product direction intentionally borrows proven concepts, not vendor-specific
-implementation:
+The product direction intentionally borrows proven interaction patterns, not
+vendor-specific implementation or branding.
 
-- ApproveThis — workflow testing, publish lifecycle, routing preview;
+### 21.1 Work and information-architecture references
+
+- Microsoft Entra My Access — landing overview emphasizes pending requests/reviews and
+  separates request history, approvals and reviews by user task;
+- ServiceNow — approvals are handled as an explicit user work queue with request detail
+  as the decision context;
+- Jira Service Management — incoming work is organized as searchable/sortable queues
+  optimized for triage rather than dashboard watching;
+- Okta Identity Governance — end-user request/catalog work is separated from
+  administrator governance configuration;
+- Apono — access-flow administration emphasizes discoverable policy lists, filters,
+  duplicate/reuse and explicit active/inactive state;
+- Teleport — access requests are request-first, bounded and temporary, with web flows
+  organized around the resource/role being requested;
+- Opal — request/security configuration is attached to focused resource detail rather
+  than a permanently expanded global settings canvas;
+- ConductorOne — end-user Home/tasks/request work is separated from administrator
+  applications, policies, connectors, users and settings;
+- SailPoint — approval context and reminder/escalation behavior are treated as managed
+  approval configuration rather than monitoring widgets.
+
+### 21.2 Approval and notification behavior references
+
+- ApproveThis — workflow testing, publish lifecycle and routing preview;
 - ApprovalMax — approval matrix and operational approval notifications;
 - StrongDM — separation of access conditions from approval workflow;
-- Teleport — reviewer thresholds and temporary authorization concepts;
-- ServiceNow — reusable notification templates and event-oriented notifications;
-- Jira Service Management — safe customer notifications and configurable event
-  messaging;
 - Microsoft Power Automate — sequential/parallel/custom approval patterns.
 
-These are design references only. Grant remains governed by this Product Standard,
-its own contracts and tested implementation.
+These references do not expand Grant into IAM provisioning, a generic workflow engine,
+ticketing, SOAR or a monitoring product. Grant remains governed by this Product
+Standard, its own server-enforced contracts and tested implementation. The detailed
+reference links and accepted layout implications are maintained in
+`docs/UX_INFORMATION_ARCHITECTURE.md`.

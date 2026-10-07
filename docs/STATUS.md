@@ -1,6 +1,6 @@
 # Grant 1.0 implementation status
 
-Updated: 2026-10-07. G1/G2 coordination: GitHub Issue #38; baseline/external lane: Issue #33 / PR #34.
+Updated: 2026-10-08. G1/G2 coordination: GitHub Issue #38; baseline/external lane: Issue #33 / PR #34.
 Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
@@ -12,10 +12,21 @@ sequenced by `ROADMAP.md`. The current branch remains a development baseline, no
 claim that all 1.0 workstreams are implemented. Existing R1 evidence is retained as
 historical/current baseline evidence and maps into the broader 1.0 roadmap.
 
+## Accepted UX/IA direction
+
+The accepted Grant 1.0 UX/IA direction is recorded in
+`docs/UX_INFORMATION_ARCHITECTURE.md` and the Product Standard sections 11-13. It adds
+G0 Product Foundation/task-oriented UX convergence ahead of further product-surface
+expansion. Acceptance of this direction is not implementation evidence; current
+capability remains whatever is present and tested at the committed candidate HEAD.
+
 ## Implemented candidate
 
-- Pinned unpublished Foundation SDK and public imports; real shell, login,
-  MFA/recovery, accounts/sessions, health and audit adapters.
+- Pinned unpublished Foundation SDK and public imports with Foundation-backed auth,
+  shell, MFA/recovery, accounts/sessions, health and audit adapters. The accepted G0
+  grouped task-oriented navigation, centered DataRelay-family login composition, action
+  center Home and focused Administration/configuration layouts are roadmap/design targets
+  until committed implementation and browser evidence establish them.
 - Versioned approval policies with explicit Draft -> Testing -> Active -> Disabled
   lifecycle, clone/history, bounded deterministic selectors and shared runtime/preview
   resolution. Saving never makes a policy live; isolated tests cannot authorize execution.

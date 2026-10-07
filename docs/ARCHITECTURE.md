@@ -30,11 +30,16 @@ Transport: configured destinations only; installation-registered exact URL allow
 or redirects. Endpoint ownership and DNS remain an installation trust boundary. Development HTTP only
 explicitly enabled on loopback. No public service, TLS/firewall/production changes.
 UI: exact Foundation public SDK through product adapters; unavailable capabilities
-are declared unavailable. Shared shell/auth/account/session/status/audit host Grant
-Requests/My approvals, Integrations, Approval Policies, Notifications and account/system
-administration. Approval Policies exposes Draft/Test/Activate, preview/isolated test and
-version history; Notifications exposes template sets, safe variables, preview/test send,
-delivery health and branding. Never a copied Foundation fork or mock authority.
+are declared unavailable. The Grant 1.0 target UI architecture has Foundation own the
+shared Auth UI, Product Shell, semantic
+tokens, account/session surfaces and capability-driven System Administration primitives.
+Grant supplies product identity, grouped navigation and typed adapters, then owns only
+approval-domain pages. Target primary IA is Home; Work (My approvals, Requests); Configuration
+(Approval Policies, Notifications, Integrations); Administration. Account & Security is
+a signed-in-user action rather than primary navigation. Approval Policies exposes
+Draft/Test/Activate, preview/isolated test and version history; Notifications exposes
+template sets, safe variables, preview/test send, delivery health and branding. Never a
+copied Foundation fork, direct product-DB access from shared UI or mock authority.
 Recovery: SQLite online backup + separately protected installation key; restore into
 a new path only, outgoing work and execution commitment paused for reconciliation.
 Tests: isolated API/security/DB-race/outbox HTTP tests, frontend types/build/Foundation
