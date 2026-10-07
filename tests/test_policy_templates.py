@@ -218,3 +218,25 @@ def test_schema_v1_migrates_to_v3_and_backfills_policy_and_notification_state(en
             ).fetchone()[0]
         )
     assert snapshot == DEFAULT_MAIL_TEMPLATE
+
+
+def test_schema_v2_migration_keeps_only_one_legacy_policy_active_per_resolver_key(env):
+    path = env.settings.database
+    with sqlite3.connect(path) as conn:
+        base = conn.execute(
+            "SELECT integration_id,approver_id,action_kind,deadline_seconds,reminder_seconds,max_reminders,grant_seconds FROM profiles LIMIT 1"
+        ).fetchone()
+        conn.execute(
+            "INSERT INTO profiles(id,name,integration_id,approver_id,action_kind,deadline_seconds,reminder_seconds,max_reminders,grant_seconds,enabled) VALUES(?,?,?,?,?,?,?,?,?,1)",
+            ("legacy-collision", "Legacy collision", *base),
+        )
+        conn.execute("DROP TABLE profile_versions")
+        conn.execute("PRAGMA user_version=2")
+        conn.commit()
+    migrated = Database(path)
+    with migrated.transaction(write=False) as conn:
+        rows = conn.execute(
+            "SELECT lifecycle FROM profile_versions WHERE integration_id=? AND action_kind=?",
+            (base[0], base[2]),
+        ).fetchall()
+    assert sum(row["lifecycle"] == "ACTIVE" for row in rows) == 1

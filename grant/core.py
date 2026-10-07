@@ -424,6 +424,7 @@ class Core:
         actor.require_admin()
         principal = actor
         with self.db.transaction(write=False) as conn:
+            require_current_authority(conn, principal)
             row = conn.execute("SELECT * FROM email_templates WHERE id=?", (ident,)).fetchone()
             if not row:
                 raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
@@ -1053,15 +1054,15 @@ class Core:
                     (actor.integration_id, body.external_id),
                 ).fetchone()
             else:
-                existing_rows = conn.execute(
-                    """SELECT * FROM requests
-                       WHERE profile_id=? AND external_id=? AND requester_id=?
-                       ORDER BY created_at DESC LIMIT 2""",
-                    (body.profile_id, body.external_id, requester),
-                ).fetchall()
-                if len(existing_rows) > 1:
-                    raise GrantError("IDEMPOTENCY_CONFLICT", 409)
-                existing = existing_rows[0] if existing_rows else None
+                selected_profile = conn.execute(
+                    "SELECT integration_id FROM profiles WHERE id=?", (body.profile_id,)
+                ).fetchone()
+                if not selected_profile:
+                    raise GrantError("PROFILE_NOT_FOUND", 404)
+                existing = conn.execute(
+                    "SELECT * FROM requests WHERE integration_id=? AND external_id=?",
+                    (selected_profile["integration_id"], body.external_id),
+                ).fetchone()
             if existing:
                 self._visible(existing, actor)
                 if (

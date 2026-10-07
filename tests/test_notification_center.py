@@ -239,3 +239,29 @@ def test_notification_test_send_is_non_authorizing_and_receipt_is_not_claimed(en
     assert body["receipt_confirmed"] is False
     assert body["execution_allowed"] is False
     assert sent["destination"]["email"] == env.users["admin"]["email"]
+
+
+def test_notification_test_send_revalidates_authority_before_transport(env, monkeypatch):
+    admin = env.human("admin")
+    template_set = admin.post(
+        "/api/v1/notification-template-sets", json=template_set_payload()
+    ).json()
+    sent = []
+    monkeypatch.setattr("grant.transport.send_email", lambda *args: sent.append(args))
+    with env.db.transaction() as conn:
+        conn.execute("UPDATE users SET enabled=0 WHERE id=?", (env.users["admin"]["id"],))
+    response = admin.post(
+        f"/api/v1/notification-template-sets/{template_set['id']}/test-send",
+        json={
+            "event": "requested",
+            "sample": {
+                "request_title": "Revoked", "request_url": "http://testserver/requests/test",
+                "external_id": "revoked-send", "action_kind": "service.notify",
+                "target": "test-service", "reason": "test",
+                "deadline": "2030-01-01T00:00:00+00:00",
+                "decision_state": "AWAITING", "execution_state": "NOT_STARTED"
+            },
+        },
+    )
+    assert response.status_code in (401, 403)
+    assert sent == []

@@ -75,6 +75,22 @@ def test_idempotent_intake_and_conflicting_change(env):
         assert conn.execute("SELECT count(*) FROM outbox").fetchone()[0] == 1
 
 
+def test_human_external_id_conflict_uses_integration_uniqueness_key(env):
+    body = env.intake(external_id="human-idempotency")
+    first = env.human("requester").post("/api/v1/requests", json=body)
+    assert first.status_code == 202, first.text
+    with env.db.transaction() as conn:
+        conn.execute(
+            "INSERT INTO profiles(id,name,integration_id,approver_id,action_kind,deadline_seconds,reminder_seconds,max_reminders,grant_seconds,enabled) VALUES(?,?,?,?,?,?,?,?,?,0)",
+            ("other-profile", "Other", env.integration["id"], env.users["approver"]["id"], "service.restart", 86400, 3600, 3, 900),
+        )
+    conflict = env.human("stranger").post(
+        "/api/v1/requests", json={**body, "profile_id": "other-profile"}
+    )
+    assert conflict.status_code in (404, 409)
+    assert conflict.status_code != 500
+
+
 def test_duplicate_decision_is_not_duplicate_event(env):
     row = create(env)
     client = env.human("approver")
