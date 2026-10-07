@@ -260,14 +260,25 @@ def test_recovery_pause_freezes_expiry_maintenance(env, tmp_path):
     Database.restore(backup, restored)
 
     restored_db = Database(restored)
+    restored_settings = replace(env.settings, database=restored)
     with restored_db.transaction() as conn:
-        conn.execute("UPDATE requests SET deadline=0 WHERE id=?", (pending["id"],))
+        conn.execute(
+            "UPDATE requests SET deadline=0,next_reminder=0 WHERE id=?",
+            (pending["id"],),
+        )
 
-    worker = Worker(restored_db, replace(env.settings, database=restored))
+    core = Core(restored_db, restored_settings)
+    assert core.get(env.admin, pending["id"])["state"] == "AWAITING"
+    core.maintenance()
+    worker = Worker(restored_db, restored_settings)
     assert worker.tick() == 0
     with restored_db.transaction(write=False) as conn:
-        row = conn.execute("SELECT state FROM requests WHERE id=?", (pending["id"],)).fetchone()
+        row = conn.execute(
+            "SELECT state,reminder_count FROM requests WHERE id=?", (pending["id"],)
+        ).fetchone()
         assert row["state"] == "AWAITING"
+        assert row["reminder_count"] == 0
+        assert conn.execute("SELECT count(*) FROM outbox WHERE kind='email'").fetchone()[0] == 1
         assert (
             conn.execute(
                 "SELECT count(*) FROM audit WHERE request_id=? AND action='request.expired'",

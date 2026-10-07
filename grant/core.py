@@ -239,7 +239,13 @@ class Core:
             (ident, row["id"], row["revision"], json_text(payload), integration[0], now, now),
         )
 
+    @staticmethod
+    def _paused(conn: sqlite3.Connection) -> bool:
+        return conn.execute("SELECT value FROM runtime WHERE key='paused'").fetchone()[0] == "1"
+
     def _expire(self, conn: sqlite3.Connection, row: sqlite3.Row, now: float) -> bool:
+        if self._paused(conn):
+            return False
         due = (row["state"] in ("AWAITING", "HELD") and row["deadline"] <= now) or (
             row["state"] == "APPROVED" and row["grant_until"] <= now and not row["execution_id"]
         )
@@ -565,6 +571,8 @@ class Core:
     def maintenance(self) -> None:
         now = time.time()
         with self.db.transaction() as conn:
+            if self._paused(conn):
+                return
             rows = conn.execute(
                 "SELECT * FROM requests WHERE state IN ('AWAITING','HELD','APPROVED') AND execution_id IS NULL"
             ).fetchall()
