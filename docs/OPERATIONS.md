@@ -126,13 +126,15 @@ Stop the old loopback process, take a new backup, run `check` and the candidate
 against an isolated copy before pointing a service at it. The default web path is
 resolved from the active source tree; remove a legacy hard-coded `web_root` only
 after verifying the new compiled assets. Run the same user scenarios on that build.
-Schema v2 adds administrator-managed mail templates, policy references and immutable
-request template snapshots. Opening a schema-v1 database with this candidate migrates
-it forward to v2 in place; take a backup first for any non-disposable installation.
-Pre-v2 binaries reject schema v2 and therefore are not a valid code-only rollback target.
-Do not downgrade/stamp the database. If a schema rollback is ever required, use the
-protected pre-upgrade backup through the reconciliation procedure above. Real
-upgrade/rollback requires the operator's deployment approval.
+Schema v3 adds versioned policy lifecycle/selectors, event-oriented notification
+template sets/branding snapshots, request policy-version references and event-typed
+delivery state on top of the schema-v2 approval/mail snapshot baseline. Opening a
+schema-v1 or schema-v2 database with this candidate migrates it forward to v3 in place;
+take a backup first for any non-disposable installation. Pre-v3 binaries reject schema
+v3 and therefore are not a valid code-only rollback target. Do not downgrade/stamp the
+database. If a schema rollback is ever required, use the protected pre-upgrade backup
+through the reconciliation procedure above. Real upgrade/rollback requires the
+operator's deployment approval.
 
 ## Browser checks
 

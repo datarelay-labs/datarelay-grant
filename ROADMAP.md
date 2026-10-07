@@ -28,9 +28,11 @@ The current development candidate already provides:
 - immutable requested action and fingerprint;
 - explicit approve/hold/deny;
 - request deadlines, reminders, cancellation and linked replacement;
-- administrator-managed approval policies;
-- administrator-managed plain-text approval/reminder templates;
-- request-time policy/template snapshot behavior;
+- versioned approval policies with Draft -> Testing -> Active -> Disabled lifecycle,
+  bounded deterministic matching, clone/history and shared runtime/preview resolution;
+- event-oriented notification template sets with safe variables, preview/test send,
+  delivery health, branding and sender display name;
+- request-time policy-version and complete notification snapshot behavior;
 - scoped integration identities and credentials;
 - durable SMTP/HTTP outbox and signed outcome callbacks;
 - action-bound consume/replay protocol and result reporting;

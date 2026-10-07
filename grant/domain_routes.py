@@ -10,6 +10,12 @@ from .models import (
     EmailTemplateUpdate,
     Intake,
     Integration,
+    NotificationBrandingUpdate,
+    NotificationPreview,
+    NotificationTemplateSet,
+    NotificationTemplateSetUpdate,
+    NotificationTestSend,
+    PolicySample,
     Profile,
     ProfileUpdate,
     Result,
@@ -58,9 +64,37 @@ def register_domain(app, actor, human, reader):
     def add_profile(body: Profile, request: Request):
         return core.create_profile(actor(request), body)
 
+    @app.post("/api/v1/profiles/preview")
+    def preview_profile(body: PolicySample, request: Request):
+        return core.preview_policy(actor(request), body)
+
     @app.put("/api/v1/profiles/{ident}")
     def update_profile(ident: str, body: ProfileUpdate, request: Request):
         return core.update_profile(actor(request), ident, body)
+
+    @app.post("/api/v1/profiles/{ident}/test")
+    def test_profile(ident: str, request: Request):
+        return core.transition_profile(actor(request), ident, "TESTING")
+
+    @app.post("/api/v1/profiles/{ident}/activate")
+    def activate_profile(ident: str, request: Request):
+        return core.transition_profile(actor(request), ident, "ACTIVE")
+
+    @app.post("/api/v1/profiles/{ident}/disable")
+    def disable_profile(ident: str, request: Request):
+        return core.transition_profile(actor(request), ident, "DISABLED")
+
+    @app.post("/api/v1/profiles/{ident}/clone", status_code=201)
+    def clone_profile(ident: str, request: Request):
+        return core.clone_profile(actor(request), ident)
+
+    @app.get("/api/v1/profiles/{ident}/history")
+    def profile_history(ident: str, request: Request):
+        return core.profile_history(actor(request), ident)
+
+    @app.post("/api/v1/profiles/{ident}/test-request")
+    def test_profile_request(ident: str, body: PolicySample, request: Request):
+        return core.test_profile_request(actor(request), ident, body)
 
     @app.get("/api/v1/email-templates")
     def email_templates(request: Request):
@@ -73,6 +107,44 @@ def register_domain(app, actor, human, reader):
     @app.put("/api/v1/email-templates/{ident}")
     def update_email_template(ident: str, body: EmailTemplateUpdate, request: Request):
         return core.update_email_template(actor(request), ident, body)
+
+    @app.get("/api/v1/notification-template-sets")
+    def notification_template_sets(request: Request):
+        return core.notification_template_sets(actor(request))
+
+    @app.post("/api/v1/notification-template-sets", status_code=201)
+    def add_notification_template_set(body: NotificationTemplateSet, request: Request):
+        return core.create_notification_template_set(actor(request), body)
+
+    @app.put("/api/v1/notification-template-sets/{ident}")
+    def update_notification_template_set(
+        ident: str, body: NotificationTemplateSetUpdate, request: Request
+    ):
+        return core.update_notification_template_set(actor(request), ident, body)
+
+    @app.post("/api/v1/notification-template-sets/{ident}/preview")
+    def preview_notification(ident: str, body: NotificationPreview, request: Request):
+        return core.preview_notification(actor(request), ident, body)
+
+    @app.post("/api/v1/notification-template-sets/{ident}/test-send")
+    def test_notification(ident: str, body: NotificationTestSend, request: Request):
+        return core.test_notification(actor(request), ident, body)
+
+    @app.get("/api/v1/notification-variables")
+    def notification_variables(request: Request):
+        return core.notification_variables(actor(request))
+
+    @app.get("/api/v1/notification-deliveries")
+    def notification_deliveries(request: Request):
+        return core.notification_deliveries(actor(request))
+
+    @app.get("/api/v1/notification-branding")
+    def notification_branding(request: Request):
+        return core.notification_branding(actor(request))
+
+    @app.put("/api/v1/notification-branding")
+    def update_notification_branding(body: NotificationBrandingUpdate, request: Request):
+        return core.update_notification_branding(actor(request), body)
 
     @app.get("/api/v1/integrations")
     def integrations(request: Request):

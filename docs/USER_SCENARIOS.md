@@ -53,9 +53,13 @@ An administrator signs in through the normal login screen. System administration
 shows actual accounts, health and audit through Foundation adapters. Create a
 separate disposable account through the UI; never assume mock account creation.
 Configure a DataRelay fixture integration against the registered receiver and test
-its connection. Create a bounded approval/reminder email template through the UI, then
-configure a single-approver approval policy for a fixed action kind and select that
-template. Confirm policy/template edits apply only to new request snapshots.
+its connection. In Notifications, create a complete bounded event template set, preview
+the rendered requested message, and send a non-authorizing test notification while
+keeping transport acceptance distinct from inbox receipt. In Approval Policies, create
+a single-approver Draft for a fixed action kind, select the notification template set,
+move it to Testing, run an isolated non-executing test, explicitly Activate it and inspect
+version/change history. Confirm policy/template/branding edits apply only to new request
+snapshots; saving a policy alone must never make it live.
 Issue a scoped credential through the UI, inspect metadata without raw secret/hash
 exposure, request revocation and confirm it. Verify the revoked credential cannot
 read requests. Revocation cancellation must leave it usable. A requester/member

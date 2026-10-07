@@ -9,6 +9,7 @@ import smtplib
 import ssl
 import time
 from email.message import EmailMessage
+from email.utils import formataddr
 from urllib.parse import urlsplit
 
 import httpx
@@ -81,7 +82,12 @@ def send_email(settings: Settings, destination: dict, payload: str, event_id: st
         raise GrantError("SMTP_UNCONFIGURED", 503)
     data = json.loads(payload)
     message = EmailMessage()
-    message["From"] = settings.smtp_from
+    sender_display_name = str(data.get("sender_display_name", "")).strip()
+    message["From"] = (
+        formataddr((sender_display_name, settings.smtp_from))
+        if sender_display_name
+        else settings.smtp_from
+    )
     message["To"] = destination["email"]
     message["Subject"] = data["subject"].replace("\r", " ").replace("\n", " ")
     message["Message-ID"] = f"<{event_id}@grant.local>"
@@ -134,11 +140,12 @@ class Worker:
                 stale_outcome = (
                     row["kind"] == "webhook" and json.loads(row["payload"])["state"] != req["state"]
                 )
-                if (
-                    not req["enabled"]
-                    or stale_outcome
-                    or (row["kind"] == "email" and req["state"] not in ("AWAITING", "HELD"))
-                ):
+                stale_approval_email = (
+                    row["kind"] == "email"
+                    and row["event_type"] in ("requested", "reminder", "legacy")
+                    and req["state"] not in ("AWAITING", "HELD")
+                )
+                if not req["enabled"] or stale_outcome or stale_approval_email:
                     conn.execute(
                         "UPDATE outbox SET state='SUPERSEDED',lease_token=NULL,last_error=NULL WHERE id=?",
                         (row["id"],),

@@ -1,7 +1,7 @@
-# R1 implementation status
+# Grant 1.0 implementation status
 
-Updated: 2026-10-07. Canonical coordination: GitHub Issue #33, PR #34.
-Status: development candidate, not production/GA or full R1 acceptance.
+Updated: 2026-10-07. G1/G2 coordination: GitHub Issue #38; baseline/external lane: Issue #33 / PR #34.
+Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
@@ -16,9 +16,13 @@ historical/current baseline evidence and maps into the broader 1.0 roadmap.
 
 - Pinned unpublished Foundation SDK and public imports; real shell, login,
   MFA/recovery, accounts/sessions, health and audit adapters.
-- Administrator-managed approval policies and bounded plain-text approval/reminder
-  templates. Each request snapshots the assigned approver, timing policy and selected
-  template so later administration changes apply only to new requests.
+- Versioned approval policies with explicit Draft -> Testing -> Active -> Disabled
+  lifecycle, clone/history, bounded deterministic selectors and shared runtime/preview
+  resolution. Saving never makes a policy live; isolated tests cannot authorize execution.
+- A coherent Notifications area with complete event template sets, explicit safe
+  variables, rendered preview/test send, delivery health/retry visibility and system
+  branding. Each request snapshots the exact policy version and notification content so
+  later policy/template/branding changes apply only to new requests.
 - One fixed approver per policy; immutable action, explicit approve/hold/deny,
   expiry, bounded reminders, cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.
@@ -35,15 +39,17 @@ historical/current baseline evidence and maps into the broader 1.0 roadmap.
 
 ## Observed development evidence
 
-The current development tree passes 128 Python contract/lifecycle cases, 12 frontend
-adapter cases, typecheck/build, and five real browser journeys. The browser administration
-journey now creates an email template and binds it to an approval policy. Final exact-HEAD
-confirmation and CI are recorded in Issue #33.
+The current G1/G2 development tree passes 132 Python contract/lifecycle cases, 12
+frontend adapter cases, static checks, typecheck/build, and five real browser journeys.
+The browser administration journey exercises Notification template-set preview/test send
+and Approval Policy Draft -> Testing -> isolated test -> Activate -> runtime preview ->
+history. Final exact-HEAD confirmation and CI belong in active Work Packet #38.
 
 Browser cases include two independently signed-in requester/approver passes,
 mobile shared administration, cancellation/replacement, account creation,
-email-template/approval-policy creation and scoped credential revocation. Screenshots were inspected. Browser tests use
-actual loopback SMTP/HTTP and disposable accounts; the executor is explicitly a
+notification-template/policy lifecycle administration and scoped credential revocation.
+Screenshots were inspected. Browser tests use actual loopback SMTP/HTTP and disposable
+accounts; the executor is explicitly a
 fixture, not the real DataRelay consumer. Never promote these into external PASS.
 Raw fixture credentials and trace archives remain private and untracked.
 A Starlette TestClient deprecation warning is recorded without suppressing it.
@@ -53,7 +59,7 @@ A Starlette TestClient deprecation warning is recorded without suppressing it.
 | Milestone | Disposition |
 | --- | --- |
 | M0 | Foundation/auth/admin baseline implemented and locally tested; unsupported lifecycle/TLS mutations stay unavailable |
-| M1 | Core/UI plus approval-policy and email-template administration tested; Gmail STARTTLS/AUTH/submission and actual receipt at a distinct designated mailbox verified |
+| M1 | Core/UI plus versioned approval-policy and Notification administration tested; baseline Gmail STARTTLS/AUTH/submission and actual receipt at a distinct designated mailbox verified |
 | M2 | API, strict consumer replies, durable transport and recovery tested on the development server |
 | M3 | Consumer contract/client implemented; actual existing DataRelay operation NOT integrated/accepted |
 | M4 | Stellar request/tenant/callback contract and guide implemented; actual Stellar receiver evidence missing |
