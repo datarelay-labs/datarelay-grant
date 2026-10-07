@@ -48,6 +48,26 @@ class Intake(Input):
     predecessor_id: str | None = Field(default=None, max_length=100)
 
 
+class Delegation(Input):
+    substitute_id: str = Field(min_length=1, max_length=100)
+    starts_at: float
+    ends_at: float
+
+    @field_validator("ends_at")
+    @classmethod
+    def bounded_end(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("Delegation end must be positive")
+        return value
+
+
+class Reassign(Input):
+    from_approver_id: str = Field(min_length=1, max_length=100)
+    to_approver_id: str = Field(min_length=1, max_length=100)
+    expected_revision: int = Field(ge=1)
+    reason: str = Field(min_length=1, max_length=2000)
+
+
 class Decision(Input):
     decision: Literal["APPROVED", "HELD", "DENIED"]
     expected_revision: int = Field(ge=1)

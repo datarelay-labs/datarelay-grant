@@ -7,6 +7,7 @@ from .models import (
     Cancel,
     Consume,
     Decision,
+    Delegation,
     EmailTemplate,
     EmailTemplateUpdate,
     Intake,
@@ -19,6 +20,7 @@ from .models import (
     PolicySample,
     Profile,
     ProfileUpdate,
+    Reassign,
     Result,
     Token,
 )
@@ -26,6 +28,14 @@ from .models import (
 
 def register_domain(app, actor, human, reader):
     core, auth, worker = app.state.core, app.state.auth, app.state.worker
+
+    @app.get("/api/v1/delegations")
+    def delegations(request: Request):
+        return core.delegations(human(request))
+
+    @app.post("/api/v1/delegations", status_code=201)
+    def add_delegation(body: Delegation, request: Request):
+        return core.create_delegation(human(request), body)
 
     @app.get("/api/v1/requests")
     def requests(
@@ -44,6 +54,10 @@ def register_domain(app, actor, human, reader):
     @app.post("/api/v1/requests/{ident}/decision")
     def decision(ident: str, body: Decision, request: Request):
         return core.decide(human(request), ident, body)
+
+    @app.post("/api/v1/requests/{ident}/reassign")
+    def reassign(ident: str, body: Reassign, request: Request):
+        return core.reassign_request(actor(request), ident, body)
 
     @app.post("/api/v1/requests/{ident}/cancel")
     def cancel(ident: str, body: Cancel, request: Request):

@@ -117,7 +117,13 @@ CREATE TABLE IF NOT EXISTS request_decisions (
  reason TEXT NOT NULL DEFAULT '', decided_at REAL NOT NULL,
  PRIMARY KEY(request_id,actor_id)
 );
-PRAGMA user_version=4;
+CREATE TABLE IF NOT EXISTS delegations (
+ id TEXT PRIMARY KEY, delegator_id TEXT NOT NULL REFERENCES users(id),
+ substitute_id TEXT NOT NULL REFERENCES users(id), starts_at REAL NOT NULL, ends_at REAL NOT NULL,
+ created_at REAL NOT NULL, revoked_at REAL
+);
+CREATE INDEX IF NOT EXISTS delegations_active ON delegations(delegator_id,starts_at,ends_at);
+PRAGMA user_version=5;
 """
 
 
@@ -150,7 +156,7 @@ class Database:
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1, 2, 3, 4):
+            if version not in (0, 1, 2, 3, 4, 5):
                 raise RuntimeError("Unsupported database schema; do not downgrade this binary")
             conn.execute("PRAGMA journal_mode=WAL")
             if version == 1:
@@ -161,6 +167,9 @@ class Database:
                 version = 3
             if version == 3:
                 self._migrate_v3_to_v4(conn)
+                version = 4
+            if version == 4:
+                self._migrate_v4_to_v5(conn)
             conn.executescript(SCHEMA)
         private_file(path)
 
@@ -332,6 +341,18 @@ class Database:
             conn.execute("ALTER TABLE requests ADD COLUMN approval_plan TEXT NOT NULL DEFAULT '{}'")
         conn.execute("PRAGMA user_version=4")
 
+    @staticmethod
+    def _migrate_v4_to_v5(conn: sqlite3.Connection) -> None:
+        conn.executescript("""
+        CREATE TABLE IF NOT EXISTS delegations (
+         id TEXT PRIMARY KEY, delegator_id TEXT NOT NULL REFERENCES users(id),
+         substitute_id TEXT NOT NULL REFERENCES users(id), starts_at REAL NOT NULL, ends_at REAL NOT NULL,
+         created_at REAL NOT NULL, revoked_at REAL
+        );
+        CREATE INDEX IF NOT EXISTS delegations_active ON delegations(delegator_id,starts_at,ends_at);
+        """)
+        conn.execute("PRAGMA user_version=5")
+
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
         conn.row_factory = sqlite3.Row
@@ -368,7 +389,7 @@ class Database:
         with closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
-            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4):
+            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5):
                 raise ValueError("Backup schema mismatch")
             with closing(sqlite3.connect(destination)) as new:
                 old.backup(new)
