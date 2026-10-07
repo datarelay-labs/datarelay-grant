@@ -233,3 +233,16 @@ def test_login_limiter_does_not_treat_the_reverse_proxy_as_user_identity(env, mo
         ("login-installation", 120, 60),
         ("login-user:missing-user", 15, 300),
     ]
+
+
+def test_ended_session_cannot_change_password_or_complete_mfa_enrollment(env):
+    browser = env.human("stranger")
+    principal = env.auth.session(browser.cookies["grant_session"])
+    material = env.auth.enroll(principal)
+    with env.db.transaction() as conn:
+        conn.execute("DELETE FROM sessions WHERE id=?", (principal.session_id,))
+
+    with pytest.raises(GrantError, match="AUTHENTICATION_REQUIRED"):
+        env.auth.change_password(principal, env.password, "new-isolated-password-42")
+    with pytest.raises(GrantError, match="AUTHENTICATION_REQUIRED"):
+        env.auth.confirm_enrollment(principal, pyotp.TOTP(material["secret"]).now())

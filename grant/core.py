@@ -93,6 +93,7 @@ class Core:
             }
         )
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
             conn.execute(
                 "INSERT INTO integrations VALUES(?,?,?,1,?,?,?)",
                 (ident, body.name, body.kind, body.tenant, destination, time.time()),
@@ -124,6 +125,7 @@ class Core:
         actor.require_admin()
         ident = uid()
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
             if not conn.execute(
                 "SELECT id FROM integrations WHERE id=? AND enabled=1", (body.integration_id,)
             ).fetchone():

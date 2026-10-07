@@ -3,6 +3,7 @@
 from fastapi import Request
 
 from . import __version__
+from .auth import require_current_authority
 from .db import audit
 from .errors import GrantError
 from .models import NewUser
@@ -48,7 +49,7 @@ def register_admin(app, actor):
         principal = actor(request)
         principal.require_admin()
         return app.state.auth.create_user(
-            body.username, body.email, body.password, body.role, principal.id
+            body.username, body.email, body.password, body.role, principal
         )
 
     @app.post("/api/v1/admin/users/{ident}/disable")
@@ -58,6 +59,7 @@ def register_admin(app, actor):
         if ident == principal.id:
             raise GrantError("CANNOT_DISABLE_CURRENT_ACCOUNT", 409)
         with app.state.db.transaction() as conn:
+            require_current_authority(conn, principal)
             if not conn.execute("SELECT id FROM users WHERE id=?", (ident,)).fetchone():
                 raise GrantError("ACCOUNT_NOT_FOUND", 404)
             conn.execute("UPDATE users SET enabled=0 WHERE id=?", (ident,))

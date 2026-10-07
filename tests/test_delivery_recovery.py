@@ -286,3 +286,20 @@ def test_recovery_pause_freezes_expiry_maintenance(env, tmp_path):
             ).fetchone()[0]
             == 0
         )
+
+
+def test_ended_admin_session_cannot_resend_a_delivery(env):
+    row = env.api.post("/api/v1/requests", json=env.intake()).json()
+    browser = env.human("admin")
+    principal = env.auth.session(browser.cookies["grant_session"])
+    with env.db.transaction() as conn:
+        event = conn.execute(
+            "SELECT id FROM outbox WHERE request_id=? AND kind='email'", (row["id"],)
+        ).fetchone()
+        conn.execute("UPDATE outbox SET state='FAILED' WHERE id=?", (event["id"],))
+        conn.execute("DELETE FROM sessions WHERE id=?", (principal.session_id,))
+
+    with pytest.raises(GrantError, match="AUTHENTICATION_REQUIRED"):
+        Worker(env.db, env.settings).resend(principal, event["id"])
+    with env.db.transaction(write=False) as conn:
+        assert conn.execute("SELECT state FROM outbox WHERE id=?", (event["id"],)).fetchone()[0] == "FAILED"

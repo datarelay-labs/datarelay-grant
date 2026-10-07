@@ -106,7 +106,7 @@ class Auth:
         email: str,
         password: str,
         role: str = "member",
-        actor: str = "bootstrap",
+        actor: str | Principal = "bootstrap",
     ) -> dict:
         if len(password) < 12 or len(password) > 256 or role not in ("admin", "member"):
             raise GrantError("INVALID_ACCOUNT", 422)
@@ -114,11 +114,15 @@ class Auth:
         user_id = uid()
         try:
             with self.db.transaction() as conn:
+                actor_id = actor.id if isinstance(actor, Principal) else actor
+                if isinstance(actor, Principal):
+                    actor.require_admin()
+                    require_current_authority(conn, actor)
                 conn.execute(
                     "INSERT INTO users(id,username,email,password_hash,role,created_at) VALUES(?,?,?,?,?,?)",
                     (user_id, username.strip(), email, hashed, role, time.time()),
                 )
-                audit(conn, None, actor, "user.created", {"user_id": user_id})
+                audit(conn, None, actor_id, "user.created", {"user_id": user_id})
         except sqlite3.IntegrityError as exc:
             raise GrantError("ACCOUNT_EXISTS", 409) from exc
         return {"id": user_id, "username": username, "email": email, "role": role}
@@ -246,6 +250,7 @@ class Auth:
     def revoke_token(self, actor: Principal, ident: str) -> dict:
         actor.require_admin()
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
             row = conn.execute("SELECT enabled FROM api_tokens WHERE id=?", (ident,)).fetchone()
             if not row:
                 raise GrantError("TOKEN_NOT_FOUND", 404)
@@ -278,6 +283,7 @@ class Auth:
             raise GrantError("PASSWORD_CHANGE_REJECTED", 422)
         hashed = PASSWORDS.hash(new)
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
             if not conn.execute(
                 "UPDATE users SET password_hash=? WHERE id=? AND password_hash=?",
                 (hashed, actor.id, row[0]),
@@ -290,6 +296,7 @@ class Auth:
         self.rate("enroll:" + actor.id, 5, 300)
         secret = pyotp.random_base32()
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
             user = conn.execute("SELECT * FROM users WHERE id=?", (actor.id,)).fetchone()
             if user["totp_secret"]:
                 raise GrantError("MFA_ALREADY_ENABLED")
@@ -308,6 +315,7 @@ class Auth:
         self.rate("mfa:" + actor.id, 10, 300)
         recovery = [secrets.token_hex(10) for _ in range(8)]
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
             row = conn.execute(
                 "SELECT value FROM runtime WHERE key=?", ("enroll:" + actor.id,)
             ).fetchone()

@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 
 import httpx
 
-from .auth import Principal
+from .auth import Principal, require_current_authority
 from .config import Settings
 from .core import Core
 from .db import Database, audit, uid
@@ -192,6 +192,7 @@ class Worker:
     def resend(self, actor: Principal, ident: str) -> dict:
         actor.require_admin()
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
             row = conn.execute("SELECT * FROM outbox WHERE id=?", (ident,)).fetchone()
             if not row:
                 raise GrantError("DELIVERY_NOT_FOUND", 404)

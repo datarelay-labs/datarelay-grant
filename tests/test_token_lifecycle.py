@@ -2,7 +2,7 @@ import pytest
 
 from grant.auth import Principal
 from grant.errors import GrantError
-from grant.models import Consume, Decision, Intake
+from grant.models import Consume, Decision, Intake, Integration, Profile
 
 
 def test_token_metadata_and_idempotent_revoke_are_admin_only(env):
@@ -78,3 +78,53 @@ def test_ended_admin_session_cannot_issue_a_new_integration_token(env):
 
     with env.db.transaction(write=False) as conn:
         assert conn.execute("SELECT count(*) FROM api_tokens").fetchone()[0] == 1
+
+
+def test_ended_admin_session_cannot_mutate_durable_admin_configuration(env):
+    browser = env.human("admin")
+    principal = env.auth.session(browser.cookies["grant_session"])
+    with env.db.transaction() as conn:
+        conn.execute("DELETE FROM sessions WHERE id=?", (principal.session_id,))
+
+    with pytest.raises(GrantError, match="AUTHENTICATION_REQUIRED"):
+        env.auth.create_user(
+            "stale-admin-created",
+            "stale-admin-created@example.invalid",
+            "isolated-test-password-42",
+            actor=principal,
+        )
+    with pytest.raises(GrantError, match="AUTHENTICATION_REQUIRED"):
+        env.core.create_integration(
+            principal,
+            Integration(
+                name="stale-admin-integration",
+                kind="datarelay",
+                callback_url=env.settings.callback_urls[0],
+            ),
+        )
+    with pytest.raises(GrantError, match="AUTHENTICATION_REQUIRED"):
+        env.core.create_profile(
+            principal,
+            Profile(
+                name="stale-admin-profile",
+                integration_id=env.integration["id"],
+                approver_id=env.users["approver"]["id"],
+                action_kind="service.restart",
+            ),
+        )
+    with pytest.raises(GrantError, match="AUTHENTICATION_REQUIRED"):
+        env.auth.revoke_token(principal, env.token["id"])
+
+    with env.db.transaction(write=False) as conn:
+        assert conn.execute(
+            "SELECT count(*) FROM users WHERE username='stale-admin-created'"
+        ).fetchone()[0] == 0
+        assert conn.execute(
+            "SELECT count(*) FROM integrations WHERE name='stale-admin-integration'"
+        ).fetchone()[0] == 0
+        assert conn.execute(
+            "SELECT count(*) FROM profiles WHERE name='stale-admin-profile'"
+        ).fetchone()[0] == 0
+        assert conn.execute(
+            "SELECT enabled FROM api_tokens WHERE id=?", (env.token["id"],)
+        ).fetchone()[0] == 1
