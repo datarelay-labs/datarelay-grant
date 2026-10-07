@@ -90,6 +90,14 @@ export function productConfig(user: User) {
         requiredCapability: 'grant.approval_policy.manage',
       },
       {
+        id: 'approvers',
+        label: 'Approvers',
+        path: '/approvers',
+        icon: 'settings',
+        group: 'Configuration',
+        requiredCapability: 'grant.approval_policy.manage',
+      },
+      {
         id: 'notifications',
         label: 'Notifications',
         path: '/notifications',

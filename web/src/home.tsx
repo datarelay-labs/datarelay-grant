@@ -28,7 +28,7 @@ export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
 
   const now = Date.now() / 1000;
   const mine = useMemo(
-    () => rows.filter((row) => row.approver_id === user.id),
+    () => rows.filter((row) => (row.approval_plan?.members ?? [row.approver_id]).includes(user.id)),
     [rows, user.id],
   );
   const needsDecision = mine.filter((row) => ['AWAITING', 'HELD'].includes(row.state));

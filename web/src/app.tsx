@@ -9,6 +9,7 @@ import {
   ThemeRoot,
 } from '@datarelay-labs/foundation';
 import { Administration, Security } from './administration';
+import { Approvers } from './approvers';
 import { ApiError, setCsrf } from './api';
 import { useTask } from './common';
 import { authAdapter, productConfig, readSession } from './foundation.config';
@@ -202,6 +203,8 @@ export function App() {
     page = <Integrations />;
   } else if (user.role === 'admin' && path === '/profiles') {
     page = <Profiles />;
+  } else if (user.role === 'admin' && path === '/approvers') {
+    page = <Approvers />;
   } else if (user.role === 'admin' && path === '/notifications') {
     page = <Notifications />;
   } else if (user.role === 'admin' && path === '/email-templates') {
