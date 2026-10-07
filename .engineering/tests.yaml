@@ -1,25 +1,58 @@
 version: 1
-
-setup_command: ""
-
+setup_command: "bash scripts/checks.sh setup"
 paths:
+  "grant/**":
+    domains: [approval, api, automation, integrations]
+  "web/**":
+    domains: [approval, api]
+  "tests/**":
+    domains: [approval, api, integrations]
+  "scripts/**":
+    domains: [approval, api, integrations]
+  "uv.lock":
+    domains: [approval, api, integrations]
   "**":
-    domains:
-      - "documentation"
-
+    domains: [documentation]
 scenarios:
-  - id: ADOPTED-STATIC-001
-    name: Git whitespace validation
+  - id: GRANT-API-001
+    name: Approval and integration security contracts
+    cost: medium
+    estimated_seconds: 60
+    timeout_seconds: 180
+    level: integration
+    domains: [approval, api, automation, integrations]
+    triggers: [pr, preflight, release]
+    platforms: [linux]
+    command: "bash scripts/checks.sh api"
+    invariants: [explicit human decision, immutable action, scoped authorization, durable state]
+    release_gate: true
+  - id: GRANT-WEB-001
+    name: Foundation consumer typecheck and production build
+    cost: medium
+    estimated_seconds: 10
+    timeout_seconds: 120
+    level: integration
+    domains: [approval, api]
+    triggers: [pr, preflight, release]
+    platforms: [linux]
+    command: "bash scripts/checks.sh web"
+    invariants: [Foundation public SDK boundary, real product adapters]
+    release_gate: true
+  - id: GRANT-STATIC-001
+    name: Product lint and diff validation
     level: static
-    domains:
-      - "documentation"
-    triggers:
-      - pr
-      - preflight
-      - release
-    platforms:
-      - "linux"
-    command: "git diff --check"
-    invariants:
-      - "repository diff has no whitespace errors"
+    domains: [documentation, approval, api]
+    triggers: [pr, preflight, release]
+    platforms: [linux]
+    command: "bash scripts/checks.sh static"
+    invariants: [clean deterministic source]
+    release_gate: true
+  - id: GRANT-BROWSER-001
+    name: Actual browser two-user journeys and shared administration
+    level: e2e
+    domains: [approval, api, integrations]
+    triggers: [preflight, release]
+    platforms: [linux]
+    command: "bash scripts/checks.sh browser"
+    invariants: [real authenticated user journeys, explicit confirmation, no fixture proof of external integration]
     release_gate: true

@@ -20,13 +20,23 @@ Do not preload unrelated standards, historical discussions, or documentation.
 
 ## Current repository state
 
-DataRelay Grant is currently a **pre-release product definition**. Do not infer implemented behavior from the patent, README, or product-site language.
+DataRelay Grant is currently a **pre-release development candidate**. Do not infer implemented behavior from the patent, README, product-site language, roadmap, or unmerged design; only current code plus deterministic evidence establishes implemented behavior.
 
 Any future implementation must distinguish clearly between:
 - patent-described concepts;
 - accepted product requirements;
 - implemented and tested behavior; and
 - roadmap / planned behavior.
+
+## Product authority
+
+For product behavior, UX, approval semantics, administration model, and product-scope
+decisions, `docs/PRODUCT_STANDARD.md` is the canonical product standard.
+`ROADMAP.md` owns implementation sequencing and target workstreams, not current
+capability. `docs/STATUS.md` plus exact code/tests/evidence describe what is
+implemented now. If roadmap wording conflicts with Product Standard, Product Standard
+wins; if code differs from Product Standard, report implementation drift rather than
+silently redefining the requirement.
 
 ## DataRelay Grant product invariants
 
