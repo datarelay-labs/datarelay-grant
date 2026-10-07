@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS email_templates (
 );
 CREATE TABLE IF NOT EXISTS profiles (
  id TEXT PRIMARY KEY, name TEXT NOT NULL, integration_id TEXT NOT NULL REFERENCES integrations(id),
- approver_id TEXT NOT NULL REFERENCES users(id), action_kind TEXT NOT NULL,
+ approver_id TEXT NOT NULL REFERENCES users(id), approval_mode TEXT NOT NULL DEFAULT 'SINGLE', approver_group_id TEXT, approvals_required INTEGER, action_kind TEXT NOT NULL,
  email_template_id TEXT REFERENCES email_templates(id),
  deadline_seconds INTEGER NOT NULL, reminder_seconds INTEGER NOT NULL,
  max_reminders INTEGER NOT NULL, grant_seconds INTEGER NOT NULL, enabled INTEGER NOT NULL DEFAULT 0
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS profile_versions (
  id TEXT PRIMARY KEY, profile_id TEXT NOT NULL REFERENCES profiles(id),
  version INTEGER NOT NULL, name TEXT NOT NULL,
  integration_id TEXT NOT NULL REFERENCES integrations(id),
- approver_id TEXT NOT NULL REFERENCES users(id), action_kind TEXT NOT NULL,
+ approver_id TEXT NOT NULL REFERENCES users(id), approval_mode TEXT NOT NULL DEFAULT 'SINGLE', approver_group_id TEXT, approvals_required INTEGER, action_kind TEXT NOT NULL,
  email_template_id TEXT REFERENCES email_templates(id),
  deadline_seconds INTEGER NOT NULL, reminder_seconds INTEGER NOT NULL,
  max_reminders INTEGER NOT NULL, grant_seconds INTEGER NOT NULL,
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS requests (
  id TEXT PRIMARY KEY, integration_id TEXT NOT NULL REFERENCES integrations(id),
  external_id TEXT NOT NULL, profile_id TEXT NOT NULL REFERENCES profiles(id),
  profile_version_id TEXT REFERENCES profile_versions(id),
- requester_id TEXT REFERENCES users(id), approver_id TEXT NOT NULL REFERENCES users(id),
+ requester_id TEXT REFERENCES users(id), approver_id TEXT NOT NULL REFERENCES users(id), approval_plan TEXT NOT NULL DEFAULT '{}',
  title TEXT NOT NULL, action TEXT NOT NULL, action_hash TEXT NOT NULL, intake_hash TEXT NOT NULL,
  source TEXT NOT NULL, reason TEXT NOT NULL, predecessor_id TEXT REFERENCES requests(id),
  mail_template TEXT NOT NULL, state TEXT NOT NULL, decision TEXT, decision_actor TEXT, decision_at REAL,
@@ -102,7 +102,22 @@ CREATE TABLE IF NOT EXISTS runtime (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 INSERT OR IGNORE INTO runtime(key,value) VALUES('paused','0');
 INSERT OR IGNORE INTO runtime(key,value) VALUES('notification_brand_name','DataRelay Grant');
 INSERT OR IGNORE INTO runtime(key,value) VALUES('notification_sender_display_name','DataRelay Grant');
-PRAGMA user_version=3;
+CREATE TABLE IF NOT EXISTS approver_groups (
+ id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, enabled INTEGER NOT NULL DEFAULT 1,
+ created_at REAL NOT NULL, updated_at REAL NOT NULL
+);
+CREATE TABLE IF NOT EXISTS approver_group_members (
+ group_id TEXT NOT NULL REFERENCES approver_groups(id) ON DELETE CASCADE,
+ user_id TEXT NOT NULL REFERENCES users(id), position INTEGER NOT NULL,
+ PRIMARY KEY(group_id,user_id), UNIQUE(group_id,position)
+);
+CREATE TABLE IF NOT EXISTS request_decisions (
+ request_id TEXT NOT NULL REFERENCES requests(id), actor_id TEXT NOT NULL REFERENCES users(id),
+ decision TEXT NOT NULL CHECK(decision IN ('APPROVED','HELD','DENIED')),
+ reason TEXT NOT NULL DEFAULT '', decided_at REAL NOT NULL,
+ PRIMARY KEY(request_id,actor_id)
+);
+PRAGMA user_version=4;
 """
 
 
@@ -135,7 +150,7 @@ class Database:
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1, 2, 3):
+            if version not in (0, 1, 2, 3, 4):
                 raise RuntimeError("Unsupported database schema; do not downgrade this binary")
             conn.execute("PRAGMA journal_mode=WAL")
             if version == 1:
@@ -143,6 +158,9 @@ class Database:
                 version = 2
             if version == 2:
                 self._migrate_v2_to_v3(conn)
+                version = 3
+            if version == 3:
+                self._migrate_v3_to_v4(conn)
             conn.executescript(SCHEMA)
         private_file(path)
 
@@ -192,7 +210,7 @@ class Database:
              id TEXT PRIMARY KEY, profile_id TEXT NOT NULL REFERENCES profiles(id),
              version INTEGER NOT NULL, name TEXT NOT NULL,
              integration_id TEXT NOT NULL REFERENCES integrations(id),
-             approver_id TEXT NOT NULL REFERENCES users(id), action_kind TEXT NOT NULL,
+             approver_id TEXT NOT NULL REFERENCES users(id), approval_mode TEXT NOT NULL DEFAULT 'SINGLE', approver_group_id TEXT, approvals_required INTEGER, action_kind TEXT NOT NULL,
              email_template_id TEXT REFERENCES email_templates(id),
              deadline_seconds INTEGER NOT NULL, reminder_seconds INTEGER NOT NULL,
              max_reminders INTEGER NOT NULL, grant_seconds INTEGER NOT NULL,
@@ -210,12 +228,15 @@ class Database:
         active_legacy_keys: set[tuple[str, str]] = set()
         for profile in conn.execute("SELECT * FROM profiles ORDER BY rowid").fetchall():
             existing = conn.execute(
-                "SELECT id FROM profile_versions WHERE profile_id=? LIMIT 1", (profile["id"],)
+                "SELECT id,lifecycle FROM profile_versions WHERE profile_id=? LIMIT 1",
+                (profile["id"],),
             ).fetchone()
+            key = (profile["integration_id"], profile["action_kind"])
             if existing:
+                if profile["enabled"] and existing["lifecycle"] == "ACTIVE":
+                    active_legacy_keys.add(key)
                 continue
             version_id = uid()
-            key = (profile["integration_id"], profile["action_kind"])
             lifecycle = "DISABLED"
             if profile["enabled"] and key not in active_legacy_keys:
                 lifecycle = "ACTIVE"
@@ -279,6 +300,38 @@ class Database:
         )
         conn.execute("PRAGMA user_version=3")
 
+    @staticmethod
+    def _migrate_v3_to_v4(conn: sqlite3.Connection) -> None:
+        conn.executescript("""
+        CREATE TABLE IF NOT EXISTS approver_groups (
+         id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, enabled INTEGER NOT NULL DEFAULT 1,
+         created_at REAL NOT NULL, updated_at REAL NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS approver_group_members (
+         group_id TEXT NOT NULL REFERENCES approver_groups(id) ON DELETE CASCADE,
+         user_id TEXT NOT NULL REFERENCES users(id), position INTEGER NOT NULL,
+         PRIMARY KEY(group_id,user_id), UNIQUE(group_id,position)
+        );
+        CREATE TABLE IF NOT EXISTS request_decisions (
+         request_id TEXT NOT NULL REFERENCES requests(id), actor_id TEXT NOT NULL REFERENCES users(id),
+         decision TEXT NOT NULL CHECK(decision IN ('APPROVED','HELD','DENIED')),
+         reason TEXT NOT NULL DEFAULT '', decided_at REAL NOT NULL,
+         PRIMARY KEY(request_id,actor_id)
+        );
+        """)
+        for table in ("profiles", "profile_versions"):
+            columns = {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+            if "approval_mode" not in columns:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN approval_mode TEXT NOT NULL DEFAULT 'SINGLE'")
+            if "approver_group_id" not in columns:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN approver_group_id TEXT")
+            if "approvals_required" not in columns:
+                conn.execute(f"ALTER TABLE {table} ADD COLUMN approvals_required INTEGER")
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(requests)")}
+        if "approval_plan" not in columns:
+            conn.execute("ALTER TABLE requests ADD COLUMN approval_plan TEXT NOT NULL DEFAULT '{}'")
+        conn.execute("PRAGMA user_version=4")
+
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
         conn.row_factory = sqlite3.Row
@@ -315,7 +368,7 @@ class Database:
         with closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
-            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3):
+            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4):
                 raise ValueError("Backup schema mismatch")
             with closing(sqlite3.connect(destination)) as new:
                 old.backup(new)

@@ -195,10 +195,31 @@ class PolicySample(Input):
     source: dict[str, Any] = Field(default_factory=dict)
 
 
+class ApproverGroup(Input):
+    name: str = Field(min_length=1, max_length=100)
+    member_ids: list[str] = Field(min_length=1, max_length=50)
+
+    @field_validator("member_ids")
+    @classmethod
+    def unique_members(cls, value: list[str]) -> list[str]:
+        if len(set(value)) != len(value):
+            raise ValueError("Group members must be unique")
+        return value
+
+
+class ApprovalPlan(Input):
+    mode: Literal["SINGLE", "ANY_ONE", "ALL", "N_OF_M", "SEQUENTIAL"] = "SINGLE"
+    group_id: str | None = None
+    approvals_required: int | None = Field(default=None, ge=1, le=50)
+
+
 class Profile(Input):
     name: str = Field(min_length=1, max_length=100)
     integration_id: str
     approver_id: str
+    approval_mode: Literal["SINGLE", "ANY_ONE", "ALL", "N_OF_M", "SEQUENTIAL"] = "SINGLE"
+    approver_group_id: str | None = None
+    approvals_required: int | None = Field(default=None, ge=1, le=50)
     action_kind: str = Field(min_length=1, max_length=100)
     email_template_id: str | None = None
     deadline_seconds: int = Field(default=86400, ge=60, le=604800)

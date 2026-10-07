@@ -3,6 +3,7 @@
 from fastapi import Query, Request
 
 from .models import (
+    ApproverGroup,
     Cancel,
     Consume,
     Decision,
@@ -55,6 +56,18 @@ def register_domain(app, actor, human, reader):
     @app.post("/api/v1/requests/{ident}/result")
     def result(ident: str, body: Result, request: Request):
         return core.report(actor(request), ident, body)
+
+    @app.get("/api/v1/approver-groups")
+    def approver_groups(request: Request):
+        return core.approver_groups(actor(request))
+
+    @app.post("/api/v1/approver-groups", status_code=201)
+    def add_approver_group(body: ApproverGroup, request: Request):
+        return core.create_approver_group(actor(request), body)
+
+    @app.put("/api/v1/approver-groups/{ident}")
+    def update_approver_group(ident: str, body: ApproverGroup, request: Request):
+        return core.update_approver_group(actor(request), ident, body)
 
     @app.get("/api/v1/profiles")
     def profiles(request: Request):
