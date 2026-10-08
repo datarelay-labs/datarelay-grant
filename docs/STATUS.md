@@ -29,10 +29,16 @@ capability remains whatever is present and tested at the committed candidate HEA
   until committed implementation and browser evidence establish them.
 - Versioned approval policies with explicit Draft -> Testing -> Active -> Disabled
   lifecycle, clone/history, bounded deterministic selectors and shared runtime/preview
-  resolution. Saving never makes a policy live; isolated tests cannot authorize execution.
+  resolution. The browser request form populates configured policy selectors
+  (tenant/environment/severity/risk) and disabling an old ACTIVE version does not
+  overwrite the latest DRAFT editor. Saving never makes a policy live; isolated
+  tests cannot authorize execution.
 - A coherent Notifications area with complete event template sets, explicit safe
   variables, rendered preview/test send, delivery health/retry visibility and system
-  branding. Each request snapshots the exact policy version and notification content so
+  branding. SMTP failure counts are separate from webhook delivery state. Until an
+  explicit safe-test-recipient registry is implemented, sending a notification test
+  is restricted to the currently authenticated administrator's own mailbox. Each
+  request snapshots the exact policy version and notification content so
   later policy/template/branding changes apply only to new requests.
 - One fixed approver per policy; immutable action, explicit approve/hold/deny,
   expiry, bounded reminders, cancellation and a linked replacement request.
@@ -50,8 +56,16 @@ capability remains whatever is present and tested at the committed candidate HEA
 
 ## Observed development evidence
 
-The current G1/G2 development tree passes 132 Python contract/lifecycle cases, 12
-frontend adapter cases, static checks, typecheck/build, and five real browser journeys.
+PR #39 review hardening covers all five latest actionable findings:
+selector-complete browser requests, self-only notification test sends, latest
+draft retained after active disable, expired requests counted as overdue, and
+SMTP failures surfaced separately from callback failures. These changes have
+focused deterministic API and real-browser regressions. Final commit and
+exact-head CI/review evidence are recorded in Work Packet #38, not this source file.
+
+The current G1/G2 review-hardening development tree passes 139 Python/API cases,
+12 frontend unit cases, static checks, typecheck/build and seven real Chromium
+browser journeys, including policy-selector creation and draft-preserving disable.
 The browser administration journey exercises Notification template-set preview/test send
 and Approval Policy Draft -> Testing -> isolated test -> Activate -> runtime preview ->
 history. Final exact-HEAD confirmation and CI belong in active Work Packet #38.

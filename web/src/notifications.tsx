@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   TextField,
-  type AccountProjection,
 } from '@datarelay-labs/foundation';
 import { api } from './api';
 import { Form, Select, TextArea, useTask, when } from './common';
@@ -99,7 +98,6 @@ export function Notifications() {
   const [sets, setSets] = useState<NotificationTemplateSet[]>([]);
   const [deliveries, setDeliveries] = useState<NotificationDelivery[]>([]);
   const [variables, setVariables] = useState<string[]>([]);
-  const [users, setUsers] = useState<AccountProjection[]>([]);
   const [branding, setBranding] = useState<NotificationBranding>({
     brand_name: 'DataRelay Grant',
     sender_display_name: 'DataRelay Grant',
@@ -116,7 +114,6 @@ export function Notifications() {
   const [draftTemplates, setDraftTemplates] =
     useState<Record<NotificationEvent, NotificationEventTemplate>>(copyDefaults());
   const [preview, setPreview] = useState<PreviewResult | null>(null);
-  const [recipient, setRecipient] = useState('');
   const [sampleTitle, setSampleTitle] = useState('Sample approval request');
   const [sampleTarget, setSampleTarget] = useState('sample-target');
   const [sampleReason, setSampleReason] = useState('Notification preview');
@@ -125,13 +122,12 @@ export function Notifications() {
   const task = useTask();
 
   const load = async () => {
-    const [templateSets, deliveryHealth, safeVariables, currentBranding, accounts] =
+    const [templateSets, deliveryHealth, safeVariables, currentBranding] =
       await Promise.all([
         api<NotificationTemplateSet[]>('/notification-template-sets'),
         api<{ deliveries: NotificationDelivery[] }>('/notification-deliveries'),
         api<{ variables: string[] }>('/notification-variables'),
         api<NotificationBranding>('/notification-branding'),
-        api<AccountProjection[]>('/admin/users'),
       ]);
     setSets(templateSets);
     setDeliveries(deliveryHealth.deliveries);
@@ -139,7 +135,6 @@ export function Notifications() {
     setBranding(currentBranding);
     setBrandName(currentBranding.brand_name);
     setSenderName(currentBranding.sender_display_name);
-    setUsers(accounts);
   };
 
   useEffect(() => {
@@ -223,7 +218,7 @@ export function Notifications() {
     );
   }
 
-  async function sendTest(toDesignated: boolean) {
+  async function sendTest() {
     if (!editing) return;
     const result = await api<{
       transport_accepted: boolean;
@@ -233,7 +228,6 @@ export function Notifications() {
     }>('/notification-template-sets/' + editing + '/test-send', 'POST', {
       event,
       sample: sample(),
-      ...(toDesignated && recipient ? { recipient_user_id: recipient } : {}),
     });
     task.setNotice(
       'Transport accepted: ' +
@@ -471,21 +465,6 @@ export function Notifications() {
                 value={sampleReason}
                 onChange={setSampleReason}
               />
-              <Select
-                label="Designated test recipient"
-                value={recipient}
-                onChange={setRecipient}
-                required={false}
-              >
-                <option value="">Authenticated administrator</option>
-                {users
-                  .filter((user) => user.status === 'enabled')
-                  .map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.displayName}
-                    </option>
-                  ))}
-              </Select>
               <div className="grant-actions">
                 <Button
                   variant="secondary"
@@ -497,17 +476,11 @@ export function Notifications() {
                 <Button
                   variant="secondary"
                   disabled={task.busy}
-                  onClick={() => void task.run(() => sendTest(false))}
+                  onClick={() => void task.run(sendTest)}
                 >
                   Send test to me
                 </Button>
-                <Button
-                  variant="secondary"
-                  disabled={task.busy || !recipient}
-                  onClick={() => void task.run(() => sendTest(true))}
-                >
-                  Send to designated test recipient
-                </Button>
+
               </div>
               {preview ? (
                 <Alert tone="warning" title={preview.rendered.subject}>

@@ -273,3 +273,65 @@ def test_notification_test_send_revalidates_authority_before_transport(env, monk
     )
     assert response.status_code in (401, 403)
     assert sent == []
+
+
+def test_notification_test_send_rejects_non_allowlisted_recipient_before_smtp(env, monkeypatch):
+    admin = env.human("admin")
+    template_set = admin.post(
+        "/api/v1/notification-template-sets", json=template_set_payload()
+    ).json()
+    outgoing = []
+    monkeypatch.setattr("grant.transport.send_email", lambda *args: outgoing.append(args))
+    attempted = admin.post(
+        f"/api/v1/notification-template-sets/{template_set['id']}/test-send",
+        json={
+            "event": "requested",
+            "sample": {
+                "request_title": "Restricted test",
+                "request_url": "http://testserver/requests/test",
+                "external_id": "restricted",
+                "action_kind": "service.notify",
+                "target": "test",
+                "reason": "must not deliver",
+                "deadline": "2030-01-01T00:00:00+00:00",
+                "decision_state": "AWAITING",
+                "execution_state": "NOT_STARTED",
+            },
+            "recipient_user_id": env.users["stranger"]["id"],
+        },
+    )
+    assert attempted.status_code == 403, attempted.text
+    assert attempted.json()["error"]["code"] == "TEST_RECIPIENT_NOT_ALLOWED"
+    assert outgoing == []
+
+
+def test_failed_email_delivery_and_expired_deadline_are_projected_separately(env):
+    import time
+
+    result = env.human("requester").post(
+        "/api/v1/requests", json=env.intake(title="Expired email-failure request")
+    )
+    assert result.status_code == 202, result.text
+    item = result.json()
+    with env.db.transaction() as conn:
+        email = conn.execute(
+            "SELECT id FROM outbox WHERE request_id=? AND kind='email' LIMIT 1",
+            (item["id"],),
+        ).fetchone()
+        assert email is not None
+        conn.execute(
+            "UPDATE outbox SET state='FAILED',last_error='isolated transport failure' WHERE id=?",
+            (email["id"],),
+        )
+        conn.execute(
+            "UPDATE requests SET deadline=? WHERE id=?",
+            (time.time()-10, item["id"]),
+        )
+
+    listed = env.human("approver").get("/api/v1/requests")
+    assert listed.status_code == 200, listed.text
+    current = next(value for value in listed.json() if value["id"] == item["id"])
+    assert current["state"] == "EXPIRED"
+    assert current["deadline"] < time.time()
+    assert current["delivery_state"] != "FAILED"  # callback and SMTP are distinct
+    assert current["notification_failure_count"] >= 1

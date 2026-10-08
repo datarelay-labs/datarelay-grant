@@ -10,7 +10,7 @@ export type RequestRow = {
  decision: Outcome | null; decision_actor: string | null; decision_at: number | null;
  revision: number; created_at: number; deadline: number; grant_until: number | null;
  predecessor_id: string | null; execution_id: string | null; execution_state: string;
- execution_result: { status: string; evidence: string } | null; delivery_state: string;
+ execution_result: { status: string; evidence: string } | null; delivery_state: string; notification_failure_count?: number;
  deliveries?: Delivery[]; timeline?: { id: string; at: number; actor: string; action: string; detail: unknown }[];
 };
 export type Integration = { id: string; name: string; kind: 'datarelay' | 'stellar'; tenant: string; enabled: boolean; callback_origin: string };
