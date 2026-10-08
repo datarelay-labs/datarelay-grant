@@ -64,7 +64,7 @@ test('Foundation login and grouped Grant shell follow the DataRelay family layou
 
 test('Foundation administration and mobile approval page are real adapters',async({browser})=>{
  const context=await browser.newContext({viewport:{width:390,height:844}});const page=await context.newPage();await login(page,'admin');
- await page.goto('/system');await expect(page.getByText('System health',{exact:true})).toBeVisible();await expect(page.getByText('Accounts',{exact:true})).toBeVisible();await page.getByRole('button',{name:'View',exact:true}).first().click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
+ await page.goto('/system');await expect(page.getByText('System Health',{exact:true})).toBeVisible();await expect(page.getByText('User Management',{exact:true})).toBeVisible();await page.getByRole('button',{name:'View System Health',exact:true}).click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
  await page.goto('/integrations');await expect(page.locator('strong').filter({hasText:/^Isolated DataRelay fixture$/})).toBeVisible();await page.getByRole('button',{name:'Test connection',exact:true}).click();await expect(page.getByText('Test event accepted by the HTTP receiver. This is not approval or execution.')).toBeVisible();
  await page.goto('/notifications');await expect(page.getByRole('heading',{name:'Notifications',exact:true,level:2})).toBeVisible();
  await page.goto('/profiles');await expect(page.getByRole('heading',{name:'Approval policies',exact:true,level:2})).toBeVisible();
@@ -105,7 +105,7 @@ test('requester cancels and creates a newly approved replacement through the UI'
 test('administrator configures accounts/profile and explicitly revokes a scoped credential',async({browser,request})=>{
  const f=fixture();const context=await browser.newContext();const page=await context.newPage();
  await login(page,'admin');await page.goto('/system');
- const accountsCard=page.locator('.dr-card').filter({hasText:'Accounts'}).first();await accountsCard.getByRole('button',{name:'Manage',exact:true}).click();
+ await page.getByRole('button',{name:'Manage User Management',exact:true}).click();
  await page.getByLabel('New username',{exact:true}).fill('browser-member');
  await page.getByLabel('New user email',{exact:true}).fill('browser-member@example.invalid');
  await page.getByLabel('Initial password',{exact:true}).fill(f.password);
