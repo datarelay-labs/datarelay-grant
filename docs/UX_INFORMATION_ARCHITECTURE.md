@@ -225,8 +225,13 @@ Mobile copy/paste, autofill, accessible labels and error recovery
 are mandatory. No automatic downgrade when required step-up fails.
 
 **Step 4: final explicit decision POST.** The CTA is
-`Confirm Approve`, `Confirm Hold` or `Confirm Deny`. Only
-this deliberate action may update approval state. On success,
+`Confirm Approve`, `Confirm Hold` or `Confirm Deny`. A policy's
+`denial_reason_required` switch controls whether Deny needs a
+nonblank reason; default optional. When required, clearly mark
+the field required and prevent confirmation while empty.
+The server must independently reject missing required reasons;
+UI enforcement alone is never sufficient. Only this
+deliberate action may update approval state. On success,
 show `Decision recorded`, which seat/outcome was recorded,
 remaining reviewer/quorum status and a separate execution status,
 never `Business action executed` from the approval alone.
@@ -241,6 +246,22 @@ quorum can still complete. In SEQUENTIAL mode, clearly show
 `Next approval step waiting for this step's approval` until
 the current seat approves; no next-stage email sent on Hold.
 
+**Non-exclusive delegation UX (owner-accepted):** while a
+delegation window remains valid, send original approver and
+delegate independent response links and PINs, but visually
+show *one represented approval obligation*. Either may select
+Hold, and either may later record the first final Approve/Deny
+for that one seat. If the other already completed it, show
+`This approval has already been decided` and the authorized
+current state; no new vote or notification execution follows.
+A revoked/expired delegation makes only the delegate's
+choice unavailable. For EMAIL_PIN without identity step-up,
+show `Decision confirmed using the assigned recipient's
+email link` rather than claiming personal identity proof.
+Administration/audit shows original assignee, which
+original/delegate email capability was used and independently
+verified person if one exists.
+
 **Expired/revoked/error state:** show a generic no-data disclosure
 result and safe reissue/requester support path. Repeated invalid
 PINs produce bounded lockout and authorized reissue, not an
@@ -253,6 +274,11 @@ optional `EMAIL_PIN_PLUS_MFA`, and configurable link validity
 with default maximum seven days (always no longer than
 the request's approval deadline). Expose code retry/reissue
 controls, auditable operator actions and risk classification.
+In the policy Approval section show a **Require denial reason**
+toggle (default off), version history/preview and example
+required/optional Deny confirmation. In the approver delegation
+detail explain **Original OR delegate — first final vote wins**,
+display expiry/current eligibility and no double-count guarantee.
 `Notifications` manages HTML and text email layouts, per-recipient
 delivery health, masked-code previews and safe test sends.
 Reuse existing Foundation common app shell and auth/MFA adapters;
