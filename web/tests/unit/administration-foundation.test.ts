@@ -25,6 +25,15 @@ describe('Grant administration consumes the public Foundation shared Hub', () =>
     expect(html).toContain('User Management');
     expect(html).toContain('Backup &amp; Import');
     expect(html).toContain('System Health');
+    // The Foundation-owned nine task labels must remain visible and consistent,
+    // including controls Grant has intentionally not implemented.
+    for (const task of [
+      'HTTPS', 'User Management', 'Password Management',
+      'Display timezone', 'Network', 'Retention', 'Backup &amp; Import',
+      'Audit', 'System Health',
+    ]) {
+      expect(html).toContain(task);
+    }
     expect(html).not.toContain('dr-admin-hub__header');
     expect(html).toContain('aria-label="Manage User Management"');
     expect(html).toContain('aria-label="View System Health"');

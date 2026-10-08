@@ -62,6 +62,22 @@ test('Foundation login and grouped Grant shell follow the DataRelay family layou
  await context.close();
 });
 
+// Existing permitted desktop Chromium journey; does not replace the blocked
+// 320/375 mobile login/account-menu acceptance gate.
+test('Foundation member account action reaches personal security, not Administration',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ await login(page,'approver');
+ await page.getByRole('button',{name:'Account & security',exact:true}).click();
+ await expect(page.getByText('Active sessions',{exact:true})).toBeVisible();
+ await expect(page.getByText('Change password',{exact:true})).toBeVisible();
+ await page.goto('/system');
+ await expect(page.getByText('Page unavailable',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Sign out',exact:true}).first().click();
+ await expect(page.getByLabel('Username',{exact:true})).toBeVisible();
+ await context.close();
+});
+
 test('Foundation administration and mobile approval page are real adapters',async({browser})=>{
  const context=await browser.newContext({viewport:{width:390,height:844}});const page=await context.newPage();await login(page,'admin');
  await page.goto('/system');await expect(page.getByText('System Health',{exact:true})).toBeVisible();await expect(page.getByText('User Management',{exact:true})).toBeVisible();await page.getByRole('button',{name:'View System Health',exact:true}).click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();

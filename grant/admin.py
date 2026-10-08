@@ -211,6 +211,10 @@ def register_admin(app, actor):
         principal.require_admin()
         app.state.auth.rate("mail-test:" + principal.id, 5, 60)
         user = app.state.auth.user(principal)
+        # Revocation or role changes after session validation must not leave
+        # the test-mail endpoint with authority to send a new message.
+        with app.state.db.transaction(write=False) as conn:
+            require_current_authority(conn, principal)
         event_id = uid()
         payload = json_text(
             {
