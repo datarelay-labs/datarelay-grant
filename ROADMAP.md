@@ -40,6 +40,8 @@ The current development candidate already provides:
 - real browser user journeys and live Gmail delivery evidence;
 - generic DataRelay/Stellar integration contracts.
 
+Email approvals in this baseline use a **single request-detail link**, not
+three patent-style decision links; emailed PIN/OTP verification is not present.
 This baseline is not the 1.0 completion bar.
 
 ## 1.0 workstreams
@@ -380,6 +382,72 @@ formula handling, CSRF/Origin and safe import-preview misuse testing. This is
 source hardening, not proof of external consumer authorization; exact HEAD
 CI, browser, G11 and release qualification remain independent.
 
+### G10A — Patent-aligned email decision links and verification
+
+Priority: **P0 — before G12 final 1.0 acceptance**  
+Status: **PLANNED; not implemented or acceptance-tested.**  
+Dependency: G2 notification templates, G3 multi-approval, G10 authorization/security.
+Scope: Email decision UX; this is not an inbound external-system callback or an
+execution trigger.
+
+Patent-origin intent (US 12,056,667 B1, description of Figures 13–16): the
+request email contains **separate response hyperlinks for Approve, Hold/Pending and
+Deny**. The patent embodiment routes a chosen hyperlink through a browser and
+records the response, then displays confirmation. This differs from the current
+Grant implementation, which emails one request-detail link and asks the signed-in
+user to choose and confirm a decision on the request page.
+
+Recommended safe product adaptation (confirmation UX subject to final owner choice):
+
+- generate a distinct **Approve / Hold / Deny** decision-intent link for each assigned
+  approver and request snapshot in requested/reminder emails, including only relevant
+  choices; preserve the one-link request-detail path as a fallback;
+- a GET/HEAD/prefetch/email-security-scanner opening a decision link **must only
+  display a read-only landing**, showing exact requested action, decision already
+  selected by the email link, current status and assigned identity; it must never
+  record a decision, issue an execution grant, consume a grant or send a new OTP;
+- only the assigned, currently authorized human (including valid delegation and
+  current approval step) may explicitly submit the displayed outcome through a
+  protected POST, reusing the existing transactional decision state machine with
+  expected revision, immutable action fingerprint, request/approver binding,
+  expiration, single-decision/idempotency and audit checks;
+- **Standard**: signed-in approver reviews the preselected outcome and confirms it;
+  **Verified**: optionally require an on-demand **six-digit email challenge** sent
+  separately after the approver explicitly requests it (default proposal: 5-minute
+  expiry, 3 attempts, bounded resend/throttling); **High Assurance**: require current
+  configured MFA/SSO step-up and fail closed if unavailable;
+- optionally assess a **four-digit code included in the original email** as a
+  same-message intent check only, not an identity factor or MFA; decide its inclusion
+  after UX/security testing, not as a substitute for the separate challenge;
+- administer the verification mode and thresholds per versioned approval policy;
+  emit distinct result-safe, system-generated decision URLs through notification
+  templates. Never expose reusable authenticators, raw challenge codes, action-link
+  internals or credentials in previews, APIs, audit exports or tracking/logging;
+  browser pages and responses use no-store/no-referrer precautions;
+- audit intent-link visits separately from verification attempts, final decisions
+  and any subsequent independent execution; expired, changed, delegated, already
+  decided, forwarded and replayed links fail closed without side effects.
+
+Acceptance / regression evidence:
+
+- real rendered request/reminder email contains three *distinct* outcome links,
+  each opening a read-only, correctly preselected decision context; final UX mode
+  is documented rather than inferred from the original patent embodiment;
+- crawler/antivirus HEAD/GET/unfurl, wrong identity, mail forwarding, stale
+  revision, expiry, multi-approver races, replay and challenge brute-force cannot
+  alter authorization or cause execution; no leaked codes/tokens;
+- successful explicit authenticated POST (and required challenge/MFA) records
+  exactly one attributed decision and preserves the existing signed outcome callback
+  and independent consume/result gate; failed or cancelled verification records none;
+- deterministic API/security tests plus **direct, real-email, two-person browser
+  E2E** on the same candidate; no fixture-only success used as mail receipt proof.
+
+Source: https://patents.google.com/patent/US12056667B1/en.
+This plan preserves the patent's per-answer email controls while avoiding
+GET-triggered approvals and unsafe mail-scanner side effects. Patent examples
+describe a historical workflow; they are not evidence of Grant implementation
+or a legal scope conclusion.
+
 ### G11 — DataRelay and Stellar external acceptance
 
 Priority: **P0**
@@ -414,6 +482,10 @@ WAITING_INTEGRATION; this is not the G11 completion gate.
 Priority: **P0**
 
 Required final sequence:
+
+G10A email-response/verification acceptance, if included in the 1.0 candidate,
+must be reflected in the final same-head Surface Reconciliation and direct
+Full User E2E rather than inferred from the patent or an earlier browser fixture.
 
 1. complete Surface Reconciliation;
 2. remediate all actionable findings;
@@ -518,7 +590,7 @@ Implementation should progress in coherent user-visible slices, not one massive 
 
 Recommended sequence:
 
-`G0 convergence + G1/G2 closure -> G3/G4 -> G5/G6 -> G7/G8 -> G9/G10 -> G11 -> G12`
+`G0 convergence + G1/G2 closure -> G3/G4 -> G5/G6 -> G7/G8 -> G9/G10 -> G10A -> G11 -> G12`
 
 Current approval/execution integrity and existing tests are preserved throughout.
 External integration waits must not block independent product work.
