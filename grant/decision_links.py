@@ -357,6 +357,13 @@ class DecisionLinks:
                     (new_attempts, "LOCKED" if new_attempts >= MAX_PIN_FAILURES else "ACTIVE",
                      state["issuance_id"]),
                 )
+                audit(conn, state["request_id"], "email-capability",
+                      "decision.pin_failed", {
+                          "issuance_id": state["issuance_id"],
+                          "approval_assignment_id": state["approval_assignment_id"],
+                          "failed_attempts": new_attempts,
+                          "locked": new_attempts >= MAX_PIN_FAILURES,
+                      }, now)
                 error = GrantError("PIN_VERIFICATION_FAILED", 403)
             else:
                 context = secrets.token_urlsafe(32)

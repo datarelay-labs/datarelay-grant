@@ -46,6 +46,18 @@ End-to-end verified person attribution, customer OTP/MFA Web experience,
 live external mail receipts and complete operations/release gates remain
 G10A-3/4/5 follow-up work. This branch is not released or accepted.
 
+G10A-4 backend evidence now projects immutable seat IDs and epochs,
+original versus delegated mailbox issuance generations, bounded OTP
+challenge states, and typed assurance/failure history through the
+existing administrator-only request audit chain. Audit search/export
+allowlist security-relevant enum/ID/count fields while excluding raw
+message text, PIN/OTP digests, or bearer tokens. Operations reports
+aggregate issuance lockout/revocation and OTP status without addresses
+or delivery content. SMTP transport acceptance remains distinct from
+actual mailbox receipt. The operator runbook defines safe reissue and
+recovery handling; none of this establishes direct two-human E2E,
+independently verified MFA or product release.
+
 ## Product direction
 
 The accepted target is now **Grant 1.0**, governed by `docs/PRODUCT_STANDARD.md` and

@@ -191,6 +191,14 @@ class DecisionOtp:
                     (attempts, "LOCKED" if attempts >= MAX_OTP_ERRORS else "ACTIVE",
                      challenge["id"]),
                 )
+                audit(conn, state["request_id"], "email-capability",
+                      "decision.otp_failed", {
+                          "challenge_id": challenge["id"],
+                          "issuance_id": state["issuance_id"],
+                          "failed_attempts": attempts,
+                          "locked": attempts >= MAX_OTP_ERRORS,
+                          "mfa": False,
+                      }, now)
                 error = GrantError("EMAIL_OTP_VERIFICATION_FAILED", 403)
             else:
                 conn.execute(

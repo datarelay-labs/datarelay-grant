@@ -23,15 +23,27 @@ SAFE_ENUMS: dict[str, set[str]] = {
     "mode": {"SINGLE", "ANY_ONE", "ALL", "N_OF_M", "SEQUENTIAL"},
     "event_type": {
         "requested", "reminder", "approved", "denied", "expired", "cancelled",
-        "execution_succeeded", "execution_failed", "execution_unknown",
+        "execution_succeeded", "execution_failed", "execution_unknown", "decision_otp",
     },
+    "actor_assurance": {
+        "AUTHENTICATED", "EMAIL_LINK_PIN", "EMAIL_LINK_PIN_PLUS_OTP",
+    },
+    "verification_mode": {
+        "EMAIL_PIN", "EMAIL_PIN_PLUS_OTP", "EMAIL_PIN_PLUS_MFA",
+    },
+    "issuance_state": {"ACTIVE", "LOCKED", "CONSUMED", "REVOKED"},
 }
-SAFE_NUMBERS = {"approvals", "required", "revision", "policy_version", "version"}
-SAFE_BOOLEAN = {"committed", "replay", "enabled"}
+SAFE_NUMBERS = {
+    "approvals", "required", "revision", "policy_version", "version",
+    "assignment_epoch", "failed_attempts", "generation",
+}
+SAFE_BOOLEAN = {"committed", "replay", "enabled", "locked", "mfa"}
 SAFE_IDENTIFIER = re.compile(r"^[a-zA-Z0-9_-]{1,100}$")
 SAFE_IDS = {
     "event_id", "token_id", "integration_id", "profile_id", "request_id",
     "group_id", "execution_id", "delegation_id", "action_hash",
+    "recipient_id", "mailbox_recipient_id", "verified_person_id",
+    "approval_assignment_id", "approval_step_id", "issuance_id", "challenge_id",
 }
 
 
@@ -197,7 +209,7 @@ def request_chain(db: Database, actor: Principal, ident: str) -> dict:
             """SELECT id,integration_id,profile_id,profile_version_id,
                       action_hash,requester_id,approver_id,state,decision,decision_at,
                       execution_id,execution_state,committed_at,created_at,deadline,
-                      revision
+                      revision,decision_verification_mode
                FROM requests WHERE id=?""",
             (ident,),
         ).fetchone()
@@ -222,10 +234,54 @@ def request_chain(db: Database, actor: Principal, ident: str) -> dict:
             (ident,),
         ).fetchall()
         delivery = conn.execute(
-            """SELECT id,kind,event_type,state,attempts,created_at,delivered_at
+            """SELECT id,kind,event_type,state,attempts,created_at,delivered_at,
+                      recipient_id,approval_assignment_id,delegation_id,issuance_id,
+                      otp_challenge_id,sealed_payload
                FROM outbox WHERE request_id=? ORDER BY created_at,id LIMIT 1000""",
             (ident,),
         ).fetchall()
+        assignments = conn.execute(
+            """SELECT id,step_id,approver_id,position,assignment_epoch,created_at
+               FROM approval_assignments WHERE request_id=?
+               ORDER BY position,id LIMIT 50""",
+            (ident,),
+        ).fetchall()
+        total_issuances = conn.execute(
+            "SELECT COUNT(*) FROM decision_issuances WHERE request_id=?",
+            (ident,),
+        ).fetchone()[0]
+        issuances = conn.execute(
+            """SELECT x.id,x.approval_assignment_id,x.recipient_id,x.delegation_id,
+                      x.generation,x.assignment_epoch,x.state,x.failed_attempts,
+                      x.issued_at,x.expires_at,
+                      (SELECT COUNT(*) FROM decision_intents i
+                       WHERE i.issuance_id=x.id) AS intent_count
+               FROM decision_issuances x WHERE x.request_id=?
+               ORDER BY x.issued_at,x.id LIMIT 1000""",
+            (ident,),
+        ).fetchall()
+        total_otp = conn.execute(
+            """SELECT COUNT(*) FROM decision_otp_challenges c
+               JOIN decision_intents i ON i.token_digest=c.intent_digest
+               JOIN decision_issuances x ON x.id=i.issuance_id
+               WHERE x.request_id=?""",
+            (ident,),
+        ).fetchone()[0]
+        otp = conn.execute(
+            """SELECT c.id,c.state,c.failed_attempts,c.issued_at,c.expires_at,
+                      c.verified_at,x.id AS issuance_id,
+                      x.approval_assignment_id,x.recipient_id
+               FROM decision_otp_challenges c
+               JOIN decision_intents i ON i.token_digest=c.intent_digest
+               JOIN decision_issuances x ON x.id=i.issuance_id
+               WHERE x.request_id=? ORDER BY c.issued_at,c.id LIMIT 1000""",
+            (ident,),
+        ).fetchall()
+        from .verification_policy import current_required
+
+        current_mode = current_required(conn, conn.execute(
+            "SELECT * FROM requests WHERE id=?", (ident,),
+        ).fetchone())
     return {
         "request": dict(row),
         "total_events": total,
@@ -233,6 +289,35 @@ def request_chain(db: Database, actor: Principal, ident: str) -> dict:
         "events": [_project(event) for event in events],
         "decisions": [dict(item) for item in decisions],
         "comments": [dict(item) for item in comments],
-        "deliveries": [dict(item) for item in delivery],
+        "deliveries": [
+            {
+                **dict(item), "sealed_payload": bool(item["sealed_payload"]),
+                "transport_accepted_not_recipient_receipt": (
+                    bool(item["delivered_at"]) and item["kind"] == "email"
+                ),
+            }
+            for item in delivery
+        ],
+        "approval_assignments": [dict(item) for item in assignments],
+        "email_issuances": [
+            {
+                **dict(item),
+                "recipient_role": (
+                    "DELEGATE" if item["delegation_id"] else "ORIGINAL"
+                ),
+            }
+            for item in issuances
+        ],
+        "email_issuances_total": total_issuances,
+        "email_issuances_truncated": total_issuances > len(issuances),
+        "otp_challenges": [dict(item) for item in otp],
+        "otp_challenges_total": total_otp,
+        "otp_challenges_truncated": total_otp > len(otp),
+        "decision_verification": {
+            "snapshot": row["decision_verification_mode"],
+            "current_minimum": current_mode,
+            "mailbox_code_is_mfa": False,
+        },
+        "identity_evidence_limit": "EMAIL_LINK_PIN_NOT_PERSON_VERIFIED",
         "current_is_execution_verified": False,
     }
