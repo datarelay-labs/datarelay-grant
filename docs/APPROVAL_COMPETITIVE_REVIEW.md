@@ -67,12 +67,20 @@ each vendor unless explicitly stated in its documentation.
 
 ## Recommendation
 
-**For 1.0:** per-approver/per-choice opaque email deep links; authenticated read-only
-landing + explicit POST; no browser GET state mutation; optional on-demand email
-verification (labeled single-factor/same-inbox), resource-driven fresh MFA step-up,
-stage-aware mail delivery, immutable human attribution and action-bound consume
-protocol. No request execution on link open, mail receipt, webhook receipt, or
-even final human approval without the separate consumer gate.
+**Owner-accepted design override — 2026-10-08 (1.0):** the owner explicitly
+selected **loginless same-email four-digit PIN as the DEFAULT** for assigned
+recipient decisions, rather than the earlier *mandatory authenticated*
+landing recommendation. Each choice still has an independent 256-bit
+opaque token, GET stays read-only and code entry + explicit confirmation
+POST is required. Customers may optionally require on-demand OTP or
+fresh independent MFA/SSO under risk-based policy. Code and link in the
+SAME mailbox provide only mailbox-possession/intent assurance, **not**
+verified named-person identity, and forwarding the mail reveals both.
+Protect with PIN rate limits, scoped ephemeral decision context, token
+revocation, secure mail persistence and honest audit assurance labels.
+Approval NEVER causes execution absent independent consume grant and
+product-owned operation. Canonical security analysis:
+`docs/ADR_EMAIL_PIN_DECISION.md` and Product Standard §§10.5–10.9.
 
 **For 1.1 (candidate, not committed 1.0 scope):** external guest self-service
 approvals, verified reply-to-email with sender/inbound validation,
