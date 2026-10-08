@@ -404,14 +404,16 @@ Recommended safe product adaptation (confirmation UX subject to final owner choi
   choices; preserve the one-link request-detail path as a fallback;
 - **Uniqueness is mandatory:** allocate a separate cryptographically random,
   unguessable, opaque decision-intent reference for every
-  `(request_id, assigned_approver_id, approval_step_id, outcome, request_revision,
-  issuance_generation)` tuple. All three outcomes for one approver must have
+  `(request_id, approver_assignment_id, approval_step_id, outcome, action_fingerprint,
+  assignment_epoch, issuance_generation)` tuple. All three outcomes for one approver must have
   different references; different approvers and different requests must never
   share a reference. Store only a keyed digest/hash and authoritative server-side
   tuple metadata, not raw tokens. A resend may explicitly rotate a generation
-  and revoke prior issued links; changes to approval step, request revision,
-  assignment or delegated approver invalidate stale link bindings. Do not
-  encode personal data, email addresses or mutable permission claims in URLs;
+  and revoke prior issued links; changes to action, assignment authority,
+  approval step or delegated approver invalidate the affected link bindings,
+  **but another approver's vote/state revision must not invalidate independently
+  eligible assignments**. Do not encode personal data, email addresses or
+  mutable permission claims in URLs;
 - the clicked email link's bound outcome must match the outcome committed by
   the confirmation POST. Switching from Approve to Deny requires opening the
   appropriate distinct intent or navigating to the neutral authenticated
@@ -423,10 +425,12 @@ Recommended safe product adaptation (confirmation UX subject to final owner choi
   including original approver vs authorized delegate, selected outcome,
   verification mode/result, decision timestamp and decision event ID. An email
   address, forwarded URL or embedded approver ID is not proof of who acted;
-- a completed decision consumes its intent and revokes the same actor's
+- each confirmed response consumes its *selected* intent exactly once.
+  **Hold is nonterminal**, and must leave a safe path to subsequent Approve/Deny
+  within the original deadline. Terminal Approved/Denied revokes the actor's
   unused sibling outcome links atomically. Preserve independent pending
   approvers until the configured ALL/N-of-M/sequential/ANY resolution rules
-  close the relevant stage; after stage closure, any no-longer-authorized links
+  close the relevant stage; after stage closure no-longer-authorized links
   are invalid. Replayed/opened links do not create a second decision;
 - a GET/HEAD/prefetch/email-security-scanner opening a decision link **must only
   display a read-only landing**, showing exact requested action, decision already
@@ -453,6 +457,64 @@ Recommended safe product adaptation (confirmation UX subject to final owner choi
 - audit intent-link visits separately from verification attempts, final decisions
   and any subsequent independent execution; expired, changed, delegated, already
   decided, forwarded and replayed links fail closed without side effects.
+
+
+#### G10A implementation sequence: six bounded deliverables
+
+The following is the **recommended 1.0 implementation roadmap**, not a
+claim of deployed behavior. Each outcome gets affected deterministic tests
+before advancing. Keep all mutations within the Grant owner repository and
+isolated development environments; do not pre-empt the actively running
+G12 QA worktree or perform an unapproved credential/production operation.
+
+| Phase / priority | Verifiable deliverable | Release-proof / exit criterion | Dependencies |
+| --- | --- | --- | --- |
+| **G10A-0 / P0: approval-state reconciliation** | Add a stable step/assignee assignment model; separate immutable action fingerprint and assignment epoch from mutable vote/state revision. Document current group denial and Hold semantics. Design v8->v9 additive migration, old-request compatibility, and rollback. | ALL/N-of-M/SEQUENTIAL 2-person votes do not invalidate other reviewers; Hold->Approve works; disabled/reassigned user cannot vote; migration/restore checks. | G3/G4 + G10 source |
+| **G10A-1 / P0: per-recipient delivery** | Generate individual emails/choices for each *currently eligible* approval seat; parallel quorum members receive distinct mail, sequential next step receives mail only upon activation, delegate/alternate/reassignment gets independently tracked notification. HTML with text fallback. | Same request with 3 approvers yields 3 non-CC mail deliveries × 3 different action links, every destination scoped; no inactive-stage mail; send/retry doesn't multiply seats or extend deadline. | G10A-0 + G2 |
+| **G10A-2 / P0: protected intent lifecycle** | 256-bit opaque per-outcome references; digest & lifecycle/expiry records; same-authorized-actor confirmation; read-only GET/HEAD/no preview mutation; action-bound atomic POST, sibling revocation only on terminal vote; original request detail fallback. | Scanner/prefetch/forwarded/wrong-user/stale/revoked/changed-choice/concurrent clicks cannot change decisions; two legitimate parallel approvers continue independently. | G10A-0/1 |
+| **G10A-3 / P0: policy-based verification** | Versioned Standard login+confirm, Verified *on-demand separate email* 6-digit single-factor check with bounded attempts/expiry, High Assurance fresh MFA step-up for risk-marked work. Same-mailbox 4-digit printable code remains an optional experimental UX, **not MFA or default gate**. | Verifiers bind to action+assignee+outcome, don't send on GET, cannot be replayed; fresh MFA required at decision time and failure is fail-closed; policy snapshots stable. | G10A-2 + Foundation authentication adapter |
+| **G10A-4 / P0: evidence + operator safety** | Append-only decision/intent events for intended recipient, actual actor, delegate, Hold history, revocation reason and delivery correlation. Encryption/redaction for actionable URLs in SMTP queue/backups; recipient delivery health, revoke/reissue, bounce/spam and Safe Links observability. | Admin can reconstruct who decided *which exact action* without exposing secrets; safe link lifecycle across resend, account disable, recovery and rollback; no secret-bearing plaintext outbox or exports. | G10A-1/2/3 + G9 |
+| **G10A-5 / P0: full qualification** | Extend canonical real-user tests (USER_SCENARIOS, SURFACE_RECONCILIATION, FULL_USER_E2E) for actual Gmail/Outlook mailbox handling, distinct approvers, proxy scanner and mobile OTP; verify external callback/consume remains independent. | Two brand-new direct authenticated real mailbox/browser persona passes on one exact HEAD; no unresolved actionable findings; full security/DB migration/restore/CI evidence; G11 Control/Stellar real external effect still its own gate. | G10A-0..4, G11/G12 qualification |
+
+**Cross-cutting failure modes that must close before G10A PASS:**
+
+- `grant/core.py::_mail_event` currently sends requested/reminder to one
+  representative `row["approver_id"]`, even when the saved approval plan
+  contains ALL/N-of-M/ANY group members; fix using eligible recipient-aware
+  deliveries, not CC/shared tokens.
+- `grant/core.py::decide` changes global `revision` after each member's
+  vote and stores one current vote/actor in `request_decisions`; add an
+  append-only event ledger for Hold/revote/delegated actor without changing
+  safe aggregate semantics.
+- `grant/core.py::get` calls `_expire` while processing a GET. A
+  decision-link landing must be a side-effect-free read, and administrative
+  deadlines must be reconciled by explicit maintenance or protected POST.
+- The existing `outbox.payload` is plaintext JSON and existing email
+  renderer only includes `request_url`. No live decision URLs or codes
+  may be persisted in plaintext queues/logs or embedded in admin preview;
+  use sealed delivery payloads and cryptographic token digests.
+- Present schema v8 lacks dedicated decision-intent, assignment/step and
+  append-only decision event tables. Prefer a small additive migration and
+  preserve existing in-flight requests' neutral authenticated decision
+  experience rather than retroactively minting action links without consent.
+- Recovery/restore and resends must not resurrect expired/revoked links,
+  duplicate email approvals, or allow missing Foundation MFA to be bypassed.
+- External approval and email reply/Outlook actionable messages are NOT an
+  implicit exception to 1.0 authenticated-human decisions. Their separate
+  trust boundaries are post-1.0 candidate work, requiring explicit scope.
+
+**Security/UX choices:** user-facing business action text is revealed only
+after a current authenticated approver is authorized; an unauthenticated
+landing gives a generic sign-in prompt. Original recipient email and
+actually signed-in actor are distinct fields. PINs/OTP are not identity
+proof because they arrive at the same mailbox; *High Assurance* uses fresh
+real MFA. No open/GET/HEAD action, click-tracker receipt or outbound callback
+may create execution authority.
+
+**Competitive support:** `docs/APPROVAL_COMPETITIVE_REVIEW.md` documents
+18 products, precise official/community/marketing evidence classes, and
+OWASP/NIST/mail-client considerations. It is evidence for this roadmap,
+not authority for vendor-specific hidden token internals.
 
 Acceptance / regression evidence:
 
@@ -517,9 +579,11 @@ Priority: **P0**
 
 Required final sequence:
 
-G10A email-response/verification acceptance, if included in the 1.0 candidate,
-must be reflected in the final same-head Surface Reconciliation and direct
-Full User E2E rather than inferred from the patent or an earlier browser fixture.
+G10A is the **P0 planned 1.0 product gate** before final G12 closure. Its
+implementation and acceptance must be reflected in final same-head Surface
+Reconciliation and direct Full User E2E rather than inferred from the
+patent or earlier browser fixtures. Do not silently drop G10A or mark 1.0
+released without separate explicit owner scope/acceptance decision.
 
 1. complete Surface Reconciliation;
 2. remediate all actionable findings;
@@ -594,6 +658,11 @@ Required UX qualities:
 Prioritize from actual use rather than speculative breadth:
 
 - Slack and Microsoft Teams approval/notification channels;
+- email-to-request creation with verified inbound sender and idempotent parsing;
+- authenticated inbound email-reply approvals (only with real sender proof; no free-form inference);
+- external guest/no-account approvals with narrow declared trust policy;
+- Outlook authenticated Actionable Messages/adaptive cards with verified Microsoft user token and web fallback;
+- reviewer-role based differentiated denial thresholds beyond 1.0 any-denial finality;
 - richer policy condition operators;
 - reusable policy bundles/customer packs;
 - optional SSO/enterprise identity federation;
@@ -632,9 +701,10 @@ External integration waits must not block independent product work.
 ## Status authority
 
 - Product requirements: `docs/PRODUCT_STANDARD.md`
-- Product roadmap and sequencing: this file
-- Actual implementation/evidence: `docs/STATUS.md` and current GitHub Work Packet #42 (G5/G6); predecessor #40 (G3/G4), #38 (G0-G2)
-- External-integration waiting evidence: GitHub Work Packet #33
+- Product roadmap and sequencing: this file and tracking Issue #37
+- Comparative research: `docs/APPROVAL_COMPETITIVE_REVIEW.md` (reference only)
+- Actual implementation/evidence: `docs/STATUS.md` and current Issue #54 G12 QA Work Packet; predecessor packets are not present implementation authority
+- External-integration waiting evidence: GitHub Work Packets #33 and #52
 - UX/IA design guide: `docs/UX_INFORMATION_ARCHITECTURE.md`
 - Architecture/security details: `docs/ARCHITECTURE.md`
 - User quality gates: `docs/SURFACE_RECONCILIATION.md`, `docs/FULL_USER_E2E.md`
