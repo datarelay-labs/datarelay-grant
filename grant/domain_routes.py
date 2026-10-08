@@ -38,6 +38,14 @@ def register_domain(app, actor, human, reader):
     def add_delegation(body: Delegation, request: Request):
         return core.create_delegation(human(request), body)
 
+    @app.post("/api/v1/delegations/{ident}/revoke")
+    def revoke_delegation(ident: str, request: Request):
+        return core.revoke_delegation(human(request), ident)
+
+    @app.get("/api/v1/approvers/directory")
+    def approver_directory(request: Request):
+        return core.approver_directory(human(request))
+
     @app.get("/api/v1/requests")
     def requests(
         request: Request, limit: int = Query(100, ge=1, le=100), offset: int = Query(0, ge=0)

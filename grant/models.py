@@ -3,7 +3,7 @@
 import re
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .mail_templates import validate_event_templates
 
@@ -62,8 +62,15 @@ class Delegation(Input):
 
 
 class Escalation(Input):
-    target_user_id: str = Field(min_length=1, max_length=100)
+    target_user_id: str | None = Field(default=None, min_length=1, max_length=100)
+    target_group_id: str | None = Field(default=None, min_length=1, max_length=100)
     after_seconds: int = Field(ge=60, le=604800)
+
+    @model_validator(mode="after")
+    def exactly_one_target(self):
+        if (self.target_user_id is None) == (self.target_group_id is None):
+            raise ValueError("Exactly one escalation target is required")
+        return self
 
 
 class Reassign(Input):

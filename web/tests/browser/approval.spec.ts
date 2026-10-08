@@ -160,3 +160,116 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  await page.screenshot({path:'../.e2e/screenshots/configured-policy-notifications.png',fullPage:true});
  await context.close();
 });
+
+test('G4 administrator confirms escalation and reassignment in the browser',async({browser,request})=>{
+ const f=fixture();const headers={authorization:'Bearer '+f.token};
+ const created=await request.post('/api/v1/requests',{headers,data:{
+  external_id:crypto.randomUUID(),profile_id:f.profile_id,title:'Browser G4 approval routing',
+  action:{kind:'test.operation',target:'isolated-escalation-target',parameters:{}},
+ }});
+ expect(created.status()).toBe(202);const original=await created.json();
+ const context=await browser.newContext();const page=await context.newPage();
+ await login(page,'admin');await page.goto('/requests/'+original.id);
+ await expect(page.getByText('Escalation',{exact:true})).toBeVisible();
+ const escalation=page.getByLabel('Escalation target',{exact:true});
+ await escalation.selectOption({index:1});
+ await page.getByLabel('Escalation delay (minutes)',{exact:true}).fill('60');
+ await page.getByRole('button',{name:'Review escalation',exact:true}).click();
+ await expect(page.getByText('Confirm escalation schedule',{exact:true})).toBeVisible();
+ let current=await(await request.get('/api/v1/requests/'+original.id,{headers})).json();
+ expect(current.timeline.some((item:any)=>item.action==='request.escalation_configured')).toBe(false);
+ await page.getByRole('button',{name:'Confirm routing change',exact:true}).click();
+ await expect(page.getByText('Approval routing updated and recorded in the request audit trail.')).toBeVisible();
+ current=await(await request.get('/api/v1/requests/'+original.id,{headers})).json();
+ expect(current.timeline.some((item:any)=>item.action==='request.escalation_configured')).toBe(true);
+ expect(current.state).toBe('AWAITING');
+ expect(current.execution_state).toBe('NOT_STARTED');
+
+ await page.getByLabel('Original approver',{exact:true}).selectOption(original.approver_id);
+ const replacement=page.getByLabel('Replacement approver',{exact:true});
+ await replacement.selectOption({index:1});
+ const substitute=await replacement.inputValue();
+ await page.getByLabel('Reassignment reason for audit',{exact:true}).fill('Browser on-call handoff');
+ await page.getByRole('button',{name:'Review reassignment',exact:true}).click();
+ await expect(page.getByText('Confirm approver reassignment',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Confirm routing change',exact:true}).click();
+ await expect(page.getByText('Approval routing updated and recorded in the request audit trail.')).toBeVisible();
+ current=await(await request.get('/api/v1/requests/'+original.id,{headers})).json();
+ expect(current.approval_plan.members).toEqual([substitute]);
+ expect(current.timeline.some((item:any)=>item.action==='request.reassigned')).toBe(true);
+ expect(current.execution_state).toBe('NOT_STARTED');
+ await context.close();
+});
+
+test('G4 approver schedules, exercises and revokes own delegation without implicit approval',async({browser,request})=>{
+ const context=await browser.newContext();const page=await context.newPage();
+ await login(page,'approver');
+ await page.goto('/delegations');
+ await expect(page.getByText('Delegate my approvals',{exact:true})).toBeVisible();
+ await page.getByLabel('Substitute approver',{exact:true}).selectOption({label:'stranger'});
+ const substitute=await page.getByLabel('Substitute approver',{exact:true}).inputValue();
+ await page.getByRole('button',{name:'Review delegation',exact:true}).click();
+ await expect(page.getByText('Confirm time-bounded delegation',{exact:true})).toBeVisible();
+ const before=await(await page.request.get('/api/v1/delegations')).json();
+ expect(before.some((item:any)=>item.substitute_id===substitute)).toBe(false);
+ await page.getByRole('button',{name:'Confirm delegation change',exact:true}).click();
+ await expect(page.getByText('Delegation change recorded in the audit trail.')).toBeVisible();
+ const during=await(await page.request.get('/api/v1/delegations')).json();
+ const delegation=during.find((item:any)=>item.substitute_id===substitute);
+ expect(delegation).toBeTruthy();
+ expect(delegation.revoked_at).toBeNull();
+
+ const f=fixture();const headers={authorization:'Bearer '+f.token};
+ const created=await request.post('/api/v1/requests',{headers,data:{
+  external_id:crypto.randomUUID(),profile_id:f.profile_id,title:'Delegated browser queue',
+  action:{kind:'test.operation',target:'delegated-test-target',parameters:{}},
+ }});
+ expect(created.status()).toBe(202);const delegatedRequest=await created.json();
+ const substituteContext=await browser.newContext();const substitutePage=await substituteContext.newPage();
+ await login(substitutePage,'stranger');await substitutePage.goto('/approvals');
+ await substitutePage.getByLabel('Work view',{exact:true}).selectOption('delegated');
+ await expect(substitutePage.getByRole('button',{name:'Delegated browser queue',exact:true})).toBeVisible();
+ await substitutePage.getByRole('button',{name:'Delegated browser queue',exact:true}).click();
+ await expect(substitutePage.getByRole('button',{name:'Approve',exact:true})).toBeVisible();
+ const beforeDecision=await(await request.get('/api/v1/requests/'+delegatedRequest.id,{headers})).json();
+ expect(beforeDecision.state).toBe('AWAITING');
+ await substituteContext.close();
+
+ await page.getByRole('button',{name:'Revoke',exact:true}).click();
+ await expect(page.getByText('Confirm delegation revocation',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Confirm delegation change',exact:true}).click();
+ await expect(page.getByText('Delegation change recorded in the audit trail.')).toBeVisible();
+ const after=await(await page.request.get('/api/v1/delegations')).json();
+ expect(after.find((item:any)=>item.id===delegation.id).revoked_at).not.toBeNull();
+ await context.close();
+});
+
+test('G4 delegated substitute finds and approves request through My approvals',async({browser,request})=>{
+ const f=fixture();const headers={authorization:'Bearer '+f.token};
+ const ownerContext=await browser.newContext();const substituteContext=await browser.newContext();
+ const owner=await ownerContext.newPage(),substitute=await substituteContext.newPage();
+ await login(owner,'approver');await owner.goto('/delegations');
+ await owner.getByLabel('Substitute approver',{exact:true}).selectOption({label:'stranger'});
+ await owner.getByRole('button',{name:'Review delegation',exact:true}).click();
+ await owner.getByRole('button',{name:'Confirm delegation change',exact:true}).click();
+ await expect(owner.getByText('Delegation change recorded in the audit trail.')).toBeVisible();
+
+ const title='Delegated browser work queue';
+ const created=await request.post('/api/v1/requests',{headers,data:{
+  external_id:crypto.randomUUID(),profile_id:f.profile_id,title,
+  action:{kind:'test.operation',target:'delegated-isolated-target',parameters:{}},
+ }});
+ expect(created.status()).toBe(202);const row=await created.json();
+ await login(substitute,'stranger');await substitute.goto('/approvals');
+ await expect(substitute.getByRole('button',{name:title,exact:true})).toBeVisible();
+ await substitute.getByRole('button',{name:title,exact:true}).click();
+ await expect(substitute.getByRole('button',{name:'Approve',exact:true})).toBeVisible();
+ await substitute.getByRole('button',{name:'Approve',exact:true}).click();
+ await substitute.getByRole('button',{name:'Confirm approved',exact:true}).click();
+ await expect(substitute.getByText('Recorded. Delivery and execution are tracked separately.')).toBeVisible();
+ const result=await(await request.get('/api/v1/requests/'+row.id,{headers})).json();
+ expect(result.state).toBe('APPROVED');
+ expect(result.execution_state).toBe('NOT_STARTED');
+ expect(result.decisions[0].actor_id).toBe(row.approver_id);
+ await ownerContext.close();await substituteContext.close();
+});

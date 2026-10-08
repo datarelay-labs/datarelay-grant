@@ -27,13 +27,10 @@ export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
   }, []);
 
   const now = Date.now() / 1000;
-  const mine = useMemo(
-    () => rows.filter((row) => (row.approval_plan?.members ?? [row.approver_id]).includes(user.id)),
-    [rows, user.id],
-  );
-  const needsDecision = mine.filter((row) => ['AWAITING', 'HELD'].includes(row.state));
+  const mine = useMemo(() => rows.filter((row) => row.viewer_assigned), [rows]);
+  const needsDecision = mine.filter((row) => row.viewer_can_decide);
   const overdue = mine.filter(
-    (row) => ['AWAITING', 'HELD'].includes(row.state) && row.deadline <= now,
+    (row) => row.overdue || (row.state === 'EXPIRED' && row.deadline <= now),
   );
   const deliveryFailures = rows.filter((row) => row.delivery_state === 'FAILED');
   const executionExceptions = rows.filter(isExecutionException);
@@ -68,7 +65,7 @@ export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
         <button type="button" onClick={() => navigate('/approvals')}>
           <span>Overdue</span>
           <strong>{overdue.length}</strong>
-          <small>Assigned work past its deadline</small>
+          <small>Escalation due or approval deadline expired</small>
         </button>
         <button type="button" onClick={() => navigate('/requests')}>
           <span>Delivery failures</span>

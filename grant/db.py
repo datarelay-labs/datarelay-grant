@@ -123,8 +123,15 @@ CREATE TABLE IF NOT EXISTS delegations (
  created_at REAL NOT NULL, revoked_at REAL
 );
 CREATE INDEX IF NOT EXISTS delegations_active ON delegations(delegator_id,starts_at,ends_at);
-CREATE TABLE IF NOT EXISTS escalations (request_id TEXT PRIMARY KEY REFERENCES requests(id), target_user_id TEXT NOT NULL REFERENCES users(id), due_at REAL NOT NULL, fired_at REAL);
-PRAGMA user_version=6;
+CREATE TABLE IF NOT EXISTS escalations (
+ request_id TEXT PRIMARY KEY REFERENCES requests(id),
+ target_user_id TEXT REFERENCES users(id),
+ target_group_id TEXT REFERENCES approver_groups(id),
+ target_members TEXT NOT NULL DEFAULT '[]',
+ due_at REAL NOT NULL, fired_at REAL,
+ CHECK ((target_user_id IS NOT NULL) != (target_group_id IS NOT NULL))
+);
+PRAGMA user_version=7;
 """
 
 
@@ -157,7 +164,7 @@ class Database:
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1, 2, 3, 4, 5, 6):
+            if version not in (0, 1, 2, 3, 4, 5, 6, 7):
                 raise RuntimeError("Unsupported database schema; do not downgrade this binary")
             conn.execute("PRAGMA journal_mode=WAL")
             if version == 1:
@@ -174,6 +181,9 @@ class Database:
                 version = 5
             if version == 5:
                 self._migrate_v5_to_v6(conn)
+                version = 6
+            if version == 6:
+                self._migrate_v6_to_v7(conn)
             conn.executescript(SCHEMA)
         private_file(path)
 
@@ -362,6 +372,27 @@ class Database:
         conn.execute("CREATE TABLE IF NOT EXISTS escalations (request_id TEXT PRIMARY KEY REFERENCES requests(id), target_user_id TEXT NOT NULL REFERENCES users(id), due_at REAL NOT NULL, fired_at REAL)")
         conn.execute("PRAGMA user_version=6")
 
+    @staticmethod
+    def _migrate_v6_to_v7(conn: sqlite3.Connection) -> None:
+        conn.executescript("""
+        CREATE TABLE escalations_v7 (
+         request_id TEXT PRIMARY KEY REFERENCES requests(id),
+         target_user_id TEXT REFERENCES users(id),
+         target_group_id TEXT REFERENCES approver_groups(id),
+         target_members TEXT NOT NULL DEFAULT '[]',
+         due_at REAL NOT NULL, fired_at REAL,
+         CHECK ((target_user_id IS NOT NULL) != (target_group_id IS NOT NULL))
+        );
+        INSERT INTO escalations_v7(
+         request_id,target_user_id,target_group_id,target_members,due_at,fired_at
+        )
+        SELECT request_id,target_user_id,NULL,json_array(target_user_id),due_at,fired_at
+        FROM escalations;
+        DROP TABLE escalations;
+        ALTER TABLE escalations_v7 RENAME TO escalations;
+        PRAGMA user_version=7;
+        """)
+
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
         conn.row_factory = sqlite3.Row
@@ -398,7 +429,7 @@ class Database:
         with closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
-            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6):
+            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7):
                 raise ValueError("Backup schema mismatch")
             with closing(sqlite3.connect(destination)) as new:
                 old.backup(new)

@@ -184,7 +184,7 @@ def test_template_rejects_unknown_or_malformed_variables(env):
         assert response.status_code == 422
 
 
-def test_schema_v1_migrates_to_v6_and_backfills_policy_and_notification_state(env):
+def test_schema_v1_migrates_to_v7_and_backfills_policy_and_notification_state(env):
     created = env.api.post(
         "/api/v1/requests", json=env.intake(external_id="legacy-migration")
     )
@@ -201,7 +201,7 @@ def test_schema_v1_migrates_to_v6_and_backfills_policy_and_notification_state(en
 
     migrated = Database(path)
     with migrated.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 6
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 7
         assert "email_template_id" in {
             row[1] for row in conn.execute("PRAGMA table_info(profiles)")
         }

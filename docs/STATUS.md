@@ -1,6 +1,6 @@
 # Grant 1.0 implementation status
 
-Updated: 2026-10-08. G1/G2 coordination: GitHub Issue #38; baseline/external lane: Issue #33 / PR #34.
+Updated: 2026-10-08. G3/G4 development lane: Issue #40 / PR #41; G0/G1/G2 predecessor: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
 Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
@@ -23,10 +23,10 @@ capability remains whatever is present and tested at the committed candidate HEA
 ## Implemented candidate
 
 - Pinned unpublished Foundation SDK and public imports with Foundation-backed auth,
-  shell, MFA/recovery, accounts/sessions, health and audit adapters. The accepted G0
-  grouped task-oriented navigation, centered DataRelay-family login composition, action
-  center Home and focused Administration/configuration layouts are roadmap/design targets
-  until committed implementation and browser evidence establish them.
+  shell, MFA/recovery, accounts/sessions, health and audit adapters. The G0 development
+  candidate includes centered shared login, task-oriented Home, grouped Work / Configuration
+  / Administration navigation and focused configuration pages, covered by real browser
+  journeys. Final integration and release qualification are not yet complete.
 - Versioned approval policies with explicit Draft -> Testing -> Active -> Disabled
   lifecycle, clone/history, bounded deterministic selectors and shared runtime/preview
   resolution. Saving never makes a policy live; isolated tests cannot authorize execution.
@@ -34,8 +34,16 @@ capability remains whatever is present and tested at the committed candidate HEA
   variables, rendered preview/test send, delivery health/retry visibility and system
   branding. Each request snapshots the exact policy version and notification content so
   later policy/template/branding changes apply only to new requests.
-- One fixed approver per policy; immutable action, explicit approve/hold/deny,
-  expiry, bounded reminders, cancellation and a linked replacement request.
+- G3 development candidate: approver groups and Single / Any One / All / N-of-M /
+  Sequential modes, validated quorum bounds, policy-plan preview, request-time membership
+  snapshots and auditable per-member decisions. An approval plan cannot silently count
+  duplicate votes or allow approval by an unavailable member.
+- G4 development candidate: time-bounded self-service delegation and revocation,
+  administrator reassignment (recorded voters cannot be silently replaced), user/group
+  escalation with snapshotted targets, overdue/escalated request projections, and
+  delegated work queue/administrator browser controls.
+- Immutable action, explicit approve/hold/deny, expiry, bounded reminders,
+  cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.
   An integration credential cannot make a human decision.
 - Transactional decision/outbox, HTTP/SMTP delivery, registered endpoints, TLS,
@@ -50,11 +58,15 @@ capability remains whatever is present and tested at the committed candidate HEA
 
 ## Observed development evidence
 
-The current G1/G2 development tree passes 132 Python contract/lifecycle cases, 12
-frontend adapter cases, static checks, typecheck/build, and five real browser journeys.
-The browser administration journey exercises Notification template-set preview/test send
-and Approval Policy Draft -> Testing -> isolated test -> Activate -> runtime preview ->
-history. Final exact-HEAD confirmation and CI belong in active Work Packet #38.
+The G3/G4 stacked development candidate builds on G1/G2 and has locally passed
+157 Python/API tests, 12 frontend unit cases, static and TypeScript checks,
+a production web build, and 9 real Playwright Chromium user journeys (including delegation creation/revocation
+and confirmed escalation/reassignment). Backend focused regressions also pass.
+These are development-worktree observations, not frozen exact-HEAD CI evidence;
+record authoritative complete counts and final commit after all code is tested
+and pushed in Work Packet #40. The browser administration journey still exercises
+Notification template-set preview/test send and Policy Draft -> Testing -> isolated
+test -> Activate -> runtime preview -> history.
 
 Browser cases include two independently signed-in requester/approver passes,
 mobile shared administration, cancellation/replacement, account creation,
