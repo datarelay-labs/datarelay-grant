@@ -45,11 +45,29 @@ remains unchanged until G10A is implemented and qualified.
    step until that seat explicitly approves. Normal request state_revision
    changes do not invalidate unrelated still-eligible seat/step links.
    A final seat approval/denial revokes sibling links atomically.
+   A customer-configured policy flag `denial_reason_required`
+   (default `false`) optionally requires a bounded, nonblank
+   Deny reason; missing mandatory text must reject the final POST
+   without consuming the intent or recording any vote.
 5. **TTL:** customer-configurable issuance TTL with out-of-box maximum
    **seven days**, always further bounded by the approval request deadline.
    Reminders reuse currently valid link/code generations. Administrator-
    authorized reissue rotates/revokes issuance, records actor and reason,
    and never extends the original business deadline on its own.
+7. **Non-exclusive delegation (owner-accepted 2026-10-09):** an active
+   delegate and the original assigned approver may BOTH initiate
+   a decision for the SAME represented seat, via separate recipient-
+   bound email messages, distinct response URLs and separate
+   four-digit codes. This is one approval obligation, not two.
+   The first valid terminal Approve/Deny wins atomically; the other
+   person's pending links become unusable, including concurrent
+   competing POSTs. A provisional Hold from either party does
+   not end the seat; while eligibility remains current, either
+   party may later resolve that Hold. Delegation revocation/expiry
+   invalidates delegate links only, preserving original eligibility.
+   Audit original assignee, which original/delegate mailbox link
+   was used, and verified personal identity ONLY if separately
+   established by real identity step-up.
 6. **Attribution language:** the recipient/assigned seat is known by
    metadata, but an email-link + four-digit code in that *same mailbox*
    is not independent verification of the individual clicking it.
@@ -78,8 +96,11 @@ remains unchanged until G10A is implemented and qualified.
   scoped cookies/session and browser safety. A delivered approval email
   necessarily reveals both items to its actual mailbox holder.
 - **Replay, race and authorization drift:** final POST revalidates request
-  action fingerprint, current seat epoch, step, outstanding quorum,
-  outcome and deadline atomically. Delegation, account disablement,
+  action fingerprint, current seat epoch, original/delegate active
+  authorization, step, outstanding quorum, any required Deny reason,
+  outcome and deadline atomically. The first terminal decision for
+  a represented seat wins; a simultaneous second party cannot
+  increment quorum or overwrite the outcome. Delegation, account disablement,
   reassignment, request closure, backup restore and key rotation revoke
   stale bindings; only one terminal seat outcome can commit.
 - **Trust downgrade:** high assurance policy may not be reduced via
@@ -105,9 +126,17 @@ remains unchanged until G10A is implemented and qualified.
   experience and must be consulted for real transaction-time step-up.
 - In customer UI and exports, label email decisions as
   **recipient mailbox confirmed**, not **named individual verified**.
-- Deny-reason defaults and whether delegated original/delegate seats
-  can both initiate a decision remain open owner decisions; neither
-  changes one-seat-one-vote enforcement.
+- **Owner decisions closed (2026-10-09):** per-policy optional
+  `denial_reason_required` Boolean, default false; both original and
+  active delegate may decide for ONE seat, first terminal result wins.
+  These choices do not relax any verification tier or allow two
+  approvals for the same seat.
+- **Required additive records:** the request/policy snapshot persists
+  reason enforcement, approval-seat authority persists current
+  original-and-delegate eligibility, and issuance/delivery/audit
+  distinguishes original recipient link from delegate recipient link.
+  A loginless EMAIL_PIN decision proves the specific issued mailbox
+  capability was used, NOT which person physically clicked it.
 
 ## Rejected alternatives
 
