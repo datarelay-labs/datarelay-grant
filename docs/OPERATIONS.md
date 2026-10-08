@@ -95,6 +95,32 @@ reconciliation. The dashboard exposes no token, secret or destination URL and
 has no action replay controls. A restored installation remains subject to the
 existing recovery-paused/explicit reconciliation procedure.
 
+## Integration diagnostics and safe configuration manifest
+
+The administrator Integrations page provides read-only health details,
+request activity, last accepted/failed callback transport, nonsecret
+credential scope-role metadata and recorded connection-test outcomes. The
+Producer preset requests only request creation/reading permissions. The
+Executor preset requests execution-grant consumption and result-reporting
+permissions. Mixing both capabilities should be explicitly reviewed. Only
+an actual operator may create or revoke credentials; diagnostic inspection
+never does so.
+
+GET /api/v1/integrations/{id}/diagnostics requires administrator authority.
+GET /api/v1/integrations/configuration-export returns a bounded planning
+manifest of integration identity, policy version selectors/timing and template
+metadata. It intentionally omits registered callback destinations, encrypted
+headers, authenticators, raw message bodies and connection-specific keys.
+The manifest is NOT importable as a runnable configuration or a backup.
+Production Import requires separate design of validation, mapping, rollback
+and privilege boundaries before being made available.
+
+A connection test is an explicitly requested diagnostic event; accepted or
+failed transport is auditable without logging a raw destination or exception
+text. Never infer action execution, an approved policy or inbound Stellar
+support from a successful test event. External receiver/consumer qualification
+remains separate from these operator observations.
+
 ## Backup, restore and restart
 
 ```sh

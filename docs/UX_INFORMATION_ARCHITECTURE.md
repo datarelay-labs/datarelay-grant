@@ -107,7 +107,7 @@ Work
 Configuration
 ├── Approval policies
 ├── Notifications
-├── Integrations
+├── Integrations        # G8 health, credential roles, safe export
 └── Approvers          # when G3/G4 is implemented
 
 Administration
