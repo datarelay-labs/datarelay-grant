@@ -249,6 +249,10 @@ Exit evidence:
 - no cross-user data leakage;
 - pagination and empty/large-list behavior verified.
 
+Development candidate: G6 server-side role-filtered Inbox and My requests UI,
+request approval-progress projection, and bounded paging tested. Final exact-head
+CI/browser qualification and release reconciliation remain required (Work Packet #42).
+
 ### G7 — Operational dashboard and exception handling
 
 Priority: **P0**

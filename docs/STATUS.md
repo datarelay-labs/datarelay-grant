@@ -49,8 +49,14 @@ capability remains whatever is present and tested at the committed candidate HEA
   original immutable action/fingerprint. Migration v7 to v8 is additive and re-entry
   tested. G5 browser collaboration and replacement-diff journeys are exercised;
   this is not a release claim.
-- G6 is not complete: some existing approver/requester queue views and pagination
-  exist, but full server-side filtering/search and large-list evidence remain.
+- G6 development candidate: role-scoped server-filtered approval inbox views
+  (needs, held, overdue, delegated, recently decided and escalated), dedicated My
+  requests workspace, administrator-selectable policy/requester/approver/group and
+  integration filters, action/date/delivery/execution search and stable pagination.
+  A request's approval progress and waiting party derive from the authoritative
+  decision ledger, approval-plan snapshot and collaboration state. Large-list API
+  pagination and actual browser requester/approver journeys are covered by tests;
+  final exact-head qualification is still outstanding.
 - Immutable action, explicit approve/hold/deny, expiry, bounded reminders,
   cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.
@@ -75,7 +81,11 @@ These are predecessor development observations, now captured in Work Packet #40
 at exact committed/pushed head. G5 full Python/API regression (165 PASS), static checks,
 12 frontend units, TypeScript build and 10 real browser journeys passed on
 the current successor worktree. Exact-head CI and downstream real integrations
-remain separately gated in Work Packet #42 and #33. The browser administration journey still exercises
+remain separately gated in Work Packet #42 and #33. G6 full-source verification has now passed 172 Python/API tests, static checks,
+12 frontend units, TypeScript production build and 12 actual Playwright Chromium
+journeys, including two browser Inbox/query scenarios. Exact committed HEAD
+and integration/CI evidence remain separate from local development tests. The browser
+administration journey still exercises
 Notification template-set preview/test send and Policy Draft -> Testing -> isolated
 test -> Activate -> runtime preview -> history.
 

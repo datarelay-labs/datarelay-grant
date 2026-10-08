@@ -322,3 +322,88 @@ test('G5 two-user request for information pauses approval until response',async(
  expect(current.comments.map((m:any)=>m.kind)).toEqual(['REQUEST_INFO','INFO_RESPONSE']);
  await requester.close();await approver.close();
 });
+
+test('G6 requester inbox server search, pagination and role scoping',async({browser})=>{
+  const f=fixture();
+  const context=await browser.newContext();
+  const page=await context.newPage();
+  await login(page,'requester');
+  const session=await(await context.request.get('/api/v1/auth/session')).json();
+  const csrf=session.csrf;
+  expect(typeof csrf).toBe('string');
+  const uniqueBatch='G6-'+crypto.randomUUID().slice(0,8);
+  for(let i=0;i<57;i++){
+    const created=await context.request.post('/api/v1/requests',{
+      headers:{'x-csrf-token':csrf},
+      data:{
+        external_id:crypto.randomUUID(),profile_id:f.profile_id,
+        title:uniqueBatch+' '+(i%26===0?'Needle-':'Bulk-')+i,
+        action:{kind:'test.operation',target:'bulk-isolated-target',parameters:{}},
+      },
+    });
+    expect(created.status()).toBe(202);
+  }
+
+  await page.goto('/my-requests');
+  await expect(page.getByRole('heading',{name:'My requests',exact:true})).toBeVisible();
+  await page.getByLabel('Search requests',{exact:true}).fill(uniqueBatch);
+  await page.getByRole('button',{name:'Apply filters',exact:true}).click();
+  await expect(page.getByText('Page 1 · 50 loaded',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Next page',exact:true}).click();
+  await expect(page.getByText('Page 2 · 7 loaded',{exact:true})).toBeVisible();
+  await page.getByLabel('Search requests',{exact:true}).fill(uniqueBatch+' Needle');
+  await page.getByRole('button',{name:'Apply filters',exact:true}).click();
+  for(const index of [0,26,52]){
+    await expect(page.getByRole('button',{name:uniqueBatch+' Needle-'+index,exact:true})).toBeVisible();
+  }
+  await expect(page.getByText('Page 1 · 3 loaded',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:uniqueBatch+' Bulk-56',exact:true})).toHaveCount(0);
+  await context.close();
+});
+
+test('G6 approver inbox needs/held/recent views reflect decisions',async({browser,request})=>{
+ const f=fixture();const headers={authorization:'Bearer '+f.token};
+ const senderContext=await browser.newContext();
+ const senderPage=await senderContext.newPage();
+ await login(senderPage,'requester');
+ const senderSession=await(await senderContext.request.get('/api/v1/auth/session')).json();
+ async function create(title:string){
+   const created=await senderContext.request.post('/api/v1/requests',{
+     headers:{'x-csrf-token':senderSession.csrf},
+     data:{
+       external_id:crypto.randomUUID(),profile_id:f.profile_id,title,
+       action:{kind:'test.operation',target:'inbox-target',parameters:{}},
+     },
+   });
+   expect(created.status()).toBe(202);return await created.json();
+ }
+ const hold=await create('G6 hold work');
+ const ask=await create('G6 ask work');
+ const context=await browser.newContext(),page=await context.newPage();
+ await login(page,'approver');await page.goto('/approvals');
+ await expect(page.getByRole('button',{name:'G6 hold work',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'G6 hold work',exact:true}).click();
+ await page.getByRole('button',{name:'Hold',exact:true}).click();
+ await page.getByRole('button',{name:'Confirm held',exact:true}).click();
+ await page.goto('/approvals');
+ await page.getByLabel('Work view',{exact:true}).selectOption('held');
+ await page.getByRole('button',{name:'Apply filters',exact:true}).click();
+ await expect(page.getByRole('button',{name:'G6 hold work',exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'G6 ask work',exact:true})).toHaveCount(0);
+ await page.goto('/requests/'+ask.id);
+ await page.getByLabel('Message purpose',{exact:true}).selectOption('REQUEST_INFO');
+ await page.getByLabel('Message (up to 2000 characters; no credentials)',{exact:true}).fill('What is the ticket?');
+ await page.getByRole('button',{name:'Confirm message',exact:true}).click();
+ await page.goto('/approvals');
+ await expect(page.getByRole('button',{name:'G6 ask work',exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'G6 hold work',exact:true}).click();
+ await page.getByRole('button',{name:'Approve',exact:true}).click();
+ await page.getByRole('button',{name:'Confirm approved',exact:true}).click();
+ await page.goto('/approvals');
+ await page.getByLabel('Work view',{exact:true}).selectOption('recent');
+ await page.getByRole('button',{name:'Apply filters',exact:true}).click();
+ await expect(page.getByRole('button',{name:'G6 hold work',exact:true})).toBeVisible();
+ const latest=await(await request.get('/api/v1/requests/'+hold.id,{headers})).json();
+ expect(latest.state).toBe('APPROVED');
+ await context.close();await senderContext.close();
+});

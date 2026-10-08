@@ -1654,35 +1654,184 @@ class Core:
             )
             return self._project(conn, self._load(conn, ident))
 
-    def list_requests(self, actor: Principal, limit: int = 100, offset: int = 0) -> list[dict]:
+    def list_requests(
+        self,
+        actor: Principal,
+        limit: int = 100,
+        offset: int = 0,
+        *,
+        view: str = "all",
+        search: str = "",
+        state: str | None = None,
+        collaboration_state: str | None = None,
+        policy_id: str | None = None,
+        requester_id: str | None = None,
+        approver_id: str | None = None,
+        group_id: str | None = None,
+        integration_id: str | None = None,
+        action_kind: str | None = None,
+        created_after: float | None = None,
+        created_before: float | None = None,
+        delivery_state: str | None = None,
+        execution_state: str | None = None,
+    ) -> list[dict]:
+        """Stream role-visible rows and page *after* all server-side filters."""
+        allowed_views = {
+            "all", "needs", "overdue", "held", "delegated",
+            "recent", "requester", "escalated",
+        }
+        if (
+            view not in allowed_views
+            or (state is not None and state not in {
+                "AWAITING", "HELD", "APPROVED", "DENIED", "EXPIRED", "CANCELLED"
+            })
+            or (
+                collaboration_state is not None
+                and collaboration_state not in {
+                    "OPEN", "INFO_REQUESTED", "CHANGES_REQUESTED"
+                }
+            )
+            or limit < 1 or limit > 100 or offset < 0
+        ):
+            raise GrantError("REQUEST_FILTER_INVALID", 422)
+        if actor.kind == "integration" and view != "all":
+            raise GrantError("HUMAN_REQUIRED", 403)
+        if actor.kind not in ("human", "integration"):
+            raise GrantError("AUTHENTICATION_REQUIRED", 401)
+
         self.maintenance()
-        query, args = "SELECT * FROM requests", []
+        now = time.time()
+        clauses: list[str] = []
+        args: list[Any] = []
+
         if actor.kind == "integration":
-            query += " WHERE integration_id=?"
+            clauses.append("requests.integration_id=?")
             args.append(actor.integration_id)
         elif actor.role != "admin":
-            now = time.time()
-            query += """ WHERE requester_id=? OR approver_id=? OR approval_plan LIKE ?
-                OR EXISTS (
-                    SELECT 1 FROM delegations d
-                    WHERE d.substitute_id=? AND d.revoked_at IS NULL
-                      AND d.starts_at<=? AND d.ends_at>?
-                      AND (
-                        d.delegator_id=requests.approver_id
-                        OR requests.approval_plan LIKE '%"' || d.delegator_id || '"%'
-                      )
-                )"""
-            args += [actor.id, actor.id, f'%"{actor.id}"%', actor.id, now, now]
-        query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+            clauses.append(
+                """(requests.requester_id=? OR requests.approver_id=?
+                    OR requests.approval_plan LIKE ?
+                    OR EXISTS (
+                        SELECT 1 FROM delegations d
+                        WHERE d.substitute_id=?
+                          AND d.revoked_at IS NULL
+                          AND d.starts_at<=? AND d.ends_at>?
+                          AND (
+                            d.delegator_id=requests.approver_id
+                            OR requests.approval_plan LIKE '%"' || d.delegator_id || '"%'
+                          )
+                    ))"""
+            )
+            args.extend([
+                actor.id, actor.id, f'%"{actor.id}"%', actor.id, now, now,
+            ])
+
+        for value, column in (
+            (state, "requests.state"),
+            (collaboration_state, "requests.collaboration_state"),
+            (policy_id, "requests.profile_id"),
+            (requester_id, "requests.requester_id"),
+            (integration_id, "requests.integration_id"),
+            (execution_state, "requests.execution_state"),
+        ):
+            if value is not None:
+                clauses.append(f"{column}=?")
+                args.append(value)
+        if action_kind is not None:
+            clauses.append("json_extract(requests.action,'$.kind')=?")
+            args.append(action_kind)
+        if approver_id is not None:
+            clauses.append(
+                """(requests.approver_id=? OR EXISTS (
+                    SELECT 1 FROM json_each(requests.approval_plan,'$.members')
+                    WHERE value=?
+                ))"""
+            )
+            args.extend([approver_id, approver_id])
+        if group_id is not None:
+            clauses.append("json_extract(requests.approval_plan,'$.group_id')=?")
+            args.append(group_id)
+        if created_after is not None:
+            clauses.append("requests.created_at>=?")
+            args.append(created_after)
+        if created_before is not None:
+            clauses.append("requests.created_at<=?")
+            args.append(created_before)
+        if search:
+            # A search term is literal text; percent/underscore must not
+            # silently become arbitrary SQL LIKE wildcards.
+            term = search.lower().replace("!", "!!").replace("%", "!%").replace("_", "!_")
+            clauses.append(
+                """(LOWER(requests.title) LIKE ? ESCAPE '!'
+                    OR LOWER(requests.external_id) LIKE ? ESCAPE '!')"""
+            )
+            args.extend([f"%{term}%", f"%{term}%"])
+
+        query = "SELECT requests.* FROM requests"
+        if clauses:
+            query += " WHERE " + " AND ".join(clauses)
+        query += " ORDER BY requests.created_at DESC, requests.id DESC LIMIT ? OFFSET ?"
+
+        def included(row: dict) -> bool:
+            if delivery_state is not None and row["delivery_state"] != delivery_state:
+                return False
+            assigned = row["viewer_assigned"]
+            if view == "needs":
+                return bool(row["viewer_can_decide"])
+            if view == "held":
+                return bool(assigned and row["state"] == "HELD")
+            if view == "delegated":
+                return bool(row["viewer_delegated_for"])
+            if view == "requester":
+                return actor.kind == "human" and row["requester_id"] == actor.id
+            if view == "recent":
+                represented = row["viewer_delegated_for"] or actor.id
+                return bool(
+                    assigned and any(
+                        item["actor_id"] == represented
+                        and item["decision"] in ("APPROVED", "DENIED")
+                        for item in row["decisions"]
+                    )
+                )
+            if view == "overdue":
+                return bool(row["overdue"] or row["state"] == "EXPIRED")
+            if view == "escalated":
+                return bool(row["escalation"] and row["escalation"]["fired_at"] is not None)
+            return True
+
+        result: list[dict] = []
+        matched = 0
+        cursor = 0
+        chunk = max(100, min(200, limit * 2))
         with self.db.transaction(write=False) as conn:
-            now = time.time()
-            return [
-                {
-                    **self._project(conn, row, detail=False),
-                    **self._viewer_assignment(conn, row, actor, now),
-                }
-                for row in conn.execute(query, (*args, limit, offset)).fetchall()
-            ]
+            # Streaming bounded fetches keep page results correct even when
+            # viewer/delegation/outbox filters are computed after SQL predicates.
+            while len(result) < limit:
+                page = conn.execute(query, (*args, chunk, cursor)).fetchall()
+                if not page:
+                    break
+                cursor += len(page)
+                for source in page:
+                    try:
+                        self._visible(conn, source, actor)
+                    except GrantError as exc:
+                        if exc.code == "REQUEST_NOT_FOUND":
+                            continue
+                        raise
+                    item = {
+                        **self._project(conn, source, detail=False),
+                        **self._viewer_assignment(conn, source, actor, now),
+                    }
+                    if not included(item):
+                        continue
+                    if matched >= offset:
+                        result.append(item)
+                        if len(result) == limit:
+                            break
+                    matched += 1
+                if len(page) < chunk:
+                    break
+        return result
 
     def decide(self, actor: Principal, ident: str, body: Decision) -> dict:
         if actor.kind != "human":
@@ -2034,6 +2183,64 @@ class Core:
             version = version_row["version"] if version_row else None
         out["policy_version"] = version
         out["decisions"] = [dict(r) for r in conn.execute("SELECT actor_id,decision,reason,decided_at FROM request_decisions WHERE request_id=? ORDER BY decided_at,actor_id", (row["id"],)).fetchall()]
+        plan = out["approval_plan"] or {
+            "mode": "SINGLE", "members": [row["approver_id"]], "required": 1,
+        }
+        votes = {vote["actor_id"]: vote["decision"] for vote in out["decisions"]}
+        members = plan.get("members", [row["approver_id"]])
+        approved_count = sum(votes.get(member) == "APPROVED" for member in members)
+        undecided_members = [
+            member for member in members
+            if votes.get(member) not in ("APPROVED", "DENIED")
+        ]
+        waiting_members = (
+            undecided_members[:1]
+            if plan.get("mode") == "SEQUENTIAL"
+            else undecided_members
+        )
+        waiting_on = "CLOSED"
+        if row["state"] in ("AWAITING", "HELD"):
+            waiting_on = {
+                "OPEN": "APPROVERS",
+                "INFO_REQUESTED": "REQUESTER_INFO",
+                "CHANGES_REQUESTED": "REQUESTER_REVISION",
+            }[row["collaboration_state"]]
+        elif row["state"] == "APPROVED":
+            waiting_on = (
+                "EXECUTOR"
+                if row["execution_state"] == "NOT_STARTED"
+                else "EXECUTION_RESULT"
+            )
+        visible_waiting = waiting_members if waiting_on == "APPROVERS" else []
+        names = {}
+        if visible_waiting:
+            placeholders = ",".join("?" for _ in visible_waiting)
+            names = {
+                person["id"]: person["username"]
+                for person in conn.execute(
+                    f"SELECT id,username FROM users WHERE id IN ({placeholders})",
+                    visible_waiting,
+                ).fetchall()
+            }
+        group_name = None
+        if plan.get("group_id"):
+            group = conn.execute(
+                "SELECT name FROM approver_groups WHERE id=?", (plan["group_id"],)
+            ).fetchone()
+            group_name = group["name"] if group else None
+        out["approval_progress"] = {
+            "mode": plan.get("mode", "SINGLE"),
+            "approved_count": approved_count,
+            "required_count": int(plan.get("required") or 1),
+            "total_members": len(members),
+            "waiting_approver_ids": visible_waiting,
+            "waiting_approvers": [
+                {"id": member, "username": names.get(member, "Unavailable approver")}
+                for member in visible_waiting
+            ],
+            "group_name": group_name,
+            "waiting_on": waiting_on,
+        }
         escalation = conn.execute(
             """SELECT target_user_id,target_group_id,target_members,due_at,fired_at
                FROM escalations WHERE request_id=?""",
