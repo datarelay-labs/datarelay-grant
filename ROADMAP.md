@@ -1,6 +1,7 @@
 # DataRelay Grant — 1.0 Product Roadmap
 
 Accepted: 2026-10-07
+Owner accepted G10A-0..5 roadmap and safe per-answer email UX: 2026-10-08
 Repository: `datarelay-labs/datarelay-grant`
 Canonical product rules: `docs/PRODUCT_STANDARD.md`
 Status: pre-release development candidate
@@ -385,7 +386,10 @@ CI, browser, G11 and release qualification remain independent.
 ### G10A — Patent-aligned email decision links and verification
 
 Priority: **P0 — before G12 final 1.0 acceptance**  
-Status: **PLANNED; not implemented or acceptance-tested.**  
+Status: **OWNER-ACCEPTED PRODUCT REQUIREMENT; implementation and acceptance pending.**
+The owner accepted this six-phase scope on 2026-10-08. Do not mistake roadmap
+acceptance for implemented behavior, merged branch, CI qualification, customer
+release or a live deployment.  
 Dependency: G2 notification templates, G3 multi-approval, G10 authorization/security.
 Scope: Email decision UX; this is not an inbound external-system callback or an
 execution trigger.
@@ -397,7 +401,8 @@ records the response, then displays confirmation. This differs from the current
 Grant implementation, which emails one request-detail link and asks the signed-in
 user to choose and confirm a decision on the request page.
 
-Recommended safe product adaptation (confirmation UX subject to final owner choice):
+Owner-accepted safe product adaptation (GET does not decide; explicit authenticated
+confirmation is mandatory):
 
 - generate a distinct **Approve / Hold / Deny** decision-intent link for each assigned
   approver and request snapshot in requested/reminder emails, including only relevant
@@ -459,10 +464,51 @@ Recommended safe product adaptation (confirmation UX subject to final owner choi
   decided, forwarded and replayed links fail closed without side effects.
 
 
+#### G10A approved boundary, unresolved product defaults and decisions
+
+**Approved product behavior** (2026-10-08): separate per-request/per-assignee/
+per-outcome unguessable links; email link preselects but never executes;
+side-effect-free anonymous GET/HEAD; signed-in authorized human confirms via
+protected POST; request/action/step/assignment identity binding; Hold
+provisional; receipt, decision and actual execution remain distinct; per-step
+individual delivery; Standard / Verified / High Assurance policy tiers; real
+two-person actual-email browser E2E. These are P0 for Grant 1.0.
+
+**Owner choices still to settle before the named implementing phase** — proposed
+defaults are listed in `docs/PRODUCT_STANDARD.md` Section 10.9:
+
+1. **New-policy verification default (G10A-3):** propose Standard for normal
+   authenticated internal approvals; require High Assurance for trusted
+   policy-classified privileged/production operations; Verified is optional.
+   Same-mailbox OTP is never MFA. Confirm whether normal approvals should
+   always require a separately sent email code.
+2. **Hold / deny / reason UX (G10A-0/2):** propose Hold suspends only its
+   approver seat, not unrelated valid reviewers or a satisfied N-of-M quorum;
+   any Deny is terminal under current 1.0 policy; require a short reason
+   for Deny, optional for Approve/Hold unless policy requires it. Confirm
+   whether a Hold should globally veto a quorum.
+3. **Link expiration / resend (G10A-2/4):** propose no validity beyond
+   request deadline, at most seven days per issuance, and authenticated
+   reissue for longer requests. Normal reminders reuse still-valid links;
+   explicit administrator reissue rotates/revokes generation. Confirm
+   desired default lifespan and operator behavior.
+
+**Engineering verification, not owner approval needed for research:**
+confirm Foundation's fresh transaction-time MFA step-up surface before
+G10A-3; validate risk policy selectors are **trusted admin/integration
+authoritative fields** rather than requester-supplied downgradeable data;
+check shared-email-address users do not gain identity by mailbox possession;
+prove schema v8->v9 migration/rollback, link token secrecy in sealed outbox,
+and Safe Links scanner GET no mutation. If a missing SDK capability blocks
+High Assurance, report it and fail closed; do not silently weaken the tier.
+The original current G12 Work Packet #54 and real G11 external gates continue
+independently. No G12 HEAD freeze/release may claim G10A complete before
+G10A-5 evidence and a reconciled product candidate.
+
 #### G10A implementation sequence: six bounded deliverables
 
-The following is the **recommended 1.0 implementation roadmap**, not a
-claim of deployed behavior. Each outcome gets affected deterministic tests
+The following six-phase sequence is the **owner-accepted 1.0 implementation
+roadmap**, not a claim of deployed behavior. Each outcome gets affected deterministic tests
 before advancing. Keep all mutations within the Grant owner repository and
 isolated development environments; do not pre-empt the actively running
 G12 QA worktree or perform an unapproved credential/production operation.
