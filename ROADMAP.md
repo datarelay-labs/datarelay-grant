@@ -442,8 +442,27 @@ approver's seat**; other eligible approvers continue, and a satisfied
 threshold may authorize despite a held seat (ALL still requires all).
 **Sequential hold:** the current step's Hold **blocks all downstream
 steps**, which are neither activated nor mailed until the current
-step explicitly approves. A denial is terminal under existing 1.0
-behavior; changing denial-reason defaults is a separate open choice.
+step explicitly approves. A Deny is terminal under existing 1.0 rules.
+**Deny reason is optional by default, or required if the active
+snapshotted approval policy sets `denial_reason_required=true`.**
+Reject missing/blank required reasons server-side before consuming an
+intent or committing a vote.
+
+**Non-exclusive delegation (accepted):** during a currently valid,
+non-revoked delegation, both the original assignee and their named
+delegate receive **independent per-recipient emails, links and
+four-digit PINs**, can reach the same represented seat, and may
+choose Hold/Approve/Deny. A Hold is provisional and either party
+may later resolve it. The first valid **terminal** approval or
+denial commits atomically for that seat; it revokes both parties'
+remaining decision links and counts as **one** seat vote only.
+A losing concurrent response, revoked/expired delegate link, or
+duplicate click creates no additional decision or effect.
+Delegation expiry removes the delegate's authority without
+removing the original assignee's rights. Audit precisely which
+original/delegate mailbox capability was used and whether any
+person's identity was independently established; EMAIL_PIN alone
+is only mailbox possession, not verified personal identity.
 
 **Link expiration:** each customer chooses a default and may override
 per approval policy. Out-of-box **maximum validity is seven days** per
@@ -474,12 +493,12 @@ an administrator-defined required verification tier.
 
 | Phase | Delivery | Evidence/exit |
 | --- | --- | --- |
-| **G10A-0 — Versioned approval seats** | Durable assignment/step identity and epoch independent of mutable state revision, v8→v9-or-later migration with old-request compatibility, seat-local Hold vs sequential-step blocking | ALL/ANY_ONE/N_OF_M unaffected by other votes, SEQUENTIAL Hold prevents next stage, denial/quorum and Hold→Approve regression, rollback/restore valid |
-| **G10A-1 — Recipient mail fanout** | Each eligible approver independently receives HTML + text with 3 unique answer links and **their own 4-digit code**. Sequence stage activation and delegate/reassignment recipients handled, original one-link fallback retained | No bulk CC/shared URL, inactive stages not emailed, no PIN/link leaks in plain outbox/logs or template previews; real SMTP receipt measured |
-| **G10A-2 — PIN-scoped decision API/UI** | 256-bit opaque intents and protected binding/digests, GET/HEAD no state mutation, no-login PIN POST, bounded decision context, final explicit protected POST, terminal revocation and one-vote transaction | Mail scanners cannot decide; no login required for EMAIL_PIN; wrong/stolen link risks documented, rate limits/lockout/expiry/reissue, concurrent choices and forwarded/wrong-assignee cases tested |
+| **G10A-0 — Versioned approval seats** | Durable assignment/step identity and epoch independent of mutable state revision, v8→v9-or-later migration with old-request compatibility, seat-local Hold vs sequential-step blocking; versioned `denial_reason_required` flag (default false); original/delegate rights map to one seat | ALL/ANY_ONE/N_OF_M unaffected by other votes, SEQUENTIAL Hold prevents next stage, reason required/optional API validation, original-vs-delegate first terminal wins, rollback/restore valid |
+| **G10A-1 — Recipient mail fanout** | Each eligible approver independently receives HTML + text with 3 unique answer links and **their own 4-digit code**. When delegation is active, mail original and delegate independently for the same seat. Sequence stage activation and reassignment handled, original one-link fallback retained | Separate recipient-specific codes/links for both parties, no duplicate seats, no CC/shared URL or inactive-step mail, no PIN/link leak in queues/previews; real SMTP receipt measured |
+| **G10A-2 — PIN-scoped decision API/UI** | 256-bit opaque intents and protected binding/digests, GET/HEAD no state mutation, no-login PIN POST, bounded decision context, final explicit protected POST, policy-enforced Deny reason, first-terminal-wins per represented seat and atomic original/delegate sibling revocation | Scanner GET cannot decide; missing required Deny reason rejected, optional Deny reason allowed, no login for EMAIL_PIN, duplicate/competing original-delegate decisions, replays, expiry and forwarded email tested |
 | **G10A-3 — Customer verification policy** | Tenant/installation defaults and policy override for EMAIL_PIN/EMAIL_PIN_PLUS_OTP/EMAIL_PIN_PLUS_MFA; trusted risk selector, requested OTP + fresh identity step-up and secret redaction | Customer can select code-only vs OTP/MFA; Same-email OTP not mislabelled MFA; missing mandatory MFA fails closed; old policy snapshot not silently downgraded |
-| **G10A-4 — Audit + operator lifecycle** | Persist intended recipient vs proven person (if any), issuance, Hold/revote, delegate, PIN/OTP assurance result, delivery and revoke/reissue actions; protected mail queue, backup/recovery and operational diagnostics | Audit accurately labels `EMAIL_LINK_PIN` rather than verified person; token/code absent from exports; restore and retries never resurrect unsafe links or duplicate human votes |
-| **G10A-5 — Actual Full User E2E** | Update repository-local user scenarios and surface reconciliation for recipient-specific email/4-digit code and optional OTP/MFA; perform direct human browser/mobile + two real mailbox passes, group and sequential Hold, stale links and actual execution separation | New frozen exact HEAD, independent direct two-person email/browser PASS with exact backend readback, affected deterministic tests then full qualification, independent G11 external Control/Stellar and owner release gates respected |
+| **G10A-4 — Audit + operator lifecycle** | Persist original seat, original/delegate issued mailbox capability, independently proven person (if any), decision/reason/Hold history, PIN/OTP assurance, revoke/issuance, delivery and protected queue, backup/recovery | Audit separately shows original assignment, email link recipient and verified identity if established; `EMAIL_LINK_PIN` alone never claims person verified, no raw token/code; restore and retries cannot double count or resurrect links |
+| **G10A-5 — Actual Full User E2E** | Update repository-local user scenarios and surface reconciliation for unique per-person mail/PIN and optional OTP/MFA; directly test parallel/sequential Hold, optional/required Deny reasons, active delegation original/delegate independent links, first terminal race and revocation, audit assurance, execution separation | New frozen exact HEAD, independent direct two-person email/browser PASS, no double-count after competing delegate vote; exact backend readback, deterministic+full qualification and independent G11/G12 external and owner acceptance gates |
 
 **Required implementation corrections found in current source:**
 `_mail_event` sends to one representative `approver_id` despite group
@@ -491,13 +510,15 @@ existing G0–G10 behavior and fail closed during additive migration.
 Existing R1 `/requests/{id}` login flow remains available for old
 requests and normal authenticated users.
 
-**Open owner choices not silently inferred:** mandatory Deny reason
-(default proposal required for Deny), and whether active delegation
-makes only the delegate eligible or permits original **OR** delegate
-on one seat (never two votes). Risk-based OTP/MFA and link TTL
-are **customer settings**, not unresolved product-default questions.
-Technical validation still needed for actual Foundation
-transaction-time MFA API and secure mail queue/key lifecycle.
+**Owner choices closed (2026-10-09):** Deny-reason requirement is a
+versioned per-policy optional/required switch, default optional.
+Original OR valid delegate may decide, via separate links/codes for
+one seat; first terminal result wins, no duplicate vote, while a
+provisional Hold can be resolved by either party. No remaining G10A
+business-default decision is pending. Risk-based OTP/MFA and link TTL
+remain **customer-configurable policies**. Engineering verification
+still required for fresh MFA API, protected mail/crypto lifecycle,
+delegation expiry/races and migration/rollback.
 If safety/tool restrictions block E2E-contract changes, document
 that gap honestly and do not claim G10A-5 or G12 PASS.
 
