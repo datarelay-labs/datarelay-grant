@@ -2,6 +2,7 @@
 
 Version: 1.0 draft
 Accepted product direction: 2026-10-07
+G10A email decision/verification lifecycle direction owner-accepted: 2026-10-08
 Repository: `datarelay-labs/datarelay-grant`
 
 ## 1. Product definition
@@ -305,7 +306,7 @@ System-level notification branding owns product name, sender display name, logo 
 basic visual identity. Policy-specific content can override text, not security-owned
 layout or authority controls.
 
-### 10.5 Email decision links (planned G10A contract)
+### 10.5 Email decision links (accepted G10A requirement; not implemented)
 
 For each approval request and each assigned approver, the requested/reminder email
 may present three separate labeled response hyperlinks: **Approve**, **Hold
@@ -384,10 +385,12 @@ the audit UI without disclosing raw token or OTP contents.
 - No open, click, delivery receipt or external signed callback is itself a
   human approval or permission to perform the protected business operation.
 
-### 10.6 Per-policy decision verification (planned G10A contract)
+### 10.6 Per-policy decision verification (accepted G10A requirement; not implemented)
 
 The versioned approval policy configures decision verification without altering
-existing in-flight requests. Proposed tiers:
+existing in-flight requests. The three-tier capability is accepted for Grant 1.0;
+the default selected for newly created policies is still an explicit open
+owner choice (Section 10.9). Accepted tiers:
 
 1. **Standard** — current authenticated approver, preselected email-link
    response, explicit on-page final confirmation.
@@ -413,7 +416,7 @@ version snapshots, delivery failures and audit attribution must be tested before
 any feature is claimed as supported.
 
 
-### 10.7 Approval assignments, mail fanout and state versions (planned G10A)
+### 10.7 Approval assignments, mail fanout and state versions (accepted G10A requirement; not implemented)
 
 **Three distinct version/identity dimensions are mandatory** before
 per-response links can ship:
@@ -465,7 +468,7 @@ operator revocation/reissue. Delivery retry must retain issuance identity,
 recipient, Message-ID/correlation and link expiry; it must not create
 duplicate approval seats or inadvertently extend the request deadline.
 
-### 10.8 Link/OTP protection, evidence and safe execution (planned G10A)
+### 10.8 Link/OTP protection, evidence and safe execution (accepted G10A requirement; not implemented)
 
 - **Server authority:** protected link metadata must include original
   recipient assignment, selected outcome, action fingerprint, step/epoch,
@@ -531,6 +534,49 @@ fallback during migration. G10A is a **planned extension** and not evidence
 that any of these surfaces is implemented. Competitive evidence and why
 certain tempting email-reply and passwordless modes were deferred is in
 `docs/APPROVAL_COMPETITIVE_REVIEW.md`.
+
+### 10.9 Approval UX decisions and engineering checks (owner-accepted scope)
+
+**Decision authority (2026-10-08):** the owner accepted the G10A-0..5
+roadmap and this response-specific email-link workflow. The following
+table distinguishes settled product behavior from defaults proposed for
+final confirmation. The open choices do **not** authorize a runtime
+shortcut, a code change across an unrelated worktree, or a false G12 PASS.
+
+| Decision | State | Default/contract and owner choice |
+| --- | --- | --- |
+| Response-link semantics | **ACCEPTED** | Every recipient/assignment/outcome has unique opaque intent. Email button opens safe read-only landing and preselects choice; a signed-in, currently authorized human explicitly confirms via protected POST. No click/GET/HEAD/preview/scan authorizes anything. |
+| Attribution | **ACCEPTED** | Preserve immutable action and policy snapshot, intended recipient, actual authenticated actor, authorized delegate/represented seat, outcome, evidence and UTC timestamp separately. Email address or link possession alone is not identity. |
+| Execution boundary | **ACCEPTED** | Human decision never becomes business execution. Keep the existing independent producer/consumer grant commitment and durable reported-result checks. |
+| Default verification tier | **OWNER CHOICE BEFORE G10A-3** | **Propose** Standard (login + final confirm) for ordinary internal work, Verified (on-demand separate same-email 6-digit confirmation) optional by policy, and High Assurance fresh MFA for privileged/production operations. Alternatively make Verified the ordinary default if owner values extra intent friction over fewer emails. Neither email-code mode is MFA. |
+| What Hold means across a quorum | **OWNER CHOICE BEFORE G10A-0/2** | **Propose** a provisional **seat-level** Hold: the seat has not approved, deadline does not extend, and the same seat can later Approve/Deny. Other eligible reviewers can continue; if a distinct ANY_ONE/N-of-M threshold is satisfied, the request can approve even when someone else Holds. Under ALL, every required seat must approve. Hold alone never grants execution. An alternate *global Hold veto* changes product semantics and must be explicitly selected, not inferred from status names. |
+| Deny and reasons | **OWNER CHOICE BEFORE G10A-2** | **Propose** current 1.0 any-Deny-is-terminal veto (no customizable denial quorum), short reason required for Deny; reason optional for Approve/Hold unless the snapshotted policy requires it. Requiring reasons is a deliberate change from current API defaults; enforce on server, not UI alone. |
+| Link expiry and reissue | **OWNER CHOICE BEFORE G10A-2/4** | **Propose** link deadline = min(request approval deadline, issuance time + seven days); never extend the business deadline automatically. Normal reminders reuse still-authorized links; explicit owner/admin reissue revokes old issuance generation, sends replacement mail with a new unique link and records actor/reason. Requests longer than seven days use legitimate reissuance. |
+| Delegation and message recipients | **DESIGN DEFAULT; VERIFY IN G10A-1** | Only currently decision-eligible humans receive actionable links; substitute/delegate gets its own binding to represented seat, original may receive FYI without actionable original-seat authority if policy transfers it; original and substitute cannot count twice. Whether a delegation is exclusive versus either-person valid is a policy option to decide without changing historical decisions. |
+| Accounts sharing one mailbox | **SECURITY INVARIANT** | Two users with same email still get separate assignment-specific references and must authenticate to their *own* distinct users; no email-address-only lookup can choose approver or authorize. Admin must see recipient collision warning before enabling email-only convenience options. |
+| Sensitive action classification | **SECURITY INVARIANT; VERIFY TRUST** | High Assurance is based on an administrator-controlled policy of trusted source/integration/action identity, not an untrusted requester's free-form risk/severity. The server must prevent a requester setting `risk_level=low` to downgrade fresh MFA or approver plan. Verify actual Product Foundation step-up capabilities and fail closed if unavailable. |
+| Migration and original mailbox code | **ACCEPTED BOUNDARY** | Older in-flight requests retain neutral authenticated Request Details flow; no retroactive minting of links. A 4-digit number in the original email remains experimental and off by default unless approved after security/UX tests. External loginless approval, inbound email replies, and email-to-request creation remain post-1.0 candidates. |
+
+**Landing and confirmation UX:** email shows explicit Approve, Hold, Deny
+and neutral View Details actions with mobile-ready HTML and equivalent
+plain text. Anonymous landing only says sign in and does **not** expose
+request title, internal asset names or approver identity. After session/
+assignment authorization, show immutable request/action summary, a
+clearly *preselected but not yet recorded* outcome and one explicit
+`Confirm Approve` / `Confirm Hold` / `Confirm Deny` action. Require
+any applicable reason and step-up on the same current action and actor;
+separate POST changes server state. Post-decision show *recorded human
+vote*, quorum status, and separately *execution not yet verified* — no
+misleading `executed successfully` confirmation merely because the
+approval passed. Expired/stale/reassigned/forwarded links use a safe
+generic error and link to the neutral authenticated inbox.
+
+**Owner input policy:** implementation may proceed through G10A-0
+structure/prototype and independent research without turning
+proposals into defaults. Before shipping a phase that depends on an
+open choice, record the chosen policy in the versioned standard and
+tests. Other existing runnable roadmap tasks are not blocked by
+these later product defaults.
 
 ## 11. User experience standard
 
