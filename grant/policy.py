@@ -140,6 +140,7 @@ def version_view(row: sqlite3.Row) -> dict[str, Any]:
         "environment": row["environment"],
         "severity": row["severity"],
         "risk_level": row["risk_level"],
+        "denial_reason_required": bool(row["denial_reason_required"]),
         "lifecycle": row["lifecycle"],
         "enabled": row["lifecycle"] == "ACTIVE",
         "created_at": row["created_at"],

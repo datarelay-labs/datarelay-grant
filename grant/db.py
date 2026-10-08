@@ -48,7 +48,8 @@ CREATE TABLE IF NOT EXISTS profiles (
  approver_id TEXT NOT NULL REFERENCES users(id), approval_mode TEXT NOT NULL DEFAULT 'SINGLE', approver_group_id TEXT, approvals_required INTEGER, action_kind TEXT NOT NULL,
  email_template_id TEXT REFERENCES email_templates(id),
  deadline_seconds INTEGER NOT NULL, reminder_seconds INTEGER NOT NULL,
- max_reminders INTEGER NOT NULL, grant_seconds INTEGER NOT NULL, enabled INTEGER NOT NULL DEFAULT 0
+ max_reminders INTEGER NOT NULL, grant_seconds INTEGER NOT NULL, enabled INTEGER NOT NULL DEFAULT 0,
+ denial_reason_required INTEGER NOT NULL DEFAULT 0 CHECK(denial_reason_required IN (0,1))
 );
 CREATE TABLE IF NOT EXISTS profile_versions (
  id TEXT PRIMARY KEY, profile_id TEXT NOT NULL REFERENCES profiles(id),
@@ -60,6 +61,7 @@ CREATE TABLE IF NOT EXISTS profile_versions (
  max_reminders INTEGER NOT NULL, grant_seconds INTEGER NOT NULL,
  tenant_selector TEXT NOT NULL DEFAULT '', environment TEXT NOT NULL DEFAULT '',
  severity TEXT NOT NULL DEFAULT '', risk_level TEXT NOT NULL DEFAULT '',
+ denial_reason_required INTEGER NOT NULL DEFAULT 0 CHECK(denial_reason_required IN (0,1)),
  lifecycle TEXT NOT NULL CHECK(lifecycle IN ('DRAFT','TESTING','ACTIVE','DISABLED')),
  created_at REAL NOT NULL, updated_at REAL NOT NULL,
  activated_at REAL, disabled_at REAL,
@@ -72,6 +74,8 @@ CREATE TABLE IF NOT EXISTS requests (
  external_id TEXT NOT NULL, profile_id TEXT NOT NULL REFERENCES profiles(id),
  profile_version_id TEXT REFERENCES profile_versions(id),
  requester_id TEXT REFERENCES users(id), approver_id TEXT NOT NULL REFERENCES users(id), approval_plan TEXT NOT NULL DEFAULT '{}',
+ denial_reason_required INTEGER NOT NULL DEFAULT 0 CHECK(denial_reason_required IN (0,1)),
+ email_pin_enabled INTEGER NOT NULL DEFAULT 0 CHECK(email_pin_enabled IN (0,1)),
  title TEXT NOT NULL, action TEXT NOT NULL, action_hash TEXT NOT NULL, intake_hash TEXT NOT NULL,
  source TEXT NOT NULL, reason TEXT NOT NULL, predecessor_id TEXT REFERENCES requests(id),
  mail_template TEXT NOT NULL, state TEXT NOT NULL,
@@ -119,6 +123,14 @@ CREATE TABLE IF NOT EXISTS request_decisions (
  reason TEXT NOT NULL DEFAULT '', decided_at REAL NOT NULL,
  PRIMARY KEY(request_id,actor_id)
 );
+CREATE TABLE IF NOT EXISTS approval_assignments (
+ id TEXT PRIMARY KEY, request_id TEXT NOT NULL REFERENCES requests(id),
+ step_id TEXT NOT NULL, approver_id TEXT NOT NULL REFERENCES users(id),
+ position INTEGER NOT NULL, assignment_epoch INTEGER NOT NULL DEFAULT 1,
+ created_at REAL NOT NULL,
+ UNIQUE(request_id,position), UNIQUE(request_id,approver_id)
+);
+CREATE INDEX IF NOT EXISTS approval_assignments_user ON approval_assignments(approver_id,request_id);
 CREATE TABLE IF NOT EXISTS request_comments (
  id TEXT PRIMARY KEY, request_id TEXT NOT NULL REFERENCES requests(id),
  author_id TEXT NOT NULL REFERENCES users(id),
@@ -142,7 +154,7 @@ CREATE TABLE IF NOT EXISTS escalations (
  due_at REAL NOT NULL, fired_at REAL,
  CHECK ((target_user_id IS NOT NULL) != (target_group_id IS NOT NULL))
 );
-PRAGMA user_version=8;
+PRAGMA user_version=9;
 """
 
 
@@ -175,7 +187,7 @@ class Database:
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8):
+            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9):
                 raise RuntimeError("Unsupported database schema; do not downgrade this binary")
             conn.execute("PRAGMA journal_mode=WAL")
             if version == 1:
@@ -198,6 +210,9 @@ class Database:
                 version = 7
             if version == 7:
                 self._migrate_v7_to_v8(conn)
+                version = 8
+            if version == 8:
+                self._migrate_v8_to_v9(conn)
             conn.executescript(SCHEMA)
         private_file(path)
 
@@ -430,6 +445,54 @@ class Database:
             )
         conn.execute("PRAGMA user_version=8")
 
+    @staticmethod
+    def _migrate_v8_to_v9(conn: sqlite3.Connection) -> None:
+        # Idempotent additive migration. Old requests never receive a new
+        # passwordless issuance merely because their database was upgraded.
+        for table, fields in {
+            "profiles": (("denial_reason_required", "INTEGER NOT NULL DEFAULT 0"),),
+            "profile_versions": (("denial_reason_required", "INTEGER NOT NULL DEFAULT 0"),),
+            "requests": (
+                ("denial_reason_required", "INTEGER NOT NULL DEFAULT 0"),
+                ("email_pin_enabled", "INTEGER NOT NULL DEFAULT 0"),
+            ),
+        }.items():
+            existing = {col[1] for col in conn.execute(f"PRAGMA table_info({table})")}
+            for name, definition in fields:
+                if name not in existing:
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")
+        conn.executescript('''
+        CREATE TABLE IF NOT EXISTS approval_assignments (
+         id TEXT PRIMARY KEY, request_id TEXT NOT NULL REFERENCES requests(id),
+         step_id TEXT NOT NULL, approver_id TEXT NOT NULL REFERENCES users(id),
+         position INTEGER NOT NULL, assignment_epoch INTEGER NOT NULL DEFAULT 1,
+         created_at REAL NOT NULL,
+         UNIQUE(request_id,position), UNIQUE(request_id,approver_id)
+        );
+        CREATE INDEX IF NOT EXISTS approval_assignments_user
+         ON approval_assignments(approver_id,request_id);
+        ''')
+        for request in conn.execute("SELECT id,approver_id,approval_plan,created_at FROM requests").fetchall():
+            plan = json.loads(request["approval_plan"] or "{}")
+            members = plan.get("members") or [request["approver_id"]]
+            shared_step = uid()
+            for position, member in enumerate(members):
+                if not conn.execute(
+                    "SELECT id FROM approval_assignments WHERE request_id=? AND position=?",
+                    (request["id"], position),
+                ).fetchone():
+                    conn.execute(
+                        '''INSERT INTO approval_assignments
+                           (id,request_id,step_id,approver_id,position,created_at)
+                           VALUES(?,?,?,?,?,?)''',
+                        (
+                            uid(), request["id"],
+                            uid() if plan.get("mode") == "SEQUENTIAL" else shared_step,
+                            member, position, request["created_at"],
+                        ),
+                    )
+        conn.execute("PRAGMA user_version=9")
+
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
         conn.row_factory = sqlite3.Row
@@ -466,7 +529,7 @@ class Database:
         with closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
-            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8):
+            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9):
                 raise ValueError("Backup schema mismatch")
             with closing(sqlite3.connect(destination)) as new:
                 old.backup(new)

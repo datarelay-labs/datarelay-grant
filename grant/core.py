@@ -587,6 +587,10 @@ class Core:
                 now,
             ),
         )
+        conn.execute(
+            "UPDATE profile_versions SET denial_reason_required=? WHERE id=?",
+            (int(body.denial_reason_required), version_id),
+        )
         return version_id
 
     @staticmethod
@@ -614,6 +618,10 @@ class Core:
                 int(enabled),
                 ident,
             ),
+        )
+        conn.execute(
+            "UPDATE profiles SET denial_reason_required=? WHERE id=?",
+            (int(body.denial_reason_required), ident),
         )
 
     def create_delegation(self, actor: Principal, body: Delegation) -> dict:
@@ -787,6 +795,12 @@ class Core:
             plan["members"] = members
             conn.execute("UPDATE requests SET approval_plan=?,approver_id=?,revision=revision+1 WHERE id=?",
                          (json_text(plan), members[0], ident))
+            conn.execute(
+                """UPDATE approval_assignments
+                   SET approver_id=?,assignment_epoch=assignment_epoch+1
+                   WHERE request_id=? AND approver_id=?""",
+                (body.to_approver_id, ident, body.from_approver_id),
+            )
             audit(conn, ident, actor.id, "request.reassigned", {"from": body.from_approver_id, "to": body.to_approver_id, "reason": body.reason})
             return self._project(conn, self._load(conn, ident))
 
@@ -940,6 +954,10 @@ class Core:
             else:
                 version = current["version"] + 1
                 version_id = self._insert_profile_version(conn, ident, version, body)
+            conn.execute(
+                "UPDATE profile_versions SET denial_reason_required=? WHERE id=?",
+                (int(body.denial_reason_required), version_id),
+            )
             self._mirror_profile(conn, ident, body, enabled=active is not None)
             audit(
                 conn,
@@ -1086,6 +1104,7 @@ class Core:
                 environment=row["environment"],
                 severity=row["severity"],
                 risk_level=row["risk_level"],
+                denial_reason_required=bool(row["denial_reason_required"]),
             )
             conn.execute(
                 """INSERT INTO profiles(
@@ -1476,6 +1495,7 @@ class Core:
                 "requester_id": requester,
                 "approver_id": approval_plan["members"][0],
                 "approval_plan": json_text(approval_plan),
+                "denial_reason_required": int(profile["denial_reason_required"]),
                 "title": body.title,
                 "action": json_text(action),
                 "action_hash": action_hash,
@@ -1497,6 +1517,17 @@ class Core:
                 f"INSERT INTO requests({columns}) VALUES({','.join('?' for _ in values)})",
                 tuple(values.values()),
             )
+            step_id = uid()
+            for position, member in enumerate(approval_plan["members"]):
+                conn.execute(
+                    """INSERT INTO approval_assignments
+                       (id,request_id,step_id,approver_id,position,created_at)
+                       VALUES(?,?,?,?,?,?)""",
+                    (
+                        uid(), ident, uid() if approval_plan["mode"] == "SEQUENTIAL" else step_id,
+                        member, position, now,
+                    ),
+                )
             row = self._load(conn, ident)
             audit(
                 conn,
@@ -1947,6 +1978,12 @@ class Core:
                 return self._project(conn, row)
             if prior and prior["decision"] != "HELD":
                 raise GrantError("DECISION_ALREADY_RECORDED", 409)
+            if (
+                body.decision == "DENIED"
+                and row["denial_reason_required"]
+                and not body.reason.strip()
+            ):
+                raise GrantError("DENIAL_REASON_REQUIRED", 422)
             if self._expire(conn, row, now):
                 error = GrantError("REQUEST_EXPIRED")
             elif row["revision"] != body.expected_revision or row["state"] not in ("AWAITING", "HELD"):
@@ -1989,8 +2026,16 @@ class Core:
                      actor.id if state in ("APPROVED","DENIED") else None,
                      now if state in ("APPROVED","DENIED") else None, until, ident),
                 )
+                assignment = conn.execute(
+                    "SELECT id,step_id,assignment_epoch FROM approval_assignments "
+                    "WHERE request_id=? AND approver_id=?",
+                    (ident, represented),
+                ).fetchone()
                 audit(conn, ident, actor.id, "request.decision_recorded", {
                     "decision": body.decision, "reason": body.reason, "mode": mode, "represented_approver": represented,
+                    "approval_assignment_id": assignment["id"] if assignment else None,
+                    "approval_step_id": assignment["step_id"] if assignment else None,
+                    "assignment_epoch": assignment["assignment_epoch"] if assignment else None,
                     "approvals": approvals, "required": required, "final_state": state,
                 }, now)
                 updated = self._load(conn, ident)

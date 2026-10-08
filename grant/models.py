@@ -268,6 +268,7 @@ class Profile(Input):
     environment: str = Field(default="", max_length=100)
     severity: str = Field(default="", max_length=100)
     risk_level: str = Field(default="", max_length=100)
+    denial_reason_required: bool = False
 
 
 class ProfileUpdate(Profile):
