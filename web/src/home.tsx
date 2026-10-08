@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Button, Card, StatusBadge } from '@datarelay-labs/foundation';
 import { api } from './api';
 import { useTask, when } from './common';
+import { collectVisibleRequestPages } from './home_pages';
 import type { RequestRow, User } from './types';
 
 type Navigate = (path: string) => void;
@@ -16,10 +17,15 @@ function isExecutionException(row: RequestRow): boolean {
 
 export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
   const [rows, setRows] = useState<RequestRow[]>([]);
+  const [summaryComplete, setSummaryComplete] = useState(true);
   const task = useTask();
 
   async function load() {
-    setRows(await api<RequestRow[]>('/requests?limit=100&offset=0'));
+    const snapshot = await collectVisibleRequestPages((limit, offset) =>
+      api<RequestRow[]>(`/requests?limit=${limit}&offset=${offset}`),
+    );
+    setRows(snapshot.rows);
+    setSummaryComplete(snapshot.complete);
   }
 
   useEffect(() => {
@@ -37,6 +43,7 @@ export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
   );
   const executionExceptions = rows.filter(isExecutionException);
   const recent = [...rows].sort((a, b) => b.created_at - a.created_at).slice(0, 6);
+  const displayCount = (value: number) => summaryComplete ? String(value) : `≥${value}`;
 
   return (
     <div className="grant-stack">
@@ -58,25 +65,29 @@ export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
         </div>
       </section>
 
+      {!summaryComplete ? (
+        <p role="status">Summary totals are lower bounds from the first 1,000 visible requests. Open a work queue for all matching requests.</p>
+      ) : null}
+
       <section className="grant-action-summary" aria-label="Action summary">
         <button type="button" onClick={() => navigate('/approvals')}>
           <span>Needs my decision</span>
-          <strong>{needsDecision.length}</strong>
+          <strong>{displayCount(needsDecision.length)}</strong>
           <small>Assigned approvals waiting for you</small>
         </button>
         <button type="button" onClick={() => navigate('/approvals')}>
           <span>Overdue</span>
-          <strong>{overdue.length}</strong>
+          <strong>{displayCount(overdue.length)}</strong>
           <small>Escalation due or approval deadline expired</small>
         </button>
         <button type="button" onClick={() => navigate('/requests')}>
           <span>Delivery failures</span>
-          <strong>{deliveryFailures.length}</strong>
+          <strong>{displayCount(deliveryFailures.length)}</strong>
           <small>Notification delivery needs attention</small>
         </button>
         <button type="button" onClick={() => navigate('/requests')}>
           <span>Execution exceptions</span>
-          <strong>{executionExceptions.length}</strong>
+          <strong>{displayCount(executionExceptions.length)}</strong>
           <small>Approved-not-consumed, failed or unknown</small>
         </button>
       </section>
@@ -85,7 +96,7 @@ export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
         <Card
           title="Needs your attention"
           description="The approval inbox is the primary decision work queue."
-          actions={<StatusBadge tone={needsDecision.length ? 'warning' : 'success'}>{needsDecision.length} open</StatusBadge>}
+          actions={<StatusBadge tone={needsDecision.length || !summaryComplete ? 'warning' : 'success'}>{displayCount(needsDecision.length)} open</StatusBadge>}
         >
           {needsDecision.slice(0, 4).map((row) => (
             <button
@@ -101,7 +112,11 @@ export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
               <span aria-hidden>›</span>
             </button>
           ))}
-          {!needsDecision.length ? <p>No assigned requests need a decision right now.</p> : null}
+          {!needsDecision.length ? (
+            <p>{summaryComplete
+              ? 'No assigned requests need a decision right now.'
+              : 'No decisions found in the loaded subset. Open the full approvals queue.'}</p>
+          ) : null}
           <Button variant="secondary" onClick={() => navigate('/approvals')}>
             Open my approvals
           </Button>

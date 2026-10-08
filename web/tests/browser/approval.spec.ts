@@ -624,3 +624,37 @@ test('G10 real browser sign-out revokes audit access and cached administrator vi
  await expect(page.getByText('Audit evidence explorer',{exact:true})).toHaveCount(0);
  await context.close();
 });
+
+test('G12 Home action summary includes authorized approvals after the first 100 results',async({browser,request})=>{
+ test.setTimeout(120000);
+ const f=fixture();
+ const headers={authorization:'Bearer '+f.token};
+ // Supporting disposable Chromium fixture evidence only: not direct-persona acceptance.
+ for(let index=0;index<101;index++){
+  const created=await request.post('/api/v1/requests',{headers,data:{
+   external_id:'home-multipage-'+crypto.randomUUID(),profile_id:f.profile_id,
+   title:'Home paging regression '+index,
+   action:{kind:'test.operation',target:'isolated-test-target',parameters:{}}
+  }});
+  expect(created.status()).toBe(202);
+ }
+ const context=await browser.newContext(),page=await context.newPage();
+ try{
+  await login(page,'approver');
+  let expected=0;
+  for(let offset=0;offset<1000;offset+=100){
+   const response=await context.request.get('/api/v1/requests?limit=100&offset='+offset+'&view=needs');
+   expect(response.status()).toBe(200);
+   const rows=await response.json();
+   expected+=rows.length;
+   if(rows.length<100)break;
+  }
+  expect(expected).toBeGreaterThanOrEqual(101);
+  await page.goto('/home');
+  const summary=page.getByRole('region',{name:'Action summary'});
+  await expect(summary.getByRole('button',{name:/Needs my decision/}).locator('strong')).toHaveText(String(expected));
+  await expect(page.getByText('Summary totals are lower bounds',{exact:false})).toHaveCount(0);
+ }finally{
+  await context.close();
+ }
+});
