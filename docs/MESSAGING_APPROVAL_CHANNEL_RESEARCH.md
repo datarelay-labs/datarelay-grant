@@ -136,6 +136,141 @@ Grant's single approval-seat ledger.
   business-execution consume/result ledger. Channel-level
   identity ≠ independently verified person.
 
+## Critical adoption risk: customers will not provision bots, tokens and groups
+
+**Owner concern — 2026-10-09:** asking each customer to create a Telegram
+BotFather bot, capture API token, add staff to a group, discover chat IDs,
+configure webhooks, or complete raw WhatsApp/WABA provisioning will make the
+feature impractical for nontechnical customers. The messaging adapter
+should not be committed as a sellable feature without an actual
+**customer onboarding UX proof**. This is a *research finding and
+go/no-go constraint*, NOT an acceptance to build a new hosted service.
+
+### What competitors actually automate
+
+| Competitor/platform | Customer action | Automation / what remains | Evidence |
+| --- | --- | --- | --- |
+| **respond.io Telegram** | Create new bot through BotFather or retrieve an existing bot's API token, paste it in the channel dialog; scan QR for test | Platform routes messages thereafter. **BotFather/API token remains a manual setup burden.** | [Telegram Quick Start](https://respond.io/help/telegram/telegram) (official vendor docs) |
+| **n8n Telegram** | Bot/API credential must be supplied; workflow user configures account/target | Telegram node and approval/wait capability are supported, but n8n is developer-oriented, not proof of zero-touch channel enrollment. | [Telegram node](https://docs.n8n.io/integrations/builtin/app-nodes/n8n-nodes-base.telegram/) (official vendor) |
+| **Manychat WhatsApp** | Settings → WhatsApp → Connect → Meta login/business authorization; select existing or new phone number, optionally buy one through Manychat | Embedded connection/number provisioning removes the need to hand-edit webhook/token JSON, **not business consent and verification**. | [Existing number](https://help.manychat.com/hc/en-us/articles/14959925356572-How-to-transfer-your-own-WhatsApp-number-to-Manychat), [new number](https://help.manychat.com/hc/en-us/articles/16816162800668-Connect-a-new-number-purchased-from-Manychat-to-WhatsApp) (vendor) |
+| **respond.io WhatsApp** | Select channel and `Connect with Facebook`; grant required Meta business and phone permissions | Embedded Signup automates much of Cloud API connection, but user owns/authorizes Meta business and number. | [Coexistence guide](https://respond.io/help/whatsapp/whatsapp-coexistence) (vendor) |
+| **Workato Slack/Teams** | Company admin installs approved bot/workspace app; enterprise Workato workspace imports a packaged accelerator | No raw bot coding for approvers but **enterprise admin installation/permission and package setup remain**. | [Approval Bot installation](https://docs.workato.com/en/accelerator-approval-bot-install.html) (official) |
+| **Meta WhatsApp Business Tools MCP (new Sep 2026)** | Authorized business/developer permits an AI coding assistant to manage account/phone/template/test workflows | Meta has announced agent-assisted account/number/template/test automation, currently **gradual, development/test-oriented**, not yet a promise of universal production zero-touch WABA onboarding. | [Meta developers blog listing](https://developers.meta.com/resources/blog/) and [TechCrunch Sep 15](https://techcrunch.com/2026/09/15/meta-now-lets-ai-agents-handle-the-boring-parts-of-whatsapp-business-setup/) |
+| **WhatsApp solution provider** | Customer completes provider account + Meta embedded business-number authorization | Provider manages reusable WABA/cloud API access, webhook and template resources according to permissions. Businesses still own consent, source data, phone and billing. | [Meta Embedded Signup](https://www.postman.com/meta/whatsapp-business-platform/documentation/du6gzjv/embedded-signup) (first-party) |
+
+### Telegram: two very different low-friction solutions
+
+**Option A: one Grant-managed bot for all enrolled approvers (best UX).**
+Grant organization admin enables Telegram in the product; a member
+clicks a Grant-generated `https://t.me/<GrantBot>?start=<one_use_binding>`
+link and the **real Telegram user** taps Start; Grant securely
+binds the received numeric Telegram account ID to exactly one
+current approver enrollment. No customer BotFather, token, webhook
+configuration or mandatory group. Deliver actionable approvals by
+1:1 bot DM; use group notifications only when an admin opts in.
+Multiple customers can share a bot only with strict tenant/seat
+isolation, enrollment revocation and opaque event routing.
+Telegram users must explicitly start the bot and can block it;
+neither task can be silently forced by Grant. [Telegram Deep
+links](https://core.telegram.org/api/links) and [Bot Features](https://core.telegram.org/bots/features).
+
+**Important single-installation conflict:** Grant's 1.0 architecture
+is one customer-hosted SQLite installation and expressly **not
+multi-tenant SaaS**. A centralized shared bot receiving platform
+webhooks for disconnected customer-hosted Grant servers needs
+a *new separately approved hosted channel broker* (or other
+on-prem-safe trusted inbound delivery mechanism), operational
+service credentials, relay billing and privacy/data-residency
+controls. Do **not** quietly invent that cloud relay or make it
+a 1.0 dependency.
+
+**Option B: customer-owned managed bot via Telegram's new first-party
+Managed Bots API.** The user can interactively approve bot creation
+through a manager-bot deep link, without manually using BotFather.
+The user owns the bot and grants limited manager control. A
+manager authorized through Telegram can obtain/manage the bot
+token securely. This may enable branded dedicated bots and a
+customer-installed, outbound-only polling receiver while
+avoiding an always-on cross-tenant hosted message relay.
+However managed-bot API/MTProto availability, consent,
+token handoff to the installation and lifecycle are separate
+implementation and security gates, **not** proven effortless
+onboarding today.
+[Official Telegram Managed Bots](https://core.telegram.org/api/bots/managed-bots).
+
+**Optional group integration:** a Grant-created
+`https://t.me/<GrantBot>?startgroup=<one_use_org_binding>`
+link lets an authorized group admin choose an existing group
+and authorize adding the bot. Grant can then learn and
+associate the specific group through a verified Telegram
+update/chat ID. The admin must still select/authorize the
+group; Grant cannot silently join or force other employees
+to join. Group users/visible messages are not proof of an
+eligible approver. Recommend **1:1 actions** plus **redacted
+group status** instead of group-wide actionable case data.
+[Telegram official deep links](https://core.telegram.org/api/links).
+
+### WhatsApp: one-to-one must be first; group buttons are not broadly viable
+
+**1:1 customer onboarding can be largely product-guided**, by
+integrating Meta's Embedded Signup (as Tech Provider/Solution
+Partner with approved app permissions) or using a licensed BSP
+rather than asking customers for raw Cloud API keys. The
+organization selects/authorizes its Meta business account and
+phone number; provider/Grant configures permitted webhooks and
+templates. Customer still must perform Meta-controlled
+verification, phone ownership, terms/opt-in and any applicable
+template/account approval. Meta's newly announced Business
+Tools MCP may further assist setup but does not bypass required
+consent or yet replace a production onboarding flow.
+
+**WhatsApp official Groups API in 2026 EXISTS** but is severely
+restricted. Contemporary specialist review referencing Meta
+docs records *Official Business Account (OBA) eligibility*,
+max **eight members**, **invite-only** group joining and
+**interactive buttons/messages NOT supported inside API group
+messages**. Business verification alone does not imply OBA
+status. Therefore a Telegram-style group with clickable
+Approve/Hold/Deny message buttons cannot be the normal
+WhatsApp Grant design. Even where a group API is available,
+use group status notifications and private 1:1 template
+buttons/web-confirmation for actual decisions.
+[Specialist Meta-doc review](https://kapso.com/blog/whatsapp-groups-api-state-2026);
+[Meta-sourced reference](https://support.chatarchitect.com/books/meta-whatsapp/page/groups-api-developer-documentation).
+Review exact Meta entitlement with a real target WABA during any pilot;
+third-party copied documentation does not grant API eligibility.
+
+### Hard product go/no-go: measurable setup friction
+
+**Minimum post-1.0 pilot acceptance (proposed, not owner-approved):**
+
+1. Telegram standard: customer can register a currently assigned
+   approver using a guided **Start** link and Grant confirmation;
+   customer has to enter **zero** bot tokens, webhook URLs or
+   Telegram numeric chat IDs; **no group required**.
+2. Telegram optional group: the actual group admin can add the
+   approved bot using a one-time `startgroup` link, and the
+   channel is auto-detected; failing an admin permission check
+   does not leak requests.
+3. Dedicated bots: prove Telegram Managed Bot onboarding
+   separately; if unsuitable, mark it an advanced administrator
+   option rather than claiming zero setup.
+4. WhatsApp: customer completes vendor-managed Meta business/
+   number consent in Grant or BSP connection flow without
+   manually pasting a Meta token. Account/template review
+   and regional message costs must be visible as *pending
+   external dependencies*, not falsely reported Connected.
+5. Security: no cross-company routing, misleading personal
+   identity attribution, actionable group exposure, duplicate
+   email+chat vote, replayed callback or direct business
+   execution. Test SaaS relay data minimization/tenant isolation
+   **only if** a separate hosted broker is explicitly authorized.
+6. If the pilot cannot meet the setup-friction threshold,
+   classify the channel as **advanced/BYOC** or notification-only
+   and postpone a general release. Do not require customers
+   to understand BotFather, WABA IDs, API keys or webhooks
+   as a default product path.
+
 ## Proposed roadmap — research candidate only
 
 **Prerequisite:** finish accepted Grant 1.0 G10A email-PIN policy,
