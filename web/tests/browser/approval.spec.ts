@@ -670,3 +670,40 @@ test('G12 Home action summary includes authorized approvals after the first 100 
   await context.close();
  }
 });
+
+test('G12 Home overdue drilldown opens an actual filtered approval queue',async({browser})=>{
+ const context=await browser.newContext(),page=await context.newPage();
+ try{
+  await login(page,'approver');
+  await page.goto('/home');
+  const filtered=page.waitForResponse(response=>{
+   const url=new URL(response.url());
+   return url.pathname==='/api/v1/requests' && url.searchParams.get('view')==='overdue';
+  });
+  await page.getByRole('region',{name:'Action summary'}).getByRole('button',{name:/Overdue/}).click();
+  const response=await filtered;
+  expect(response.status()).toBe(200);
+  await expect(page).toHaveURL(/\/approvals\?view=overdue$/);
+  await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('overdue');
+  await page.getByRole('button',{name:'Clear filters',exact:true}).click();
+  await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('needs');
+  await expect(page).toHaveURL(/\/approvals$/);
+  // Unknown URL views must not override the server-approved queue selector.
+  await page.goto('/approvals?view=ops_execution_unknown');
+  await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('needs');
+ }finally{await context.close();}
+});
+
+test('G12 a queue preset survives Clear filters outside the Home deep link',async({browser})=>{
+ const context=await browser.newContext(),page=await context.newPage();
+ try{
+  await login(page,'admin');
+  await page.goto('/operations/queue/pending');
+  await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('ops_pending');
+  await page.getByLabel('Work view',{exact:true}).selectOption('ops_overdue');
+  await page.getByRole('button',{name:'Apply filters',exact:true}).click();
+  await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('ops_overdue');
+  await page.getByRole('button',{name:'Clear filters',exact:true}).click();
+  await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('ops_pending');
+ }finally{await context.close();}
+});

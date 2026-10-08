@@ -83,7 +83,18 @@ function queryFor(filters: Filters, offset: number): string {
 export function RequestList({
   user, mode, navigate, preset,
 }: { user: User; mode: InboxMode; navigate: Navigate; preset?: Partial<Filters> }) {
-  const initial = () => ({ ...initialFilters(mode), ...preset });
+  const initial = (): Filters => {
+    const defaults = { ...initialFilters(mode), ...preset };
+    // The App router already resolves pathname independently of search params.
+    // Only this allowlisted deep link may override the approval queue's default.
+    if (
+      mode === 'approvals' && window.location.pathname === '/approvals' &&
+      new URLSearchParams(window.location.search).get('view') === 'overdue'
+    ) {
+      defaults.view = 'overdue';
+    }
+    return defaults;
+  };
   const [draft, setDraft] = useState<Filters>(initial);
   const [applied, setApplied] = useState<Filters>(initial);
   const [offset, setOffset] = useState(0);
@@ -128,6 +139,10 @@ export function RequestList({
     setApplied({ ...draft });
   }
   function reset() {
+    if (mode === 'approvals' && window.location.pathname === '/approvals' &&
+        new URLSearchParams(window.location.search).get('view') === 'overdue') {
+      window.history.replaceState(window.history.state, '', '/approvals');
+    }
     const defaults = initial();
     setDraft(defaults);
     setOffset(0);

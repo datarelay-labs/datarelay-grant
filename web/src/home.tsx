@@ -75,7 +75,7 @@ export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
           <strong>{displayCount(needsDecision.length)}</strong>
           <small>Assigned approvals waiting for you</small>
         </button>
-        <button type="button" onClick={() => navigate('/approvals')}>
+        <button type="button" onClick={() => { window.location.assign('/approvals?view=overdue'); }}>
           <span>Overdue</span>
           <strong>{displayCount(overdue.length)}</strong>
           <small>Escalation due or approval deadline expired</small>
