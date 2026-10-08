@@ -324,8 +324,8 @@ remain an independent *outbound event* mechanism.
 own non-guessable, cryptographically random opaque reference, bound on the
 server to the complete tuple:
 
-`(approval_request_id, assigned_approver_id, approval_step_id,
-  selected_outcome, request_revision, issuance_generation)`
+`(approval_request_id, approver_assignment_id, approval_step_id,
+  selected_outcome, action_fingerprint, assignment_epoch, issuance_generation)`
 
 - **Per request:** two requests never reuse a response reference, even for the
   same recipient and same outcome.
@@ -335,13 +335,15 @@ server to the complete tuple:
 - **Per answer button:** Approve, Hold and Deny always have three distinct
   references for each assigned approver; the bound outcome cannot be changed
   by editing a query parameter or substituting POST content.
-- **Per step / version / issuance:** sequential or repeated approval steps,
-  replacement/revised requests, changed authorization and newly issued links
-  cannot silently reuse stale permissions. Reminder delivery may reuse a
-  still-valid generation or explicitly rotate all affected references; any
-  rotation revokes the superseded generation. Uniqueness must be guaranteed
-  by persisted constraints and collision-safe generation, not by a reversible
-  encoding of request, outcome or approver.
+- **Per step / authority epoch / issuance:** sequential or repeated steps,
+  changed assignments, changed action fingerprint and newly issued links
+  cannot reuse stale permission. A normal vote increments `state_revision`
+  but **must not invalidate unrelated pending approvers' valid links**;
+  the link binds stable `assignment_epoch` and immutable `action_fingerprint`,
+  not the request's mutable vote/state revision. Reminder delivery may reuse
+  a still-valid issuance generation or explicitly rotate it and revoke the
+  prior generation. Guarantees rely on persisted unique constraints and
+  collision-safe generation, not reversible encodings of user/action IDs.
 - Only safe opaque routing material goes into URLs. Raw link references are
   never exposed in logs, admin preview, exports or audit evidence; persist
   a protected token digest and authoritative binding instead. Links may
@@ -363,10 +365,13 @@ the audit UI without disclosing raw token or OTP contents.
   authenticated, CSRF-protected POST; the server rechecks assigned identity,
   policy/approval-step, delegation, revision, request state, expiration, MFA
   requirement, stored link-to-outcome binding and action fingerprint in its
-  existing atomic decision transaction. A successful decision consumes its
-  reference and revokes the same actor/assignment's remaining outcome links
-  atomically. Other legitimate approvers retain their links only while their
-  approval stage remains active under the configured quorum/sequence rules.
+  existing atomic decision transaction. Every confirmed answer consumes the
+  selected link exactly once; **HELD is provisional**, must remain an explicit
+  block on execution and must still allow an authorized later Approve/Deny via
+  other valid intent or the neutral request page. A terminal APPROVED/DENIED
+  vote revokes the actor/assignment's remaining outcome links atomically.
+  Other eligible approvers retain their links while their stage remains
+  open under the configured quorum/sequence rules.
 - The response page must clearly distinguish the already selected email outcome
   from the **not-yet-recorded** final decision. A completed/replayed/expired/
   reassigned/forwarded link may inform the viewer safely but cannot reauthorize.
@@ -406,6 +411,126 @@ Administrators configure verification mode, challenge expiry/retry limits and
 event-safe notification appearance in Approval Policies/Notifications; defaults,
 version snapshots, delivery failures and audit attribution must be tested before
 any feature is claimed as supported.
+
+
+### 10.7 Approval assignments, mail fanout and state versions (planned G10A)
+
+**Three distinct version/identity dimensions are mandatory** before
+per-response links can ship:
+
+- `action_fingerprint` / immutable action identity: any material action
+  replacement creates a new request and fresh authorization.
+- `approval_assignment_id`, `approval_step_id`, `assignment_epoch`: a stable
+  assignment in a specific approval step, changed only when that assignment
+  is replaced, revoked, or its authorization boundaries materially change.
+- `state_revision`: optimistic concurrency for each vote, Hold, reminder
+  metadata or expiry transition; not a key for all recipients' issued links.
+  Confirmation must reload current revision/eligibility atomically, and
+  notify the user of true conflict without discarding unrelated eligibility.
+
+The approval plan owns stable server-side step and assignment records rather
+than relying only on a group-member array. Snapshot versioned policy,
+threshold and original assignees at request creation. A dynamically assigned
+delegate/alternate is given a separately auditable identity binding and new
+links; one represented seat must not contribute two approvals simply because
+the original user and a delegate both acted. Current user disablement,
+revoked delegation, role change and compromised identity **override stale
+in-flight permission**; an old policy snapshot cannot restore revoked access.
+
+Mail delivery rules by approval mode:
+
+- SINGLE: send one customized notification to the eligible assignee.
+- ANY_ONE, ALL, N_OF_M: send a **separate message** with different links to
+  every currently eligible pending assignee. No CC/shared-link bulk mailing;
+  quorum closure revokes no-longer-needed links.
+- SEQUENTIAL: notify and issue actionable links **only for the currently
+  active step**. After its approved completion, activate the next step and
+  enqueue its own assignees; an early or superseded step cannot decide.
+- HOLD: preserve deadline, block execution, record a provisional event; the
+  policy declares whether this should pause reminders and whether newly
+  resumed action gets a fresh notification. Existing valid final outcomes
+  remain usable for the same still-active assignment.
+- Reassignment, authorized delegation, escalation or account disablement:
+  maintain truthful actor/represented identities, revoke unauthorized
+  bindings, issue replacement notifications for newly eligible persons,
+  and suppress stale pending outbox items before send.
+- Denial/quorum behavior must be explicit in the snapshotted plan. The
+  current 1.0 default (any DENIED terminates the request; otherwise configured
+  approval threshold) must not silently become a generic deny-quorum policy.
+  Expanded per-role deny thresholds are a post-1.0 candidate.
+
+Reusing an already delivered, still-valid link on an ordinary reminder is
+allowed. Rotate on a genuine authorization boundary change or explicit
+operator revocation/reissue. Delivery retry must retain issuance identity,
+recipient, Message-ID/correlation and link expiry; it must not create
+duplicate approval seats or inadvertently extend the request deadline.
+
+### 10.8 Link/OTP protection, evidence and safe execution (planned G10A)
+
+- **Server authority:** protected link metadata must include original
+  recipient assignment, selected outcome, action fingerprint, step/epoch,
+  issuance generation, expiry and lifecycle (ISSUED, REDEEMED, REVOKED,
+  EXPIRED). Generate at least 256 bits of cryptographically secure random
+  token material per link; store only a keyed, collision-safe digest
+  for lookup, and enforce database uniqueness. Do not treat the opaque URL
+  as an authenticated human principal.
+- **No sensitive GET:** HTTP GET/HEAD, prefetch and link scanner requests
+  have no approval-state, execution-state, challenge-send or durable
+  authorization mutation. Existing `GET /requests/{id}` expiry maintenance
+  must not be reused as a side-effecting email landing. Show a generic
+  sign-in state before authorizing access to request title, target or
+  other restricted details. After sign-in validate the actual account
+  and assignment, use no-store/referrer protection, sanitized error
+  responses, same-origin navigation and no third-party pixels.
+- **Secure delivery:** support HTML button rendering and a real plain-text
+  fallback with the same server-generated decision URLs. Templates cannot
+  construct URLs or reveal raw codes. Since SMTP must receive the actual
+  per-recipient URL, encrypt the sensitive queued message or serialize
+  it securely at send time with replay-safe issuance; **never store raw
+  actionable mail links in plaintext outbox/logs/analytics/exports**.
+  Existing notification snapshots and replay/recovery must remain safe.
+- **Atomic decision:** authenticated, CSRF/Origin-checked POST asserts
+  link binding, actual decision actor, current assignment/step and
+  transaction-time verification. Consume a link and write the append-only
+  decision event, vote aggregate, sibling invalidation and outbox event in
+  a single DB transaction. Idempotent retries return the prior result
+  without another vote; concurrent different-outcome posts cannot both win.
+- **Evidence:** distinguish intended email recipient, represented assignee,
+  actual authenticated user/delegate, verifier mode and success, exact
+  action/policy snapshot, decision chronology (including repeated HOLD),
+  token issuance/revocation correlation, outbound webhook event and
+  independent product execution commitment/result. Redact full URL, raw
+  OTP, free-text secrets and token digest from externally exportable logs.
+  No user IP or email-open event alone proves approver identity.
+- **Verified mode:** new emailed 6-digit challenge is delivered only
+  after a real POST request on an authorized session, never on GET; hash,
+  bind to actor/assignment/outcome/action, expire quickly, limit attempts
+  across resend/renewals, and make a successful challenge single-use.
+  This is **same-mailbox confirmation, not MFA**. High Assurance requires
+  a genuinely fresh, configured MFA step-up at decision time and fails
+  closed when missing.
+- **Recovery:** account disable/revocation, request closure, stage closure,
+  changed assignment, secret/key rotation and restored snapshots must not
+  resurrect stale intent links. Backup/restore retains audit history but
+  pauses uncertain outbound actions, revokes stale issued links and requires
+  deliberate reconciliation; no auto-execution from restored state.
+- **Transport and UX:** SPF/DKIM/DMARC sender-domain hygiene, delivery
+  failures/bounces and real inbox receipt are distinct from SMTP acceptance.
+  Handle Outlook Safe Links and Gmail scanners without changed decisions;
+  verification codes must support mobile copy/paste/autofill.
+- **Test boundary:** exact-candidate deterministic API/database/SMTP tests
+  plus direct browser E2E with two distinct actual mailboxes, two
+  independently authenticated approvers and an unrelated user; validate
+  all group modes, Hold-to-Approve, reminder reuse/rotation, bad/expired
+  token, forwarded link, wrong actor, MFA failure, duplicate clicks,
+  scanner GET, concurrent POST, audit/readback and outbound grant consumption.
+  Scripted mail/browser fixtures alone are not full real-user acceptance.
+
+The existing authenticated neutral request-detail link remains a supported
+fallback during migration. G10A is a **planned extension** and not evidence
+that any of these surfaces is implemented. Competitive evidence and why
+certain tempting email-reply and passwordless modes were deferred is in
+`docs/APPROVAL_COMPETITIVE_REVIEW.md`.
 
 ## 11. User experience standard
 
