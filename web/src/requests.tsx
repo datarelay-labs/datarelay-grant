@@ -32,23 +32,51 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
  const [parameters,setParameters] = useState('{}');
  const [reason,setReason] = useState('');
  const [external,setExternal] = useState<string>(()=>crypto.randomUUID());
+ const [sourceTenant,setSourceTenant]=useState('');
+ const [environment,setEnvironment]=useState('');
+ const [severity,setSeverity]=useState('');
+ const [riskLevel,setRiskLevel]=useState('');
  const task=useTask();
+ const selected=profiles.find(p=>p.id===profile);
+ function chooseProfile(id:string){
+  setProfile(id);
+  const policy=profiles.find(p=>p.id===id);
+  // The source attributes must be explicit; do not silently omit the exact
+  // selectors this active policy uses when creating a request from the browser.
+  setSourceTenant(policy?.tenant || policy?.tenant_selector || '');
+  setEnvironment(policy?.environment || '');
+  setSeverity(policy?.severity || '');
+  setRiskLevel(policy?.risk_level || '');
+ }
  useEffect(()=>{void task.run(async()=>{
-  setProfiles(await api('/profiles'));
+  const loaded=await api<Profile[]>('/profiles');
+  setProfiles(loaded);
   if(predecessorId){
    const previous=await api<RequestRow>('/requests/'+encodeURIComponent(predecessorId));
    if(previous.state!=='CANCELLED')throw new Error('Cancel the original request before replacing it');
    setPredecessor(previous);setProfile(previous.profile_id);setTitle(previous.title);
+   const selected=loaded.find(p=>p.id===previous.profile_id);
+   setSourceTenant(String(previous.source?.tenant_id ?? selected?.tenant ?? selected?.tenant_selector ?? ''));
+   setEnvironment(String(previous.source?.environment ?? selected?.environment ?? ''));
+   setSeverity(String(previous.source?.severity ?? selected?.severity ?? ''));
+   setRiskLevel(String(previous.source?.risk_level ?? selected?.risk_level ?? ''));
    setTarget(previous.action.target);setParameters(JSON.stringify(previous.action.parameters,null,2));setReason(previous.reason);
   }
  });},[predecessorId]);
  async function submit(){
-  const selected=profiles.find(p=>p.id===profile);
   if(!selected)throw new Error('Select a profile');
   if(predecessorId&&!predecessor)throw new Error('The original request is not available');
   let parsed;try{parsed=JSON.parse(parameters);}catch{task.setNotice('Parameters must be a JSON object.');return;}
   if(!parsed||Array.isArray(parsed)||typeof parsed!=='object'){task.setNotice('Parameters must be a JSON object.');return;}
-  const source={...(predecessor?.source??{}),channel:'grant.web',...(selected.tenant?{tenant_id:selected.tenant}:{})};
+  const source={...(predecessor?.source??{}),channel:'grant.web',
+   ...(sourceTenant?{tenant_id:sourceTenant}:{}),
+   ...(environment?{environment}:{}),
+   ...(severity?{severity}:{}),
+   ...(riskLevel?{risk_level:riskLevel}:{})};
+  if(selected.tenant && sourceTenant!==selected.tenant)throw new Error('Tenant must match the integration scope.');
+  if((selected.tenant_selector && !sourceTenant) || (selected.environment && !environment) ||
+     (selected.severity && !severity) || (selected.risk_level && !riskLevel))
+     throw new Error('Fill every required policy selector.');
   const row=await api<RequestRow>('/requests','POST',{
    external_id:external,profile_id:profile,title,action:{kind:selected.action_kind,target,parameters:parsed},
    reason,source,...(predecessorId?{predecessor_id:predecessorId}:{}),
@@ -58,8 +86,16 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
  return <Card title="Create an approval request" description="This creates a request, not an execution. The assigned approver is determined by the profile.">
   {task.feedback}{predecessor&&<p>Replacement for cancelled request <code>{predecessor.id}</code>. A new explicit approval is required.</p>}
   <Form busy={task.busy} onSubmit={()=>void task.run(submit)} label="Submit request">
-   <Select label="Approval profile" value={profile} onChange={setProfile}><option value="">Select a configured profile</option>{profiles.filter(p=>p.enabled).map(p=><option key={p.id} value={p.id}>{p.name} · {p.action_kind}</option>)}</Select>
-   {profiles.find(p=>p.id===profile)?.tenant&&<p>Tenant scope: {profiles.find(p=>p.id===profile)?.tenant}</p>}
+   <Select label="Approval profile" value={profile} onChange={chooseProfile}><option value="">Select a configured profile</option>{profiles.filter(p=>p.enabled).map(p=><option key={p.id} value={p.id}>{p.name} · {p.action_kind}</option>)}</Select>
+   {selected?.tenant&&<p>Tenant scope: {selected.tenant}</p>}
+   {selected?.tenant_selector && !selected.tenant &&
+    <TextField label="Source tenant" required maxLength={200} value={sourceTenant} onChange={e=>setSourceTenant(e.target.value)} />}
+   {selected?.environment &&
+    <TextField label="Environment" required maxLength={200} value={environment} onChange={e=>setEnvironment(e.target.value)} />}
+   {selected?.severity &&
+    <TextField label="Severity" required maxLength={200} value={severity} onChange={e=>setSeverity(e.target.value)} />}
+   {selected?.risk_level &&
+    <TextField label="Risk level" required maxLength={200} value={riskLevel} onChange={e=>setRiskLevel(e.target.value)} />}
    <TextField label="Request title" required maxLength={250} value={title} onChange={e=>setTitle(e.target.value)}/>
    <TextField label="Target" required maxLength={500} value={target} onChange={e=>setTarget(e.target.value)}/>
    <TextField label="External request ID" required maxLength={200} value={external} onChange={e=>setExternal(e.target.value)}/>

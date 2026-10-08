@@ -10,7 +10,7 @@ export type RequestRow = {
  decision: Outcome | null; decision_actor: string | null; decision_at: number | null;
  revision: number; created_at: number; deadline: number; grant_until: number | null;
  predecessor_id: string | null; execution_id: string | null; execution_state: string;
- execution_result: { status: string; evidence: string } | null; delivery_state: string;
+ execution_result: { status: string; evidence: string } | null; delivery_state: string; notification_failure_count?: number;
  overdue?: boolean; escalation?: { target_user_id: string | null; target_group_id: string | null; target_members: string[]; due_at: number; fired_at: number | null } | null;
  deliveries?: Delivery[]; timeline?: { id: string; at: number; actor: string; action: string; detail: unknown }[];
 };

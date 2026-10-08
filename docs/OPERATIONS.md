@@ -57,6 +57,10 @@ exact approved HTTPS callback URLs in `callback_urls`. Do not put secret values 
 Git, issue bodies, screenshots, request parameters, shell history or mail subjects.
 A disabled STARTTLS option is allowed only for explicit loopback test SMTP.
 Restart and use **Send test email to me**. SMTP acceptance is not actual inbox receipt.
+Notification test sends are restricted to the authenticated administrator's
+own mailbox until a designated-safe-recipient registry and explicit allowlist
+are implemented and audited. The currently available UI cannot send an
+arbitrary test message to another enabled user.
 In Integrations create the matching destination, protected headers and optional
 HMAC secret. **Test connection** sends a diagnostic event, never an approval.
 Tokens are shown once. Use separate creation and execution/reporting credentials;

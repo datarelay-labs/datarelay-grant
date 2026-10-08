@@ -29,10 +29,16 @@ capability remains whatever is present and tested at the committed candidate HEA
   journeys. Final integration and release qualification are not yet complete.
 - Versioned approval policies with explicit Draft -> Testing -> Active -> Disabled
   lifecycle, clone/history, bounded deterministic selectors and shared runtime/preview
-  resolution. Saving never makes a policy live; isolated tests cannot authorize execution.
+  resolution. The browser request form populates configured policy selectors
+  (tenant/environment/severity/risk) and disabling an old ACTIVE version does not
+  overwrite the latest DRAFT editor. Saving never makes a policy live; isolated
+  tests cannot authorize execution.
 - A coherent Notifications area with complete event template sets, explicit safe
   variables, rendered preview/test send, delivery health/retry visibility and system
-  branding. Each request snapshots the exact policy version and notification content so
+  branding. SMTP failure counts are separate from webhook delivery state. Until an
+  explicit safe-test-recipient registry is implemented, sending a notification test
+  is restricted to the currently authenticated administrator's own mailbox. Each
+  request snapshots the exact policy version and notification content so
   later policy/template/branding changes apply only to new requests.
 - G3 development candidate: approver groups and Single / Any One / All / N-of-M /
   Sequential modes, validated quorum bounds, policy-plan preview, request-time membership
@@ -58,15 +64,22 @@ capability remains whatever is present and tested at the committed candidate HEA
 
 ## Observed development evidence
 
-The G3/G4 stacked development candidate builds on G1/G2 and has locally passed
-157 Python/API tests, 12 frontend unit cases, static and TypeScript checks,
-a production web build, and 9 real Playwright Chromium user journeys (including delegation creation/revocation
-and confirmed escalation/reassignment). Backend focused regressions also pass.
-These are development-worktree observations, not frozen exact-HEAD CI evidence;
-record authoritative complete counts and final commit after all code is tested
-and pushed in Work Packet #40. The browser administration journey still exercises
-Notification template-set preview/test send and Policy Draft -> Testing -> isolated
-test -> Activate -> runtime preview -> history.
+G1/G2 predecessor PR #39 review hardening addresses five findings:
+browser-created requests include policy tenant/environment/severity/risk selectors,
+test emails are restricted to the administrator until a safe-recipient registry,
+the latest draft survives active-version disable, overdue includes EXPIRED requests,
+and SMTP failures are counted separately from webhook delivery. This predecessor
+development candidate passed 139 Python/API, 12 frontend and seven Chromium
+journeys. Exact predecessor validation evidence belongs in Work Packet #38.
+
+G3/G4 plus inherited G1/G2 review fixes pass 160 Python/API, 12 frontend,
+static/typecheck/production build and 10 actual Chromium journeys together on
+the resolved non-force merge worktree. Authoritative committed exact-HEAD CI
+evidence belongs in Work Packet #40.
+
+The browser administration journey exercises Notification preview/test-send
+and Policy Draft -> Testing -> isolated test -> Activate -> runtime preview
+-> history.
 
 Browser cases include two independently signed-in requester/approver passes,
 mobile shared administration, cancellation/replacement, account creation,
