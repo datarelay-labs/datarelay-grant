@@ -143,7 +143,7 @@ def test_v7_to_v8_migration_preserves_requests_and_collaboration(env, tmp_path):
         conn.execute("PRAGMA user_version=7")
     upgraded = Database(destination)
     with upgraded.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 10
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 11
         persisted = conn.execute(
             "SELECT action_hash,collaboration_state FROM requests WHERE id=?", (row["id"],)
         ).fetchone()

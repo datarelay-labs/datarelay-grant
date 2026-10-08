@@ -580,10 +580,14 @@ business default decision remains in §§10.5–10.9; implementation
 must still verify migration, rate limits, permissions, identity
 assurance and the complete user gates.
 
-**Implementation planning:** G10A-0 and the backend-only portions of G10A-1/2 are implemented in an unreleased branch. Mailbox/decision Web UI, customer OTP/MFA, complete evidence and direct Full User E2E under G10A-3..5 remain pending.
-until source, database migration, deterministic tests, direct
-multi-recipient mail/browser E2E and owner release gates prove
-otherwise. Cross-project Foundation still owns shared Auth UI; the
+**Implementation planning:** G10A-0, backend-only G10A-1/2, and the
+policy-version/extra-email-OTP portion of G10A-3 are implemented in an
+unreleased branch with isolated deterministic tests. A separately verified
+fresh MFA step-up for EMAIL_PIN_PLUS_MFA intentionally fails closed until
+implemented. No mailbox/decision Web UI, independently verified person,
+live external mailbox receipt or direct Full User E2E has passed. Complete
+G10A-3..5 security, audit and user gates remain pending.
+Cross-project Foundation still owns shared Auth UI; the
 no-login Grant decision screen is a Grant-domain scoped surface,
 not a fork of the shared user sign-in UI. The bounded design rationale
 and residual impersonation risk are captured in

@@ -26,9 +26,25 @@ attribution keeps verified_person_id unset for that assurance tier.
 This is not a completed email decision product experience: no matching
 passwordless decision Web screen is implemented in this backend lane; no
 real external mailbox delivery or direct two-person Full User E2E has passed.
-Per-customer/per-policy OTP and genuine fresh MFA, trusted risk selection,
-end-to-end actor evidence and complete operations/release gates remain
-G10A-3/4/5 work. This branch is not released or accepted.
+G10A-3 now also includes additive v11 installation default, registered
+integration minimum and per-policy versioned EMAIL_PIN / EMAIL_PIN_PLUS_OTP /
+EMAIL_PIN_PLUS_MFA configuration, a bounded per-policy decision link TTL,
+request-time effective verification snapshot, and a conservative trusted
+action/integration security floor so requester-controlled risk/severity labels
+cannot downgrade verification. Active integration minimum tightening is
+enforced at final confirmation; relaxing it cannot weaken in-flight snapshots.
+Admin-only integration minimum changes are audited.
+
+For EMAIL_PIN_PLUS_OTP, a deliberate scoped POST requests a separately
+queued encrypted six-digit email code; a distinct POST verifies it for
+one intent/confirmation context (short expiry, limited retries, reissue
+cooldown) before the final explicit decision. That extra code goes to the
+same mailbox and is **not MFA**. Mandatory fresh EMAIL_PIN_PLUS_MFA
+fails closed until a genuinely independently verified step-up provider is
+implemented; an existing authenticated approval API cannot bypass it.
+End-to-end verified person attribution, customer OTP/MFA Web experience,
+live external mail receipts and complete operations/release gates remain
+G10A-3/4/5 follow-up work. This branch is not released or accepted.
 
 ## Product direction
 

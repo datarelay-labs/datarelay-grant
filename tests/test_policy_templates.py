@@ -202,7 +202,7 @@ def test_schema_v1_migrates_to_v8_and_backfills_policy_and_notification_state(en
 
     migrated = Database(path)
     with migrated.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 10
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 11
         assert "email_template_id" in {
             row[1] for row in conn.execute("PRAGMA table_info(profiles)")
         }

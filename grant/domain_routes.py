@@ -17,7 +17,10 @@ from .models import (
     Escalation,
     Intake,
     Integration,
+    IntegrationVerificationPolicy,
     IntentConfirmation,
+    IntentOtpRequest,
+    IntentOtpVerification,
     IntentPin,
     NotificationBrandingUpdate,
     NotificationPreview,
@@ -69,6 +72,26 @@ def register_domain(app, actor, human, reader):
         require_decision_origin(request)
         return DecisionLinks(core.db, core.settings).confirm(
             token, body.confirmation_token, body.reason,
+        )
+
+    @app.post("/api/v1/decision-intents/{token}/otp/request", status_code=202)
+    def issue_decision_otp(token: str, body: IntentOtpRequest, request: Request):
+        from .decision_otp import DecisionOtp
+
+        require_decision_origin(request)
+        return DecisionOtp(core.db, core.settings).request(
+            token, body.confirmation_token,
+            request.client.host if request.client else "unknown",
+        )
+
+    @app.post("/api/v1/decision-intents/{token}/otp/verify")
+    def verify_decision_otp(token: str, body: IntentOtpVerification, request: Request):
+        from .decision_otp import DecisionOtp
+
+        require_decision_origin(request)
+        return DecisionOtp(core.db, core.settings).verify(
+            token, body.confirmation_token, body.otp,
+            request.client.host if request.client else "unknown",
         )
 
     @app.post("/api/v1/admin/requests/{ident}/decision-links/reissue")
@@ -294,6 +317,12 @@ def register_domain(app, actor, human, reader):
     @app.post("/api/v1/integrations", status_code=201)
     def add_integration(body: Integration, request: Request):
         return core.create_integration(actor(request), body)
+
+    @app.put("/api/v1/integrations/{ident}/decision-verification")
+    def update_integration_decision_verification(
+        ident: str, body: IntegrationVerificationPolicy, request: Request,
+    ):
+        return core.update_integration_verification_policy(actor(request), ident, body)
 
     @app.post("/api/v1/integrations/tokens", status_code=201)
     def add_token(body: Token, request: Request):

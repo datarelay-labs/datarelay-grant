@@ -29,7 +29,9 @@ CREATE TABLE IF NOT EXISTS sessions (
 CREATE TABLE IF NOT EXISTS integrations (
  id TEXT PRIMARY KEY, name TEXT NOT NULL, kind TEXT NOT NULL,
  enabled INTEGER NOT NULL DEFAULT 1, tenant TEXT NOT NULL DEFAULT '',
- destination TEXT NOT NULL, created_at REAL NOT NULL
+ destination TEXT NOT NULL, created_at REAL NOT NULL,
+ decision_verification_minimum TEXT NOT NULL DEFAULT 'EMAIL_PIN'
+  CHECK(decision_verification_minimum IN ('EMAIL_PIN','EMAIL_PIN_PLUS_OTP','EMAIL_PIN_PLUS_MFA'))
 );
 CREATE TABLE IF NOT EXISTS api_tokens (
  id TEXT PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE,
@@ -49,7 +51,10 @@ CREATE TABLE IF NOT EXISTS profiles (
  email_template_id TEXT REFERENCES email_templates(id),
  deadline_seconds INTEGER NOT NULL, reminder_seconds INTEGER NOT NULL,
  max_reminders INTEGER NOT NULL, grant_seconds INTEGER NOT NULL, enabled INTEGER NOT NULL DEFAULT 0,
- denial_reason_required INTEGER NOT NULL DEFAULT 0 CHECK(denial_reason_required IN (0,1))
+ denial_reason_required INTEGER NOT NULL DEFAULT 0 CHECK(denial_reason_required IN (0,1)),
+ verification_mode TEXT NOT NULL DEFAULT 'INHERIT'
+  CHECK(verification_mode IN ('INHERIT','EMAIL_PIN','EMAIL_PIN_PLUS_OTP','EMAIL_PIN_PLUS_MFA')),
+ decision_link_ttl_seconds INTEGER
 );
 CREATE TABLE IF NOT EXISTS profile_versions (
  id TEXT PRIMARY KEY, profile_id TEXT NOT NULL REFERENCES profiles(id),
@@ -62,6 +67,9 @@ CREATE TABLE IF NOT EXISTS profile_versions (
  tenant_selector TEXT NOT NULL DEFAULT '', environment TEXT NOT NULL DEFAULT '',
  severity TEXT NOT NULL DEFAULT '', risk_level TEXT NOT NULL DEFAULT '',
  denial_reason_required INTEGER NOT NULL DEFAULT 0 CHECK(denial_reason_required IN (0,1)),
+ verification_mode TEXT NOT NULL DEFAULT 'INHERIT'
+  CHECK(verification_mode IN ('INHERIT','EMAIL_PIN','EMAIL_PIN_PLUS_OTP','EMAIL_PIN_PLUS_MFA')),
+ decision_link_ttl_seconds INTEGER,
  lifecycle TEXT NOT NULL CHECK(lifecycle IN ('DRAFT','TESTING','ACTIVE','DISABLED')),
  created_at REAL NOT NULL, updated_at REAL NOT NULL,
  activated_at REAL, disabled_at REAL,
@@ -76,6 +84,9 @@ CREATE TABLE IF NOT EXISTS requests (
  requester_id TEXT REFERENCES users(id), approver_id TEXT NOT NULL REFERENCES users(id), approval_plan TEXT NOT NULL DEFAULT '{}',
  denial_reason_required INTEGER NOT NULL DEFAULT 0 CHECK(denial_reason_required IN (0,1)),
  email_pin_enabled INTEGER NOT NULL DEFAULT 0 CHECK(email_pin_enabled IN (0,1)),
+ decision_verification_mode TEXT NOT NULL DEFAULT 'EMAIL_PIN'
+  CHECK(decision_verification_mode IN ('EMAIL_PIN','EMAIL_PIN_PLUS_OTP','EMAIL_PIN_PLUS_MFA')),
+ decision_link_ttl_seconds INTEGER NOT NULL DEFAULT 604800,
  title TEXT NOT NULL, action TEXT NOT NULL, action_hash TEXT NOT NULL, intake_hash TEXT NOT NULL,
  source TEXT NOT NULL, reason TEXT NOT NULL, predecessor_id TEXT REFERENCES requests(id),
  mail_template TEXT NOT NULL, state TEXT NOT NULL,
@@ -102,6 +113,7 @@ CREATE TABLE IF NOT EXISTS outbox (
  available_at REAL NOT NULL, lease_token TEXT, lease_until REAL, last_error TEXT,
  delivered_at REAL, created_at REAL NOT NULL,
  sealed_payload INTEGER NOT NULL DEFAULT 0 CHECK(sealed_payload IN (0,1)),
+ otp_challenge_id TEXT,
  recipient_id TEXT REFERENCES users(id),
  approval_assignment_id TEXT,
  delegation_id TEXT,
@@ -162,8 +174,19 @@ CREATE INDEX IF NOT EXISTS decision_intents_issuance ON decision_intents(issuanc
 CREATE TABLE IF NOT EXISTS decision_confirmations (
  context_digest TEXT PRIMARY KEY,
  intent_digest TEXT NOT NULL REFERENCES decision_intents(token_digest),
- expires_at REAL NOT NULL, created_at REAL NOT NULL, consumed_at REAL
+ expires_at REAL NOT NULL, created_at REAL NOT NULL, consumed_at REAL,
+ otp_verified_at REAL
 );
+CREATE TABLE IF NOT EXISTS decision_otp_challenges (
+ id TEXT PRIMARY KEY, context_digest TEXT NOT NULL REFERENCES decision_confirmations(context_digest),
+ intent_digest TEXT NOT NULL REFERENCES decision_intents(token_digest),
+ otp_digest TEXT NOT NULL,
+ state TEXT NOT NULL DEFAULT 'ACTIVE' CHECK(state IN ('ACTIVE','LOCKED','CONSUMED','REVOKED')),
+ failed_attempts INTEGER NOT NULL DEFAULT 0,
+ issued_at REAL NOT NULL, expires_at REAL NOT NULL, verified_at REAL
+);
+CREATE INDEX IF NOT EXISTS decision_otp_by_context
+ ON decision_otp_challenges(context_digest,issued_at);
 CREATE INDEX IF NOT EXISTS decision_confirmations_intent ON decision_confirmations(intent_digest);
 CREATE TABLE IF NOT EXISTS request_comments (
  id TEXT PRIMARY KEY, request_id TEXT NOT NULL REFERENCES requests(id),
@@ -188,7 +211,7 @@ CREATE TABLE IF NOT EXISTS escalations (
  due_at REAL NOT NULL, fired_at REAL,
  CHECK ((target_user_id IS NOT NULL) != (target_group_id IS NOT NULL))
 );
-PRAGMA user_version=10;
+PRAGMA user_version=11;
 """
 
 
@@ -221,7 +244,7 @@ class Database:
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
+            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11):
                 raise RuntimeError("Unsupported database schema; do not downgrade this binary")
             conn.execute("PRAGMA journal_mode=WAL")
             if version == 1:
@@ -250,6 +273,9 @@ class Database:
                 version = 9
             if version == 9:
                 self._migrate_v9_to_v10(conn)
+                version = 10
+            if version == 10:
+                self._migrate_v10_to_v11(conn)
             conn.executescript(SCHEMA)
         private_file(path)
 
@@ -578,6 +604,49 @@ class Database:
         PRAGMA user_version=10;
         ''')
 
+    @staticmethod
+    def _migrate_v10_to_v11(conn: sqlite3.Connection) -> None:
+        # Upgrade only adds versioned defaults. It never issues email links
+        # or downgrades the assurance of an in-flight approval.
+        for table, fields in {
+            "integrations": (
+                ("decision_verification_minimum", "TEXT NOT NULL DEFAULT 'EMAIL_PIN'"),
+            ),
+            "profiles": (
+                ("verification_mode", "TEXT NOT NULL DEFAULT 'INHERIT'"),
+                ("decision_link_ttl_seconds", "INTEGER"),
+            ),
+            "profile_versions": (
+                ("verification_mode", "TEXT NOT NULL DEFAULT 'INHERIT'"),
+                ("decision_link_ttl_seconds", "INTEGER"),
+            ),
+            "requests": (
+                ("decision_verification_mode", "TEXT NOT NULL DEFAULT 'EMAIL_PIN'"),
+                ("decision_link_ttl_seconds", "INTEGER NOT NULL DEFAULT 604800"),
+            ),
+            "outbox": (("otp_challenge_id", "TEXT"),),
+            "decision_confirmations": (("otp_verified_at", "REAL"),),
+        }.items():
+            existing = {col[1] for col in conn.execute(f"PRAGMA table_info({table})")}
+            for name, definition in fields:
+                if name not in existing:
+                    conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")
+        conn.executescript("""
+        CREATE TABLE IF NOT EXISTS decision_otp_challenges (
+         id TEXT PRIMARY KEY,
+         context_digest TEXT NOT NULL REFERENCES decision_confirmations(context_digest),
+         intent_digest TEXT NOT NULL REFERENCES decision_intents(token_digest),
+         otp_digest TEXT NOT NULL,
+         state TEXT NOT NULL DEFAULT 'ACTIVE'
+          CHECK(state IN ('ACTIVE','LOCKED','CONSUMED','REVOKED')),
+         failed_attempts INTEGER NOT NULL DEFAULT 0,
+         issued_at REAL NOT NULL, expires_at REAL NOT NULL, verified_at REAL
+        );
+        CREATE INDEX IF NOT EXISTS decision_otp_by_context
+         ON decision_otp_challenges(context_digest,issued_at);
+        PRAGMA user_version=11;
+        """)
+
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
         conn.row_factory = sqlite3.Row
@@ -614,7 +683,7 @@ class Database:
         with closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
-            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
+            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11):
                 raise ValueError("Backup schema mismatch")
             with closing(sqlite3.connect(destination)) as new:
                 old.backup(new)

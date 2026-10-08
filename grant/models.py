@@ -100,6 +100,14 @@ class IntentConfirmation(Input):
     reason: str = Field(default="", max_length=2000)
 
 
+class IntentOtpRequest(Input):
+    confirmation_token: str = Field(min_length=32, max_length=100)
+
+
+class IntentOtpVerification(IntentOtpRequest):
+    otp: str = Field(min_length=6, max_length=6, pattern=r"^[0-9]{6}$")
+
+
 class RequestComment(Input):
     kind: Literal["COMMENT", "QUESTION", "REQUEST_INFO", "REQUEST_CHANGES", "INFO_RESPONSE"]
     body: str = Field(min_length=1, max_length=2000)
@@ -128,6 +136,16 @@ class Integration(Input):
     callback_url: str = Field(min_length=1, max_length=2048)
     callback_headers: dict[str, str] = Field(default_factory=dict)
     hmac_secret: str = Field(default="", max_length=256)
+    decision_verification_minimum: Literal[
+        "EMAIL_PIN", "EMAIL_PIN_PLUS_OTP", "EMAIL_PIN_PLUS_MFA"
+    ] = "EMAIL_PIN"
+
+
+class IntegrationVerificationPolicy(Input):
+    decision_verification_minimum: Literal[
+        "EMAIL_PIN", "EMAIL_PIN_PLUS_OTP", "EMAIL_PIN_PLUS_MFA"
+    ]
+    reason: str = Field(min_length=5, max_length=1000)
 
 
 class EmailTemplate(Input):
@@ -283,6 +301,10 @@ class Profile(Input):
     severity: str = Field(default="", max_length=100)
     risk_level: str = Field(default="", max_length=100)
     denial_reason_required: bool = False
+    verification_mode: Literal[
+        "INHERIT", "EMAIL_PIN", "EMAIL_PIN_PLUS_OTP", "EMAIL_PIN_PLUS_MFA"
+    ] = "INHERIT"
+    decision_link_ttl_seconds: int | None = Field(default=None, ge=300, le=2592000)
 
 
 class ProfileUpdate(Profile):

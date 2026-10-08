@@ -143,7 +143,12 @@ class Worker:
                     row["kind"] == "webhook" and json.loads(row["payload"])["state"] != req["state"]
                 )
                 from .decision_links import deliverable
+                from .decision_otp import otp_deliverable
 
+                stale_otp = (
+                    bool(row["otp_challenge_id"])
+                    and not otp_deliverable(conn, self.settings, row["otp_challenge_id"], now)
+                )
                 stale_sealed_issuance = (
                     bool(row["issuance_id"])
                     and not deliverable(conn, self.settings, row["issuance_id"], now)
@@ -159,7 +164,10 @@ class Worker:
                         )
                     )
                 )
-                if not req["enabled"] or stale_outcome or stale_approval_email or stale_sealed_issuance:
+                if (
+                    not req["enabled"] or stale_outcome or stale_approval_email
+                    or stale_sealed_issuance or stale_otp
+                ):
                     conn.execute(
                         "UPDATE outbox SET state='SUPERSEDED',lease_token=NULL,last_error=NULL WHERE id=?",
                         (row["id"],),

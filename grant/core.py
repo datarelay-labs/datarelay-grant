@@ -33,6 +33,7 @@ from .models import (
     Escalation,
     Intake,
     Integration,
+    IntegrationVerificationPolicy,
     NotificationBrandingUpdate,
     NotificationPreview,
     NotificationTemplateSet,
@@ -134,11 +135,49 @@ class Core:
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
             conn.execute(
-                "INSERT INTO integrations VALUES(?,?,?,1,?,?,?)",
+                """INSERT INTO integrations(id,name,kind,enabled,tenant,destination,created_at)
+                   VALUES(?,?,?,1,?,?,?)""",
                 (ident, body.name, body.kind, body.tenant, destination, time.time()),
             )
-            audit(conn, None, actor.id, "integration.created", {"integration_id": ident})
-        return {"id": ident, "name": body.name, "kind": body.kind}
+            conn.execute(
+                "UPDATE integrations SET decision_verification_minimum=? WHERE id=?",
+                (body.decision_verification_minimum, ident),
+            )
+            audit(conn, None, actor.id, "integration.created", {
+                "integration_id": ident,
+                "decision_verification_minimum": body.decision_verification_minimum,
+            })
+        return {"id": ident, "name": body.name, "kind": body.kind,
+                "decision_verification_minimum": body.decision_verification_minimum}
+
+    def update_integration_verification_policy(
+        self, actor: Principal, ident: str, body: IntegrationVerificationPolicy,
+    ) -> dict:
+        actor.require_admin()
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            current = conn.execute(
+                "SELECT decision_verification_minimum FROM integrations WHERE id=? AND enabled=1",
+                (ident,),
+            ).fetchone()
+            if current is None:
+                raise GrantError("INTEGRATION_NOT_FOUND", 404)
+            conn.execute(
+                "UPDATE integrations SET decision_verification_minimum=? WHERE id=?",
+                (body.decision_verification_minimum, ident),
+            )
+            audit(conn, None, actor.id, "integration.decision_verification_updated", {
+                "integration_id": ident,
+                "previous": current["decision_verification_minimum"],
+                "current": body.decision_verification_minimum,
+                "reason": body.reason,
+                "existing_snapshots_unchanged": True,
+            })
+        return {
+            "integration_id": ident,
+            "decision_verification_minimum": body.decision_verification_minimum,
+            "existing_snapshots_unchanged": True,
+        }
 
     def integrations(self, actor: Principal) -> list[dict]:
         actor.require_admin()
@@ -151,6 +190,7 @@ class Core:
                 "kind": r["kind"],
                 "tenant": r["tenant"],
                 "enabled": bool(r["enabled"]),
+                "decision_verification_minimum": r["decision_verification_minimum"],
                 "callback_origin": self._origin(r["destination"]),
             }
             for r in rows
@@ -589,8 +629,11 @@ class Core:
             ),
         )
         conn.execute(
-            "UPDATE profile_versions SET denial_reason_required=? WHERE id=?",
-            (int(body.denial_reason_required), version_id),
+            """UPDATE profile_versions
+               SET denial_reason_required=?,verification_mode=?,
+                   decision_link_ttl_seconds=? WHERE id=?""",
+            (int(body.denial_reason_required), body.verification_mode,
+             body.decision_link_ttl_seconds, version_id),
         )
         return version_id
 
@@ -621,8 +664,11 @@ class Core:
             ),
         )
         conn.execute(
-            "UPDATE profiles SET denial_reason_required=? WHERE id=?",
-            (int(body.denial_reason_required), ident),
+            """UPDATE profiles
+               SET denial_reason_required=?,verification_mode=?,
+                   decision_link_ttl_seconds=? WHERE id=?""",
+            (int(body.denial_reason_required), body.verification_mode,
+             body.decision_link_ttl_seconds, ident),
         )
 
     def create_delegation(self, actor: Principal, body: Delegation) -> dict:
@@ -981,8 +1027,11 @@ class Core:
                 version = current["version"] + 1
                 version_id = self._insert_profile_version(conn, ident, version, body)
             conn.execute(
-                "UPDATE profile_versions SET denial_reason_required=? WHERE id=?",
-                (int(body.denial_reason_required), version_id),
+                """UPDATE profile_versions
+                   SET denial_reason_required=?,verification_mode=?,
+                       decision_link_ttl_seconds=? WHERE id=?""",
+                (int(body.denial_reason_required), body.verification_mode,
+                 body.decision_link_ttl_seconds, version_id),
             )
             self._mirror_profile(conn, ident, body, enabled=active is not None)
             audit(
@@ -1131,6 +1180,8 @@ class Core:
                 severity=row["severity"],
                 risk_level=row["risk_level"],
                 denial_reason_required=bool(row["denial_reason_required"]),
+                verification_mode=row["verification_mode"],
+                decision_link_ttl_seconds=row["decision_link_ttl_seconds"],
             )
             conn.execute(
                 """INSERT INTO profiles(
@@ -1473,7 +1524,7 @@ class Core:
                 integration_id = selected_profile["integration_id"]
 
             integration = conn.execute(
-                "SELECT enabled,tenant FROM integrations WHERE id=?",
+                "SELECT enabled,tenant,decision_verification_minimum FROM integrations WHERE id=?",
                 (integration_id,),
             ).fetchone()
             if not integration or not integration["enabled"]:
@@ -1522,6 +1573,18 @@ class Core:
                 if previous["requester_id"] != requester:
                     raise GrantError("PREDECESSOR_OWNER_MISMATCH", 403)
 
+            from .verification_policy import trusted_action_floor
+
+            mode = trusted_action_floor(
+                conn, self.settings, integration_id=integration_id,
+                action_kind=action["kind"],
+                integration_minimum=integration["decision_verification_minimum"],
+            )
+            ttl = (
+                profile["decision_link_ttl_seconds"]
+                if profile["decision_link_ttl_seconds"] is not None
+                else self.settings.decision_link_ttl_seconds
+            )
             values = {
                 "id": ident,
                 "integration_id": integration_id,
@@ -1533,6 +1596,8 @@ class Core:
                 "approval_plan": json_text(approval_plan),
                 "denial_reason_required": int(profile["denial_reason_required"]),
                 "email_pin_enabled": 1,  # prior migrated requests remain disabled
+                "decision_verification_mode": mode,
+                "decision_link_ttl_seconds": ttl,
                 "title": body.title,
                 "action": json_text(action),
                 "action_hash": action_hash,
@@ -1993,6 +2058,7 @@ class Core:
         self, conn: sqlite3.Connection, row: sqlite3.Row, *,
         now: float, represented: str, actual_actor_id: str,
         decision: str, reason: str, issuance_id: str | None = None,
+        actor_assurance: str | None = None,
     ) -> None:
         # Caller owns BEGIN IMMEDIATE and authorization/expiry checks.
         ident = row["id"]
@@ -2068,7 +2134,9 @@ class Core:
             "approval_step_id": assignment["step_id"] if assignment else None,
             "assignment_epoch": assignment["assignment_epoch"] if assignment else None,
             "approvals": approvals, "required": required, "final_state": state,
-            "actor_assurance": "AUTHENTICATED" if issuance_id is None else "EMAIL_LINK_PIN",
+            "actor_assurance": actor_assurance or (
+                "AUTHENTICATED" if issuance_id is None else "EMAIL_LINK_PIN"
+            ),
             "verified_person_id": verified_person_id,
             "mailbox_recipient_id": actual_actor_id if issuance_id is not None else None,
             "issuance_id": issuance_id,
@@ -2089,14 +2157,21 @@ class Core:
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
             row = self._load(conn, ident, actor)
+            if self._paused(conn):
+                raise GrantError("RECOVERY_RECONCILIATION_REQUIRED", 409)
             if not row["email_pin_enabled"] or row["state"] not in ("AWAITING", "HELD"):
                 raise GrantError("DECISION_REISSUE_NOT_AVAILABLE", 409)
-            recipient = next((
+            matches = [
                 item for item in eligible_recipients(conn, row, now)
                 if item["recipient_id"] == body.recipient_user_id
-            ), None)
-            if not recipient:
+            ]
+            if not matches:
                 raise GrantError("DECISION_REISSUE_NOT_AVAILABLE", 409)
+            if len(matches) > 1:
+                # One substitute can represent multiple seats. Never silently
+                # rotate only one while queueing mail for all of them.
+                raise GrantError("DECISION_REISSUE_AMBIGUOUS_SEAT", 409)
+            recipient = matches[0]
             prior = [
                 old["id"] for old in conn.execute(
                     """SELECT id FROM decision_issuances
@@ -2132,8 +2207,14 @@ class Core:
         error = None
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
+            if self._paused(conn):
+                raise GrantError("RECOVERY_RECONCILIATION_REQUIRED", 409)
             row = self._load(conn, ident, actor)
             now = time.time()
+            from .verification_policy import current_required
+
+            if current_required(conn, row) != "EMAIL_PIN":
+                raise GrantError("DECISION_VERIFICATION_STEP_UP_REQUIRED", 403)
             if row["collaboration_state"] != "OPEN":
                 raise GrantError("COLLABORATION_RESPONSE_REQUIRED", 409)
             plan = json.loads(row["approval_plan"] or "{}") or {

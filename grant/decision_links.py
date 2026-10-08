@@ -144,7 +144,7 @@ def queue_choice_mail(
             ).fetchone()[0]
             issuance_id = uid()
             pin = f"{secrets.randbelow(10000):04d}"
-            expires = min(request["deadline"], now + settings.decision_link_ttl_seconds)
+            expires = min(request["deadline"], now + request["decision_link_ttl_seconds"])
             if expires <= now:
                 continue
             conn.execute(
@@ -207,7 +207,8 @@ def _row_by_digest(conn: sqlite3.Connection, digest: str) -> sqlite3.Row | None:
                   a.assignment_epoch AS current_epoch,
                   r.action_hash AS current_action_hash,r.state AS request_state,
                   r.email_pin_enabled,r.deadline,r.collaboration_state,
-                  r.approval_plan,r.requester_id
+                  r.approval_plan,r.requester_id,r.integration_id,
+                  r.decision_verification_mode
            FROM decision_intents i
            JOIN decision_issuances x ON x.id=i.issuance_id
            JOIN approval_assignments a ON a.id=x.approval_assignment_id
@@ -232,6 +233,11 @@ def _active(conn: sqlite3.Connection, settings: Settings, state: sqlite3.Row | N
         raise GrantError("DECISION_LINK_UNAVAILABLE", 404)
     if conn.execute("SELECT value FROM runtime WHERE key='paused'").fetchone()[0] == "1":
         raise GrantError("RECOVERY_RECONCILIATION_REQUIRED", 409)
+    integration = conn.execute(
+        "SELECT enabled FROM integrations WHERE id=?", (state["integration_id"],),
+    ).fetchone()
+    if not integration or not integration["enabled"]:
+        raise GrantError("DECISION_LINK_UNAVAILABLE", 404)
     users = conn.execute(
         "SELECT id,enabled FROM users WHERE id IN (?,?)",
         (state["original_id"], state["recipient_id"]),
@@ -318,8 +324,12 @@ class DecisionLinks:
         with self.db.transaction(write=False) as conn:
             state = _row_by_digest(conn, _digest(self.settings, "intent", token))
             _active(conn, self.settings, state, time.time())
+            from .verification_policy import current_required
+
             return {
-                "outcome": state["outcome"], "pin_digits": 4,
+                "outcome": state["outcome"],
+                "verification_mode": current_required(conn, state),
+                "pin_digits": 4,
                 "pin_required": True, "requires_login": False,
                 "confirmation_required": True,
                 "details_visible": False, "execution_allowed": False,
@@ -368,10 +378,12 @@ class DecisionLinks:
         if error:
             raise error
         with self.db.transaction(write=False) as conn:
+            from .verification_policy import current_required
+
             item = conn.execute(
-                "SELECT title,action,deadline,denial_reason_required "
-                "FROM requests WHERE id=?", (state["request_id"],),
+                "SELECT * FROM requests WHERE id=?", (state["request_id"],),
             ).fetchone()
+            effective_mode = current_required(conn, item)
         action = json.loads(item["action"])
         return {
             "confirmation_token": context, "expires_in": CONFIRM_SECONDS,
@@ -384,6 +396,7 @@ class DecisionLinks:
                 "denial_reason_required": bool(item["denial_reason_required"]),
             },
             "assurance": "EMAIL_LINK_PIN",
+            "verification_mode": effective_mode,
             "verified_person_id": None,
             "execution_allowed": False,
         }
@@ -407,12 +420,24 @@ class DecisionLinks:
             request = conn.execute(
                 "SELECT * FROM requests WHERE id=?", (state["request_id"],)
             ).fetchone()
+            from .verification_policy import current_required
+
+            effective = current_required(conn, request)
+            if effective == "EMAIL_PIN_PLUS_MFA":
+                raise GrantError("FRESH_IDENTITY_MFA_REQUIRED", 403)
+            if effective == "EMAIL_PIN_PLUS_OTP" and not checked["otp_verified_at"]:
+                raise GrantError("EMAIL_OTP_REQUIRED", 403)
             if state["outcome"] == "DENIED" and request["denial_reason_required"] and not reason.strip():
                 raise GrantError("DENIAL_REASON_REQUIRED", 422)
             Core(self.db, self.settings)._record_vote(
                 conn, request, now=now, represented=state["original_id"],
                 actual_actor_id=state["recipient_id"], decision=state["outcome"],
                 reason=reason, issuance_id=state["issuance_id"],
+                actor_assurance=(
+                    "EMAIL_LINK_PIN_PLUS_OTP"
+                    if checked["otp_verified_at"] is not None
+                    else "EMAIL_LINK_PIN"
+                ),
             )
             conn.execute(
                 "UPDATE decision_confirmations SET consumed_at=? WHERE context_digest=?",
@@ -432,6 +457,10 @@ class DecisionLinks:
             ).fetchone()["state"]
         return {
             "recorded": True, "decision": state["outcome"], "state": new_state,
-            "actor_assurance": "EMAIL_LINK_PIN", "verified_person_id": None,
+            "actor_assurance": (
+                "EMAIL_LINK_PIN_PLUS_OTP" if effective == "EMAIL_PIN_PLUS_OTP"
+                else "EMAIL_LINK_PIN"
+            ),
+            "verified_person_id": None,
             "execution_allowed": False,
         }
