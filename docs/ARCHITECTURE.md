@@ -121,11 +121,31 @@ plaintext backup or telemetry. Queued sensitive mail must be
 sealed or generated securely on delivery, with safe retries
 and recovery. SMTP accepted differs from real inbox receipt.
 
-**Group and time model:** immutable action fingerprint,
-stable seat/step `assignment_epoch`, and mutable
-`state_revision` are distinct. Parallel seat Hold never blocks
-the other active seats; sequential Hold blocks next-stage
-activation/notification until the current step approves.
+**Group, policy reason and delegation model:** immutable action
+fingerprint, stable seat/step `assignment_epoch`, and mutable
+`state_revision` are distinct. The snapshotted policy includes
+`denial_reason_required` default false; when true, the final
+Deny POST rejects absent/blank bounded reason before consuming
+the selected intent, changing state or sending any outcome.
+
+Non-exclusive delegation means original assignee and currently
+valid, non-revoked delegate may each receive independently bound
+email links/PINs for **one represented approval seat**. They
+must never be counted as separate approval votes; a seat-keyed
+atomic finality guard makes the **first terminal Approve/Deny**
+win and revokes both parties' other links. A Hold remains
+provisional so the other currently eligible party can later
+resolve it. Delegation expiry/revocation removes only the
+delegate's authorization. Each final commit revalidates
+delegate window/assignment and the original seat's finality;
+the audit event records seat/original assignee, capability
+recipient original-or-delegate, actual verified identity if
+independently established, reason and final result separately.
+With EMAIL_PIN alone no named person is proven.
+
+Parallel seat Hold never blocks the other active seats;
+sequential Hold blocks next-stage activation/notification
+until the current step approves.
 Request GET (currently expiry-maintaining in R1) must not
 be reused to cause state changes in a new email-intent
 GET route. Revoke stale generations on terminal decisions,
