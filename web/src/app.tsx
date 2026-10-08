@@ -9,6 +9,7 @@ import {
   ThemeRoot,
 } from '@datarelay-labs/foundation';
 import { Administration, Security } from './administration';
+import { AuditExplorer } from './audit_explorer';
 import { Approvers } from './approvers';
 import { Delegations } from './delegations';
 import { ApiError, setCsrf } from './api';
@@ -224,6 +225,8 @@ export function App() {
     page = <Notifications />;
   } else if (user.role === 'admin' && path === '/email-templates') {
     page = <Notifications />;
+  } else if (user.role === 'admin' && path === '/audit') {
+    page = <AuditExplorer />;
   } else if (user.role === 'admin' && path === '/system') {
     page = <Administration user={user} />;
   } else {

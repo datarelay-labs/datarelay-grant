@@ -112,6 +112,7 @@ Configuration
 
 Administration
 ├── Operations          # G7 authoritative metrics / exceptions
+├── Audit explorer      # G9 filtered events / bounded evidence export
 └── Administration
 
 Signed-in user footer

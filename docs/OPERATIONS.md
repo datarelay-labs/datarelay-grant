@@ -125,6 +125,36 @@ text. Never infer action execution, an approved policy or inbound Stellar
 support from a successful test event. External receiver/consumer qualification
 remains separate from these operator observations.
 
+## Audit evidence explorer and controlled exports
+
+The administrator-only Audit explorer offers searchable and paginated historical
+actions by recorded actor, action, request ID and UTC time range. GET
+/api/v1/admin/audit/search limits an individual response to 100 events.
+GET /api/v1/admin/audit/export supports CSV or JSON bounded at 1,000 events
+per export/page and does not export arbitrary free-form audit details.
+CSV fields originating from users are prefixed when needed to neutralize
+spreadsheet formula evaluation. Save exports only in approved protected
+locations; they still contain event times, request IDs and actor identities.
+No password, token, callback destination, mail text or arbitrary notes are
+included. GET /api/v1/admin/audit/chain/{request-id} connects persisted policy
+and action fingerprint, human decisions, comments metadata, notification
+delivery attempts, execution commitment and reported result; a reported
+execution result is not Grant's independent verification of external work.
+
+Configuration import preview POST /api/v1/admin/configuration/preview accepts
+only the strict secret-free schema-v1 planning manifest produced by the
+read-only integration export. It computes name/identity/mapping conflicts
+WITHOUT writing any policy, template, integration or credential record.
+There is deliberately no Apply/Activate control. Production import requires
+verified account, group, callback, policy-version and template-content
+mapping, operator-approved policy activation, migration/rollback rehearsal
+and release authorization. Do not use the preview as an installation restore.
+
+Backup/restore and schema-v8 migration checks must retain historical audit,
+versioned policies, request action fingerprints, approver groups, delegations,
+comments and credential status. Isolated database copies are not evidence
+that external execution effects were reconciled.
+
 ## Backup, restore and restart
 
 ```sh

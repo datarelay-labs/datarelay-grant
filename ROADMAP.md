@@ -347,6 +347,12 @@ Exit evidence:
 - export contains no raw credentials;
 - upgrade and restore retain policy/request semantics.
 
+Development candidate: Work Packet #48 implements bounded admin audit search,
+typed redacted CSV/JSON evidence export, request-to-result chain inspection,
+backup/restore verification and nonmutating policy/template conflict preview.
+Configuration import/apply, operator identity mapping, release and external
+consumer/Stellar acceptance remain separately gated; preview is not import.
+
 ### G10 — Security and product hardening
 
 Priority: **P0**
