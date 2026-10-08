@@ -79,10 +79,11 @@ export function Profiles() {
     setUsers(accounts);
     setTemplates(templateSets);
     setGroups(approverGroups);
+    return policies;
   };
 
   useEffect(() => {
-    void task.run(load);
+    void task.run(async () => { await load(); });
   }, []);
 
   function resetEditor() {
@@ -187,8 +188,14 @@ export function Profiles() {
 
   async function transition(id: string, actionName: 'test' | 'activate' | 'disable') {
     const updated = await api<Profile>('/profiles/' + id + '/' + actionName, 'POST');
-    await load();
-    if (editing === id) edit(updated);
+    const currentPolicies = await load();
+    // Disabling active v1 must not load obsolete v1 into the draft-v2 editor.
+    // /profiles always returns the newest editable policy version.
+    if (editing === id) {
+      edit(actionName === 'disable'
+        ? currentPolicies.find((policy) => policy.id === id) ?? updated
+        : updated);
+    }
     task.setNotice(
       actionName === 'test'
         ? 'Policy moved to Testing. Use isolated test before activation.'

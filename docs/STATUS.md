@@ -29,10 +29,16 @@ capability remains whatever is present and tested at the committed candidate HEA
   journeys. Final integration and release qualification are not yet complete.
 - Versioned approval policies with explicit Draft -> Testing -> Active -> Disabled
   lifecycle, clone/history, bounded deterministic selectors and shared runtime/preview
-  resolution. Saving never makes a policy live; isolated tests cannot authorize execution.
+  resolution. The browser request form populates configured policy selectors
+  (tenant/environment/severity/risk) and disabling an old ACTIVE version does not
+  overwrite the latest DRAFT editor. Saving never makes a policy live; isolated
+  tests cannot authorize execution.
 - A coherent Notifications area with complete event template sets, explicit safe
   variables, rendered preview/test send, delivery health/retry visibility and system
-  branding. Each request snapshots the exact policy version and notification content so
+  branding. SMTP failure counts are separate from webhook delivery state. Until an
+  explicit safe-test-recipient registry is implemented, sending a notification test
+  is restricted to the currently authenticated administrator's own mailbox. Each
+  request snapshots the exact policy version and notification content so
   later policy/template/branding changes apply only to new requests.
 - G3 development candidate: approver groups and Single / Any One / All / N-of-M /
   Sequential modes, validated quorum bounds, policy-plan preview, request-time membership
@@ -73,21 +79,22 @@ capability remains whatever is present and tested at the committed candidate HEA
 
 ## Observed development evidence
 
-The G3/G4 stacked development candidate builds on G1/G2 and has locally passed
-157 Python/API tests, 12 frontend unit cases, static and TypeScript checks,
-a production web build, and 9 real Playwright Chromium user journeys (including delegation creation/revocation
-and confirmed escalation/reassignment). Backend focused regressions also pass.
-These are predecessor development observations, now captured in Work Packet #40
-at exact committed/pushed head. G5 full Python/API regression (165 PASS), static checks,
-12 frontend units, TypeScript build and 10 real browser journeys passed on
-the current successor worktree. Exact-head CI and downstream real integrations
-remain separately gated in Work Packet #42 and #33. G6 full-source verification has now passed 172 Python/API tests, static checks,
-12 frontend units, TypeScript production build and 12 actual Playwright Chromium
-journeys, including two browser Inbox/query scenarios. Exact committed HEAD
-and integration/CI evidence remain separate from local development tests. The browser
-administration journey still exercises
-Notification template-set preview/test send and Policy Draft -> Testing -> isolated
-test -> Activate -> runtime preview -> history.
+G0/G1/G2 PR #39 review hardening passed 139 Python/API, 12 frontend,
+seven Chromium journeys at exact predecessor source HEAD 75fb144. All five
+latest actionable reviews were resolved: browser policy selectors, recipient-
+restricted test email, latest Draft retention, overdue/EXPIRED counting, and
+SMTP error visibility. Engineering System and API/Static GitHub CI passed;
+private Foundation Web read credential remains a separate approval gate.
+
+G3/G4 + G1/G2 non-force merged PR #41 candidate passed 160 Python/API,
+12 frontend and 10 actual browser journeys at exact source HEAD b6a434c.
+G5/G6 plus merged G0-G4 predecessor fixes pass 175 Python/API, 12 frontend,
+static/typecheck/production build and 13 actual Chromium journeys together
+on the resolved non-force merge source. Exact HEAD, GitHub CI/provenance
+and owner acceptance belong in Work Packet #42, not this source document.
+
+Browser test sessions use disposable accounts and actual loopback SMTP/HTTP.
+These are not real DataRelay/Stellar integration or production evidence.
 
 Browser cases include two independently signed-in requester/approver passes,
 mobile shared administration, cancellation/replacement, account creation,

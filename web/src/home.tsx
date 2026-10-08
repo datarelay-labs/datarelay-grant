@@ -32,7 +32,9 @@ export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
   const overdue = mine.filter(
     (row) => row.overdue || (row.state === 'EXPIRED' && row.deadline <= now),
   );
-  const deliveryFailures = rows.filter((row) => row.delivery_state === 'FAILED');
+  const deliveryFailures = rows.filter(
+    (row) => row.delivery_state === 'FAILED' || (row.notification_failure_count ?? 0) > 0,
+  );
   const executionExceptions = rows.filter(isExecutionException);
   const recent = [...rows].sort((a, b) => b.created_at - a.created_at).slice(0, 6);
 

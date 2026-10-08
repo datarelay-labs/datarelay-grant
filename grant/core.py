@@ -485,6 +485,10 @@ class Core:
                 raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
             template = snapshot(row, branding=self._branding(conn))
             recipient_id = body.recipient_user_id or principal.id
+            # No designated-safe-recipient registry exists yet. Do not let an
+            # administrator turn test delivery into unsolicited mail to users.
+            if recipient_id != principal.id:
+                raise GrantError("TEST_RECIPIENT_NOT_ALLOWED", 403)
             recipient = conn.execute(
                 "SELECT id,email,enabled FROM users WHERE id=?", (recipient_id,)
             ).fetchone()
@@ -2268,6 +2272,11 @@ class Core:
         ]
         out["delivery_state"] = next(
             (d["state"] for d in reversed(deliveries) if d["kind"] == "webhook"), "NOT_SCHEDULED"
+        )
+        # The callback channel is not the notification channel. A failed SMTP
+        # outbox attempt must be visible independently in the action center.
+        out["notification_failure_count"] = sum(
+            d["kind"] == "email" and d["state"] == "FAILED" for d in deliveries
         )
         if detail:
             out["comments"] = [

@@ -407,3 +407,58 @@ test('G6 approver inbox needs/held/recent views reflect decisions',async({browse
  expect(latest.state).toBe('APPROVED');
  await context.close();await senderContext.close();
 });
+
+test('G1 browser policy selectors create a matching request and keep latest draft on disable',async({browser,request})=>{
+ const f=fixture();
+ const adminContext=await browser.newContext(),reqContext=await browser.newContext();
+ const ap=await adminContext.newPage(),rp=await reqContext.newPage();
+ await login(ap,'admin');
+ const session=await(await adminContext.request.get('/api/v1/auth/session')).json();
+ const headers={'x-csrf-token':session.csrf};
+ const policyInput={
+   name:'Browser selector v1', integration_id:f.integration_id,
+   approver_id:f.users.approver.id, action_kind:'test.selector',
+   tenant_selector:'finance',environment:'production',
+   severity:'high',risk_level:'critical',
+ };
+ const created=await adminContext.request.post('/api/v1/profiles',{headers,data:policyInput});
+ expect(created.status()).toBe(201);const policy=await created.json();
+ expect((await adminContext.request.post('/api/v1/profiles/'+policy.id+'/test',{headers})).status()).toBe(200);
+ expect((await adminContext.request.post('/api/v1/profiles/'+policy.id+'/activate',{headers})).status()).toBe(200);
+
+ await login(rp,'requester');
+ await rp.goto('/requests/new');
+ await rp.getByLabel('Approval profile',{exact:true}).selectOption(policy.id);
+ for(const [field,value] of [
+   ['Source tenant','finance'],
+   ['Environment','production'],
+   ['Severity','high'],
+   ['Risk level','critical'],
+ ]){
+   await expect(rp.getByLabel(field,{exact:true})).toHaveValue(value);
+ }
+ await rp.getByLabel('Request title',{exact:true}).fill('Selector matched browser request');
+ await rp.getByLabel('Target',{exact:true}).fill('safe-selector-test');
+ await rp.getByRole('button',{name:'Submit request',exact:true}).click();
+ await expect(rp.getByText('Exact action to be approved',{exact:true})).toBeVisible();
+ const id=rp.url().split('/').pop()!;
+ const actual=await(await adminContext.request.get('/api/v1/requests/'+id)).json();
+ expect(actual.source.tenant_id).toBe('finance');
+ expect(actual.source.environment).toBe('production');
+ expect(actual.source.severity).toBe('high');
+ expect(actual.source.risk_level).toBe('critical');
+ expect(actual.profile_id).toBe(policy.id);
+
+ const updated=await adminContext.request.put('/api/v1/profiles/'+policy.id,{
+   headers,data:{...policyInput,name:'Browser selector draft v2'},
+ });
+ expect(updated.status()).toBe(200);expect((await updated.json()).version).toBe(2);
+ await ap.goto('/profiles');
+ const policyRow=ap.getByRole('row').filter({hasText:'Browser selector draft v2'});
+ await policyRow.getByRole('button',{name:'Open',exact:true}).click();
+ await expect(ap.getByLabel('Policy name',{exact:true})).toHaveValue('Browser selector draft v2');
+ await ap.getByRole('button',{name:'Disable active',exact:true}).click();
+ await expect(ap.getByText('Active policy version disabled.')).toBeVisible();
+ await expect(ap.getByLabel('Policy name',{exact:true})).toHaveValue('Browser selector draft v2');
+ await adminContext.close();await reqContext.close();
+});
