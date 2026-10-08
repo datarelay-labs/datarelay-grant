@@ -214,6 +214,37 @@ executions UNKNOWN. Old human decisions stay in the audit history. A fresh appro
 requires a new request ID. The acknowledgment is not proof that external work was
 reconciled; that remains the operator's responsibility. Notify affected requesters.
 
+## User acceptance evidence validator (not a release gate override)
+
+Use the locked development toolchain to run the repository's existing
+acceptance evidence contract. Its JSON Schema 2020-12 validator is the
+pinned jsonschema development dependency:
+
+~~~sh
+uv run --frozen python tools/user_acceptance_contract.py validate-gate \
+  --root . --expected-gate SURFACE_RECONCILIATION \
+  --evidence /absolute/private/evidence/surface.json
+uv run --frozen python tools/user_acceptance_contract.py validate-gate \
+  --root . --expected-gate FULL_USER_E2E \
+  --evidence /absolute/private/evidence/full-user-e2e.json
+uv run --frozen python tools/user_acceptance_contract.py quality-close \
+  --root . --surface-evidence /absolute/private/evidence/surface.json \
+  --e2e-evidence /absolute/private/evidence/full-user-e2e.json
+~~~
+
+The validate-gate command checks schema, exact Git HEAD, immutable contract
+digest, contract clean state, claimed coverage and mandatory counts. A
+structural check can return success while explicitly printing
+USER_GATE_EXECUTION_PASS=NOT_ESTABLISHED. **It is not independent evidence
+that ChatGPT personally drove the browser or that a real DataRelay/Stellar
+operation occurred.** The quality-close command therefore returns nonzero
+and prints PRODUCT_QUALITY_CLOSURE=BLOCK even if every submitted self-claim
+is structurally perfect, until separately trusted persona/real-effect
+evidence and owner acceptance are verifiable through an authorized process.
+Never interpret a self-authored JSON report or successful schema validation
+as candidate freeze/release permission. A missing verifier dependency is a
+toolchain defect, not permission to waive this gate.
+
 ## Candidate, upgrade and rollback
 
 After committing a clean reviewed candidate, run `python3 tools/build_candidate.py`.

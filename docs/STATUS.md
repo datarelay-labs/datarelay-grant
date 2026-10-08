@@ -1,6 +1,6 @@
 # Grant 1.0 implementation status
 
-Updated: 2026-10-08. G11 readiness lane: Issue #52; G10 predecessor: Issue #50 / PR #51; G9: Issue #48 / PR #49; G8: Issue #46 / PR #47; G7: Issue #44 / PR #45; G5/G6: Issue #42 / PR #43; G3/G4: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
+Updated: 2026-10-08. G12 quality preflight: Issue #54; G11 external readiness: Issue #52 / Draft PR #53; G10: Issue #50 / PR #51; G9: Issue #48 / PR #49; G8: Issue #46 / PR #47; G7: Issue #44 / PR #45; G5/G6: Issue #42 / PR #43; G3/G4: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
 Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
@@ -123,6 +123,14 @@ capability remains whatever is present and tested at the committed candidate HEA
   effects. G11 M3/M4 remain WAITING_INTEGRATION pending a real product-owned
   guard/ledger and an actual supported Stellar receiving path; see
   docs/G11_EXTERNAL_ACCEPTANCE.md.
+- G12 acceptance-validator hardening (active Work Packet #54): the evidence
+  CLI now runs in the locked development dependency set. Structural-only
+  quality-close returns a nonzero process status while it reports unverified
+  ChatGPT persona execution provenance and no release authority. Candidate
+  identity, dirty-contract, partial coverage and synthetic self-claim cases
+  have isolated negative regression tests. This does not close the mobile
+  first-screen P2, direct second-persona Full User E2E, real DataRelay/Stellar
+  acceptance, Foundation CI private read access or owner release gates.
 - Immutable action, explicit approve/hold/deny, expiry, bounded reminders,
   cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.
