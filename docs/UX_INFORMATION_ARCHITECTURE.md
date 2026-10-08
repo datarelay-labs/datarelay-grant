@@ -180,6 +180,39 @@ Important columns/filters include:
 The request detail remains the authority surface for the immutable action, explicit
 decision, delivery history, execution result and audit timeline.
 
+### G10A owner-accepted email decision UX (planned; not yet implemented)
+
+- The same mobile-friendly email includes four semantically distinct actions:
+  **Approve**, **Hold**, **Deny**, and neutral **View Details**. Each actionable
+  link is unique per request/eligible recipient/approval step/outcome.
+- A decision deep link selects an **intent only**; GET/HEAD/prefetch never
+  records a decision or sends OTP. Before login, show only a generic sign-in
+  view with no request/action/person detail. Preserve intent across normal
+  login safely without exposing tokens in analytics, referer or browser logs.
+- Once the actually authorized approver is signed in, show the exact
+  immutable action/target, policy and deadline, the preselected outcome and
+  its current eligibility. The primary CTA clearly says **Confirm Approve**,
+  **Confirm Hold**, or **Confirm Deny**; the chosen action remains unrecorded
+  until the authenticated/CSRF-protected final POST succeeds.
+- If policy requires an extra challenge, show it at decision time. Same-email
+  verification is not labeled MFA; genuine fresh High Assurance MFA follows
+  the shared Foundation authentication capability. Support copy/paste/
+  autofill, focus order, mobile screen readers and denial reasons.
+- If a link is stale, revoked, consumed, forwarded, or no longer authorized,
+  show a safe non-disclosing error, a neutral Inbox navigation option and
+  no action button. A completed step shows *who really confirmed* and the
+  current quorum/result, not a claim that the external business action ran.
+- Administration extends existing focused **Approval Policies** detail with
+  Decision Verification defaults and escalation/reissue rules, and existing
+  **Notifications** with event-safe HTML/text layout and delivery health;
+  do not add another top-level settings tree or fork the Product Foundation
+  Auth UI/shared Administration shell.
+- Existing authenticated neutral request detail remains the backward-
+  compatible fallback. No G10A link page should be represented as shipped
+  before its exact-version browser and full-user acceptance is complete.
+
+
+
 ## Approval Policies
 
 The landing surface is a list/table, not an always-expanded editor.
