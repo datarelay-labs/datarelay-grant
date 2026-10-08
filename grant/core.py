@@ -1455,9 +1455,15 @@ class Core:
                 previous = self._load(conn, body.predecessor_id, actor)
                 if (
                     previous["integration_id"] != integration_id
-                    or previous["state"] != "CANCELLED"
+                    or not (
+                        previous["state"] == "CANCELLED"
+                        or (
+                            previous["state"] == "EXPIRED"
+                            and previous["collaboration_state"] == "CHANGES_REQUESTED"
+                        )
+                    )
                 ):
-                    raise GrantError("PREDECESSOR_MUST_BE_CANCELLED", 409)
+                    raise GrantError("PREDECESSOR_NOT_REPLACEABLE", 409)
                 if previous["requester_id"] != requester:
                     raise GrantError("PREDECESSOR_OWNER_MISMATCH", 403)
 
@@ -1562,7 +1568,10 @@ class Core:
             latest = self._load(conn, ident, actor)
             if not latest["predecessor_id"]:
                 raise GrantError("REVISION_COMPARISON_NOT_AVAILABLE", 409)
-            previous = self._load(conn, latest["predecessor_id"], actor)
+            # A new approver has authority over the replacement even if the
+            # prior request was assigned to a different approval group.
+            # Cross-request access is permitted only by verified lineage.
+            previous = self._load(conn, latest["predecessor_id"])
             if (
                 previous["integration_id"] != latest["integration_id"]
                 or previous["requester_id"] != latest["requester_id"]
@@ -1601,6 +1610,7 @@ class Core:
         if actor.kind != "human":
             raise GrantError("HUMAN_REQUIRED", 403)
         now = time.time()
+        expired = False
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
             row = self._load(conn, ident, actor)
@@ -1612,51 +1622,78 @@ class Core:
             if body.kind in ("REQUEST_INFO", "REQUEST_CHANGES", "INFO_RESPONSE"):
                 if row["state"] not in ("AWAITING", "HELD") or row["execution_id"]:
                     raise GrantError("COLLABORATION_NOT_ALLOWED", 409)
-                if self._expire(conn, row, now):
-                    raise GrantError("REQUEST_EXPIRED", 409)
-                if body.kind == "INFO_RESPONSE":
-                    if actor.id != row["requester_id"]:
-                        raise GrantError("REQUESTER_REQUIRED", 403)
-                    if progress != "INFO_REQUESTED":
-                        raise GrantError("COLLABORATION_RESPONSE_NOT_PENDING", 409)
-                    progress = "OPEN"
-                else:
-                    if actor.id == row["requester_id"] or not self._viewer_assignment(
-                        conn, row, actor, now
-                    )["viewer_can_decide"]:
-                        raise GrantError("ASSIGNED_APPROVER_REQUIRED", 403)
-                    if progress == "CHANGES_REQUESTED":
-                        raise GrantError("REPLACEMENT_REQUIRED", 409)
-                    if body.kind == "REQUEST_INFO" and not row["requester_id"]:
-                        raise GrantError("REQUESTER_UNAVAILABLE", 409)
-                    progress = (
-                        "INFO_REQUESTED"
-                        if body.kind == "REQUEST_INFO"
-                        else "CHANGES_REQUESTED"
+                expired = self._expire(conn, row, now)
+                if not expired:
+                    if body.kind == "INFO_RESPONSE":
+                        if actor.id != row["requester_id"]:
+                            raise GrantError("REQUESTER_REQUIRED", 403)
+                        if progress != "INFO_REQUESTED":
+                            raise GrantError("COLLABORATION_RESPONSE_NOT_PENDING", 409)
+                        progress = "OPEN"
+                    else:
+                        if actor.id == row["requester_id"] or not self._viewer_assignment(
+                            conn, row, actor, now
+                        )["viewer_can_decide"]:
+                            raise GrantError("ASSIGNED_APPROVER_REQUIRED", 403)
+                        if progress == "CHANGES_REQUESTED":
+                            raise GrantError("REPLACEMENT_REQUIRED", 409)
+                        if body.kind == "REQUEST_INFO" and not row["requester_id"]:
+                            raise GrantError("REQUESTER_UNAVAILABLE", 409)
+                        progress = (
+                            "INFO_REQUESTED"
+                            if body.kind == "REQUEST_INFO"
+                            else "CHANGES_REQUESTED"
+                        )
+            if not expired:
+                if not body.body.strip():
+                    raise GrantError("COMMENT_EMPTY", 422)
+                count = conn.execute(
+                    "SELECT count(*) FROM request_comments WHERE request_id=?", (ident,)
+                ).fetchone()[0]
+                if count >= 200:
+                    raise GrantError("COMMENT_LIMIT_REACHED", 409)
+                comment_id = uid()
+                conn.execute(
+                    """INSERT INTO request_comments(id,request_id,author_id,kind,body,created_at)
+                       VALUES(?,?,?,?,?,?)""",
+                    (comment_id, ident, actor.id, body.kind, body.body, now),
+                )
+                conn.execute(
+                    "UPDATE requests SET collaboration_state=?,revision=revision+1 WHERE id=?",
+                    (progress, ident),
+                )
+                if body.kind in ("REQUEST_INFO", "REQUEST_CHANGES"):
+                    # Queued approval reminders would mislead approvers when
+                    # they currently cannot decide. Already-in-flight SMTP is
+                    # not retractable; the transport revalidates before leasing.
+                    conn.execute(
+                        """UPDATE outbox SET state='SUPERSEDED',lease_token=NULL,
+                              lease_until=NULL,last_error=NULL
+                           WHERE request_id=? AND kind='email'
+                             AND event_type='reminder' AND state IN ('PENDING','FAILED')""",
+                        (ident,),
                     )
-            if not body.body.strip():
-                raise GrantError("COMMENT_EMPTY", 422)
-            count = conn.execute(
-                "SELECT count(*) FROM request_comments WHERE request_id=?", (ident,)
-            ).fetchone()[0]
-            if count >= 200:
-                raise GrantError("COMMENT_LIMIT_REACHED", 409)
-            comment_id = uid()
-            conn.execute(
-                """INSERT INTO request_comments(id,request_id,author_id,kind,body,created_at)
-                   VALUES(?,?,?,?,?,?)""",
-                (comment_id, ident, actor.id, body.kind, body.body, now),
-            )
-            conn.execute(
-                "UPDATE requests SET collaboration_state=?,revision=revision+1 WHERE id=?",
-                (progress, ident),
-            )
-            audit(
-                conn, ident, actor.id, "request.collaboration",
-                {"comment_id": comment_id, "kind": body.kind, "collaboration_state": progress},
-                now,
-            )
-            return self._project(conn, self._load(conn, ident))
+                elif body.kind == "INFO_RESPONSE":
+                    # Restart the reminder schedule after a requester response.
+                    conn.execute(
+                        "UPDATE requests SET next_reminder=? WHERE id=?",
+                        (now + row["reminder_seconds"], ident),
+                    )
+                audit(
+                    conn, ident, actor.id, "request.collaboration",
+                    {
+                        "comment_id": comment_id,
+                        "kind": body.kind,
+                        "collaboration_state": progress,
+                    },
+                    now,
+                )
+                result = self._project(conn, self._load(conn, ident))
+        if expired:
+            # _expire wrote audit, outbox and terminal state in the committed
+            # transaction. Raising inside it would roll all of that back.
+            raise GrantError("REQUEST_EXPIRED", 409)
+        return result
 
     def list_requests(
         self,
@@ -2157,6 +2194,7 @@ class Core:
                     continue
                 if (
                     row["state"] in ("AWAITING", "HELD")
+                    and row["collaboration_state"] == "OPEN"
                     and row["next_reminder"] <= now
                     and row["reminder_count"] < row["max_reminders"]
                 ):
@@ -2210,11 +2248,12 @@ class Core:
                 "CHANGES_REQUESTED": "REQUESTER_REVISION",
             }[row["collaboration_state"]]
         elif row["state"] == "APPROVED":
-            waiting_on = (
-                "EXECUTOR"
-                if row["execution_state"] == "NOT_STARTED"
-                else "EXECUTION_RESULT"
-            )
+            if row["execution_state"] == "NOT_STARTED":
+                waiting_on = "EXECUTOR"
+            elif row["execution_state"] in ("REPORTED_SUCCEEDED", "REPORTED_FAILED"):
+                waiting_on = "CLOSED"
+            else:
+                waiting_on = "EXECUTION_RESULT"
         visible_waiting = waiting_members if waiting_on == "APPROVERS" else []
         names = {}
         if visible_waiting:

@@ -130,6 +130,13 @@ Stop the old loopback process, take a new backup, run `check` and the candidate
 against an isolated copy before pointing a service at it. The default web path is
 resolved from the active source tree; remove a legacy hard-coded `web_root` only
 after verifying the new compiled assets. Run the same user scenarios on that build.
+Request information and change requests suspend decision-reminder scheduling.
+Queued reminder mail is superseded and the worker revalidates collaboration
+state before claiming a reminder. In-flight SMTP transport cannot be recalled.
+If a change-request deadline expires, the requester may create a new linked
+replacement without cancelling the now-expired original. Every replacement
+requires fresh action-bound approval; the original timeline remains immutable.
+
 Current development schema v8 contains versioned policy lifecycle/selectors,
 notification/event snapshots, per-approver decision ledgers, time-bounded delegation,
 group/user escalation, append-only request collaboration comments, and the separate

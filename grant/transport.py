@@ -134,7 +134,7 @@ class Worker:
                 if not row:
                     break
                 req = conn.execute(
-                    "SELECT r.state,r.revision,i.enabled FROM requests r JOIN integrations i ON i.id=r.integration_id WHERE r.id=?",
+                    "SELECT r.state,r.revision,r.collaboration_state,i.enabled FROM requests r JOIN integrations i ON i.id=r.integration_id WHERE r.id=?",
                     (row["request_id"],),
                 ).fetchone()
                 stale_outcome = (
@@ -143,7 +143,13 @@ class Worker:
                 stale_approval_email = (
                     row["kind"] == "email"
                     and row["event_type"] in ("requested", "reminder", "legacy")
-                    and req["state"] not in ("AWAITING", "HELD")
+                    and (
+                        req["state"] not in ("AWAITING", "HELD")
+                        or (
+                            row["event_type"] == "reminder"
+                            and req["collaboration_state"] != "OPEN"
+                        )
+                    )
                 )
                 if not req["enabled"] or stale_outcome or stale_approval_email:
                     conn.execute(

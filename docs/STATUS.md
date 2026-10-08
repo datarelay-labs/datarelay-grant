@@ -88,10 +88,17 @@ private Foundation Web read credential remains a separate approval gate.
 
 G3/G4 + G1/G2 non-force merged PR #41 candidate passed 160 Python/API,
 12 frontend and 10 actual browser journeys at exact source HEAD b6a434c.
-G5/G6 plus merged G0-G4 predecessor fixes pass 175 Python/API, 12 frontend,
-static/typecheck/production build and 13 actual Chromium journeys together
-on the resolved non-force merge source. Exact HEAD, GitHub CI/provenance
-and owner acceptance belong in Work Packet #42, not this source document.
+G5/G6 plus merged G0-G4 predecessor fixes passed 175 Python/API, 12 frontend,
+static/typecheck/production build and 13 actual Chromium journeys on earlier
+merged source. Five new PR #43 review issues were subsequently fixed:
+expired change-request linked resubmission, comparison visibility for a
+replacement approver, suppression of pending/reminder delivery during blocked
+collaboration, transactionally durable deadline expiry on stale comment
+submission, and terminal execution progress marking. Focused request and
+inbox regressions cover these five cases. Combined source has now passed
+180 Python/API cases, 12 frontend unit checks, static/typecheck/production
+build and 13 Chromium journeys (actual browser). Exact committed-head CI,
+release provenance and owner acceptance remain in Work Packet #42.
 
 Browser test sessions use disposable accounts and actual loopback SMTP/HTTP.
 These are not real DataRelay/Stellar integration or production evidence.

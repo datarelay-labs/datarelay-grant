@@ -219,3 +219,163 @@ def test_pending_information_excluded_from_approvers_need_decision_queue(env):
     assert responded.status_code == 201
     resumed = env.human("approver").get(f"/api/v1/requests/{row['id']}")
     assert resumed.json()["viewer_can_decide"] is True
+
+
+def test_expired_requested_changes_preserve_linked_resubmission(env):
+    import time
+
+    row = create(env)
+    response = post(
+        env, "approver", row["id"], "REQUEST_CHANGES",
+        "Change the target after verification", row["revision"],
+    )
+    assert response.status_code == 201, response.text
+    with env.db.transaction() as conn:
+        conn.execute(
+            "UPDATE requests SET deadline=? WHERE id=?", (time.time() - 5, row["id"])
+        )
+    expired = env.human("requester").get(f"/api/v1/requests/{row['id']}")
+    assert expired.status_code == 200
+    assert expired.json()["state"] == "EXPIRED"
+    assert expired.json()["collaboration_state"] == "CHANGES_REQUESTED"
+
+    replacement = env.human("requester").post(
+        "/api/v1/requests",
+        json=env.intake(
+            predecessor_id=row["id"],
+            action={
+                "kind": "service.restart",
+                "target": "revised-target",
+                "parameters": {"reason_code": 99},
+            },
+        ),
+    )
+    assert replacement.status_code == 202, replacement.text
+    successor = replacement.json()
+    assert successor["predecessor_id"] == row["id"]
+    assert successor["state"] == "AWAITING"
+    assert successor["execution_state"] == "NOT_STARTED"
+    assert successor["action_hash"] != row["action_hash"]
+    comparison = env.human("requester").get(
+        f"/api/v1/requests/{successor['id']}/comparison"
+    )
+    assert comparison.status_code == 200
+    assert comparison.json()["predecessor_state"] == "EXPIRED"
+
+
+def test_replacement_comparison_is_visible_to_new_approver_not_original_request(env):
+    row = create(env)
+    canceled = env.human("requester").post(
+        f"/api/v1/requests/{row['id']}/cancel",
+        json={"expected_revision": row["revision"], "reason": "Recreate"},
+    )
+    assert canceled.status_code == 200
+    replacement = env.human("requester").post(
+        "/api/v1/requests",
+        json=env.intake(
+            predecessor_id=row["id"],
+            action={
+                "kind": "service.restart",
+                "target": "different-service",
+                "parameters": {"reason_code": 1},
+            },
+        ),
+    )
+    assert replacement.status_code == 202, replacement.text
+    successor = replacement.json()
+    assigned = env.human("admin").post(
+        f"/api/v1/requests/{successor['id']}/reassign",
+        json={
+            "from_approver_id": env.users["approver"]["id"],
+            "to_approver_id": env.users["stranger"]["id"],
+            "expected_revision": successor["revision"],
+            "reason": "Different on-call team",
+        },
+    )
+    assert assigned.status_code == 200, assigned.text
+    new_approver = env.human("stranger")
+    assert new_approver.get(f"/api/v1/requests/{successor['id']}").status_code == 200
+    assert new_approver.get(f"/api/v1/requests/{row['id']}").status_code == 404
+    comparison = new_approver.get(
+        f"/api/v1/requests/{successor['id']}/comparison"
+    )
+    assert comparison.status_code == 200, comparison.text
+    assert comparison.json()["changes"]["action.target"] == {
+        "before": "test-service", "after": "different-service",
+    }
+
+
+def test_information_request_supersedes_queued_reminders_and_suppresses_new(env):
+    import time
+
+    row = create(env)
+    now = time.time()
+    with env.db.transaction() as conn:
+        current = conn.execute(
+            "SELECT * FROM requests WHERE id=?", (row["id"],)
+        ).fetchone()
+        env.core._mail_event(conn, current, now, "reminder")
+        conn.execute(
+            "UPDATE requests SET next_reminder=? WHERE id=?", (now - 2, row["id"])
+        )
+    asked = post(
+        env, "approver", row["id"], "REQUEST_INFO", "Need approval ticket",
+        row["revision"],
+    )
+    assert asked.status_code == 201, asked.text
+    env.core.maintenance()
+    with env.db.transaction(write=False) as conn:
+        reminders = conn.execute(
+            "SELECT state FROM outbox WHERE request_id=? AND event_type='reminder'",
+            (row["id"],),
+        ).fetchall()
+        assert len(reminders) == 1
+        assert reminders[0]["state"] == "SUPERSEDED"
+        next_reminder = conn.execute(
+            "SELECT next_reminder FROM requests WHERE id=?", (row["id"],)
+        ).fetchone()[0]
+        assert next_reminder < now
+
+    answered = post(
+        env, "requester", row["id"], "INFO_RESPONSE", "Ticket CRQ-001",
+        asked.json()["revision"],
+    )
+    assert answered.status_code == 201, answered.text
+    with env.db.transaction(write=False) as conn:
+        restarted = conn.execute(
+            "SELECT next_reminder FROM requests WHERE id=?", (row["id"],)
+        ).fetchone()[0]
+        assert restarted > now
+
+
+def test_comment_expiry_error_keeps_expiry_audit_and_notification(env):
+    import time
+
+    row = create(env)
+    with env.db.transaction() as conn:
+        conn.execute(
+            "UPDATE requests SET deadline=? WHERE id=?", (time.time() - 10, row["id"])
+        )
+    response = post(
+        env, "approver", row["id"], "REQUEST_INFO",
+        "This should not create a comment", row["revision"],
+    )
+    assert response.status_code == 409, response.text
+    assert response.json()["error"]["code"] == "REQUEST_EXPIRED"
+    with env.db.transaction(write=False) as conn:
+        state = conn.execute(
+            "SELECT state,revision FROM requests WHERE id=?", (row["id"],)
+        ).fetchone()
+        assert state["state"] == "EXPIRED"
+        assert state["revision"] > row["revision"]
+        assert conn.execute(
+            "SELECT count(*) FROM audit WHERE request_id=? AND action='request.expired'",
+            (row["id"],),
+        ).fetchone()[0] == 1
+        assert conn.execute(
+            "SELECT count(*) FROM outbox WHERE request_id=? AND event_type='expired'",
+            (row["id"],),
+        ).fetchone()[0] == 1
+        assert conn.execute(
+            "SELECT count(*) FROM request_comments WHERE request_id=?", (row["id"],)
+        ).fetchone()[0] == 0

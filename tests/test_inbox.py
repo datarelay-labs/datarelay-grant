@@ -223,3 +223,29 @@ def test_literal_search_terms_do_not_act_as_sql_wildcards(env):
     assert injection.json() == []
     assert requester.get("/api/v1/requests", params={"limit": 101}).status_code == 422
     assert requester.get("/api/v1/requests", params={"offset": -1}).status_code == 422
+
+
+def test_terminal_execution_progress_is_closed_not_waiting(env):
+    requester = env.human("requester")
+    approver = env.human("approver")
+    row = create(env, requester, title="Terminal execution")
+    approved = approver.post(
+        f"/api/v1/requests/{row['id']}/decision",
+        json={"decision": "APPROVED", "expected_revision": row["revision"]},
+    )
+    assert approved.status_code == 200, approved.text
+    claim = {"execution_id": "reported-execution-1", "action_hash": row["action_hash"]}
+    consumed = env.api.post(
+        f"/api/v1/requests/{row['id']}/consume", json=claim,
+    )
+    assert consumed.status_code == 200, consumed.text
+    in_progress = requester.get(f"/api/v1/requests/{row['id']}").json()
+    assert in_progress["approval_progress"]["waiting_on"] == "EXECUTION_RESULT"
+    reported = env.api.post(
+        f"/api/v1/requests/{row['id']}/result",
+        json={**claim, "status": "REPORTED_SUCCEEDED", "evidence": "isolated test"},
+    )
+    assert reported.status_code == 200, reported.text
+    after = requester.get(f"/api/v1/requests/{row['id']}").json()
+    assert after["execution_state"] == "REPORTED_SUCCEEDED"
+    assert after["approval_progress"]["waiting_on"] == "CLOSED"
