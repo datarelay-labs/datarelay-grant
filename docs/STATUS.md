@@ -73,8 +73,11 @@ capability remains whatever is present and tested at the committed candidate HEA
   requests. Full G0-G7 local verification on this worktree passed **187
   Python/API tests**, 12 frontend unit tests, static/typecheck/build, and **15
   real Chromium journeys** including two G7 operator/admin-boundary scenarios.
-  These are pre-commit development-worktree observations; exact-HEAD CI and
-  owner/release acceptance remain separate.
+  These are development-worktree observations; exact-HEAD CI and
+  owner/release acceptance remain separate. PR #45 review hardening now counts
+  only unresolved latest failed callbacks per request, not historical failures
+  subsequently followed by successful delivery. G7 focused regressions
+  including the recovery case passed on the corrected source.
 - Immutable action, explicit approve/hold/deny, expiry, bounded reminders,
   cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.

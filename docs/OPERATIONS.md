@@ -90,8 +90,10 @@ Unused approvals are still-approved requests not yet consumed.
 
 Integration observations include the last *outgoing callback transport
 acceptance* (HTTP delivery 2xx), never proof that the consumer executed an
-action. A failed callback, SMTP failure or UNKNOWN execution requires human
-reconciliation. The dashboard exposes no token, secret or destination URL and
+action. Current failed callback counts match the exception queue: only the
+latest callback state per request is unresolved, not historical failed attempts
+that later succeeded. A failed callback, SMTP failure or UNKNOWN execution
+requires human reconciliation. The dashboard exposes no token, secret or destination URL and
 has no action replay controls. A restored installation remains subject to the
 existing recovery-paused/explicit reconciliation procedure.
 

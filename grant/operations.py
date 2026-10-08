@@ -75,16 +75,24 @@ def operations_summary(db: Database, actor: Principal) -> dict:
                 (item["id"],),
             ).fetchone()
             delivery = conn.execute(
-                """SELECT
-                       MAX(CASE WHEN o.kind='webhook' AND o.state='DELIVERED'
-                         THEN o.delivered_at ELSE NULL END) AS accepted_at,
-                       SUM(CASE WHEN o.kind='webhook' AND o.state='FAILED'
-                         THEN 1 ELSE 0 END) AS failed_callbacks
+                """SELECT MAX(o.delivered_at) AS accepted_at
                    FROM outbox o JOIN requests r ON r.id=o.request_id
-                   WHERE r.integration_id=?""",
+                   WHERE r.integration_id=? AND o.kind='webhook'
+                     AND o.state='DELIVERED'""",
                 (item["id"],),
             ).fetchone()
-            failed_callbacks = int(delivery["failed_callbacks"] or 0)
+            # Match the request-level ops_webhook_failed queue: an earlier
+            # FAILED callback ceases to be an unresolved failure after a
+            # newer callback has been successfully delivered for that request.
+            failed_callbacks = conn.execute(
+                """SELECT COUNT(*) FROM requests r
+                   WHERE r.integration_id=? AND (
+                     SELECT o.state FROM outbox o
+                     WHERE o.request_id=r.id AND o.kind='webhook'
+                     ORDER BY o.created_at DESC,o.id DESC LIMIT 1
+                   )='FAILED'""",
+                (item["id"],),
+            ).fetchone()[0]
             accepted_at = delivery["accepted_at"]
             health = (
                 "disabled" if not item["enabled"]
