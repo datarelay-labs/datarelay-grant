@@ -226,3 +226,38 @@ def test_read_scope_is_neutral_in_credential_role_classification(env):
     assert observer.status_code == 200
     record = next(item for item in observer.json()["credentials"] if item["id"] == ident)
     assert record["role"] == "observer"
+
+
+def test_recovered_callback_health_reconciles_with_operations_queue(env):
+    import time
+
+    req = env.human("requester").post(
+        "/api/v1/requests", json=env.intake()
+    )
+    assert req.status_code == 202, req.text
+    item = req.json()
+    now = time.time()
+    with env.db.transaction() as conn:
+        for ident, state, at, delivered in (
+            ("old-callback-error", "FAILED", now - 30, None),
+            ("recovered-callback", "DELIVERED", now, now),
+        ):
+            conn.execute(
+                """INSERT INTO outbox(
+                  id,request_id,kind,event_type,revision,payload,destination,
+                  state,available_at,delivered_at,created_at)
+                  VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                (ident, item["id"], "webhook", "approval_outcome",
+                 item["revision"], "{}", "opaque-disposable",
+                 state, at, delivered, at),
+            )
+    a = env.human("admin")
+    diag = a.get(f"/api/v1/integrations/{env.integration['id']}/diagnostics")
+    ops = a.get("/api/v1/admin/operations")
+    assert diag.status_code == ops.status_code == 200
+    assert diag.json()["transport"]["health"] == "transport_accepted"
+    assert diag.json()["transport"]["failed_events"] == 0
+    current = ops.json()["integrations"][0]
+    assert current["health"] == diag.json()["transport"]["health"]
+    assert current["failed_callback_events"] == 0
+    assert a.get("/api/v1/requests", params={"view": "ops_webhook_failed"}).json() == []

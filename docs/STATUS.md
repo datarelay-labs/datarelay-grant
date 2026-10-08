@@ -83,8 +83,10 @@ capability remains whatever is present and tested at the committed candidate HEA
   issuance/revocation events, connection test history), explicit producer/executor
   purpose presets and a metadata-only planning manifest for safe configuration
   export. It never serializes callback destinations, credentials or mail text
-  and is not an executable backup or configuration import. Last accepted HTTP
-  callback is not proof of product execution. Real DataRelay/Stellar approval
+  and is not an executable backup or configuration import. Current failed
+  callback counts reconcile per-request latest webhook outcomes with G7;
+  request:read is neutral and does not trigger the mixed-credential warning.
+  Last accepted HTTP callback is not proof of product execution. Real DataRelay/Stellar approval
   integration and reversible validated import are NOT implemented.
 - Immutable action, explicit approve/hold/deny, expiry, bounded reminders,
   cancellation and a linked replacement request.

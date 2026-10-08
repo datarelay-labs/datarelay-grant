@@ -511,6 +511,7 @@ test('G8 integration health and safe export are visible without revealing creden
  await expect(page.getByRole('checkbox',{name:'request:read',exact:true})).toBeChecked();
  await expect(page.getByRole('checkbox',{name:'grant:consume',exact:true})).toBeChecked();
  await expect(page.getByRole('checkbox',{name:'result:write',exact:true})).toBeChecked();
+ await expect(page.getByText('Mixed integration credential',{exact:true})).toHaveCount(0);
  await expect(page.getByText('Integration health and activity',{exact:true})).toBeVisible();
  await page.getByLabel('Inspect integration health',{exact:true}).selectOption({label:'Isolated DataRelay fixture'});
  await expect(page.getByText('Credential roles',{exact:true})).toBeVisible();

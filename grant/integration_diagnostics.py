@@ -25,14 +25,23 @@ def diagnostics(db: Database, actor: Principal, ident: str) -> dict:
             (ident,),
         ).fetchone()
         transport = conn.execute(
-            """SELECT MAX(CASE WHEN o.kind='webhook' AND o.state='DELIVERED'
-                         THEN o.delivered_at END) AS accepted,
-                      COUNT(CASE WHEN o.kind='webhook' AND o.state='FAILED'
-                         THEN 1 END) AS failed_count
+            """SELECT MAX(o.delivered_at) AS accepted
                FROM outbox o JOIN requests r ON r.id=o.request_id
-               WHERE r.integration_id=?""",
+               WHERE r.integration_id=? AND o.kind='webhook'
+                 AND o.state='DELIVERED'""",
             (ident,),
         ).fetchone()
+        # Same unresolved-failure definition as G7's Operations summary:
+        # only the most recent webhook per request can remain failed.
+        failed_events = conn.execute(
+            """SELECT COUNT(*) FROM requests r
+               WHERE r.integration_id=? AND (
+                 SELECT o.state FROM outbox o
+                 WHERE o.request_id=r.id AND o.kind='webhook'
+                 ORDER BY o.created_at DESC,o.id DESC LIMIT 1
+               )='FAILED'""",
+            (ident,),
+        ).fetchone()[0]
         # Outbox available_at is the *next retry time*, not a failure timestamp.
         # Worker audits record real attempt time without exposing destination data.
         failed_at = conn.execute(
@@ -109,7 +118,7 @@ def diagnostics(db: Database, actor: Principal, ident: str) -> dict:
                     "event": event["action"],
                     "credential_id": detail.get("token_id"),
                 })
-        failure_events = int(transport["failed_count"] or 0)
+        failure_events = int(failed_events)
         health = (
             "disabled" if not row["enabled"]
             else "degraded" if failure_events

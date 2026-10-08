@@ -31,7 +31,7 @@ export function Integrations() {
   setPurpose('custom');
   setScopes(e.target.checked?[...scopes,scope]:scopes.filter(value=>value!==scope));
  }}/> {scope}</label>)}</div>
- {scopes.some(value=>['request:create','request:read'].includes(value))&&
+ {scopes.includes('request:create')&&
   scopes.some(value=>['grant:consume','result:write'].includes(value))&&
   <Alert tone="warning" title="Mixed integration credential">
    This credential combines producer and executor permissions. Use separate credentials for least privilege whenever practical.
