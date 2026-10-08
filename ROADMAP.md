@@ -383,212 +383,123 @@ formula handling, CSRF/Origin and safe import-preview misuse testing. This is
 source hardening, not proof of external consumer authorization; exact HEAD
 CI, browser, G11 and release qualification remain independent.
 
-### G10A — Patent-aligned email decision links and verification
+### G10A — Patent-aligned email decisions with default four-digit code
 
-Priority: **P0 — before G12 final 1.0 acceptance**  
-Status: **OWNER-ACCEPTED PRODUCT REQUIREMENT; implementation and acceptance pending.**
-The owner accepted this six-phase scope on 2026-10-08. Do not mistake roadmap
-acceptance for implemented behavior, merged branch, CI qualification, customer
-release or a live deployment.  
-Dependency: G2 notification templates, G3 multi-approval, G10 authorization/security.
-Scope: Email decision UX; this is not an inbound external-system callback or an
-execution trigger.
+Priority: **P0 before G12 final 1.0 acceptance**  
+Status: **OWNER-ACCEPTED (2026-10-08); NOT IMPLEMENTED / NOT QUALIFIED.**  
+Canonical requirements: `docs/PRODUCT_STANDARD.md` §§10.5–10.9.  
+Trust-boundary rationale: `docs/ADR_EMAIL_PIN_DECISION.md`.  
+Supporting vendor survey: `docs/APPROVAL_COMPETITIVE_REVIEW.md`.  
+Dependencies: G2 templates/outbox, G3 approval plans, G4 delegation and
+G10 security. Approval control remains separate from the external execution
+consumer and its outcome callback.
 
-Patent-origin intent (US 12,056,667 B1, description of Figures 13–16): the
-request email contains **separate response hyperlinks for Approve, Hold/Pending and
-Deny**. The patent embodiment routes a chosen hyperlink through a browser and
-records the response, then displays confirmation. This differs from the current
-Grant implementation, which emails one request-detail link and asks the signed-in
-user to choose and confirm a decision on the request page.
+#### Accepted default email decision journey
 
-Owner-accepted safe product adaptation (GET does not decide; explicit authenticated
-confirmation is mandatory):
+1. Grant sends a **separate email to each eligible approver**, containing
+   unique, unguessable **Approve / Hold / Deny** response-intent links (and
+   a neutral View Details link) plus one random **4-digit confirmation
+   number in the SAME approval email**, bound to that request, approver
+   assignment and issuance generation.
+2. The approver opens a chosen link. The GET/HEAD, including Safe Links
+   scanners and link previews, **only shows a generic read-only decision
+   landing and code input**. It neither sends new OTPs nor mutates
+   approval/execution state or discloses restricted request details.
+3. The approver enters the four-digit number. A protected PIN-validation
+   POST binds the link and code and grants only a short-lived,
+   action/assignee/outcome-scoped confirmation context; then the page
+   displays enough immutable request details for an informed decision.
+4. If that customer policy requires it, the same decision also requires
+   a **separately requested OTP** or **fresh MFA/identity step-up**.
+   OTP delivered to the same mailbox is *not MFA*. The default mode
+   **does not require Grant login**.
+5. The approver deliberately presses **Confirm Approve / Hold / Deny**.
+   A separately protected final POST revalidates the current assignment,
+   selected outcome, action, deadline, PIN context and optional higher
+   assurance, commits one human-intent event and records assurance.
+   Final approval never directly executes a connected system operation.
 
-- generate a distinct **Approve / Hold / Deny** decision-intent link for each assigned
-  approver and request snapshot in requested/reminder emails, including only relevant
-  choices; preserve the one-link request-detail path as a fallback;
-- **Uniqueness is mandatory:** allocate a separate cryptographically random,
-  unguessable, opaque decision-intent reference for every
-  `(request_id, approver_assignment_id, approval_step_id, outcome, action_fingerprint,
-  assignment_epoch, issuance_generation)` tuple. All three outcomes for one approver must have
-  different references; different approvers and different requests must never
-  share a reference. Store only a keyed digest/hash and authoritative server-side
-  tuple metadata, not raw tokens. A resend may explicitly rotate a generation
-  and revoke prior issued links; changes to action, assignment authority,
-  approval step or delegated approver invalidate the affected link bindings,
-  **but another approver's vote/state revision must not invalidate independently
-  eligible assignments**. Do not encode personal data, email addresses or
-  mutable permission claims in URLs;
-- the clicked email link's bound outcome must match the outcome committed by
-  the confirmation POST. Switching from Approve to Deny requires opening the
-  appropriate distinct intent or navigating to the neutral authenticated
-  request page and passing its explicit confirmation; client-provided outcome
-  fields cannot override a bound action link;
-- **Attribution is mandatory:** immutable audit evidence binds the request ID,
-  immutable action fingerprint, policy/request revision, approval step and
-  recipient/assignment identity to the *actual authenticated decision actor*,
-  including original approver vs authorized delegate, selected outcome,
-  verification mode/result, decision timestamp and decision event ID. An email
-  address, forwarded URL or embedded approver ID is not proof of who acted;
-- each confirmed response consumes its *selected* intent exactly once.
-  **Hold is nonterminal**, and must leave a safe path to subsequent Approve/Deny
-  within the original deadline. Terminal Approved/Denied revokes the actor's
-  unused sibling outcome links atomically. Preserve independent pending
-  approvers until the configured ALL/N-of-M/sequential/ANY resolution rules
-  close the relevant stage; after stage closure no-longer-authorized links
-  are invalid. Replayed/opened links do not create a second decision;
-- a GET/HEAD/prefetch/email-security-scanner opening a decision link **must only
-  display a read-only landing**, showing exact requested action, decision already
-  selected by the email link, current status and assigned identity; it must never
-  record a decision, issue an execution grant, consume a grant or send a new OTP;
-- only the assigned, currently authorized human (including valid delegation and
-  current approval step) may explicitly submit the displayed outcome through a
-  protected POST, reusing the existing transactional decision state machine with
-  expected revision, immutable action fingerprint, request/approver binding,
-  expiration, single-decision/idempotency and audit checks;
-- **Standard**: signed-in approver reviews the preselected outcome and confirms it;
-  **Verified**: optionally require an on-demand **six-digit email challenge** sent
-  separately after the approver explicitly requests it (default proposal: 5-minute
-  expiry, 3 attempts, bounded resend/throttling); **High Assurance**: require current
-  configured MFA/SSO step-up and fail closed if unavailable;
-- optionally assess a **four-digit code included in the original email** as a
-  same-message intent check only, not an identity factor or MFA; decide its inclusion
-  after UX/security testing, not as a substitute for the separate challenge;
-- administer the verification mode and thresholds per versioned approval policy;
-  emit distinct result-safe, system-generated decision URLs through notification
-  templates. Never expose reusable authenticators, raw challenge codes, action-link
-  internals or credentials in previews, APIs, audit exports or tracking/logging;
-  browser pages and responses use no-store/no-referrer precautions;
-- audit intent-link visits separately from verification attempts, final decisions
-  and any subsequent independent execution; expired, changed, delegated, already
-  decided, forwarded and replayed links fail closed without side effects.
+No-login email PIN confirms possession/control of the **recipient mailbox
+and email contents**, **NOT the specific named person's identity**:
+a forwarded or compromised email discloses both code and URLs.
+When no independent identity step-up occurred, audit records identify
+the *assigned recipient* and verification method `EMAIL_LINK_PIN`
+but must NOT claim that a particular person was authenticated. Verified
+person/delegate identities are recorded separately only when actually
+established. Customer policy can select OTP/MFA to improve assurance.
 
+Each response link is independently unique for
+`request × seat/approver × active step × chosen outcome × immutable action
+fingerprint × assignment epoch × issuance generation`. A normal vote
+increases mutable state revision without invalidating a different
+still-eligible reviewer's link. Terminal decision consumes its link and
+revokes its sibling choices, with each seat counting at most once.
+`HELD` is provisional and may later become Approved/Denied within
+the original business deadline.
 
-#### G10A approved boundary, unresolved product defaults and decisions
+**Parallel hold:** for ANY_ONE / ALL / N_OF_M, Hold affects **only that
+approver's seat**; other eligible approvers continue, and a satisfied
+threshold may authorize despite a held seat (ALL still requires all).
+**Sequential hold:** the current step's Hold **blocks all downstream
+steps**, which are neither activated nor mailed until the current
+step explicitly approves. A denial is terminal under existing 1.0
+behavior; changing denial-reason defaults is a separate open choice.
 
-**Approved product behavior** (2026-10-08): separate per-request/per-assignee/
-per-outcome unguessable links; email link preselects but never executes;
-side-effect-free anonymous GET/HEAD; signed-in authorized human confirms via
-protected POST; request/action/step/assignment identity binding; Hold
-provisional; receipt, decision and actual execution remain distinct; per-step
-individual delivery; Standard / Verified / High Assurance policy tiers; real
-two-person actual-email browser E2E. These are P0 for Grant 1.0.
+**Link expiration:** each customer chooses a default and may override
+per approval policy. Out-of-box **maximum validity is seven days** per
+issuance; actual expiry = min(request approval deadline, issued-at +
+customer-configured TTL). Shorter/longer customer-configured durations
+are supported within server-defined safe bounds. Reminder reuse is
+allowed while still valid; a deliberate reissue rotates links/code
+and invalidates superseded generation without extending the request
+deadline. TTL snapshots preserve in-flight behavior.
 
-**Owner choices still to settle before the named implementing phase** — proposed
-defaults are listed in `docs/PRODUCT_STANDARD.md` Section 10.9:
+**Customer policy modes (P0):**
 
-1. **New-policy verification default (G10A-3):** propose Standard for normal
-   authenticated internal approvals; require High Assurance for trusted
-   policy-classified privileged/production operations; Verified is optional.
-   Same-mailbox OTP is never MFA. Confirm whether normal approvals should
-   always require a separately sent email code.
-2. **Hold / deny / reason UX (G10A-0/2):** propose Hold suspends only its
-   approver seat, not unrelated valid reviewers or a satisfied N-of-M quorum;
-   any Deny is terminal under current 1.0 policy; require a short reason
-   for Deny, optional for Approve/Hold unless policy requires it. Confirm
-   whether a Hold should globally veto a quorum.
-3. **Link expiration / resend (G10A-2/4):** propose no validity beyond
-   request deadline, at most seven days per issuance, and authenticated
-   reissue for longer requests. Normal reminders reuse still-valid links;
-   explicit administrator reissue rotates/revokes generation. Confirm
-   desired default lifespan and operator behavior.
+| Mode | Decision proof | Customer control |
+| --- | --- | --- |
+| `EMAIL_PIN` **default** | Per-answer link + same-email four-digit code + explicit confirmation; no login | Normal use |
+| `EMAIL_PIN_PLUS_OTP` optional | Base proof plus separately requested short-lived OTP; same-email OTP is still not MFA | Per customer/policy |
+| `EMAIL_PIN_PLUS_MFA` optional | Base proof plus fresh independently authenticated MFA/SSO step-up | Per customer/policy and trusted risk/action classification |
 
-**Engineering verification, not owner approval needed for research:**
-confirm Foundation's fresh transaction-time MFA step-up surface before
-G10A-3; validate risk policy selectors are **trusted admin/integration
-authoritative fields** rather than requester-supplied downgradeable data;
-check shared-email-address users do not gain identity by mailbox possession;
-prove schema v8->v9 migration/rollback, link token secrecy in sealed outbox,
-and Safe Links scanner GET no mutation. If a missing SDK capability blocks
-High Assurance, report it and fail closed; do not silently weaken the tier.
-The original current G12 Work Packet #54 and real G11 external gates continue
-independently. No G12 HEAD freeze/release may claim G10A complete before
-G10A-5 evidence and a reconciled product candidate.
+4-digit code security relies on a high-entropy opaque link plus
+keyed protected PIN storage, rate limiting and maximum failed attempts,
+scoped one-use verification state, anti-CSRF/Origin checks, safe
+reissue/lockout recovery and monitoring. Never claim 4-digit
+in-email PIN alone prevents a stolen/forwarded-mail attacker.
+No untrusted requester-provided severity/risk label may lower
+an administrator-defined required verification tier.
 
-#### G10A implementation sequence: six bounded deliverables
+#### G10A implementation sequence — six bounded P0 deliverables
 
-The following six-phase sequence is the **owner-accepted 1.0 implementation
-roadmap**, not a claim of deployed behavior. Each outcome gets affected deterministic tests
-before advancing. Keep all mutations within the Grant owner repository and
-isolated development environments; do not pre-empt the actively running
-G12 QA worktree or perform an unapproved credential/production operation.
+| Phase | Delivery | Evidence/exit |
+| --- | --- | --- |
+| **G10A-0 — Versioned approval seats** | Durable assignment/step identity and epoch independent of mutable state revision, v8→v9-or-later migration with old-request compatibility, seat-local Hold vs sequential-step blocking | ALL/ANY_ONE/N_OF_M unaffected by other votes, SEQUENTIAL Hold prevents next stage, denial/quorum and Hold→Approve regression, rollback/restore valid |
+| **G10A-1 — Recipient mail fanout** | Each eligible approver independently receives HTML + text with 3 unique answer links and **their own 4-digit code**. Sequence stage activation and delegate/reassignment recipients handled, original one-link fallback retained | No bulk CC/shared URL, inactive stages not emailed, no PIN/link leaks in plain outbox/logs or template previews; real SMTP receipt measured |
+| **G10A-2 — PIN-scoped decision API/UI** | 256-bit opaque intents and protected binding/digests, GET/HEAD no state mutation, no-login PIN POST, bounded decision context, final explicit protected POST, terminal revocation and one-vote transaction | Mail scanners cannot decide; no login required for EMAIL_PIN; wrong/stolen link risks documented, rate limits/lockout/expiry/reissue, concurrent choices and forwarded/wrong-assignee cases tested |
+| **G10A-3 — Customer verification policy** | Tenant/installation defaults and policy override for EMAIL_PIN/EMAIL_PIN_PLUS_OTP/EMAIL_PIN_PLUS_MFA; trusted risk selector, requested OTP + fresh identity step-up and secret redaction | Customer can select code-only vs OTP/MFA; Same-email OTP not mislabelled MFA; missing mandatory MFA fails closed; old policy snapshot not silently downgraded |
+| **G10A-4 — Audit + operator lifecycle** | Persist intended recipient vs proven person (if any), issuance, Hold/revote, delegate, PIN/OTP assurance result, delivery and revoke/reissue actions; protected mail queue, backup/recovery and operational diagnostics | Audit accurately labels `EMAIL_LINK_PIN` rather than verified person; token/code absent from exports; restore and retries never resurrect unsafe links or duplicate human votes |
+| **G10A-5 — Actual Full User E2E** | Update repository-local user scenarios and surface reconciliation for recipient-specific email/4-digit code and optional OTP/MFA; perform direct human browser/mobile + two real mailbox passes, group and sequential Hold, stale links and actual execution separation | New frozen exact HEAD, independent direct two-person email/browser PASS with exact backend readback, affected deterministic tests then full qualification, independent G11 external Control/Stellar and owner release gates respected |
 
-| Phase / priority | Verifiable deliverable | Release-proof / exit criterion | Dependencies |
-| --- | --- | --- | --- |
-| **G10A-0 / P0: approval-state reconciliation** | Add a stable step/assignee assignment model; separate immutable action fingerprint and assignment epoch from mutable vote/state revision. Document current group denial and Hold semantics. Design v8->v9 additive migration, old-request compatibility, and rollback. | ALL/N-of-M/SEQUENTIAL 2-person votes do not invalidate other reviewers; Hold->Approve works; disabled/reassigned user cannot vote; migration/restore checks. | G3/G4 + G10 source |
-| **G10A-1 / P0: per-recipient delivery** | Generate individual emails/choices for each *currently eligible* approval seat; parallel quorum members receive distinct mail, sequential next step receives mail only upon activation, delegate/alternate/reassignment gets independently tracked notification. HTML with text fallback. | Same request with 3 approvers yields 3 non-CC mail deliveries × 3 different action links, every destination scoped; no inactive-stage mail; send/retry doesn't multiply seats or extend deadline. | G10A-0 + G2 |
-| **G10A-2 / P0: protected intent lifecycle** | 256-bit opaque per-outcome references; digest & lifecycle/expiry records; same-authorized-actor confirmation; read-only GET/HEAD/no preview mutation; action-bound atomic POST, sibling revocation only on terminal vote; original request detail fallback. | Scanner/prefetch/forwarded/wrong-user/stale/revoked/changed-choice/concurrent clicks cannot change decisions; two legitimate parallel approvers continue independently. | G10A-0/1 |
-| **G10A-3 / P0: policy-based verification** | Versioned Standard login+confirm, Verified *on-demand separate email* 6-digit single-factor check with bounded attempts/expiry, High Assurance fresh MFA step-up for risk-marked work. Same-mailbox 4-digit printable code remains an optional experimental UX, **not MFA or default gate**. | Verifiers bind to action+assignee+outcome, don't send on GET, cannot be replayed; fresh MFA required at decision time and failure is fail-closed; policy snapshots stable. | G10A-2 + Foundation authentication adapter |
-| **G10A-4 / P0: evidence + operator safety** | Append-only decision/intent events for intended recipient, actual actor, delegate, Hold history, revocation reason and delivery correlation. Encryption/redaction for actionable URLs in SMTP queue/backups; recipient delivery health, revoke/reissue, bounce/spam and Safe Links observability. | Admin can reconstruct who decided *which exact action* without exposing secrets; safe link lifecycle across resend, account disable, recovery and rollback; no secret-bearing plaintext outbox or exports. | G10A-1/2/3 + G9 |
-| **G10A-5 / P0: full qualification** | Extend canonical real-user tests (USER_SCENARIOS, SURFACE_RECONCILIATION, FULL_USER_E2E) for actual Gmail/Outlook mailbox handling, distinct approvers, proxy scanner and mobile OTP; verify external callback/consume remains independent. | Two brand-new direct authenticated real mailbox/browser persona passes on one exact HEAD; no unresolved actionable findings; full security/DB migration/restore/CI evidence; G11 Control/Stellar real external effect still its own gate. | G10A-0..4, G11/G12 qualification |
+**Required implementation corrections found in current source:**
+`_mail_event` sends to one representative `approver_id` despite group
+plans; `decide` mutates global revision after each vote; current
+`get` calls expiry mutation from GET; only neutral `request_url`
+is rendered; `outbox.payload` holds plaintext data; schema v8
+has no per-answer intent/PIN/seat-ledger structure. Preserve
+existing G0–G10 behavior and fail closed during additive migration.
+Existing R1 `/requests/{id}` login flow remains available for old
+requests and normal authenticated users.
 
-**Cross-cutting failure modes that must close before G10A PASS:**
-
-- `grant/core.py::_mail_event` currently sends requested/reminder to one
-  representative `row["approver_id"]`, even when the saved approval plan
-  contains ALL/N-of-M/ANY group members; fix using eligible recipient-aware
-  deliveries, not CC/shared tokens.
-- `grant/core.py::decide` changes global `revision` after each member's
-  vote and stores one current vote/actor in `request_decisions`; add an
-  append-only event ledger for Hold/revote/delegated actor without changing
-  safe aggregate semantics.
-- `grant/core.py::get` calls `_expire` while processing a GET. A
-  decision-link landing must be a side-effect-free read, and administrative
-  deadlines must be reconciled by explicit maintenance or protected POST.
-- The existing `outbox.payload` is plaintext JSON and existing email
-  renderer only includes `request_url`. No live decision URLs or codes
-  may be persisted in plaintext queues/logs or embedded in admin preview;
-  use sealed delivery payloads and cryptographic token digests.
-- Present schema v8 lacks dedicated decision-intent, assignment/step and
-  append-only decision event tables. Prefer a small additive migration and
-  preserve existing in-flight requests' neutral authenticated decision
-  experience rather than retroactively minting action links without consent.
-- Recovery/restore and resends must not resurrect expired/revoked links,
-  duplicate email approvals, or allow missing Foundation MFA to be bypassed.
-- External approval and email reply/Outlook actionable messages are NOT an
-  implicit exception to 1.0 authenticated-human decisions. Their separate
-  trust boundaries are post-1.0 candidate work, requiring explicit scope.
-
-**Security/UX choices:** user-facing business action text is revealed only
-after a current authenticated approver is authorized; an unauthenticated
-landing gives a generic sign-in prompt. Original recipient email and
-actually signed-in actor are distinct fields. PINs/OTP are not identity
-proof because they arrive at the same mailbox; *High Assurance* uses fresh
-real MFA. No open/GET/HEAD action, click-tracker receipt or outbound callback
-may create execution authority.
-
-**Competitive support:** `docs/APPROVAL_COMPETITIVE_REVIEW.md` documents
-18 products, precise official/community/marketing evidence classes, and
-OWASP/NIST/mail-client considerations. It is evidence for this roadmap,
-not authority for vendor-specific hidden token internals.
-
-Acceptance / regression evidence:
-
-- real rendered request/reminder email contains three *distinct* outcome links,
-  each opening a read-only, correctly preselected decision context; final UX mode
-  is documented rather than inferred from the original patent embodiment;
-- enforce and test unique references across **multiple requests, multiple
-  assigned approvers, all three outcomes, sequential steps, reminder reissues,
-  reassignment, delegation and request revisions**; no duplicates, guessable
-  IDs, information leaks or cross-approver/cross-outcome privilege escalation;
-- audit assertions prove actual logged-in actor and original intended
-  recipient are distinguishable (including valid delegation). Cross-user
-  forwarding and stale/replayed/sibling links must never attribute a false
-  approval or generate an additional decision;
-- crawler/antivirus HEAD/GET/unfurl, wrong identity, mail forwarding, stale
-  revision, expiry, multi-approver races, replay and challenge brute-force cannot
-  alter authorization or cause execution; no leaked codes/tokens;
-- successful explicit authenticated POST (and required challenge/MFA) records
-  exactly one attributed decision and preserves the existing signed outcome callback
-  and independent consume/result gate; failed or cancelled verification records none;
-- deterministic API/security tests plus **direct, real-email, two-person browser
-  E2E** on the same candidate; no fixture-only success used as mail receipt proof.
-
-Source: https://patents.google.com/patent/US12056667B1/en.
-This plan preserves the patent's per-answer email controls while avoiding
-GET-triggered approvals and unsafe mail-scanner side effects. Patent examples
-describe a historical workflow; they are not evidence of Grant implementation
-or a legal scope conclusion.
+**Open owner choices not silently inferred:** mandatory Deny reason
+(default proposal required for Deny), and whether active delegation
+makes only the delegate eligible or permits original **OR** delegate
+on one seat (never two votes). Risk-based OTP/MFA and link TTL
+are **customer settings**, not unresolved product-default questions.
+Technical validation still needed for actual Foundation
+transaction-time MFA API and secure mail queue/key lifecycle.
+If safety/tool restrictions block E2E-contract changes, document
+that gap honestly and do not claim G10A-5 or G12 PASS.
 
 ### G11 — DataRelay and Stellar external acceptance
 
