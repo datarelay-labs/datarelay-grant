@@ -141,6 +141,14 @@ executes arbitrary user code and no generic Runner. Tests with a fixture consume
 are contract evidence, not completion of R1-M3. That milestone requires one real
 DataRelay product to enforce this contract at its actual execution boundary.
 
+## G11 observed external acceptance readiness
+
+See docs/G11_EXTERNAL_ACCEPTANCE.md for the inspected dev-drcontrol replay
+candidate, external effect/ledger boundaries, accurate unresolved M3 and M4
+evidence gates and ownership. Grant consumer_guard is a pure non-executing
+integration helper, not a product-installed action guard, actual Stellar
+receiver or replacement for product-owned idempotency.
+
 ## Stellar Cyber configuration and acceptance
 
 Candidate outgoing path: Universal Webhook Responder, custom POST to Grant
