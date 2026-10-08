@@ -1,6 +1,6 @@
 # Grant 1.0 implementation status
 
-Updated: 2026-10-08. G3/G4 development lane: Issue #40 / PR #41; G0/G1/G2 predecessor: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
+Updated: 2026-10-08. G5/G6 implementation lane: Issue #42; G3/G4 predecessor: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
 Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
@@ -42,6 +42,15 @@ capability remains whatever is present and tested at the committed candidate HEA
   administrator reassignment (recorded voters cannot be silently replaced), user/group
   escalation with snapshotted targets, overdue/escalated request projections, and
   delegated work queue/administrator browser controls.
+- G5 development candidate: auditable requester/approver comments and questions,
+  explicit information requests that block approval until requester response,
+  change requests that require cancellation and fresh linked resubmission,
+  role-checked material-field comparison across revisions and preservation of
+  original immutable action/fingerprint. Migration v7 to v8 is additive and re-entry
+  tested. G5 browser collaboration and replacement-diff journeys are exercised;
+  this is not a release claim.
+- G6 is not complete: some existing approver/requester queue views and pagination
+  exist, but full server-side filtering/search and large-list evidence remain.
 - Immutable action, explicit approve/hold/deny, expiry, bounded reminders,
   cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.
@@ -62,9 +71,11 @@ The G3/G4 stacked development candidate builds on G1/G2 and has locally passed
 157 Python/API tests, 12 frontend unit cases, static and TypeScript checks,
 a production web build, and 9 real Playwright Chromium user journeys (including delegation creation/revocation
 and confirmed escalation/reassignment). Backend focused regressions also pass.
-These are development-worktree observations, not frozen exact-HEAD CI evidence;
-record authoritative complete counts and final commit after all code is tested
-and pushed in Work Packet #40. The browser administration journey still exercises
+These are predecessor development observations, now captured in Work Packet #40
+at exact committed/pushed head. G5 full Python/API regression (165 PASS), static checks,
+12 frontend units, TypeScript build and 10 real browser journeys passed on
+the current successor worktree. Exact-head CI and downstream real integrations
+remain separately gated in Work Packet #42 and #33. The browser administration journey still exercises
 Notification template-set preview/test send and Policy Draft -> Testing -> isolated
 test -> Activate -> runtime preview -> history.
 

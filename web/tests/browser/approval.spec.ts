@@ -96,6 +96,9 @@ test('requester cancels and creates a newly approved replacement through the UI'
  expect(row.predecessor_id).toBe(oldId);expect(row.state).toBe('AWAITING');expect(row.action.target).toBe('new-test-target');
  expect((await request.post('/api/v1/requests/'+newId+'/consume',{headers,data:{execution_id:crypto.randomUUID(),action_hash:row.action_hash}})).status()).toBe(409);
  await expect(page.getByRole('button',{name:oldId,exact:true})).toBeVisible();
+ await expect(page.getByText('Replacement revision comparison',{exact:true})).toBeVisible();
+ await expect(page.getByText('Changed action.target',{exact:true})).toBeVisible();
+ await expect(page.getByText('Previous authorization cannot be reused.',{exact:false})).toBeVisible();
  await context.close();
 });
 
@@ -272,4 +275,50 @@ test('G4 delegated substitute finds and approves request through My approvals',a
  expect(result.execution_state).toBe('NOT_STARTED');
  expect(result.decisions[0].actor_id).toBe(row.approver_id);
  await ownerContext.close();await substituteContext.close();
+});
+
+test('G5 two-user request for information pauses approval until response',async({browser,request})=>{
+ const f=fixture();
+ const requester=await browser.newContext(),approver=await browser.newContext();
+ const rp=await requester.newPage(),ap=await approver.newPage();
+ await login(rp,'requester');await login(ap,'approver');
+ await rp.getByRole('button',{name:'New request',exact:true}).click();
+ await rp.getByLabel('Approval profile',{exact:true}).selectOption(f.profile_id);
+ await rp.getByLabel('Request title',{exact:true}).fill('G5 collaboration browser request');
+ await rp.getByLabel('Target',{exact:true}).fill('isolated-target-for-info');
+ await rp.getByRole('button',{name:'Submit request',exact:true}).click();
+ await expect(rp.getByText('Exact action to be approved',{exact:true})).toBeVisible();
+ const id=rp.url().split('/').pop()!;
+ const headers={authorization:'Bearer '+f.token};
+ const original=await(await request.get('/api/v1/requests/'+id,{headers})).json();
+
+ await ap.goto('/requests/'+id);
+ await expect(ap.getByRole('button',{name:'Approve',exact:true})).toBeVisible();
+ await ap.getByLabel('Message purpose',{exact:true}).selectOption('REQUEST_INFO');
+ await ap.getByLabel('Message (up to 2000 characters; no credentials)',{exact:true}).fill('Can you confirm the change reference?');
+ await ap.getByRole('button',{name:'Confirm message',exact:true}).click();
+ await expect(ap.getByText('Waiting for requester information',{exact:true})).toBeVisible();
+ await expect(ap.getByRole('button',{name:'Approve',exact:true})).toHaveCount(0);
+ let current=await(await request.get('/api/v1/requests/'+id,{headers})).json();
+ expect(current.action_hash).toBe(original.action_hash);
+ expect(current.collaboration_state).toBe('INFO_REQUESTED');
+ expect(current.execution_state).toBe('NOT_STARTED');
+
+ await rp.getByRole('button',{name:'Refresh',exact:true}).click();
+ await expect(rp.getByText('Waiting for requester information',{exact:true})).toBeVisible();
+ await rp.getByLabel('Message purpose',{exact:true}).selectOption('INFO_RESPONSE');
+ await rp.getByLabel('Message (up to 2000 characters; no credentials)',{exact:true}).fill('Change reference: CRQ-1001');
+ await rp.getByRole('button',{name:'Confirm message',exact:true}).click();
+ await expect(rp.getByText('Provide requested information',{exact:true})).toBeVisible();
+ await ap.getByRole('button',{name:'Refresh',exact:true}).click();
+ await expect(ap.getByRole('button',{name:'Approve',exact:true})).toBeVisible();
+ await ap.getByRole('button',{name:'Approve',exact:true}).click();
+ await ap.getByRole('button',{name:'Confirm approved',exact:true}).click();
+ await expect(ap.getByText('Recorded. Delivery and execution are tracked separately.')).toBeVisible();
+ current=await(await request.get('/api/v1/requests/'+id,{headers})).json();
+ expect(current.state).toBe('APPROVED');
+ expect(current.action_hash).toBe(original.action_hash);
+ expect(current.execution_state).toBe('NOT_STARTED');
+ expect(current.comments.map((m:any)=>m.kind)).toEqual(['REQUEST_INFO','INFO_RESPONSE']);
+ await requester.close();await approver.close();
 });

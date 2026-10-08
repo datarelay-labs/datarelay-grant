@@ -74,7 +74,9 @@ CREATE TABLE IF NOT EXISTS requests (
  requester_id TEXT REFERENCES users(id), approver_id TEXT NOT NULL REFERENCES users(id), approval_plan TEXT NOT NULL DEFAULT '{}',
  title TEXT NOT NULL, action TEXT NOT NULL, action_hash TEXT NOT NULL, intake_hash TEXT NOT NULL,
  source TEXT NOT NULL, reason TEXT NOT NULL, predecessor_id TEXT REFERENCES requests(id),
- mail_template TEXT NOT NULL, state TEXT NOT NULL, decision TEXT, decision_actor TEXT, decision_at REAL,
+ mail_template TEXT NOT NULL, state TEXT NOT NULL,
+ collaboration_state TEXT NOT NULL DEFAULT 'OPEN' CHECK(collaboration_state IN ('OPEN','INFO_REQUESTED','CHANGES_REQUESTED')),
+ decision TEXT, decision_actor TEXT, decision_at REAL,
  revision INTEGER NOT NULL DEFAULT 1, created_at REAL NOT NULL, deadline REAL NOT NULL,
  grant_until REAL, grant_seconds INTEGER NOT NULL,
  next_reminder REAL NOT NULL, reminder_seconds INTEGER NOT NULL,
@@ -117,6 +119,15 @@ CREATE TABLE IF NOT EXISTS request_decisions (
  reason TEXT NOT NULL DEFAULT '', decided_at REAL NOT NULL,
  PRIMARY KEY(request_id,actor_id)
 );
+CREATE TABLE IF NOT EXISTS request_comments (
+ id TEXT PRIMARY KEY, request_id TEXT NOT NULL REFERENCES requests(id),
+ author_id TEXT NOT NULL REFERENCES users(id),
+ kind TEXT NOT NULL CHECK(kind IN ('COMMENT','QUESTION','REQUEST_INFO','REQUEST_CHANGES','INFO_RESPONSE')),
+ body TEXT NOT NULL CHECK(length(body) BETWEEN 1 AND 2000),
+ created_at REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS request_comments_by_request
+ ON request_comments(request_id,created_at,id);
 CREATE TABLE IF NOT EXISTS delegations (
  id TEXT PRIMARY KEY, delegator_id TEXT NOT NULL REFERENCES users(id),
  substitute_id TEXT NOT NULL REFERENCES users(id), starts_at REAL NOT NULL, ends_at REAL NOT NULL,
@@ -131,7 +142,7 @@ CREATE TABLE IF NOT EXISTS escalations (
  due_at REAL NOT NULL, fired_at REAL,
  CHECK ((target_user_id IS NOT NULL) != (target_group_id IS NOT NULL))
 );
-PRAGMA user_version=7;
+PRAGMA user_version=8;
 """
 
 
@@ -164,7 +175,7 @@ class Database:
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1, 2, 3, 4, 5, 6, 7):
+            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8):
                 raise RuntimeError("Unsupported database schema; do not downgrade this binary")
             conn.execute("PRAGMA journal_mode=WAL")
             if version == 1:
@@ -184,6 +195,9 @@ class Database:
                 version = 6
             if version == 6:
                 self._migrate_v6_to_v7(conn)
+                version = 7
+            if version == 7:
+                self._migrate_v7_to_v8(conn)
             conn.executescript(SCHEMA)
         private_file(path)
 
@@ -393,6 +407,22 @@ class Database:
         PRAGMA user_version=7;
         """)
 
+    @staticmethod
+    def _migrate_v7_to_v8(conn: sqlite3.Connection) -> None:
+        # Earlier schema test fixtures and interrupted upgrades can retain a
+        # newer column while presenting an older user_version. This step must
+        # be safe to re-enter instead of failing with "duplicate column".
+        columns = {
+            column[1] for column in conn.execute("PRAGMA table_info(requests)")
+        }
+        if "collaboration_state" not in columns:
+            conn.execute(
+                "ALTER TABLE requests ADD COLUMN collaboration_state TEXT NOT NULL "
+                "DEFAULT 'OPEN' CHECK(collaboration_state IN "
+                "('OPEN','INFO_REQUESTED','CHANGES_REQUESTED'))"
+            )
+        conn.execute("PRAGMA user_version=8")
+
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
         conn.row_factory = sqlite3.Row
@@ -429,7 +459,7 @@ class Database:
         with closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
-            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7):
+            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8):
                 raise ValueError("Backup schema mismatch")
             with closing(sqlite3.connect(destination)) as new:
                 old.backup(new)

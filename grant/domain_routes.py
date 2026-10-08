@@ -22,6 +22,7 @@ from .models import (
     Profile,
     ProfileUpdate,
     Reassign,
+    RequestComment,
     Result,
     Token,
 )
@@ -59,6 +60,14 @@ def register_domain(app, actor, human, reader):
     @app.get("/api/v1/requests/{ident}")
     def get_request(ident: str, request: Request):
         return core.get(reader(request), ident)
+
+    @app.get("/api/v1/requests/{ident}/comparison")
+    def request_comparison(ident: str, request: Request):
+        return core.compare_replacement(reader(request), ident)
+
+    @app.post("/api/v1/requests/{ident}/comments", status_code=201)
+    def comment(ident: str, body: RequestComment, request: Request):
+        return core.add_request_comment(human(request), ident, body)
 
     @app.post("/api/v1/requests/{ident}/decision")
     def decision(ident: str, body: Decision, request: Request):

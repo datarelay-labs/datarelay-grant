@@ -41,6 +41,7 @@ from .models import (
     Profile,
     ProfileUpdate,
     Reassign,
+    RequestComment,
     Result,
 )
 from .policy import (
@@ -1453,6 +1454,8 @@ class Core:
                     or previous["state"] != "CANCELLED"
                 ):
                     raise GrantError("PREDECESSOR_MUST_BE_CANCELLED", 409)
+                if previous["requester_id"] != requester:
+                    raise GrantError("PREDECESSOR_OWNER_MISMATCH", 403)
 
             values = {
                 "id": ident,
@@ -1511,7 +1514,12 @@ class Core:
         members = plan.get("members", [row["approver_id"]])
         represented = cls._delegated_from(conn, actor.id, members, now)
         assigned = bool(represented) and actor.id != row["requester_id"]
-        can_decide = assigned and row["state"] in ("AWAITING", "HELD") and row["deadline"] > now
+        can_decide = (
+            assigned
+            and row["state"] in ("AWAITING", "HELD")
+            and row["deadline"] > now
+            and row["collaboration_state"] == "OPEN"
+        )
         if can_decide:
             decisions = {
                 decision["actor_id"]: decision["decision"]
@@ -1544,6 +1552,107 @@ class Core:
                 **self._project(conn, current),
                 **self._viewer_assignment(conn, current, actor, now),
             }
+
+    def compare_replacement(self, actor: Principal, ident: str) -> dict:
+        with self.db.transaction(write=False) as conn:
+            latest = self._load(conn, ident, actor)
+            if not latest["predecessor_id"]:
+                raise GrantError("REVISION_COMPARISON_NOT_AVAILABLE", 409)
+            previous = self._load(conn, latest["predecessor_id"], actor)
+            if (
+                previous["integration_id"] != latest["integration_id"]
+                or previous["requester_id"] != latest["requester_id"]
+            ):
+                raise GrantError("REVISION_LINEAGE_INVALID", 409)
+
+            old_action = json.loads(previous["action"])
+            new_action = json.loads(latest["action"])
+            candidates = {
+                "title": (previous["title"], latest["title"]),
+                "reason": (previous["reason"], latest["reason"]),
+                "action.kind": (old_action["kind"], new_action["kind"]),
+                "action.target": (old_action["target"], new_action["target"]),
+                "action.parameters": (
+                    old_action["parameters"], new_action["parameters"],
+                ),
+                "source": (json.loads(previous["source"]), json.loads(latest["source"])),
+            }
+            changes = {
+                field: {"before": old, "after": new}
+                for field, (old, new) in candidates.items()
+                if old != new
+            }
+            return {
+                "request_id": latest["id"],
+                "predecessor_id": previous["id"],
+                "predecessor_state": previous["state"],
+                "action_changed": previous["action_hash"] != latest["action_hash"],
+                "fresh_approval_required": True,
+                "changes": changes,
+            }
+
+    def add_request_comment(
+        self, actor: Principal, ident: str, body: RequestComment
+    ) -> dict:
+        if actor.kind != "human":
+            raise GrantError("HUMAN_REQUIRED", 403)
+        now = time.time()
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            row = self._load(conn, ident, actor)
+            if row["revision"] != body.expected_revision:
+                raise GrantError("STALE_OR_FINAL_REQUEST", 409)
+            if self._paused(conn):
+                raise GrantError("RECOVERY_PAUSED", 409)
+            progress = row["collaboration_state"]
+            if body.kind in ("REQUEST_INFO", "REQUEST_CHANGES", "INFO_RESPONSE"):
+                if row["state"] not in ("AWAITING", "HELD") or row["execution_id"]:
+                    raise GrantError("COLLABORATION_NOT_ALLOWED", 409)
+                if self._expire(conn, row, now):
+                    raise GrantError("REQUEST_EXPIRED", 409)
+                if body.kind == "INFO_RESPONSE":
+                    if actor.id != row["requester_id"]:
+                        raise GrantError("REQUESTER_REQUIRED", 403)
+                    if progress != "INFO_REQUESTED":
+                        raise GrantError("COLLABORATION_RESPONSE_NOT_PENDING", 409)
+                    progress = "OPEN"
+                else:
+                    if actor.id == row["requester_id"] or not self._viewer_assignment(
+                        conn, row, actor, now
+                    )["viewer_can_decide"]:
+                        raise GrantError("ASSIGNED_APPROVER_REQUIRED", 403)
+                    if progress == "CHANGES_REQUESTED":
+                        raise GrantError("REPLACEMENT_REQUIRED", 409)
+                    if body.kind == "REQUEST_INFO" and not row["requester_id"]:
+                        raise GrantError("REQUESTER_UNAVAILABLE", 409)
+                    progress = (
+                        "INFO_REQUESTED"
+                        if body.kind == "REQUEST_INFO"
+                        else "CHANGES_REQUESTED"
+                    )
+            if not body.body.strip():
+                raise GrantError("COMMENT_EMPTY", 422)
+            count = conn.execute(
+                "SELECT count(*) FROM request_comments WHERE request_id=?", (ident,)
+            ).fetchone()[0]
+            if count >= 200:
+                raise GrantError("COMMENT_LIMIT_REACHED", 409)
+            comment_id = uid()
+            conn.execute(
+                """INSERT INTO request_comments(id,request_id,author_id,kind,body,created_at)
+                   VALUES(?,?,?,?,?,?)""",
+                (comment_id, ident, actor.id, body.kind, body.body, now),
+            )
+            conn.execute(
+                "UPDATE requests SET collaboration_state=?,revision=revision+1 WHERE id=?",
+                (progress, ident),
+            )
+            audit(
+                conn, ident, actor.id, "request.collaboration",
+                {"comment_id": comment_id, "kind": body.kind, "collaboration_state": progress},
+                now,
+            )
+            return self._project(conn, self._load(conn, ident))
 
     def list_requests(self, actor: Principal, limit: int = 100, offset: int = 0) -> list[dict]:
         self.maintenance()
@@ -1584,6 +1693,8 @@ class Core:
             require_current_authority(conn, actor)
             row = self._load(conn, ident, actor)
             now = time.time()
+            if row["collaboration_state"] != "OPEN":
+                raise GrantError("COLLABORATION_RESPONSE_REQUIRED", 409)
             plan = json.loads(row["approval_plan"] or "{}") or {
                 "mode": "SINGLE", "members": [row["approver_id"]], "required": 1
             }
@@ -1952,6 +2063,14 @@ class Core:
             (d["state"] for d in reversed(deliveries) if d["kind"] == "webhook"), "NOT_SCHEDULED"
         )
         if detail:
+            out["comments"] = [
+                dict(comment)
+                for comment in conn.execute(
+                    """SELECT id,author_id,kind,body,created_at FROM request_comments
+                       WHERE request_id=? ORDER BY created_at,id""",
+                    (row["id"],),
+                ).fetchall()
+            ]
             out["deliveries"] = deliveries
             out["timeline"] = [
                 {**dict(r), "detail": json.loads(r["detail"])}

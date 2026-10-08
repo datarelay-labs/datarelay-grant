@@ -86,6 +86,12 @@ class Decision(Input):
     reason: str = Field(default="", max_length=2000)
 
 
+class RequestComment(Input):
+    kind: Literal["COMMENT", "QUESTION", "REQUEST_INFO", "REQUEST_CHANGES", "INFO_RESPONSE"]
+    body: str = Field(min_length=1, max_length=2000)
+    expected_revision: int = Field(ge=1)
+
+
 class Cancel(Input):
     expected_revision: int = Field(ge=1)
     reason: str = Field(default="", max_length=2000)

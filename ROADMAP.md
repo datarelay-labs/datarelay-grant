@@ -492,7 +492,7 @@ External integration waits must not block independent product work.
 
 - Product requirements: `docs/PRODUCT_STANDARD.md`
 - Product roadmap and sequencing: this file
-- Actual implementation/evidence: `docs/STATUS.md` and active GitHub Work Packet #38
+- Actual implementation/evidence: `docs/STATUS.md` and current GitHub Work Packet #42 (G5/G6); predecessor #40 (G3/G4), #38 (G0-G2)
 - External-integration waiting evidence: GitHub Work Packet #33
 - UX/IA design guide: `docs/UX_INFORMATION_ARCHITECTURE.md`
 - Architecture/security details: `docs/ARCHITECTURE.md`

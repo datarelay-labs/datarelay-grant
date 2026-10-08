@@ -8,6 +8,7 @@ htmlcov/
 .dev/
 .deps/
 node_modules/
+web/node_modules
 web/dist/
 test-results/
 playwright-report/
