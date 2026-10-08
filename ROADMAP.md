@@ -670,16 +670,36 @@ barrier for nontechnical customers. Pilot cannot proceed as a
 general-use product without a **zero-copied-credentials guided
 enrollment** path; a technical/BYOC integration alone is not enough.
 
-- **Telegram recommendation:** Grant-operated/shared bot + per-user
-  deep-link `Start` enrollment, 1:1 actionable messages, optional
-  `startgroup` admin consent and redacted team status. A customer
-  should NEVER have to paste a BotFather token or chat ID in the
-  normal path. Dedicated customer-owned bots could use Telegram's
-  first-party Managed Bots API with explicit owner approval.
-  A shared cross-installation bot may require a NEW, separately
-  authorized hosted broker because Grant 1.0 is per-installation,
-  not multi-tenant SaaS; privacy/operations and customer permission
-  must be approved before building.
+- **Telegram Managed Bots contract feasibility (2026-10-09):
+  CONDITIONAL TECHNICAL GO, NOT LIVE E2E PASS.** First-party
+  Bot API 9.6 has `request_managed_bot`, `managed_bot`
+  update and `getManagedBotToken`; a Telegram customer
+  can confirm creation of their own bot without BotFather,
+  chat IDs, webhook URL or token copy. On authorized
+  `dev-atlas`, Telegram HTTPS was reachable and **12/12
+  no-credential protocol/onboarding mock tests passed**.
+  These do not prove a real Telegram bot was created.
+- **Preferred on-prem pilot architecture:** a Grant-operated
+  *one-time manager bot* (provider BotFather bootstrap required)
+  plus an authorized minimal token-provisioning service, a
+  customer-created managed *child bot*, private per-recipient
+  `Start` enrollment, and customer installation's direct
+  **outbound `getUpdates` long polling**. No routine Telegram
+  group or public customer webhook is required. A permanently
+  shared message-routing bot is a different SaaS architecture
+  and is not assumed or approved.
+- **Hard security/custody gate:** the manager bot can still
+  fetch and **rotate** customer child bot tokens. Passing a
+  copy to the customer does NOT necessarily remove Grant
+  provider control; permanent manager unbinding has not
+  been verified. Need explicit provider authority, secret
+  handling/revocation and regulated-customer consent.
+  Native `restricted` Managed Bot access limits extra
+  users to 10; larger groups require tested Grant-enforced
+  enrollment, not a false Telegram-side native allowlist.
+  Provider central provisioning and client Telegram account
+  creation are unavoidable trusted steps, although customer
+  API/token/group configuration can be eliminated.
 - **WhatsApp recommendation:** use Meta Embedded Signup or a licensed
   BSP's `Connect with Facebook` flow for a customer-authorized
   business/phone number, without raw keys/webhook setup exposed.
@@ -711,7 +731,7 @@ to operate a central messenger SaaS relay.
 | --- | --- | --- |
 | **M0: Demand validation (post-1.0)** | Interview 5–10 SOC/MSSP/enterprise prospects about current approval channel, on-call urgency, trusted identity, cross-border restrictions and willingness to pilot/pay. | Two or more committed design partners for chosen channel. Product popularity alone is not proof of paid demand. |
 | **M1: Channel-independent decision adapter (1.1 candidate)** | Notification/intent/ack contract for messenger callbacks, current assignment+step+recipient binding, authenticated provider identity enrollment, policy-based verification, complete audit and fallback to email. | Wrong actor/group, replay, policy step, delegation, cross-channel duplicate vote and external execution-separation tests. |
-| **M2: Telegram SOC/MSSP pilot (1.1 candidate)** | Bot message with Approve / Hold / Deny + separate final confirmation, in-chat for eligible enrolled people where safe; 1:1 by default, optional redacted group alert, final answer/status returned to chat. | Real Telegram bot messages and signed webhook callbacks, two independently bound approvers and one delegate, wrong user, stale/cancelled, quorum, concurrency and email fallback. |
+| **M2: Telegram SOC/MSSP pilot (1.1 candidate)** | One-time provider manager bootstrap and user-owned managed child bot created via Telegram consent, securely delivered to an isolated customer installation; child bot receives outbound polling and routes private Approve/Hold/Deny with explicit confirmation and status acknowledgment. | **Actual** newbot confirmation/update, manager `getManagedBotToken`, token handoff, `getMe`, outbound `getUpdates`, two approvers+delegate without manual token/chat ID/webhook, denial/cancel/revocation, manager-custody approval, poll update replay/race, email fallback and no direct execution. |
 | **M3: WhatsApp Business pilot (1.1/1.2 conditional)** | Interactive/templated WhatsApp requests, three answer buttons, result acknowledgement, opt-in, approved templates/24h-window and message-price management, phone-to-assignee enrollment. | An overseas/partner customer pilot, Meta Business permissions, per-market cost/consent check, verified webhook and real phone E2E. |
 | **M4: Enterprise and Korea (1.2+ conditional)** | Evaluate Slack, Microsoft Teams, KakaoWork/KakaoTalk-specific adapters based on actual customer organizations and supported identity/approval UI. | One genuine design partner and platform approval/integration contract per additional channel; no indiscriminate connector expansion. |
 
@@ -726,6 +746,15 @@ messages require redaction and explicit eligible-user restriction.
 The accepted 1.0 no-login email-link + four-digit code policy
 remains unchanged and available as fallback. Customer policy
 selects additional OTP/MFA for important operations.
+
+**Remaining proof:** user-owned Telegram account and a real
+provider manager bot enabled in BotFather are necessary to
+complete the actual Managed Bot creation/token exchange.
+Official API reachability and 12 mocked contract tests alone
+cannot establish product usability or exclusive token custody.
+If central provider token control is unacceptable, this
+architecture is a **NO-GO** for security-sensitive deployments
+until a proven unlink/owner-controlled custody model is found.
 
 **Decision status:** research candidate only; M0–M4 are NOT
 G10A or G12 release blockers, not committed 1.1 delivery promises,
