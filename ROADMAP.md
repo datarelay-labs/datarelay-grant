@@ -651,6 +651,45 @@ Prioritize from actual use rather than speculative breadth:
 - policy analytics and approval bottleneck reporting;
 - AI-assisted policy explanation and request summarization with no approval authority.
 
+### Messaging approvals — post-1.0 research candidate (NOT ACCEPTED)
+
+User example: a SOC/MSSP case is delivered to Telegram/WhatsApp with
+Approve / Deny / Deferred buttons, comments and an outcome
+acknowledgement. Competitive documentation confirms **n8n** provides
+Telegram in-chat approval and WhatsApp approval/wait-for-response,
+**Workato** and **Microsoft Teams** provide enterprise chat approval,
+and **KakaoWork** supports mobile business approval. Details, platform
+limits and source confidence:
+`docs/MESSAGING_APPROVAL_CHANNEL_RESEARCH.md` (2026-10-09).
+
+**Candidate channel sequence, pending owner scope and customer demand:**
+
+| Milestone | Outcome | Gating evidence |
+| --- | --- | --- |
+| **M0: Demand validation (post-1.0)** | Interview 5–10 SOC/MSSP/enterprise prospects about current approval channel, on-call urgency, trusted identity, cross-border restrictions and willingness to pilot/pay. | Two or more committed design partners for chosen channel. Product popularity alone is not proof of paid demand. |
+| **M1: Channel-independent decision adapter (1.1 candidate)** | Notification/intent/ack contract for messenger callbacks, current assignment+step+recipient binding, authenticated provider identity enrollment, policy-based verification, complete audit and fallback to email. | Wrong actor/group, replay, policy step, delegation, cross-channel duplicate vote and external execution-separation tests. |
+| **M2: Telegram SOC/MSSP pilot (1.1 candidate)** | Bot message with Approve / Hold / Deny + separate final confirmation, in-chat for eligible enrolled people where safe; 1:1 by default, optional redacted group alert, final answer/status returned to chat. | Real Telegram bot messages and signed webhook callbacks, two independently bound approvers and one delegate, wrong user, stale/cancelled, quorum, concurrency and email fallback. |
+| **M3: WhatsApp Business pilot (1.1/1.2 conditional)** | Interactive/templated WhatsApp requests, three answer buttons, result acknowledgement, opt-in, approved templates/24h-window and message-price management, phone-to-assignee enrollment. | An overseas/partner customer pilot, Meta Business permissions, per-market cost/consent check, verified webhook and real phone E2E. |
+| **M4: Enterprise and Korea (1.2+ conditional)** | Evaluate Slack, Microsoft Teams, KakaoWork/KakaoTalk-specific adapters based on actual customer organizations and supported identity/approval UI. | One genuine design partner and platform approval/integration contract per additional channel; no indiscriminate connector expansion. |
+
+**No direct execution via a chat button:** all messenger actions
+reuse Grant's authoritative per-seat state machine (one represented
+seat = one terminal vote across ALL delivery channels) and the
+external action-bound consume/result protocol. Received chat
+callbacks are **decision intent** only, not automatically an
+independently verified human or a privileged business execution.
+Sensitive requests default to private/direct messages; group
+messages require redaction and explicit eligible-user restriction.
+The accepted 1.0 no-login email-link + four-digit code policy
+remains unchanged and available as fallback. Customer policy
+selects additional OTP/MFA for important operations.
+
+**Decision status:** research candidate only; M0–M4 are NOT
+G10A or G12 release blockers, not committed 1.1 delivery promises,
+and no customer demand size, Telegram/WhatsApp API integration,
+source change, real messenger E2E or channel release is asserted.
+Decide go/no-go after customer interviews and the 1.0 gates.
+
 ## Explicit non-goals
 
 Grant 1.0 does not include:
