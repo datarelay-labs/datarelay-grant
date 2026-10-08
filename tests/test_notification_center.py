@@ -105,7 +105,7 @@ def test_template_set_safe_variables_preview_snapshot_and_event_delivery(env):
             (row["id"],),
         ).fetchone()
     assert requested["event_type"] == "requested"
-    requested_payload = json.loads(requested["payload"])
+    requested_payload = env.settings.unseal(requested["payload"])
     assert requested_payload["subject"] == "[Grant requested] Notify service"
     assert requested_payload["brand_name"] == "Grant Operations"
     assert requested_payload["sender_display_name"] == "Grant Approvals"

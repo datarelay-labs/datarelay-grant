@@ -100,7 +100,12 @@ CREATE TABLE IF NOT EXISTS outbox (
  revision INTEGER NOT NULL, payload TEXT NOT NULL, destination TEXT NOT NULL,
  state TEXT NOT NULL DEFAULT 'PENDING', attempts INTEGER NOT NULL DEFAULT 0,
  available_at REAL NOT NULL, lease_token TEXT, lease_until REAL, last_error TEXT,
- delivered_at REAL, created_at REAL NOT NULL
+ delivered_at REAL, created_at REAL NOT NULL,
+ sealed_payload INTEGER NOT NULL DEFAULT 0 CHECK(sealed_payload IN (0,1)),
+ recipient_id TEXT REFERENCES users(id),
+ approval_assignment_id TEXT,
+ delegation_id TEXT,
+ issuance_id TEXT
 );
 CREATE INDEX IF NOT EXISTS outbox_ready ON outbox(state, available_at);
 CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, hits INTEGER NOT NULL, until REAL NOT NULL);
@@ -131,6 +136,35 @@ CREATE TABLE IF NOT EXISTS approval_assignments (
  UNIQUE(request_id,position), UNIQUE(request_id,approver_id)
 );
 CREATE INDEX IF NOT EXISTS approval_assignments_user ON approval_assignments(approver_id,request_id);
+CREATE TABLE IF NOT EXISTS decision_issuances (
+ id TEXT PRIMARY KEY, request_id TEXT NOT NULL REFERENCES requests(id),
+ approval_assignment_id TEXT NOT NULL REFERENCES approval_assignments(id),
+ recipient_id TEXT NOT NULL REFERENCES users(id),
+ recipient_email_digest TEXT NOT NULL,
+ delegation_id TEXT REFERENCES delegations(id),
+ generation INTEGER NOT NULL, assignment_epoch INTEGER NOT NULL,
+ pin_digest TEXT NOT NULL,
+ failed_attempts INTEGER NOT NULL DEFAULT 0,
+ state TEXT NOT NULL DEFAULT 'ACTIVE' CHECK(state IN ('ACTIVE','LOCKED','REVOKED','CONSUMED')),
+ issued_at REAL NOT NULL, expires_at REAL NOT NULL,
+ UNIQUE(approval_assignment_id,recipient_id,generation)
+);
+CREATE INDEX IF NOT EXISTS decision_issuances_request ON decision_issuances(request_id,state);
+CREATE TABLE IF NOT EXISTS decision_intents (
+ token_digest TEXT PRIMARY KEY,
+ issuance_id TEXT NOT NULL REFERENCES decision_issuances(id),
+ outcome TEXT NOT NULL CHECK(outcome IN ('APPROVED','HELD','DENIED')),
+ approval_step_id TEXT NOT NULL, assignment_epoch INTEGER NOT NULL,
+ action_hash TEXT NOT NULL, expires_at REAL NOT NULL,
+ used_at REAL
+);
+CREATE INDEX IF NOT EXISTS decision_intents_issuance ON decision_intents(issuance_id);
+CREATE TABLE IF NOT EXISTS decision_confirmations (
+ context_digest TEXT PRIMARY KEY,
+ intent_digest TEXT NOT NULL REFERENCES decision_intents(token_digest),
+ expires_at REAL NOT NULL, created_at REAL NOT NULL, consumed_at REAL
+);
+CREATE INDEX IF NOT EXISTS decision_confirmations_intent ON decision_confirmations(intent_digest);
 CREATE TABLE IF NOT EXISTS request_comments (
  id TEXT PRIMARY KEY, request_id TEXT NOT NULL REFERENCES requests(id),
  author_id TEXT NOT NULL REFERENCES users(id),
@@ -154,7 +188,7 @@ CREATE TABLE IF NOT EXISTS escalations (
  due_at REAL NOT NULL, fired_at REAL,
  CHECK ((target_user_id IS NOT NULL) != (target_group_id IS NOT NULL))
 );
-PRAGMA user_version=9;
+PRAGMA user_version=10;
 """
 
 
@@ -187,7 +221,7 @@ class Database:
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9):
+            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
                 raise RuntimeError("Unsupported database schema; do not downgrade this binary")
             conn.execute("PRAGMA journal_mode=WAL")
             if version == 1:
@@ -213,6 +247,9 @@ class Database:
                 version = 8
             if version == 8:
                 self._migrate_v8_to_v9(conn)
+                version = 9
+            if version == 9:
+                self._migrate_v9_to_v10(conn)
             conn.executescript(SCHEMA)
         private_file(path)
 
@@ -493,6 +530,54 @@ class Database:
                     )
         conn.execute("PRAGMA user_version=9")
 
+    @staticmethod
+    def _migrate_v9_to_v10(conn: sqlite3.Connection) -> None:
+        # v9 approvals stay authenticated-only until explicit new issuance.
+        current = {column[1] for column in conn.execute("PRAGMA table_info(outbox)")}
+        for name, definition in (
+            ("sealed_payload", "INTEGER NOT NULL DEFAULT 0"),
+            ("recipient_id", "TEXT REFERENCES users(id)"),
+            ("approval_assignment_id", "TEXT"),
+            ("delegation_id", "TEXT"),
+            ("issuance_id", "TEXT"),
+        ):
+            if name not in current:
+                conn.execute(f"ALTER TABLE outbox ADD COLUMN {name} {definition}")
+        conn.executescript('''
+        CREATE TABLE IF NOT EXISTS decision_issuances (
+         id TEXT PRIMARY KEY, request_id TEXT NOT NULL REFERENCES requests(id),
+         approval_assignment_id TEXT NOT NULL REFERENCES approval_assignments(id),
+         recipient_id TEXT NOT NULL REFERENCES users(id),
+         recipient_email_digest TEXT NOT NULL,
+         delegation_id TEXT REFERENCES delegations(id),
+         generation INTEGER NOT NULL, assignment_epoch INTEGER NOT NULL,
+         pin_digest TEXT NOT NULL, failed_attempts INTEGER NOT NULL DEFAULT 0,
+         state TEXT NOT NULL DEFAULT 'ACTIVE'
+           CHECK(state IN ('ACTIVE','LOCKED','REVOKED','CONSUMED')),
+         issued_at REAL NOT NULL, expires_at REAL NOT NULL,
+         UNIQUE(approval_assignment_id,recipient_id,generation)
+        );
+        CREATE INDEX IF NOT EXISTS decision_issuances_request
+         ON decision_issuances(request_id,state);
+        CREATE TABLE IF NOT EXISTS decision_intents (
+         token_digest TEXT PRIMARY KEY,
+         issuance_id TEXT NOT NULL REFERENCES decision_issuances(id),
+         outcome TEXT NOT NULL CHECK(outcome IN ('APPROVED','HELD','DENIED')),
+         approval_step_id TEXT NOT NULL, assignment_epoch INTEGER NOT NULL,
+         action_hash TEXT NOT NULL, expires_at REAL NOT NULL, used_at REAL
+        );
+        CREATE INDEX IF NOT EXISTS decision_intents_issuance
+         ON decision_intents(issuance_id);
+        CREATE TABLE IF NOT EXISTS decision_confirmations (
+         context_digest TEXT PRIMARY KEY,
+         intent_digest TEXT NOT NULL REFERENCES decision_intents(token_digest),
+         expires_at REAL NOT NULL, created_at REAL NOT NULL, consumed_at REAL
+        );
+        CREATE INDEX IF NOT EXISTS decision_confirmations_intent
+         ON decision_confirmations(intent_digest);
+        PRAGMA user_version=10;
+        ''')
+
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
         conn.row_factory = sqlite3.Row
@@ -529,7 +614,7 @@ class Database:
         with closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
-            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9):
+            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10):
                 raise ValueError("Backup schema mismatch")
             with closing(sqlite3.connect(destination)) as new:
                 old.backup(new)

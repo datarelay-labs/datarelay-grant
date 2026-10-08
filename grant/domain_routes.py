@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from fastapi import Query, Request
+from fastapi import Query, Request, Response
 
 from .integration_diagnostics import configuration_manifest, diagnostics
 from .models import (
@@ -10,12 +10,15 @@ from .models import (
     Cancel,
     Consume,
     Decision,
+    DecisionReissue,
     Delegation,
     EmailTemplate,
     EmailTemplateUpdate,
     Escalation,
     Intake,
     Integration,
+    IntentConfirmation,
+    IntentPin,
     NotificationBrandingUpdate,
     NotificationPreview,
     NotificationTemplateSet,
@@ -33,6 +36,44 @@ from .models import (
 
 def register_domain(app, actor, human, reader):
     core, auth, worker = app.state.core, app.state.auth, app.state.worker
+
+    # Scoped mailbox capabilities are deliberately separate from actor/session
+    # auth, account APIs, and the external grant consume/result boundary.
+    def require_decision_origin(request: Request) -> None:
+        if request.headers.get("origin") != app.state.settings.origin:
+            from .errors import GrantError
+            raise GrantError("DECISION_ORIGIN_REQUIRED", 403)
+
+    @app.get("/api/v1/decision-intents/{token}")
+    def preview_decision_link(token: str):
+        from .decision_links import DecisionLinks
+        return DecisionLinks(core.db, core.settings).preview(token)
+
+    @app.head("/api/v1/decision-intents/{token}")
+    def head_decision_link(token: str):
+        from .decision_links import DecisionLinks
+        DecisionLinks(core.db, core.settings).preview(token)
+        return Response(status_code=204)
+
+    @app.post("/api/v1/decision-intents/{token}/verify")
+    def verify_decision_pin(token: str, body: IntentPin, request: Request):
+        from .decision_links import DecisionLinks
+        require_decision_origin(request)
+        return DecisionLinks(core.db, core.settings).verify(
+            token, body.pin, request.client.host if request.client else "unknown",
+        )
+
+    @app.post("/api/v1/decision-intents/{token}/confirm")
+    def confirm_decision_pin(token: str, body: IntentConfirmation, request: Request):
+        from .decision_links import DecisionLinks
+        require_decision_origin(request)
+        return DecisionLinks(core.db, core.settings).confirm(
+            token, body.confirmation_token, body.reason,
+        )
+
+    @app.post("/api/v1/admin/requests/{ident}/decision-links/reissue")
+    def admin_reissue_decision_links(ident: str, body: DecisionReissue, request: Request):
+        return core.reissue_decision_mail(human(request), ident, body)
 
     @app.get("/api/v1/delegations")
     def delegations(request: Request):

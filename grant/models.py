@@ -86,6 +86,20 @@ class Decision(Input):
     reason: str = Field(default="", max_length=2000)
 
 
+class DecisionReissue(Input):
+    recipient_user_id: str = Field(min_length=1, max_length=100)
+    reason: str = Field(min_length=1, max_length=1000)
+
+
+class IntentPin(Input):
+    pin: str = Field(min_length=4, max_length=4, pattern=r"^[0-9]{4}$")
+
+
+class IntentConfirmation(Input):
+    confirmation_token: str = Field(min_length=32, max_length=100)
+    reason: str = Field(default="", max_length=2000)
+
+
 class RequestComment(Input):
     kind: Literal["COMMENT", "QUESTION", "REQUEST_INFO", "REQUEST_CHANGES", "INFO_RESPONSE"]
     body: str = Field(min_length=1, max_length=2000)

@@ -5,6 +5,31 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G10A backend-only implementation lane (2026-10-09)
+
+In the isolated feat/grant-1.0-g10a-backend branch, G10A-0 now has
+durable v9 approval seats/steps/assignment epochs independent of ordinary
+request revision, non-exclusive original/delegate voting for one seat,
+seat-local parallel Hold, sequential step blocking, and versioned
+optional/required Deny reason with request-time policy snapshot.
+
+G10A-1 and **backend-only G10A-2** additionally have additive v10
+protected email issuance: recipient-specific plain+HTML messages, independently
+generated Approve/Hold/Deny links and random four-digit PIN, sealed SMTP
+outbox, read-only GET/HEAD, bounded PIN-verification POST, short-lived
+single-use decision confirmation POST, atomic sibling revocation, five-attempt
+PIN lockout, authenticated administrative reissue, delegation/email-change
+revocation checks, and recovery-paused backup/restore. A same-email PIN is
+**not MFA** or independent proof of an identified person; request decision
+attribution keeps verified_person_id unset for that assurance tier.
+
+This is not a completed email decision product experience: no matching
+passwordless decision Web screen is implemented in this backend lane; no
+real external mailbox delivery or direct two-person Full User E2E has passed.
+Per-customer/per-policy OTP and genuine fresh MFA, trusted risk selection,
+end-to-end actor evidence and complete operations/release gates remain
+G10A-3/4/5 work. This branch is not released or accepted.
+
 ## Product direction
 
 The accepted target is now **Grant 1.0**, governed by `docs/PRODUCT_STANDARD.md` and

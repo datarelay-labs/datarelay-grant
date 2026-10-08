@@ -317,7 +317,7 @@ System-level notification branding owns product name, sender display name, logo 
 basic visual identity. Policy-specific content can override text, not security-owned
 layout or authority controls.
 
-### 10.5 Email decision links (owner-accepted G10A; not implemented)
+### 10.5 Email decision links (owner-accepted G10A; backend-only candidate)
 
 The requested/reminder email for each currently eligible assigned approver
 contains four separate actions: **Approve**, **Hold**, **Deny** and
@@ -580,7 +580,7 @@ business default decision remains in §§10.5–10.9; implementation
 must still verify migration, rate limits, permissions, identity
 assurance and the complete user gates.
 
-**Implementation planning:** G10A-0..5 are P0 and remain unimplemented
+**Implementation planning:** G10A-0 and the backend-only portions of G10A-1/2 are implemented in an unreleased branch. Mailbox/decision Web UI, customer OTP/MFA, complete evidence and direct Full User E2E under G10A-3..5 remain pending.
 until source, database migration, deterministic tests, direct
 multi-recipient mail/browser E2E and owner release gates prove
 otherwise. Cross-project Foundation still owns shared Auth UI; the

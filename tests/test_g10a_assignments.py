@@ -172,7 +172,22 @@ def test_required_deny_reason_is_snapshotted_to_request(env):
 def test_v8_upgrade_backfills_seats_but_never_enables_old_email_pin(env, tmp_path):
     request = group_request(env, "ALL")
     with env.db.transaction() as conn:
+        # Simulate an authenticated-only v8 request without any G10A
+        # issuance (new v10 rows must be cleared in foreign-key order).
+        conn.execute(
+            "DELETE FROM decision_confirmations WHERE intent_digest IN "
+            "(SELECT i.token_digest FROM decision_intents i JOIN decision_issuances x "
+            "ON x.id=i.issuance_id WHERE x.request_id=?)", (request["id"],),
+        )
+        conn.execute(
+            "DELETE FROM decision_intents WHERE issuance_id IN "
+            "(SELECT id FROM decision_issuances WHERE request_id=?)", (request["id"],),
+        )
+        conn.execute("DELETE FROM decision_issuances WHERE request_id=?", (request["id"],))
         conn.execute("DELETE FROM approval_assignments WHERE request_id=?", (request["id"],))
+        conn.execute(
+            "UPDATE requests SET email_pin_enabled=0 WHERE id=?", (request["id"],),
+        )
         conn.execute("PRAGMA user_version=8")
     upgraded = Database(env.settings.database)
     with upgraded.transaction(write=False) as conn:
@@ -185,7 +200,7 @@ def test_v8_upgrade_backfills_seats_but_never_enables_old_email_pin(env, tmp_pat
         assert conn.execute(
             "SELECT COUNT(*) FROM approval_assignments WHERE request_id=?", (request["id"],),
         ).fetchone()[0] == 2
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 9
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 10
     backup = tmp_path / "grant-v9.backup"
     upgraded.backup(backup)
     restored = tmp_path / "grant-v9-restored.sqlite"

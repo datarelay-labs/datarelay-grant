@@ -1,6 +1,6 @@
 # ADR: Scoped email PIN decisions without mandatory login
 
-- Status: **Owner accepted product direction (2026-10-08); source implementation and tests pending**
+- Status: **Owner accepted product direction (2026-10-08); unreleased backend-only implementation candidate, complete user qualification pending**
 - Scope: Grant 1.0 G10A email response links; not external business-action webhooks
 - Canonical product contract: `docs/PRODUCT_STANDARD.md` §§10.5–10.9
 - Execution plan and gates: `ROADMAP.md` G10A-0..5 and G12
