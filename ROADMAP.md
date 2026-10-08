@@ -662,6 +662,49 @@ and **KakaoWork** supports mobile business approval. Details, platform
 limits and source confidence:
 `docs/MESSAGING_APPROVAL_CHANNEL_RESEARCH.md` (2026-10-09).
 
+**Customer onboarding feasibility is the hard go/no-go gate:**
+The owner identified BotFather creation, bot token handling,
+manual Telegram-group administration, Meta business/phone verification,
+webhook configuration and WhatsApp template work as a fatal
+barrier for nontechnical customers. Pilot cannot proceed as a
+general-use product without a **zero-copied-credentials guided
+enrollment** path; a technical/BYOC integration alone is not enough.
+
+- **Telegram recommendation:** Grant-operated/shared bot + per-user
+  deep-link `Start` enrollment, 1:1 actionable messages, optional
+  `startgroup` admin consent and redacted team status. A customer
+  should NEVER have to paste a BotFather token or chat ID in the
+  normal path. Dedicated customer-owned bots could use Telegram's
+  first-party Managed Bots API with explicit owner approval.
+  A shared cross-installation bot may require a NEW, separately
+  authorized hosted broker because Grant 1.0 is per-installation,
+  not multi-tenant SaaS; privacy/operations and customer permission
+  must be approved before building.
+- **WhatsApp recommendation:** use Meta Embedded Signup or a licensed
+  BSP's `Connect with Facebook` flow for a customer-authorized
+  business/phone number, without raw keys/webhook setup exposed.
+  Customer consent, business/phone proof and template review remain.
+  Meta Business Tools MCP was announced in Sep 2026 for agent-
+  assisted setup/testing; do NOT mistake it for automatic production
+  consent or generally available no-touch onboarding.
+  WhatsApp Groups API exists but specialist Meta-doc reviews
+  report **OBA required, 8 participants, invite-only, and no
+  interactive buttons inside group messages**; therefore make
+  the initial WhatsApp approval model individual 1:1, not group.
+- **Release acceptance proposal:** two nontechnical pilot admins
+  independently connect real recipients without API token, ID or
+  webhook entry; user Start/Meta permissions are the only necessary
+  external interactive authorization; send a request, receive
+  an explicit confirmation, revoke, and verify no duplicate
+  vote/execution. If this cannot be demonstrated, defer channel
+  launch or label it **advanced-setup only**.
+
+See `docs/MESSAGING_APPROVAL_CHANNEL_RESEARCH.md` for sourced
+competitive comparison, official Telegram managed-bot/deep-link
+interfaces and WhatsApp eligibility caveats. This remains a
+**research candidate**, not a new G10A/G12 gate or authorization
+to operate a central messenger SaaS relay.
+
 **Candidate channel sequence, pending owner scope and customer demand:**
 
 | Milestone | Outcome | Gating evidence |
