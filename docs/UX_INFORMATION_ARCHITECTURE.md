@@ -180,38 +180,90 @@ Important columns/filters include:
 The request detail remains the authority surface for the immutable action, explicit
 decision, delivery history, execution result and audit timeline.
 
-### G10A owner-accepted email decision UX (planned; not yet implemented)
+### G10A owner-accepted email decision UX (NOT IMPLEMENTED)
 
-- The same mobile-friendly email includes four semantically distinct actions:
-  **Approve**, **Hold**, **Deny**, and neutral **View Details**. Each actionable
-  link is unique per request/eligible recipient/approval step/outcome.
-- A decision deep link selects an **intent only**; GET/HEAD/prefetch never
-  records a decision or sends OTP. Before login, show only a generic sign-in
-  view with no request/action/person detail. Preserve intent across normal
-  login safely without exposing tokens in analytics, referer or browser logs.
-- Once the actually authorized approver is signed in, show the exact
-  immutable action/target, policy and deadline, the preselected outcome and
-  its current eligibility. The primary CTA clearly says **Confirm Approve**,
-  **Confirm Hold**, or **Confirm Deny**; the chosen action remains unrecorded
-  until the authenticated/CSRF-protected final POST succeeds.
-- If policy requires an extra challenge, show it at decision time. Same-email
-  verification is not labeled MFA; genuine fresh High Assurance MFA follows
-  the shared Foundation authentication capability. Support copy/paste/
-  autofill, focus order, mobile screen readers and denial reasons.
-- If a link is stale, revoked, consumed, forwarded, or no longer authorized,
-  show a safe non-disclosing error, a neutral Inbox navigation option and
-  no action button. A completed step shows *who really confirmed* and the
-  current quorum/result, not a claim that the external business action ran.
-- Administration extends existing focused **Approval Policies** detail with
-  Decision Verification defaults and escalation/reissue rules, and existing
-  **Notifications** with event-safe HTML/text layout and delivery health;
-  do not add another top-level settings tree or fork the Product Foundation
-  Auth UI/shared Administration shell.
-- Existing authenticated neutral request detail remains the backward-
-  compatible fallback. No G10A link page should be represented as shipped
-  before its exact-version browser and full-user acceptance is complete.
+**Default: no Grant login is required for the email decision flow.**
 
+The email is recipient-specific (not a bulk-CC message) and presents
+four actions — **Approve**, **Hold**, **Deny**, **View Details** — plus one
+distinct four-digit code for that approval request/recipient/issuance.
+The three action buttons have different unguessable URLs. The code
+is printed in the *same* email body, not in the URLs. Example UI:
 
+~~~text
+Approval requested — Production DB Access
+Assigned mailbox: approver@example.com
+Approval deadline: (customer policy timestamp)
+
+[ APPROVE ]  [ HOLD ]  [ DENY ]   [ VIEW DETAILS ]
+
+Four-digit confirmation number: 4821
+Opening a button does not record a decision.
+~~~
+
+**Step 1: email action → safe landing (GET).** The chosen button only
+preselects Approve, Hold, or Deny. Without verification, show a
+generic decision context, the chosen action, 4-digit input and
+`Continue`. Do **not** display restricted asset/action details,
+send new OTP, record approval or require a product login.
+Mail scanners and previews see only an inert page.
+
+**Step 2: PIN verification (protected POST).** Check the 4-digit code
+and unique link together, with bounded attempts and throttling.
+On success issue a short-lived single-purpose decision-confirmation
+context, **not** a full user/session or elevated account role.
+Then display safe actionable context — exact immutable action,
+target, requester, assigned recipient, deadline and current
+approval-stage status. Show clearly:
+`You selected APPROVE; your decision has NOT yet been recorded.`
+
+**Step 3: optional extra check.** Only where customer policy
+requires it, ask for a fresh separately delivered OTP or true
+identity/MFA step-up. The former may use the same email (not MFA);
+the latter must use an independently supported authenticator.
+Mobile copy/paste, autofill, accessible labels and error recovery
+are mandatory. No automatic downgrade when required step-up fails.
+
+**Step 4: final explicit decision POST.** The CTA is
+`Confirm Approve`, `Confirm Hold` or `Confirm Deny`. Only
+this deliberate action may update approval state. On success,
+show `Decision recorded`, which seat/outcome was recorded,
+remaining reviewer/quorum status and a separate execution status,
+never `Business action executed` from the approval alone.
+Anonymous EMAIL_PIN mode must not claim a named person was
+independently identified: audit/UI can say `Confirmed via assigned
+mailbox and 4-digit email code`. Verified actor names are shown
+only after independently authenticated step-up.
+
+**Hold UX:** for parallel modes it changes only that seat to
+provisional Hold; other reviewers remain actionable and the
+quorum can still complete. In SEQUENTIAL mode, clearly show
+`Next approval step waiting for this step's approval` until
+the current seat approves; no next-stage email sent on Hold.
+
+**Expired/revoked/error state:** show a generic no-data disclosure
+result and safe reissue/requester support path. Repeated invalid
+PINs produce bounded lockout and authorized reissue, not an
+alternate route that bypasses the verification policy.
+
+**Customer administration:** extend the existing focused
+`Approval Policies → Decision Verification` editor with:
+`EMAIL_PIN` (default), optional `EMAIL_PIN_PLUS_OTP`,
+optional `EMAIL_PIN_PLUS_MFA`, and configurable link validity
+with default maximum seven days (always no longer than
+the request's approval deadline). Expose code retry/reissue
+controls, auditable operator actions and risk classification.
+`Notifications` manages HTML and text email layouts, per-recipient
+delivery health, masked-code previews and safe test sends.
+Reuse existing Foundation common app shell and auth/MFA adapters;
+the bounded email decision page is Grant-specific and must not
+fork Foundation's shared sign-in screen.
+
+The neutral authenticated request-detail page remains supported
+for existing in-flight approvals and customers who elect to
+sign in. The default no-login email path is a scoped decision
+capability only, not a replacement for account-based administration
+or an external-system execution permission.
 
 ## Approval Policies
 
