@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   AccountList,
-  AdminTaskCatalog,
+  AdministrationHub,
+  createStandardAdministrationTasks,
   AuditList,
   Button,
   Card,
@@ -12,7 +13,8 @@ import {
   SystemStatus,
   TextField,
   type AccountProjection,
-  type AdminTask,
+  type AdministrationHubTask,
+  type AdministrationExtensionGroup,
   type AuditEventProjection,
   type AuthSessionSummary,
   type CapabilityAvailability,
@@ -51,40 +53,48 @@ export function Administration({ user }: { user: User }) {
   const [role, setRole] = useState('member');
   const task = useTask();
 
-  const tasks = useMemo<readonly AdminTask[]>(
-    () => [
-      {
-        id: 'health.read',
-        label: 'System health',
-        description: 'Read Grant health and authoritative system information.',
-        availability: availability(user, 'health.read'),
-      },
-      {
-        id: 'users.manage',
-        label: 'Accounts',
-        description: 'Review local accounts and create administrator-managed Grant users.',
-        availability: availability(user, 'users.manage'),
-        effects: ['security_sensitive'],
-      },
-      {
-        id: 'audit.read',
-        label: 'Audit history',
-        description: 'Review authentication, administration and approval-control audit events.',
-        availability: availability(user, 'audit.read'),
-      },
-      {
-        id: 'grant.smtp.test',
-        label: 'Mail delivery test',
-        description: 'Submit a non-authorizing test message to the authenticated administrator.',
-        availability: availability(user, 'grant.smtp.test'),
-      },
-      {
-        id: 'grant.lifecycle.guidance',
-        label: 'Lifecycle & recovery',
-        description: 'Read the supported backup, restore, TLS and upgrade operating boundary.',
-        availability: availability(user, 'grant.lifecycle.guidance'),
-      },
-    ],
+  // Only authoritative Grant capabilities/roles and existing product actions are bound.
+  // Foundation owns all shared task names, descriptions, layout and grouping.
+  const tasks = useMemo(
+    () => createStandardAdministrationTasks({
+      'core.https': { availability: 'unavailable', access: 'view', notes: 'TLS is configured by the approved deployment reverse proxy.' },
+      'core.users': { availability: availability(user, 'users.manage'), access: 'manage', target: { kind: 'action', actionId: 'grant.accounts' }, effects: ['security_sensitive'] },
+      'core.password': { availability: 'unavailable', access: 'view', notes: 'Personal password and MFA changes are available under Account & security; no system-wide password policy editor exists.' },
+      'core.timezone': { availability: 'unavailable', access: 'view', notes: 'Grant does not provide a system timezone configuration API.' },
+      'core.network': { availability: 'unavailable', access: 'view', notes: 'Listener and proxy settings are managed by the deployment operator.' },
+      'core.retention': { availability: 'unavailable', access: 'view', notes: 'No web-managed record retention policy editor exists.' },
+      'core.backup-import': { availability: availability(user, 'grant.lifecycle.guidance'), access: 'view', target: { kind: 'action', actionId: 'grant.lifecycle.guidance' }, notes: 'Operator procedure only; no web restore or import is authorized.' },
+      'core.audit': { availability: availability(user, 'audit.read'), access: 'view', target: { kind: 'action', actionId: 'grant.audit' } },
+      'core.health': { availability: availability(user, 'health.read'), access: 'view', target: { kind: 'action', actionId: 'grant.health' } },
+    }),
+    [user],
+  );
+
+  const extensionGroups = useMemo<readonly AdministrationExtensionGroup[]>(
+    () => [{
+      id: 'grant.mail-transport',
+      title: 'Mail & Notifications',
+      description: 'Grant-managed SMTP transport diagnostics and test messages; notification templates remain in Configuration.',
+      after: 'platform-network',
+      tasks: [
+        {
+          id: 'grant.smtp.test',
+          label: 'Mail delivery test',
+          description: 'Submit a non-authorizing SMTP test message to the authenticated Grant administrator.',
+          availability: availability(user, 'grant.smtp.test'),
+          access: 'manage',
+          target: { kind: 'action', actionId: 'grant.smtp.test' },
+        },
+        {
+          id: 'grant.smtp.configure',
+          label: 'SMTP server configuration',
+          description: 'Host, port, sender identity and protected credentials (planned, not yet implemented).',
+          availability: 'unavailable',
+          access: 'view',
+          notes: 'Installation-owned SMTP configuration has no accepted editable Web API. The test email does not prove inbox receipt.',
+        },
+      ],
+    }],
     [user],
   );
 
@@ -105,13 +115,13 @@ export function Administration({ user }: { user: User }) {
     void task.run(load);
   }, []);
 
-  function openTask(selected: AdminTask) {
+  function openTask(selected: AdministrationHubTask) {
     const next: Record<string, AdminSection> = {
-      'health.read': 'health',
-      'users.manage': 'accounts',
-      'audit.read': 'audit',
+      'core.health': 'health',
+      'core.users': 'accounts',
+      'core.audit': 'audit',
       'grant.smtp.test': 'mail',
-      'grant.lifecycle.guidance': 'lifecycle',
+      'core.backup-import': 'lifecycle',
     };
     setSection(next[selected.id] ?? null);
   }
@@ -119,21 +129,23 @@ export function Administration({ user }: { user: User }) {
   return (
     <div className="grant-stack">
       {task.feedback}
-      <section className="grant-admin-heading" aria-labelledby="grant-admin-title">
-        <div>
-          <p className="grant-eyebrow">Foundation administration</p>
-          <h2 id="grant-admin-title">Administration</h2>
-          <p>
-            Common administration follows DataRelay Product Foundation capability and adapter
-            contracts. Unsupported operations are not presented as working controls.
-          </p>
-        </div>
-        <Button variant="secondary" disabled={task.busy} onClick={() => void task.run(load)}>
-          Refresh
-        </Button>
-      </section>
-
-      <AdminTaskCatalog tasks={tasks} onOpen={openTask} />
+      <AdministrationHub
+        productId="grant"
+        showHeader={false}
+        tasks={tasks}
+        extensionGroups={extensionGroups}
+        showUnavailable
+        intro={
+          <div className="grant-admin-heading">
+            <p>Shared system administration is provided by DataRelay Product Foundation.
+              Unsupported Grant operations have no active Configure action.</p>
+            <Button variant="secondary" disabled={task.busy} onClick={() => void task.run(load)}>
+              Refresh
+            </Button>
+          </div>
+        }
+        onOpen={openTask}
+      />
 
       {section === 'health' ? <SystemStatus health={health} info={info} /> : null}
 

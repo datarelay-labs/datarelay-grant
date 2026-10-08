@@ -256,29 +256,30 @@ export function App() {
             Use {theme === 'light' ? 'dark' : 'light'} theme
           </Button>
         }
-        userActions={
-          <div className="grant-user-actions">
-            <Button variant="ghost" onClick={() => navigate('/security')}>
-              Account & security
-            </Button>
-            <Button
-              variant="ghost"
-              disabled={task.busy}
-              onClick={() =>
-                void task.run(async () => {
-                  try {
-                    await authAdapter.signOut();
-                  } catch (error) {
-                    if (!(error instanceof ApiError && error.status === 401)) throw error;
-                  }
-                  signedOut();
-                })
-              }
-            >
-              Sign out
-            </Button>
-          </div>
-        }
+        accountActions={[
+          {
+            id: 'security',
+            label: 'Account & security',
+            icon: 'user',
+            onSelect: () => navigate('/security'),
+          },
+          {
+            id: 'signout',
+            label: 'Sign out',
+            icon: 'logOut',
+            tone: 'danger',
+            disabled: task.busy,
+            onSelect: () =>
+              void task.run(async () => {
+                try {
+                  await authAdapter.signOut();
+                } catch (error) {
+                  if (!(error instanceof ApiError && error.status === 401)) throw error;
+                }
+                signedOut();
+              }),
+          },
+        ]}
       >
         {task.feedback}
         {page}

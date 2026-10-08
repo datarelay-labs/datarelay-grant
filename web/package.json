@@ -11,19 +11,19 @@
     "test:browser": "playwright test"
   },
   "dependencies": {
-    "@datarelay-labs/auth-ui": "file:../.foundation/packs/datarelay-labs-auth-ui-0.1.0-grant.r1.tgz",
-    "@datarelay-labs/foundation": "file:../.foundation/packs/datarelay-labs-foundation-0.1.0-grant.r1.tgz",
-    "@datarelay-labs/icons": "file:../.foundation/packs/datarelay-labs-icons-0.1.0-grant.r1.tgz",
-    "@datarelay-labs/product-shell": "file:../.foundation/packs/datarelay-labs-product-shell-0.1.0-grant.r1.tgz",
-    "@datarelay-labs/system-admin-ui": "file:../.foundation/packs/datarelay-labs-system-admin-ui-0.1.0-grant.r1.tgz",
-    "@datarelay-labs/system-contracts": "file:../.foundation/packs/datarelay-labs-system-contracts-0.1.0-grant.r1.tgz",
-    "@datarelay-labs/tokens": "file:../.foundation/packs/datarelay-labs-tokens-0.1.0-grant.r1.tgz",
-    "@datarelay-labs/ui": "file:../.foundation/packs/datarelay-labs-ui-0.1.0-grant.r1.tgz",
+    "@datarelay-labs/auth-ui": "file:../.foundation/packs/datarelay-labs-auth-ui-0.1.0-pf5b.2.tgz",
+    "@datarelay-labs/foundation": "file:../.foundation/packs/datarelay-labs-foundation-0.1.0-pf5b.2.tgz",
+    "@datarelay-labs/icons": "file:../.foundation/packs/datarelay-labs-icons-0.1.0-pf5b.2.tgz",
+    "@datarelay-labs/product-shell": "file:../.foundation/packs/datarelay-labs-product-shell-0.1.0-pf5b.2.tgz",
+    "@datarelay-labs/system-admin-ui": "file:../.foundation/packs/datarelay-labs-system-admin-ui-0.1.0-pf5b.2.tgz",
+    "@datarelay-labs/system-contracts": "file:../.foundation/packs/datarelay-labs-system-contracts-0.1.0-pf5b.2.tgz",
+    "@datarelay-labs/tokens": "file:../.foundation/packs/datarelay-labs-tokens-0.1.0-pf5b.2.tgz",
+    "@datarelay-labs/ui": "file:../.foundation/packs/datarelay-labs-ui-0.1.0-pf5b.2.tgz",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@datarelay-labs/testkit": "file:../.foundation/packs/datarelay-labs-testkit-0.1.0-grant.r1.tgz",
+    "@datarelay-labs/testkit": "file:../.foundation/packs/datarelay-labs-testkit-0.1.0-pf5b.2.tgz",
     "@playwright/test": "1.63.0",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
