@@ -235,3 +235,35 @@ def test_recovery_paused_is_reported_without_inventing_outcomes(env):
     assert env.human("requester").get(
         f"/api/v1/requests/{row['id']}"
     ).json()["execution_state"] == "NOT_STARTED"
+
+
+def test_recovered_webhook_is_not_an_unresolved_integration_failure(env):
+    import time
+
+    row = create(env, title="Recovery from callback error")
+    now = time.time()
+    with env.db.transaction() as conn:
+        for ident, state, created, delivered in (
+            ("callback-first-failed", "FAILED", now - 10, None),
+            ("callback-next-success", "DELIVERED", now, now),
+        ):
+            conn.execute(
+                """INSERT INTO outbox(
+                     id,request_id,kind,event_type,revision,payload,destination,
+                     state,delivered_at,available_at,created_at
+                   ) VALUES(?,?,?,?,?,?,?,?,?,?,?)""",
+                (ident, row["id"], "webhook", "approval_outcome",
+                 row["revision"], "{}", "sealed-fixture",
+                 state, delivered, created, created),
+            )
+    admin = env.human("admin")
+    summary = admin.get("/api/v1/admin/operations")
+    assert summary.status_code == 200, summary.text
+    integration = summary.json()["integrations"][0]
+    assert integration["last_callback_accepted_at"] == now
+    assert integration["failed_callback_events"] == 0
+    assert integration["health"] == "transport_accepted"
+    queue = admin.get("/api/v1/requests", params={"view": "ops_webhook_failed"})
+    assert queue.status_code == 200
+    assert queue.json() == []
+    assert summary.json()["counts"]["webhook_failed"] == 0

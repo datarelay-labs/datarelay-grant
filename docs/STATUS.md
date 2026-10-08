@@ -73,8 +73,11 @@ capability remains whatever is present and tested at the committed candidate HEA
   requests. Full G0-G7 local verification on this worktree passed **187
   Python/API tests**, 12 frontend unit tests, static/typecheck/build, and **15
   real Chromium journeys** including two G7 operator/admin-boundary scenarios.
-  These are pre-commit development-worktree observations; exact-HEAD CI and
-  owner/release acceptance remain separate.
+  These are development-worktree observations; exact-HEAD CI and
+  owner/release acceptance remain separate. PR #45 review hardening now counts
+  only unresolved latest failed callbacks per request, not historical failures
+  subsequently followed by successful delivery. G7 focused regressions passed
+  on the corrected source.
 - G8 development candidate: administrator-only read-only integration diagnostics
   (requests, callback transport acceptance/failure, scoped credential metadata and
   issuance/revocation events, connection test history), explicit producer/executor
@@ -120,9 +123,10 @@ inbox regressions cover these five cases. Combined source has now passed
 build and 13 Chromium journeys (actual browser). Exact committed-head CI,
 release provenance and owner acceptance remain in Work Packet #42.
 
-G8 read-only integration diagnostics source passed a full **196 Python/API**,
+G8 + inherited G7 review hardening passed **198 Python/API**,
 **12 web unit**, static/typecheck/production build and **17 real Chromium**
-journeys, including G8 safe metadata export and admin-only diagnostic UI.
+journeys. Focused browser evidence also verifies downloaded JSON manifest
+format and executor scope presets without creating a credential.
 Additional focused negative/portability cases cover callback audit timestamps,
 history partitioning, redacted template bodies and nonexecutable export. These
 are development-worktree tests and do not meet real DataRelay/Stellar E2E,

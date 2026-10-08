@@ -7,7 +7,7 @@ import type { Integration } from './types';
 type CredentialMetadata = {
   id: string;
   scopes: string[];
-  role: 'producer' | 'executor' | 'mixed' | 'unclassified';
+  role: 'producer' | 'executor' | 'observer' | 'mixed' | 'unclassified';
   enabled: boolean;
   created_at: number;
 };

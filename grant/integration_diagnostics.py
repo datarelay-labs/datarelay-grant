@@ -56,12 +56,16 @@ def diagnostics(db: Database, actor: Principal, ident: str) -> dict:
         credentials = []
         for token in tokens:
             scopes = json.loads(token["scopes"])
-            produces = any(s in scopes for s in ("request:create", "request:read"))
+            produces = "request:create" in scopes
+            observes = "request:read" in scopes
             executes = any(s in scopes for s in ("grant:consume", "result:write"))
+            # request:read is a neutral scope used by both producer and
+            # executor. It alone is an observer, not creation authority.
             role = (
                 "mixed" if produces and executes
                 else "producer" if produces
                 else "executor" if executes
+                else "observer" if observes
                 else "unclassified"
             )
             credentials.append({

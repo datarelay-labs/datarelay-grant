@@ -201,3 +201,28 @@ def test_diagnostics_audit_bounds_apply_to_selected_integration_not_all_events(e
     history = response.json()["connection_tests"]
     assert len(history) == 1
     assert history[0]["at"] == base
+
+
+def test_read_scope_is_neutral_in_credential_role_classification(env):
+    import json
+
+    ident = env.token["id"]
+    endpoint = f"/api/v1/integrations/{env.integration['id']}/diagnostics"
+    with env.db.transaction() as conn:
+        conn.execute(
+            "UPDATE api_tokens SET scopes=? WHERE id=?",
+            (json.dumps(["request:read", "grant:consume", "result:write"]), ident),
+        )
+    executor = env.human("admin").get(endpoint)
+    assert executor.status_code == 200, executor.text
+    record = next(item for item in executor.json()["credentials"] if item["id"] == ident)
+    assert record["role"] == "executor"
+    with env.db.transaction() as conn:
+        conn.execute(
+            "UPDATE api_tokens SET scopes=? WHERE id=?",
+            (json.dumps(["request:read"]), ident),
+        )
+    observer = env.human("admin").get(endpoint)
+    assert observer.status_code == 200
+    record = next(item for item in observer.json()["credentials"] if item["id"] == ident)
+    assert record["role"] == "observer"

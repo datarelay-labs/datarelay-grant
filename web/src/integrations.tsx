@@ -19,7 +19,7 @@ export function Integrations() {
  <Card title="Create scoped integration credential" description="A creation token cannot make human decisions. The raw credential is displayed once and is never stored in browser storage."><Form busy={task.busy} label="Create scoped token" onSubmit={()=>void task.run(async()=>{const result=await api<{token:string}>('/integrations/tokens','POST',{integration_id:selected,scopes});setToken(result.token);})}><Select label="Token integration" value={selected} onChange={setSelected}><option value="">Select integration</option>{rows.map(r=><option key={r.id} value={r.id}>{r.name}</option>)}</Select><Select label="Credential purpose" value={purpose} onChange={value=>{
  setPurpose(value);
  if(value==='producer')setScopes(['request:create','request:read']);
- else if(value==='executor')setScopes(['grant:consume','result:write']);
+ else if(value==='executor')setScopes(['request:read','grant:consume','result:write']);
  else if(value==='read_only')setScopes(['request:read']);
 }}>
  <option value="producer">Producer — submit and read requests</option>

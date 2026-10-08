@@ -26,7 +26,7 @@ credentials revoked without exposing their raw value again.
 
 The administrator may view current integration request activity and last
 HTTP callback delivery acceptance/failure, compare nonsecret credential
-scope roles (producer, executor, mixed), and inspect recorded connection-test
+scope roles (producer, executor, observer, mixed), and inspect recorded connection-test
 and credential lifecycle events. A successful callback means only that an
 HTTP transport accepted the notification.
 

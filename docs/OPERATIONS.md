@@ -90,8 +90,10 @@ Unused approvals are still-approved requests not yet consumed.
 
 Integration observations include the last *outgoing callback transport
 acceptance* (HTTP delivery 2xx), never proof that the consumer executed an
-action. A failed callback, SMTP failure or UNKNOWN execution requires human
-reconciliation. The dashboard exposes no token, secret or destination URL and
+action. Current failed callback counts match the exception queue: only the
+latest callback state per request is unresolved, not historical failed attempts
+that later succeeded. A failed callback, SMTP failure or UNKNOWN execution
+requires human reconciliation. The dashboard exposes no token, secret or destination URL and
 has no action replay controls. A restored installation remains subject to the
 existing recovery-paused/explicit reconciliation procedure.
 
@@ -101,8 +103,10 @@ The administrator Integrations page provides read-only health details,
 request activity, last accepted/failed callback transport, nonsecret
 credential scope-role metadata and recorded connection-test outcomes. The
 Producer preset requests only request creation/reading permissions. The
-Executor preset requests execution-grant consumption and result-reporting
-permissions. Mixing both capabilities should be explicitly reviewed. Only
+Executor preset requests read-only request access plus execution-grant
+consumption and result-reporting permissions, without request creation.
+Read-only request access by itself is an observer role, not producer authority.
+Mixing request creation and execution capabilities should be explicitly reviewed. Only
 an actual operator may create or revoke credentials; diagnostic inspection
 never does so.
 
