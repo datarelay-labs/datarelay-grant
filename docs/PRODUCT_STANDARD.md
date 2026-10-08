@@ -316,10 +316,45 @@ link and an authenticated web decision UI. Outcome-specific email links and
 email verification are **planned, not yet implemented**.
 
 Each email response link is a **decision-intent deep link**, not an approval
-callback with mutation authority. It must be bound to the exact request, intended
-outcome, assigned approver/approval step and expected revision. Link query values
-and recipient display names are never trusted as authentication. Grant's
-external-system signed callbacks remain an independent *outbound event* mechanism.
+callback with mutation authority. Link query values and recipient display names
+are never trusted as authentication. Grant's external-system signed callbacks
+remain an independent *outbound event* mechanism.
+
+**Mandatory reference uniqueness and binding.** Every email decision link has its
+own non-guessable, cryptographically random opaque reference, bound on the
+server to the complete tuple:
+
+`(approval_request_id, assigned_approver_id, approval_step_id,
+  selected_outcome, request_revision, issuance_generation)`
+
+- **Per request:** two requests never reuse a response reference, even for the
+  same recipient and same outcome.
+- **Per approver:** within the same request, two distinct assigned users receive
+  different references, even for the same selected outcome; an authorized
+  delegate must have an independent assignment/identity binding.
+- **Per answer button:** Approve, Hold and Deny always have three distinct
+  references for each assigned approver; the bound outcome cannot be changed
+  by editing a query parameter or substituting POST content.
+- **Per step / version / issuance:** sequential or repeated approval steps,
+  replacement/revised requests, changed authorization and newly issued links
+  cannot silently reuse stale permissions. Reminder delivery may reuse a
+  still-valid generation or explicitly rotate all affected references; any
+  rotation revokes the superseded generation. Uniqueness must be guaranteed
+  by persisted constraints and collision-safe generation, not by a reversible
+  encoding of request, outcome or approver.
+- Only safe opaque routing material goes into URLs. Raw link references are
+  never exposed in logs, admin preview, exports or audit evidence; persist
+  a protected token digest and authoritative binding instead. Links may
+  help locate the intended assignment, but are **not proof of identity**.
+
+**Decision attribution.** The authoritative decision event must record the
+request ID, immutable action fingerprint, request and policy version,
+approval-step/assignment ID, link reference identifier/digest, originally
+assigned recipient, **actually authenticated decision actor**, any authorized
+delegation relationship, selected outcome, verification method/result and UTC
+decision time. An email recipient, clicked URL, unverified address or browser
+GET is not an attributable human approval. The event can expose safe IDs in
+the audit UI without disclosing raw token or OTP contents.
 
 - GET, HEAD, preview and scanner prefetch must be side-effect-free: show the
   immutable action and a clearly preselected outcome, or a safe sign-in prompt.
@@ -327,7 +362,11 @@ external-system signed callbacks remain an independent *outbound event* mechanis
 - A real, currently authorized human must deliberately confirm through an
   authenticated, CSRF-protected POST; the server rechecks assigned identity,
   policy/approval-step, delegation, revision, request state, expiration, MFA
-  requirement and action binding in its existing atomic decision transaction.
+  requirement, stored link-to-outcome binding and action fingerprint in its
+  existing atomic decision transaction. A successful decision consumes its
+  reference and revokes the same actor/assignment's remaining outcome links
+  atomically. Other legitimate approvers retain their links only while their
+  approval stage remains active under the configured quorum/sequence rules.
 - The response page must clearly distinguish the already selected email outcome
   from the **not-yet-recorded** final decision. A completed/replayed/expired/
   reassigned/forwarded link may inform the viewer safely but cannot reauthorize.
@@ -582,6 +621,13 @@ The audit trail links:
 
 `request -> matched policy/version -> approval plan -> human decisions/comments ->
 notification delivery -> execution grant -> consumer commitment -> reported result`
+
+For G10A email decisions, audit evidence additionally distinguishes the original
+assigned email recipient from the **authenticated person who submitted the
+final decision**, any authorized delegation, the selected answer/link binding,
+request/step/revision, verification result and decision timestamp. Audit views
+must answer **who actually approved or denied which exact action, and when**
+without revealing raw action-link references or challenge secrets.
 
 Audit records are append-oriented product evidence. Administrative policy/template/
 group/delegation changes are also audited.
