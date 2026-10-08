@@ -83,8 +83,10 @@ capability remains whatever is present and tested at the committed candidate HEA
   issuance/revocation events, connection test history), explicit producer/executor
   purpose presets and a metadata-only planning manifest for safe configuration
   export. It never serializes callback destinations, credentials or mail text
-  and is not an executable backup or configuration import. Last accepted HTTP
-  callback is not proof of product execution. Real DataRelay/Stellar approval
+  and is not an executable backup or configuration import. Current failed
+  callback counts reconcile per-request latest webhook outcomes with G7;
+  request:read is neutral and does not trigger the mixed-credential warning.
+  Last accepted HTTP callback is not proof of product execution. Real DataRelay/Stellar approval
   integration and reversible validated import are NOT implemented.
 - G9 development candidate: admin-only filtered/paginated audit explorer,
   bounded CSV/JSON export with spreadsheet formula neutralization and typed
@@ -132,10 +134,18 @@ inbox regressions cover these five cases. Combined source has now passed
 build and 13 Chromium journeys (actual browser). Exact committed-head CI,
 release provenance and owner acceptance remain in Work Packet #42.
 
-G8 + inherited G7 review hardening passed **198 Python/API**,
+G8 + inherited G7 review hardening previously passed **198 Python/API**,
 **12 web unit**, static/typecheck/production build and **17 real Chromium**
-journeys. Focused browser evidence also verifies downloaded JSON manifest
+journeys. Focused browser evidence also verified downloaded JSON manifest
 format and executor scope presets without creating a credential.
+
+G9 + updated G8 review corrections now passed **207 Python/API**,
+**12 frontend unit**, static/typecheck/production build and **20 real
+Chromium journeys** on the resolved merge worktree. The previous
+FRONTEND_NOT_BUILT browser failure was caused by overlapping frontend rebuild
+and Playwright execution; the full serial-build browser run passed 20/20.
+These are source-worktree observations; GitHub exact-head CI, external
+product acceptance and release/owner gates remain separate.
 Additional focused negative/portability cases cover callback audit timestamps,
 history partitioning, redacted template bodies and nonexecutable export. These
 are development-worktree tests and do not meet real DataRelay/Stellar E2E,
