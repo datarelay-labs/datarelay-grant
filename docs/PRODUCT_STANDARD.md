@@ -84,7 +84,8 @@ Minimum fields:
 - action type;
 - optional bounded matching conditions;
 - approval plan;
-- decision-reason requirements;
+- decision-reason requirements, including the versioned optional/required
+  denial-reason flag (default optional);
 - response deadline;
 - escalation/delegation behavior;
 - execution-grant validity;
@@ -422,22 +423,60 @@ Mode semantics are accepted as follows:
   valid approval of the current step advances and issues email links
   to the next step. A denial terminates under current 1.0 rules.
 - `HELD`: a reversible decision for that seat within the original
-  deadline; it never authorizes execution. The holder may later
-  Approve or Deny with a valid current intent without invalidating
-  other seats.
+  deadline; it never authorizes execution. While delegation remains
+  valid, either the original assigned approver or an eligible delegate
+  may later Approve or Deny with their OWN independently issued
+  current intent; neither can add a second vote for the same seat.
+  Other seats stay unaffected.
 - `APPROVED` / `DENIED` final decisions consume their selected
-  intent and revoke unused sibling choices for that seat. Other
-  seats remain eligible only while the quorum/stage is still open.
-  No duplicate vote from original recipient plus delegate.
+  intent and revoke ALL remaining unused choices for that SAME
+  approval seat, including the original recipient's and delegated
+  recipient's links. Other seats remain eligible only while the
+  quorum/stage is still open. No duplicate vote from original plus delegate.
+
+**Accepted non-exclusive delegation (owner decision):** throughout an
+active, non-revoked delegation window, the original assigned approver
+and the designated delegate **both remain eligible to decide for the
+same single approval seat**, using independently generated recipient-
+specific links and 4-digit email codes. This never creates a second
+seat or raises the approval quorum. The **first valid terminal
+decision** (Approve or Deny) wins for that seat, atomically and
+exactly once; concurrent or later conflicting decisions by the
+other actor fail with a safe already-decided result and no new
+outbound business effect. A provisional Hold may be superseded
+by either eligible party before the deadline. Delegation expiry
+or revocation invalidates only the delegate's remaining authority,
+not the original assigned approver's valid right to decide.
+Always revalidate delegation/window/approval-step/assignment epoch
+at final confirmation. Audit original seat, link recipient
+(original or delegate), method/assurance and independently verified
+person (if established) **separately**; receiving a forwarded
+email never proves the named recipient personally acted.
 
 Reassignment, delegation, escalation, account disablement and revocation
 recompute CURRENT eligible seat/actor, revoke unauthorized issued
-links, and independently notify new eligible recipients. A historical
-policy snapshot never restores permission revoked by a later security
-event. Current 1.0 semantics **any denial is terminal**; if the
+links, and independently notify new eligible recipients. New
+delegate mail must not reveal or reuse the original person's
+response links or code. A historical policy snapshot never
+restores permission revoked by a later security event. Current 1.0 semantics **any denial is terminal**; if the
 customer wants configurable denial thresholds or global Hold veto,
 that is a separate explicit product design decision, not implicit
 in this accepted Hold model.
+
+**Accepted configurable Deny reason (owner decision):** each approval
+policy version defines `denial_reason_required: boolean` (default
+`false`, i.e. optional). Administrators may set it to `true` to
+require a bounded nonblank explanation whenever the final choice is
+Deny, including loginless EMAIL_PIN and delegated decisions.
+UI validation and server-side final-confirmation POST validation
+must enforce the effective snapshotted policy; a missing/blank
+required reason does not consume the intent or record a denial.
+When disabled, Deny must succeed without a reason; an optional
+provided reason remains in the protected audit event. Changes
+to the policy must not retroactively alter in-flight requests.
+Approve/Hold reason handling is separate and remains governed by
+their existing policy settings, if configured. This does not
+change the any-Deny-is-terminal rule.
 
 ### 10.8 Protected decision execution, evidence and recovery (G10A)
 
@@ -468,7 +507,8 @@ currently runs expiry maintenance; use separate maintenance/POST
 for lifecycle mutation.
 
 **Auditable identity limits:** always preserve (a) assigned
-recipient/approval seat, (b) actual verified account identity
+recipient/approval seat and which independently issued original/
+delegate mailbox link was used, (b) actual verified account identity
 **only when** account/SSO/MFA step-up occurred, (c) otherwise
 `actor_assurance=EMAIL_LINK_PIN` with `verified_person_id=null`,
 (d) represented/delegated assignment when present, (e) specific
@@ -527,11 +567,18 @@ Scripted fixtures remain supplemental to direct Full User E2E.
 | **Sequential Hold** | **ACCEPTED:** Hold prevents activation/notification of subsequent steps; only current-step approval advances. |
 | **Link lifetime** | **ACCEPTED:** customer-configurable TTL (customer default and per-policy override), out-of-box maximum seven days, never beyond approval deadline; customer can select a different bounded TTL. |
 | **Identity evidence** | **ACCEPTED SECURITY REALITY:** email-link + same-message PIN proves neither a specific person nor independent MFA; audit preserves assigned recipient and verified actor separately and records EMAIL_LINK_PIN assurance for no-login decisions. |
-| **Deny and reason** | **STILL OWNER CHOICE:** whether short Deny reasons are mandatory or optional by policy. Current 1.0 core treats any Deny as terminal; no automatic denial-quorum expansion. |
-| **Delegation** | **STILL OWNER CHOICE:** whether original and delegate can both act (same seat, never two votes), or delegation exclusively transfers current actionability. |
+| **Deny and reason** | **ACCEPTED:** `denial_reason_required` is a policy-versioned Boolean, default false (optional). A policy may require a bounded nonblank Deny reason, enforced by server and UI on the final confirmation POST. Any Deny still terminates under current 1.0 semantics. |
+| **Delegation** | **ACCEPTED:** original assignee **OR** active authorized delegate may act on the same represented approval seat using separate choice links/codes; first valid terminal decision wins. An existing Hold may be resolved by either. Each seat contributes at most one vote, original stays eligible while delegation is valid, expiry/revocation removes delegate access. Audit the source mailbox link separately from independently verified identity, if any. |
 | **Verification risk defaults** | **CUSTOMER CONTROL:** customer admin may require OTP or fresh identity MFA based on trusted integration/action/asset policies. Requester-provided risk fields cannot downgrade the effective requirement. |
 | **Migration** | Existing in-flight requests retain the neutral authenticated Request Details experience unless a separately authorized compatible upgrade/migration establishes secure link issuance. No retroactive unsafe links. |
 | **1.1 scope** | Email-to-request, arbitrary reply-to-email approval, Outlook actionable cards and open external guest workflow are not silently added to 1.0. The bounded `EMAIL_PIN` no-login **decision-only** flow is a deliberate 1.0 exception, not generic guest account access. |
+
+**Decision closure (2026-10-09):** owner approved per-policy optional
+Deny reason and non-exclusive original-or-delegate approval, both
+with exactly-one-terminal-decision-per-seat semantics. No pending
+business default decision remains in §§10.5–10.9; implementation
+must still verify migration, rate limits, permissions, identity
+assurance and the complete user gates.
 
 **Implementation planning:** G10A-0..5 are P0 and remain unimplemented
 until source, database migration, deterministic tests, direct
