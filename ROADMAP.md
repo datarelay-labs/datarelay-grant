@@ -402,6 +402,32 @@ Recommended safe product adaptation (confirmation UX subject to final owner choi
 - generate a distinct **Approve / Hold / Deny** decision-intent link for each assigned
   approver and request snapshot in requested/reminder emails, including only relevant
   choices; preserve the one-link request-detail path as a fallback;
+- **Uniqueness is mandatory:** allocate a separate cryptographically random,
+  unguessable, opaque decision-intent reference for every
+  `(request_id, assigned_approver_id, approval_step_id, outcome, request_revision,
+  issuance_generation)` tuple. All three outcomes for one approver must have
+  different references; different approvers and different requests must never
+  share a reference. Store only a keyed digest/hash and authoritative server-side
+  tuple metadata, not raw tokens. A resend may explicitly rotate a generation
+  and revoke prior issued links; changes to approval step, request revision,
+  assignment or delegated approver invalidate stale link bindings. Do not
+  encode personal data, email addresses or mutable permission claims in URLs;
+- the clicked email link's bound outcome must match the outcome committed by
+  the confirmation POST. Switching from Approve to Deny requires opening the
+  appropriate distinct intent or navigating to the neutral authenticated
+  request page and passing its explicit confirmation; client-provided outcome
+  fields cannot override a bound action link;
+- **Attribution is mandatory:** immutable audit evidence binds the request ID,
+  immutable action fingerprint, policy/request revision, approval step and
+  recipient/assignment identity to the *actual authenticated decision actor*,
+  including original approver vs authorized delegate, selected outcome,
+  verification mode/result, decision timestamp and decision event ID. An email
+  address, forwarded URL or embedded approver ID is not proof of who acted;
+- a completed decision consumes its intent and revokes the same actor's
+  unused sibling outcome links atomically. Preserve independent pending
+  approvers until the configured ALL/N-of-M/sequential/ANY resolution rules
+  close the relevant stage; after stage closure, any no-longer-authorized links
+  are invalid. Replayed/opened links do not create a second decision;
 - a GET/HEAD/prefetch/email-security-scanner opening a decision link **must only
   display a read-only landing**, showing exact requested action, decision already
   selected by the email link, current status and assigned identity; it must never
@@ -433,6 +459,14 @@ Acceptance / regression evidence:
 - real rendered request/reminder email contains three *distinct* outcome links,
   each opening a read-only, correctly preselected decision context; final UX mode
   is documented rather than inferred from the original patent embodiment;
+- enforce and test unique references across **multiple requests, multiple
+  assigned approvers, all three outcomes, sequential steps, reminder reissues,
+  reassignment, delegation and request revisions**; no duplicates, guessable
+  IDs, information leaks or cross-approver/cross-outcome privilege escalation;
+- audit assertions prove actual logged-in actor and original intended
+  recipient are distinguishable (including valid delegation). Cross-user
+  forwarding and stale/replayed/sibling links must never attribute a false
+  approval or generate an additional decision;
 - crawler/antivirus HEAD/GET/unfurl, wrong identity, mail forwarding, stale
   revision, expiry, multi-approver races, replay and challenge brute-force cannot
   alter authorization or cause execution; no leaked codes/tokens;
