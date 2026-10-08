@@ -277,6 +277,16 @@ def request_chain(db: Database, actor: Principal, ident: str) -> dict:
                WHERE x.request_id=? ORDER BY c.issued_at,c.id LIMIT 1000""",
             (ident,),
         ).fetchall()
+        mfa_proofs = conn.execute(
+            """SELECT c.verified_user_id,c.mfa_verified_at,
+                      x.approval_assignment_id,x.recipient_id,i.outcome
+               FROM decision_confirmations c
+               JOIN decision_intents i ON i.token_digest=c.intent_digest
+               JOIN decision_issuances x ON x.id=i.issuance_id
+               WHERE x.request_id=? AND c.mfa_verified_at IS NOT NULL
+               ORDER BY c.mfa_verified_at,c.context_digest LIMIT 1000""",
+            (ident,),
+        ).fetchall()
         from .verification_policy import current_required
 
         current_mode = current_required(conn, conn.execute(
@@ -313,11 +323,26 @@ def request_chain(db: Database, actor: Principal, ident: str) -> dict:
         "otp_challenges": [dict(item) for item in otp],
         "otp_challenges_total": total_otp,
         "otp_challenges_truncated": total_otp > len(otp),
+        "fresh_identity_proofs": [
+            {
+                "verified_grant_user_id": item["verified_user_id"],
+                "verified_at": item["mfa_verified_at"],
+                "approval_assignment_id": item["approval_assignment_id"],
+                "recipient_id": item["recipient_id"],
+                "outcome": item["outcome"],
+                "proof_method": "GRANT_FRESH_TOTP",
+                "decision_only": True,
+            }
+            for item in mfa_proofs
+        ],
         "decision_verification": {
             "snapshot": row["decision_verification_mode"],
             "current_minimum": current_mode,
             "mailbox_code_is_mfa": False,
         },
-        "identity_evidence_limit": "EMAIL_LINK_PIN_NOT_PERSON_VERIFIED",
+        "identity_evidence_limit": (
+            "GRANT_ACCOUNT_FRESH_TOTP_VERIFIED" if mfa_proofs
+            else "EMAIL_LINK_PIN_NOT_PERSON_VERIFIED"
+        ),
         "current_is_execution_verified": False,
     }

@@ -234,8 +234,8 @@ def test_operator_counts_outstanding_email_otp_and_unavailable_fresh_mfa(env):
     overview = env.human("admin").get("/api/v1/admin/operations")
     assert overview.status_code == 200
     assert overview.json()["decision_email_security"]["active_challenges"] == 1
-    # An independent installed MFA verification provider remains unavailable;
-    # make that operational gap visible without claiming this email code is MFA.
+    # This request has not supplied its separate enrolled-user fresh TOTP
+    # proof; same-mailbox OTP must never be counted as verified MFA.
     high = env.core.create_profile(
         env.admin,
         Profile(

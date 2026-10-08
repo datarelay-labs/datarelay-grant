@@ -121,7 +121,7 @@ def test_immutable_audit_survives_disposable_backup_restore(env, tmp_path):
     env.db.backup(destination)
     restored = Database(destination)
     with restored.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 11
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
         audit_rows = conn.execute(
             "SELECT id FROM audit WHERE request_id=? ORDER BY at DESC,id DESC",
             (row["id"],),

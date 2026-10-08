@@ -108,6 +108,11 @@ class IntentOtpVerification(IntentOtpRequest):
     otp: str = Field(min_length=6, max_length=6, pattern=r"^[0-9]{6}$")
 
 
+class IntentMfaVerification(Input):
+    confirmation_token: str = Field(min_length=32, max_length=100)
+    code: str = Field(min_length=6, max_length=6, pattern=r"^[0-9]{6}$")
+
+
 class RequestComment(Input):
     kind: Literal["COMMENT", "QUESTION", "REQUEST_INFO", "REQUEST_CHANGES", "INFO_RESPONSE"]
     body: str = Field(min_length=1, max_length=2000)

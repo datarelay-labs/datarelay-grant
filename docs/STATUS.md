@@ -39,12 +39,18 @@ For EMAIL_PIN_PLUS_OTP, a deliberate scoped POST requests a separately
 queued encrypted six-digit email code; a distinct POST verifies it for
 one intent/confirmation context (short expiry, limited retries, reissue
 cooldown) before the final explicit decision. That extra code goes to the
-same mailbox and is **not MFA**. Mandatory fresh EMAIL_PIN_PLUS_MFA
-fails closed until a genuinely independently verified step-up provider is
-implemented; an existing authenticated approval API cannot bypass it.
-End-to-end verified person attribution, customer OTP/MFA Web experience,
-live external mail receipts and complete operations/release gates remain
-G10A-3/4/5 follow-up work. This branch is not released or accepted.
+same mailbox and is **not MFA**. Additive v12 backend EMAIL_PIN_PLUS_MFA
+can now require a current registered Grant user session plus a fresh
+rate-limited one-use TOTP code, binding that proof to the same recipient,
+intent, and single-use confirmation. The final decision rechecks the
+same live session, current recipient and independently recorded TOTP
+proof. A revoked session, unknown/unconfigured IdP or absent enrolled
+TOTP still fails closed; the older authenticated approval API cannot
+bypass required step-up. Attribution identifies a verified local Grant
+account, not a legal identity or independently tested external SSO.
+Customer OTP/MFA Web experience, real external mailbox receipts and
+complete operator/user/release gates remain outstanding. This branch
+is not released or accepted.
 
 G10A-4 backend evidence now projects immutable seat IDs and epochs,
 original versus delegated mailbox issuance generations, bounded OTP

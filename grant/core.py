@@ -2059,6 +2059,7 @@ class Core:
         now: float, represented: str, actual_actor_id: str,
         decision: str, reason: str, issuance_id: str | None = None,
         actor_assurance: str | None = None,
+        verified_actor_id: str | None = None,
     ) -> None:
         # Caller owns BEGIN IMMEDIATE and authorization/expiry checks.
         ident = row["id"]
@@ -2102,7 +2103,9 @@ class Core:
             state, until = "HELD", None
         else:
             state, until = "AWAITING", None
-        verified_person_id = actual_actor_id if issuance_id is None else None
+        verified_person_id = (
+            actual_actor_id if issuance_id is None else verified_actor_id
+        )
         conn.execute(
             """UPDATE requests SET state=?,decision=?,decision_actor=?,decision_at=?,
                grant_until=?,revision=revision+1 WHERE id=?""",

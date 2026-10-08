@@ -498,7 +498,7 @@ def test_restored_backup_never_reactivates_previous_mail_capability(env, tmp_pat
     restored_db = Database(recovered)
     recovered_settings = replace(env.settings, database=recovered)
     with restored_db.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 11
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
         stored = conn.execute(
             "SELECT payload FROM outbox WHERE issuance_id=?", (mail["issuance_id"],),
         ).fetchone()[0]

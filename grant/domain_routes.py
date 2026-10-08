@@ -19,6 +19,7 @@ from .models import (
     Integration,
     IntegrationVerificationPolicy,
     IntentConfirmation,
+    IntentMfaVerification,
     IntentOtpRequest,
     IntentOtpVerification,
     IntentPin,
@@ -69,9 +70,16 @@ def register_domain(app, actor, human, reader):
     @app.post("/api/v1/decision-intents/{token}/confirm")
     def confirm_decision_pin(token: str, body: IntentConfirmation, request: Request):
         from .decision_links import DecisionLinks
+
         require_decision_origin(request)
+        # Default loginless EMAIL_PIN/OTP flows do not require a product
+        # session. For fresh MFA only, the proof is bound to one authenticated
+        # Grant session and the final POST must present CSRF from that session.
+        principal = None
+        if request.cookies.get("grant_session") and request.headers.get("x-csrf-token"):
+            principal = human(request)
         return DecisionLinks(core.db, core.settings).confirm(
-            token, body.confirmation_token, body.reason,
+            token, body.confirmation_token, body.reason, actor=principal,
         )
 
     @app.post("/api/v1/decision-intents/{token}/otp/request", status_code=202)
@@ -92,6 +100,17 @@ def register_domain(app, actor, human, reader):
         return DecisionOtp(core.db, core.settings).verify(
             token, body.confirmation_token, body.otp,
             request.client.host if request.client else "unknown",
+        )
+
+    @app.post("/api/v1/decision-intents/{token}/mfa/verify")
+    def verify_decision_fresh_mfa(
+        token: str, body: IntentMfaVerification, request: Request,
+    ):
+        from .decision_mfa import DecisionMfa
+
+        require_decision_origin(request)
+        return DecisionMfa(core.db, core.settings).verify(
+            human(request), token, body.confirmation_token, body.code,
         )
 
     @app.post("/api/v1/admin/requests/{ident}/decision-links/reissue")

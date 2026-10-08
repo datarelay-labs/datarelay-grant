@@ -275,11 +275,12 @@ If a change-request deadline expires, the requester may create a new linked
 replacement without cancelling the now-expired original. Every replacement
 requires fresh action-bound approval; the original timeline remains immutable.
 
-The G10A **backend-only development branch** now uses additive schema v11:
+The G10A **backend-only development branch** now uses additive schema v12:
 v8 is the prior collaboration baseline, v9 introduces durable approval
 assignments and policy-versioned Deny reasons, v10 adds protected email PIN
-issuance and confirmation, and v11 introduces customer verification
-snapshots and short-lived extra-email OTP challenges. Legacy v1-v10
+issuance and confirmation, v11 introduces customer verification snapshots
+and short-lived extra-email OTP challenges, and v12 adds scoped fresh
+Grant account TOTP evidence bound to a live signed-in session. Legacy v1-v11
 schemas migrate forward through supported steps, including re-entry
 safety for previously added columns. Existing persisted requests do NOT
 automatically acquire fresh loginless decision links on migration.
@@ -296,7 +297,8 @@ For authorized administrators, inspect the existing read-only
 GET /api/v1/admin/audit/chain/{request_id} evidence projection. It shows
 the immutable action hash, approval assignments/steps and epochs,
 per-recipient issuance IDs, original/delegate status, requested
-verification floor, bounded typed PIN/OTP failure history, issuance
+verification floor, bounded typed PIN/OTP/fresh TOTP failure history,
+verified local Grant user ID only when an actual fresh proof exists, issuance
 state, and sanitized outbox metadata. It **never** returns raw
 Approve/Hold/Deny bearer URLs, PIN/OTP codes, keyed digests, SMTP
 credentials or queued email body. Receipt beyond SMTP acceptance is
@@ -324,10 +326,17 @@ integration/account authority before a reissue.
 An extra six-digit OTP is requested only through the protected decision
 POST after the mailbox PIN and can prove continued access to that
 **same email mailbox only**. It is not independent MFA or proof of
-named-person identity. Unimplemented independent EMAIL_PIN_PLUS_MFA
-step-up must fail closed; do not force lower policy, bypass recovery
-pause, or claim a completed real-user browser/mailbox E2E. Full
-external and user acceptance remains a separate release gate.
+named-person identity. For EMAIL_PIN_PLUS_MFA, the backend can instead
+use a currently signed-in, enabled Grant recipient who has already
+enrolled TOTP. A separate protected POST must verify a NEW TOTP step
+and bind that verified local account and live session to the decision
+context; the final POST requires the same session and rechecks current
+authority. The current local-account TOTP method is not external SSO
+or evidence that a legally named individual acted. Unsupported SSO
+providers, absent TOTP, revoked sessions and replay fail closed.
+Never force a lower policy, bypass recovery pause or claim completed
+real-user browser/mailbox E2E. Full external and user acceptance
+remains a separate release gate.
 
 ## Browser checks
 

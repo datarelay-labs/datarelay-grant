@@ -200,7 +200,7 @@ def test_v8_upgrade_backfills_seats_but_never_enables_old_email_pin(env, tmp_pat
         assert conn.execute(
             "SELECT COUNT(*) FROM approval_assignments WHERE request_id=?", (request["id"],),
         ).fetchone()[0] == 2
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 11
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
     backup = tmp_path / "grant-v9.backup"
     upgraded.backup(backup)
     restored = tmp_path / "grant-v9-restored.sqlite"

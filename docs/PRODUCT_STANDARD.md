@@ -582,11 +582,15 @@ assurance and the complete user gates.
 
 **Implementation planning:** G10A-0, backend-only G10A-1/2, and the
 policy-version/extra-email-OTP portion of G10A-3 are implemented in an
-unreleased branch with isolated deterministic tests. A separately verified
-fresh MFA step-up for EMAIL_PIN_PLUS_MFA intentionally fails closed until
-implemented. No mailbox/decision Web UI, independently verified person,
+unreleased branch with isolated deterministic tests. Backend-only
+EMAIL_PIN_PLUS_MFA can verify an enrolled Grant account through its current
+authenticated session and a NEW one-use, rate-limited TOTP proof bound to
+that particular email intent and confirmation context. Missing TOTP,
+stale/revoked sessions, unsupported external IdPs and proof replays fail
+closed. This local-account verification is not legal proof of a person's
+identity and is not a verified customer SSO integration. No decision Web UI,
 live external mailbox receipt or direct Full User E2E has passed. Complete
-G10A-3..5 security, audit and user gates remain pending.
+G10A-3..5 external and user gates remain pending.
 Cross-project Foundation still owns shared Auth UI; the
 no-login Grant decision screen is a Grant-domain scoped surface,
 not a fork of the shared user sign-in UI. The bounded design rationale

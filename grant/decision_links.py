@@ -16,6 +16,7 @@ import time
 from typing import Any
 
 from .approval_mail import eligible_recipients
+from .auth import Principal, require_current_authority
 from .config import Settings
 from .db import Database, audit, uid
 from .errors import GrantError
@@ -408,7 +409,10 @@ class DecisionLinks:
             "execution_allowed": False,
         }
 
-    def confirm(self, token: str, context: str, reason: str) -> dict[str, Any]:
+    def confirm(
+        self, token: str, context: str, reason: str,
+        actor: Principal | None = None,
+    ) -> dict[str, Any]:
         from .core import Core
 
         now = time.time()
@@ -430,21 +434,46 @@ class DecisionLinks:
             from .verification_policy import current_required
 
             effective = current_required(conn, request)
+            verified_person_id = None
             if effective == "EMAIL_PIN_PLUS_MFA":
-                raise GrantError("FRESH_IDENTITY_MFA_REQUIRED", 403)
+                if not actor or actor.kind != "human" or not actor.session_id:
+                    raise GrantError("FRESH_IDENTITY_MFA_REQUIRED", 403)
+                require_current_authority(conn, actor)
+                if (
+                    actor.id != state["recipient_id"]
+                    or checked["mfa_verified_at"] is None
+                    or checked["verified_user_id"] != actor.id
+                    or checked["mfa_session_id"] != actor.session_id
+                    or checked["mfa_verified_at"] > now
+                    or now - checked["mfa_verified_at"] > 300
+                ):
+                    raise GrantError("FRESH_IDENTITY_MFA_REQUIRED", 403)
+                verified_mfa_user = conn.execute(
+                    "SELECT enabled,totp_secret FROM users WHERE id=?",
+                    (actor.id,),
+                ).fetchone()
+                if not verified_mfa_user or (
+                    not verified_mfa_user["enabled"]
+                    or not verified_mfa_user["totp_secret"]
+                ):
+                    raise GrantError("FRESH_IDENTITY_MFA_REQUIRED", 403)
+                verified_person_id = actor.id
             if effective == "EMAIL_PIN_PLUS_OTP" and not checked["otp_verified_at"]:
                 raise GrantError("EMAIL_OTP_REQUIRED", 403)
             if state["outcome"] == "DENIED" and request["denial_reason_required"] and not reason.strip():
                 raise GrantError("DENIAL_REASON_REQUIRED", 422)
+            assurance = (
+                "EMAIL_LINK_PIN_PLUS_MFA"
+                if verified_person_id is not None
+                else "EMAIL_LINK_PIN_PLUS_OTP"
+                if checked["otp_verified_at"] is not None
+                else "EMAIL_LINK_PIN"
+            )
             Core(self.db, self.settings)._record_vote(
                 conn, request, now=now, represented=state["original_id"],
                 actual_actor_id=state["recipient_id"], decision=state["outcome"],
                 reason=reason, issuance_id=state["issuance_id"],
-                actor_assurance=(
-                    "EMAIL_LINK_PIN_PLUS_OTP"
-                    if checked["otp_verified_at"] is not None
-                    else "EMAIL_LINK_PIN"
-                ),
+                actor_assurance=assurance, verified_actor_id=verified_person_id,
             )
             conn.execute(
                 "UPDATE decision_confirmations SET consumed_at=? WHERE context_digest=?",
@@ -464,10 +493,8 @@ class DecisionLinks:
             ).fetchone()["state"]
         return {
             "recorded": True, "decision": state["outcome"], "state": new_state,
-            "actor_assurance": (
-                "EMAIL_LINK_PIN_PLUS_OTP" if effective == "EMAIL_PIN_PLUS_OTP"
-                else "EMAIL_LINK_PIN"
-            ),
-            "verified_person_id": None,
+            "actor_assurance": assurance,
+            "verified_person_id": verified_person_id,
+            "mfa_verified": verified_person_id is not None,
             "execution_allowed": False,
         }

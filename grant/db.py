@@ -175,7 +175,9 @@ CREATE TABLE IF NOT EXISTS decision_confirmations (
  context_digest TEXT PRIMARY KEY,
  intent_digest TEXT NOT NULL REFERENCES decision_intents(token_digest),
  expires_at REAL NOT NULL, created_at REAL NOT NULL, consumed_at REAL,
- otp_verified_at REAL
+ otp_verified_at REAL,
+ mfa_verified_at REAL, verified_user_id TEXT REFERENCES users(id),
+ mfa_session_id TEXT
 );
 CREATE TABLE IF NOT EXISTS decision_otp_challenges (
  id TEXT PRIMARY KEY, context_digest TEXT NOT NULL REFERENCES decision_confirmations(context_digest),
@@ -211,7 +213,7 @@ CREATE TABLE IF NOT EXISTS escalations (
  due_at REAL NOT NULL, fired_at REAL,
  CHECK ((target_user_id IS NOT NULL) != (target_group_id IS NOT NULL))
 );
-PRAGMA user_version=11;
+PRAGMA user_version=12;
 """
 
 
@@ -244,7 +246,7 @@ class Database:
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11):
+            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12):
                 raise RuntimeError("Unsupported database schema; do not downgrade this binary")
             conn.execute("PRAGMA journal_mode=WAL")
             if version == 1:
@@ -276,6 +278,9 @@ class Database:
                 version = 10
             if version == 10:
                 self._migrate_v10_to_v11(conn)
+                version = 11
+            if version == 11:
+                self._migrate_v11_to_v12(conn)
             conn.executescript(SCHEMA)
         private_file(path)
 
@@ -647,6 +652,27 @@ class Database:
         PRAGMA user_version=11;
         """)
 
+    @staticmethod
+    def _migrate_v11_to_v12(conn: sqlite3.Connection) -> None:
+        # Add only proof metadata. Existing sessions, older email contexts,
+        # and in-flight requests never gain verified identity implicitly.
+        existing = {
+            column[1] for column in conn.execute(
+                "PRAGMA table_info(decision_confirmations)"
+            )
+        }
+        for name, definition in (
+            ("mfa_verified_at", "REAL"),
+            ("verified_user_id", "TEXT REFERENCES users(id)"),
+            ("mfa_session_id", "TEXT"),
+        ):
+            if name not in existing:
+                conn.execute(
+                    "ALTER TABLE decision_confirmations "
+                    f"ADD COLUMN {name} {definition}"
+                )
+        conn.execute("PRAGMA user_version=12")
+
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
         conn.row_factory = sqlite3.Row
@@ -683,7 +709,7 @@ class Database:
         with closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
-            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11):
+            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12):
                 raise ValueError("Backup schema mismatch")
             with closing(sqlite3.connect(destination)) as new:
                 old.backup(new)
