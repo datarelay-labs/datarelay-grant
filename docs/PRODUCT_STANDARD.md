@@ -305,6 +305,69 @@ System-level notification branding owns product name, sender display name, logo 
 basic visual identity. Policy-specific content can override text, not security-owned
 layout or authority controls.
 
+### 10.5 Email decision links (planned G10A contract)
+
+For each approval request and each assigned approver, the requested/reminder email
+may present three separate labeled response hyperlinks: **Approve**, **Hold
+(Pending)** and **Deny**. This preserves the response-menu interaction described
+in US 12,056,667 B1 (Figures 13–16), alongside a neutral Request Details link.
+Existing Grant 1.0 development currently supports only the neutral request
+link and an authenticated web decision UI. Outcome-specific email links and
+email verification are **planned, not yet implemented**.
+
+Each email response link is a **decision-intent deep link**, not an approval
+callback with mutation authority. It must be bound to the exact request, intended
+outcome, assigned approver/approval step and expected revision. Link query values
+and recipient display names are never trusted as authentication. Grant's
+external-system signed callbacks remain an independent *outbound event* mechanism.
+
+- GET, HEAD, preview and scanner prefetch must be side-effect-free: show the
+  immutable action and a clearly preselected outcome, or a safe sign-in prompt.
+  No decision, grant, OTP challenge or business execution occurs on link opening.
+- A real, currently authorized human must deliberately confirm through an
+  authenticated, CSRF-protected POST; the server rechecks assigned identity,
+  policy/approval-step, delegation, revision, request state, expiration, MFA
+  requirement and action binding in its existing atomic decision transaction.
+- The response page must clearly distinguish the already selected email outcome
+  from the **not-yet-recorded** final decision. A completed/replayed/expired/
+  reassigned/forwarded link may inform the viewer safely but cannot reauthorize.
+- The notification service owns the safe rendering of three action-specific
+  decision links. Templates may place approved link placeholders, but cannot
+  construct arbitrary URLs or embed raw bearer credentials, OTP/PIN material,
+  arbitrary payloads or user-controlled destinations. Preview/test messages use
+  non-authorizing placeholders. Real link contents and verification details
+  must be redacted in request logs, analytics and audit exports.
+- No open, click, delivery receipt or external signed callback is itself a
+  human approval or permission to perform the protected business operation.
+
+### 10.6 Per-policy decision verification (planned G10A contract)
+
+The versioned approval policy configures decision verification without altering
+existing in-flight requests. Proposed tiers:
+
+1. **Standard** — current authenticated approver, preselected email-link
+   response, explicit on-page final confirmation.
+2. **Verified** — Standard plus an on-demand six-digit confirmation challenge
+   delivered to the assigned approver in a *separate* email when requested.
+   Proposed initial limits: 5-minute expiry, maximum 3 failed submissions,
+   throttled resend, bounded attempts across renewals, one-use challenge,
+   no successful challenge reusable for another outcome/request/revision.
+3. **High Assurance** — configured fresh MFA/identity step-up in addition to an
+   explicit decision; absent/unavailable step-up **must fail closed**.
+
+A four-digit number printed in the *original* approval email remains an optional
+UX/intent confirmation candidate for further evaluation. A code delivered to
+the same email account as the decision link is **not independent MFA**, nor
+does it independently establish the approver's identity. Neither the 4-digit
+candidate nor the 6-digit email challenge may be marketed as MFA. Challenge
+materials must not appear in admin previews, diagnostics, template export,
+audit data or arbitrary client response payloads.
+
+Administrators configure verification mode, challenge expiry/retry limits and
+event-safe notification appearance in Approval Policies/Notifications; defaults,
+version snapshots, delivery failures and audit attribution must be tested before
+any feature is claimed as supported.
+
 ## 11. User experience standard
 
 Grant follows the DataRelay Product Foundation for shared application identity, semantic
@@ -464,7 +527,8 @@ The policy editor is organized as:
 
 1. **General** — name, description, lifecycle/version.
 2. **Applies To** — integration/action/tenant/environment/severity/risk.
-3. **Approval** — mode, steps, users/groups, reason requirement.
+3. **Approval** — mode, steps, users/groups, reason requirement and decision
+   verification mode (G10A, when implemented).
 4. **Timing** — deadline, reminder, escalation, delegation behavior.
 5. **Execution Grant** — validity and action binding.
 6. **Notifications** — template set and event enablement.
@@ -529,6 +593,8 @@ Exports must distinguish current authoritative state from historical events.
 Product 1.0 requires:
 
 - authenticated human decisions;
+- GET/HEAD/email-prefetch paths never mutate approval state or send challenges;
+- email-only verification codes are not independent MFA;
 - MFA capability;
 - scoped integration credentials;
 - CSRF/session protection;
