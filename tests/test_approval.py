@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 
 from grant.errors import GrantError
-from grant.models import Cancel, Consume
+from grant.models import Cancel, Consume, Integration, ProfileUpdate
 
 
 def create(env, body=None):
@@ -73,6 +73,61 @@ def test_idempotent_intake_and_conflicting_change(env):
     with env.db.transaction(write=False) as conn:
         assert conn.execute("SELECT count(*) FROM requests").fetchone()[0] == 1
         assert conn.execute("SELECT count(*) FROM outbox").fetchone()[0] == 1
+
+
+def test_human_external_id_conflict_uses_integration_uniqueness_key(env):
+    body = env.intake(external_id="human-idempotency")
+    first = env.human("requester").post("/api/v1/requests", json=body)
+    assert first.status_code == 202, first.text
+    with env.db.transaction() as conn:
+        conn.execute(
+            "INSERT INTO profiles(id,name,integration_id,approver_id,action_kind,deadline_seconds,reminder_seconds,max_reminders,grant_seconds,enabled) VALUES(?,?,?,?,?,?,?,?,?,0)",
+            ("other-profile", "Other", env.integration["id"], env.users["approver"]["id"], "service.restart", 86400, 3600, 3, 900),
+        )
+    conflict = env.human("stranger").post(
+        "/api/v1/requests", json={**body, "profile_id": "other-profile"}
+    )
+    assert conflict.status_code in (404, 409)
+    assert conflict.status_code != 500
+
+
+def test_human_idempotency_uses_active_version_integration_while_draft_changes_target(env):
+    requester = env.human("requester")
+    body = env.intake(external_id="human-active-version-idempotency")
+    first = requester.post("/api/v1/requests", json=body)
+    assert first.status_code == 202, first.text
+
+    secondary = env.core.create_integration(
+        env.admin,
+        Integration(
+            name="Secondary DataRelay",
+            kind="datarelay",
+            callback_url=env.settings.callback_urls[0],
+        ),
+    )
+    env.core.update_profile(
+        env.admin,
+        env.profile["id"],
+        ProfileUpdate(
+            name=env.profile["name"],
+            integration_id=secondary["id"],
+            approver_id=env.profile["approver_id"],
+            action_kind=env.profile["action_kind"],
+            email_template_id=env.profile["email_template_id"],
+            deadline_seconds=env.profile["deadline_seconds"],
+            reminder_seconds=env.profile["reminder_seconds"],
+            max_reminders=env.profile["max_reminders"],
+            grant_seconds=env.profile["grant_seconds"],
+            tenant_selector=env.profile["tenant_selector"],
+            environment=env.profile["environment"],
+            severity=env.profile["severity"],
+            risk_level=env.profile["risk_level"],
+        ),
+    )
+
+    replay = requester.post("/api/v1/requests", json=body)
+    assert replay.status_code == 202, replay.text
+    assert replay.json()["id"] == first.json()["id"]
 
 
 def test_duplicate_decision_is_not_duplicate_event(env):

@@ -47,6 +47,8 @@ def env(tmp_path):
             action_kind="service.restart",
         ),
     )
+    app.state.core.transition_profile(admin, profile["id"], "TESTING")
+    profile = app.state.core.transition_profile(admin, profile["id"], "ACTIVE")
     issued = app.state.auth.issue_token(
         admin,
         integration["id"],

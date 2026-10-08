@@ -34,10 +34,12 @@ for(const pass of [1,2]){
   row=await(await request.get('/api/v1/requests/'+id,{headers})).json();expect(row.state).toBe('HELD');
   await ap.getByRole('button',{name:'Confirm approved',exact:true}).click();
   await expect.poll(async()=>{const r=await request.get(f.receiver);return (await r.json()).events.some((e:any)=>e.request_id===id&&e.state==='APPROVED');}).toBeTruthy();
+  await expect.poll(async()=>{const r=await request.get(f.receiver);return (await r.json()).mail.some((m:string)=>m.includes('Approved: Browser request '+pass)&&m.includes(id));}).toBeTruthy();
   row=await(await request.get('/api/v1/requests/'+id,{headers})).json();expect(row.execution_state).toBe('NOT_STARTED');
   const first=await request.post('/api/v1/requests/'+id+'/consume',{headers,data:claim});expect(first.status()).toBe(200);expect((await first.json()).replay).toBe(false);
   const second=await request.post('/api/v1/requests/'+id+'/consume',{headers,data:claim});expect((await second.json()).replay).toBe(true);
   expect((await request.post('/api/v1/requests/'+id+'/result',{headers,data:{...claim,status:'REPORTED_SUCCEEDED',evidence:'Isolated consumer fixture, not a real DataRelay integration'}})).status()).toBe(200);
+  await expect.poll(async()=>{const r=await request.get(f.receiver);return (await r.json()).mail.some((m:string)=>m.includes('Execution succeeded: Browser request '+pass)&&m.includes(id));}).toBeTruthy();
   await ap.getByRole('button',{name:'Refresh',exact:true}).click();await expect(ap.getByText('Reported execution result',{exact:true})).toBeVisible();
   fs.mkdirSync('../.e2e/screenshots',{recursive:true});await ap.screenshot({path:`../.e2e/screenshots/approval-pass-${pass}.png`,fullPage:true});
   for(const outcome of ['DENIED','CANCELLED']){
@@ -51,12 +53,21 @@ for(const pass of [1,2]){
  });
 }
 
+
+test('Foundation login and grouped Grant shell follow the DataRelay family layout',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});const page=await context.newPage();
+ await page.goto('/home');await expect(page.locator('.dr-auth-layout')).toBeVisible();await expect(page.getByRole('heading',{name:'Welcome to DataRelay',exact:true})).toBeVisible();await expect(page.getByText('Please sign in to continue.',{exact:true})).toBeVisible();
+ await page.getByLabel('Username',{exact:true}).fill('admin');await page.getByLabel('Password',{exact:true}).fill(fixture().password);await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.getByText('Work',{exact:true})).toBeVisible();await expect(page.getByText('Configuration',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByText('Work that needs a human decision',{exact:true})).toBeVisible();
+ await context.close();
+});
+
 test('Foundation administration and mobile approval page are real adapters',async({browser})=>{
  const context=await browser.newContext({viewport:{width:390,height:844}});const page=await context.newPage();await login(page,'admin');
- await page.goto('/system');await expect(page.getByText('Accounts',{exact:true})).toBeVisible();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
+ await page.goto('/system');await expect(page.getByText('System health',{exact:true})).toBeVisible();await expect(page.getByText('Accounts',{exact:true})).toBeVisible();await page.getByRole('button',{name:'View',exact:true}).first().click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
  await page.goto('/integrations');await expect(page.locator('strong').filter({hasText:/^Isolated DataRelay fixture$/})).toBeVisible();await page.getByRole('button',{name:'Test connection',exact:true}).click();await expect(page.getByText('Test event accepted by the HTTP receiver. This is not approval or execution.')).toBeVisible();
- await page.goto('/email-templates');await expect(page.getByRole('heading',{name:'Email templates',exact:true})).toBeVisible();
- await page.goto('/profiles');await expect(page.getByRole('heading',{name:'Approval policies',exact:true})).toBeVisible();
+ await page.goto('/notifications');await expect(page.getByRole('heading',{name:'Notifications',exact:true,level:2})).toBeVisible();
+ await page.goto('/profiles');await expect(page.getByRole('heading',{name:'Approval policies',exact:true,level:2})).toBeVisible();
  await page.goto('/security');await expect(page.getByText('Active sessions',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Set up MFA',exact:true})).toBeVisible();
  await page.screenshot({path:'../.e2e/screenshots/mobile-security.png',fullPage:true});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();await context.close();
@@ -91,6 +102,7 @@ test('requester cancels and creates a newly approved replacement through the UI'
 test('administrator configures accounts/profile and explicitly revokes a scoped credential',async({browser,request})=>{
  const f=fixture();const context=await browser.newContext();const page=await context.newPage();
  await login(page,'admin');await page.goto('/system');
+ const accountsCard=page.locator('.dr-card').filter({hasText:'Accounts'}).first();await accountsCard.getByRole('button',{name:'Manage',exact:true}).click();
  await page.getByLabel('New username',{exact:true}).fill('browser-member');
  await page.getByLabel('New user email',{exact:true}).fill('browser-member@example.invalid');
  await page.getByLabel('Initial password',{exact:true}).fill(f.password);
@@ -114,22 +126,92 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  await page.getByRole('button',{name:'Confirm revoke',exact:true}).click();
  await expect(page.getByText('Credential revoked. Other credentials remain unchanged.')).toBeVisible();
  expect((await request.get('/api/v1/requests',{headers:{authorization:'Bearer '+credential.token}})).status()).toBe(401);
- await page.goto('/email-templates');
- await page.getByLabel('Template name',{exact:true}).fill('Browser approval mail');
- await page.getByLabel('Approval email subject',{exact:true}).fill('[Browser] {{request_title}}');
- await page.getByLabel('Approval email body',{exact:true}).fill('Approve {{action_kind}} on {{target}}.\n{{request_url}}');
- await page.getByLabel('Reminder email subject',{exact:true}).fill('[Browser reminder] {{request_title}}');
- await page.getByLabel('Reminder email body',{exact:true}).fill('Still waiting for {{external_id}}.\n{{request_url}}');
- await page.getByRole('button',{name:'Create template',exact:true}).click();
- await expect(page.getByText('Email template created.')).toBeVisible();
+ await page.goto('/notifications');
+ await page.getByRole('button',{name:'Create template set',exact:true}).click();
+ await page.getByLabel('Template set name',{exact:true}).fill('Browser approval notifications');
+ await page.getByLabel('Event subject',{exact:true}).fill('[Browser] {{request_title}}');
+ await page.getByLabel('Event body',{exact:true}).fill('Approve {{action_kind}} on {{target}}.\n{{request_url}}');
+ await page.getByRole('button',{name:'Create template set',exact:true}).click();
+ await expect(page.getByText('Notification template set created.')).toBeVisible();
+ await page.getByRole('button',{name:'Preview rendered message',exact:true}).click();
+ await expect(page.getByText('[Browser] Sample approval request',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Send test to me',exact:true}).click();
+ await expect(page.getByText(/Transport accepted: true.*Inbox receipt confirmed: false/)).toBeVisible();
  await page.goto('/profiles');
+ await page.getByRole('button',{name:'Create policy',exact:true}).click();
  await page.getByLabel('Policy name',{exact:true}).fill('Configured browser approval');
  await page.getByLabel('Integration',{exact:true}).selectOption({label:'Configured through browser'});
  await page.getByLabel('Assigned approver',{exact:true}).selectOption({label:'approver'});
  await page.getByLabel('Allowed action kind',{exact:true}).fill('test.configured');
- await page.getByLabel('Email template',{exact:true}).selectOption({label:'Browser approval mail'});
- await page.getByRole('button',{name:'Create policy',exact:true}).click();
- await expect(page.getByText('Approval policy created.')).toBeVisible();
- await page.screenshot({path:'../.e2e/screenshots/configured-policy-template.png',fullPage:true});
+ await page.getByLabel('Notification template set',{exact:true}).selectOption({label:'Browser approval notifications'});
+ await page.getByRole('button',{name:'Create draft',exact:true}).click();
+ await expect(page.getByText('Draft saved. It is not live until it passes Testing and is explicitly activated.')).toBeVisible();
+ await page.getByRole('button',{name:'Test policy',exact:true}).click();
+ await expect(page.getByText('Policy moved to Testing. Use isolated test before activation.')).toBeVisible();
+ await page.getByRole('button',{name:'Preview & Test',exact:true}).click();
+ await page.getByRole('button',{name:'Run isolated test',exact:true}).click();
+ await expect(page.getByText(/Isolated test: Configured browser approval v1/)).toBeVisible();
+ await page.getByRole('button',{name:'Activate policy',exact:true}).click();
+ await expect(page.getByText('Policy activated. Existing requests retain their original version snapshot.')).toBeVisible();
+ await page.getByRole('button',{name:'Preview active resolution',exact:true}).click();
+ await expect(page.getByText(/Resolved policy: Configured browser approval v1/)).toBeVisible();
+ await page.getByRole('button',{name:'History',exact:true}).click();
+ await expect(page.getByText('Version / change history',{exact:true})).toBeVisible();
+ await page.screenshot({path:'../.e2e/screenshots/configured-policy-notifications.png',fullPage:true});
  await context.close();
+});
+
+test('G1 browser policy selectors create a matching request and keep latest draft on disable',async({browser,request})=>{
+ const f=fixture();
+ const adminContext=await browser.newContext(),reqContext=await browser.newContext();
+ const ap=await adminContext.newPage(),rp=await reqContext.newPage();
+ await login(ap,'admin');
+ const session=await(await adminContext.request.get('/api/v1/auth/session')).json();
+ const headers={'x-csrf-token':session.csrf};
+ const policyInput={
+   name:'Browser selector v1', integration_id:f.integration_id,
+   approver_id:f.users.approver.id, action_kind:'test.selector',
+   tenant_selector:'finance',environment:'production',
+   severity:'high',risk_level:'critical',
+ };
+ const created=await adminContext.request.post('/api/v1/profiles',{headers,data:policyInput});
+ expect(created.status()).toBe(201);const policy=await created.json();
+ expect((await adminContext.request.post('/api/v1/profiles/'+policy.id+'/test',{headers})).status()).toBe(200);
+ expect((await adminContext.request.post('/api/v1/profiles/'+policy.id+'/activate',{headers})).status()).toBe(200);
+
+ await login(rp,'requester');
+ await rp.goto('/requests/new');
+ await rp.getByLabel('Approval profile',{exact:true}).selectOption(policy.id);
+ for(const [field,value] of [
+   ['Source tenant','finance'],
+   ['Environment','production'],
+   ['Severity','high'],
+   ['Risk level','critical'],
+ ]){
+   await expect(rp.getByLabel(field,{exact:true})).toHaveValue(value);
+ }
+ await rp.getByLabel('Request title',{exact:true}).fill('Selector matched browser request');
+ await rp.getByLabel('Target',{exact:true}).fill('safe-selector-test');
+ await rp.getByRole('button',{name:'Submit request',exact:true}).click();
+ await expect(rp.getByText('Exact action to be approved',{exact:true})).toBeVisible();
+ const id=rp.url().split('/').pop()!;
+ const actual=await(await adminContext.request.get('/api/v1/requests/'+id)).json();
+ expect(actual.source.tenant_id).toBe('finance');
+ expect(actual.source.environment).toBe('production');
+ expect(actual.source.severity).toBe('high');
+ expect(actual.source.risk_level).toBe('critical');
+ expect(actual.profile_id).toBe(policy.id);
+
+ const updated=await adminContext.request.put('/api/v1/profiles/'+policy.id,{
+   headers,data:{...policyInput,name:'Browser selector draft v2'},
+ });
+ expect(updated.status()).toBe(200);expect((await updated.json()).version).toBe(2);
+ await ap.goto('/profiles');
+ const policyRow=ap.getByRole('row').filter({hasText:'Browser selector draft v2'});
+ await policyRow.getByRole('button',{name:'Open',exact:true}).click();
+ await expect(ap.getByLabel('Policy name',{exact:true})).toHaveValue('Browser selector draft v2');
+ await ap.getByRole('button',{name:'Disable active',exact:true}).click();
+ await expect(ap.getByText('Active policy version disabled.')).toBeVisible();
+ await expect(ap.getByLabel('Policy name',{exact:true})).toHaveValue('Browser selector draft v2');
+ await adminContext.close();await reqContext.close();
 });

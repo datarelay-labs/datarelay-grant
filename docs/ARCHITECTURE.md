@@ -8,11 +8,17 @@ for one installation. Network sends occur outside transactions, through a leased
 outbox. This is a bounded local-server choice, not a distributed database contract.
 Atomic state + audit + outbox; stable IDs; cancel/consume/expiry serialize on the same
 row transaction. Action JSON is immutable, hashed using documented canonical encoding.
-Approval policies are mutable administration objects for future requests only. A request
-snapshots its assigned approver, timing policy and selected plain-text email/reminder
-template so later administrative edits cannot alter an approval already in flight.
-Database schema v2 adds email templates, policy-template references and request snapshots;
-schema v1 upgrades forward automatically without changing prior approval semantics.
+Approval policies use immutable versions with an explicit DRAFT -> TESTING -> ACTIVE ->
+DISABLED lifecycle. Saving edits creates or updates a non-live draft; only an explicit
+activation changes live matching. Product-1.0 matching is deterministic AND across the
+bounded integration/action/tenant/environment/severity/risk selectors. A request snapshots
+the exact active policy version, assigned approver, timing/execution-grant values and the
+complete event-oriented notification template set plus system branding so later
+administrative edits cannot alter an approval already in flight.
+Database schema v3 adds policy versions/lifecycle/selectors, event-oriented notification
+template sets, request policy-version references and outbox event types on top of the v2
+mail-template snapshot baseline. Schema v1 and v2 databases upgrade forward automatically
+without changing prior request semantics.
 The consumer uses the returned fingerprint and must preserve its own authorization.
 Execution commitment is not exactly-once execution or rollback. Results are reported,
 not independently verified. Unknown results require reconciliation, never blind retry.
@@ -24,8 +30,16 @@ Transport: configured destinations only; installation-registered exact URL allow
 or redirects. Endpoint ownership and DNS remain an installation trust boundary. Development HTTP only
 explicitly enabled on loopback. No public service, TLS/firewall/production changes.
 UI: exact Foundation public SDK through product adapters; unavailable capabilities
-are declared unavailable. Shared shell/auth/account/session/status/audit precede
-four Grant-specific views. Never a copied Foundation fork or mock authority.
+are declared unavailable. The Grant 1.0 target UI architecture has Foundation own the
+shared Auth UI, Product Shell, semantic
+tokens, account/session surfaces and capability-driven System Administration primitives.
+Grant supplies product identity, grouped navigation and typed adapters, then owns only
+approval-domain pages. Target primary IA is Home; Work (My approvals, Requests); Configuration
+(Approval Policies, Notifications, Integrations); Administration. Account & Security is
+a signed-in-user action rather than primary navigation. Approval Policies exposes
+Draft/Test/Activate, preview/isolated test and version history; Notifications exposes
+template sets, safe variables, preview/test send, delivery health and branding. Never a
+copied Foundation fork, direct product-DB access from shared UI or mock authority.
 Recovery: SQLite online backup + separately protected installation key; restore into
 a new path only, outgoing work and execution commitment paused for reconciliation.
 Tests: isolated API/security/DB-race/outbox HTTP tests, frontend types/build/Foundation

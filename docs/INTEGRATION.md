@@ -10,7 +10,7 @@ mapping language. Wire schema is available to an administrator at
 An administrator registers a DataRelay or Stellar integration with an installation-
 approved exact callback URL. Secrets in callback headers/HMAC material are encrypted
 and excluded from response projections. An approval policy fixes the integration, action kind,
-assigned human, optional administrator-managed email template, deadline, reminder policy
+assigned human, optional administrator-managed notification template set, deadline, reminder policy
 and execution validity. Requests cannot override the destination or approver. The policy
 and selected mail template are snapshotted for each new request; later edits affect only
 future requests. A Stellar integration requires a fixed tenant;

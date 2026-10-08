@@ -62,12 +62,23 @@ def test_real_http_callback_retry_uses_same_event_and_not_execution(env, receive
     settings, row = ready(env, url)
     statuses.extend([500, 202])
     worker = Worker(env.db, settings)
-    assert worker.tick() == 1
+    # Decision notifications are independently deliverable now, so drive one item
+    # at a time until the webhook has made its first attempt.
+    outbox = None
+    for _ in range(4):
+        worker.tick(limit=1)
+        with env.db.transaction(write=False) as conn:
+            outbox = conn.execute("SELECT * FROM outbox WHERE kind='webhook'").fetchone()
+        if outbox["attempts"] == 1:
+            break
+    assert outbox is not None
+    assert outbox["state"] == "PENDING" and outbox["attempts"] == 1
     with env.db.transaction() as conn:
-        outbox = conn.execute("SELECT * FROM outbox WHERE kind='webhook'").fetchone()
-        assert outbox["state"] == "PENDING" and outbox["attempts"] == 1
         conn.execute("UPDATE outbox SET available_at=0 WHERE id=?", (outbox["id"],))
-    assert worker.tick() == 1
+    for _ in range(3):
+        worker.tick(limit=1)
+        if len(received) == 2:
+            break
     assert len(received) == 2
     one, two = [json.loads(body) for _, body in received]
     assert one["event_id"] == two["event_id"]

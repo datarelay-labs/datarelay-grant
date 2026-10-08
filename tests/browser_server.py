@@ -122,6 +122,8 @@ def main():
                 action_kind="test.operation",
             ),
         )
+        app.state.core.transition_profile(admin, profile["id"], "TESTING")
+        profile = app.state.core.transition_profile(admin, profile["id"], "ACTIVE")
         token = app.state.auth.issue_token(
             admin,
             integration["id"],

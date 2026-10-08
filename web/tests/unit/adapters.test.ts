@@ -50,10 +50,16 @@ describe('Foundation consumer contracts',()=>{
   const result=verifyCapabilityProjection([{id:'backup.disaster_recovery.restore',label:'Restore',availability:'unavailable'}],[{id:'backup.disaster_recovery.restore',visible:false,interactive:false}]);
   expect(result.ok).toBe(true);
  });
- it('admin navigation exposes approval policy and email-template management',()=>{
+ it('admin navigation follows the task-oriented Foundation information architecture',()=>{
   const admin={...user,role:'admin' as const};const config=productConfig(admin);
-  expect(config.navigation.map(item=>item.path)).toEqual(expect.arrayContaining(['/profiles','/email-templates']));
-  expect(config.navigation.find(item=>item.path==='/profiles')?.label).toBe('Approval policies');
-  expect(config.navigation.find(item=>item.path==='/email-templates')?.label).toBe('Email templates');
+  expect(config.product.homePath).toBe('/home');
+  expect(config.navigation.map(item=>item.path)).toEqual(expect.arrayContaining(['/home','/approvals','/requests','/profiles','/notifications','/integrations','/system']));
+  expect(config.navigation.find(item=>item.path==='/approvals')?.group).toBe('Work');
+  expect(config.navigation.find(item=>item.path==='/profiles')?.group).toBe('Configuration');
+  expect(config.navigation.find(item=>item.path==='/notifications')?.group).toBe('Configuration');
+  expect(config.navigation.find(item=>item.path==='/system')?.label).toBe('Administration');
+  expect(config.navigation.find(item=>item.path==='/security')).toBeUndefined();
+  expect(config.navigation.find(item=>item.path==='/email-templates')).toBeUndefined();
+  expect(config.capabilities['users.manage']).toBe('supported');
  });
 });

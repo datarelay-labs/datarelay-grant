@@ -6,6 +6,7 @@ import hashlib
 import json
 import sqlite3
 import time
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -13,7 +14,13 @@ from .auth import Principal, require_current_authority
 from .config import Settings
 from .db import Database, audit, json_text, uid
 from .errors import GrantError
-from .mail_templates import DEFAULT_MAIL_TEMPLATE, render_mail, snapshot
+from .mail_templates import (
+    ALLOWED_VARIABLES,
+    DEFAULT_EVENT_TEMPLATES,
+    render_from_context,
+    render_notification,
+    snapshot,
+)
 from .models import (
     Cancel,
     Consume,
@@ -22,10 +29,24 @@ from .models import (
     EmailTemplateUpdate,
     Intake,
     Integration,
+    NotificationBrandingUpdate,
+    NotificationPreview,
+    NotificationTemplateSet,
+    NotificationTemplateSetUpdate,
+    NotificationTestSend,
+    PolicySample,
     Profile,
     ProfileUpdate,
     Result,
 )
+from .policy import (
+    active_version,
+    latest_version,
+    resolve_policy,
+    selector_evaluation,
+    version_view,
+)
+from .policy import history as policy_versions
 
 
 def bounded_json(value: Any, depth: int = 0) -> None:
@@ -148,32 +169,193 @@ class Core:
         ).fetchone():
             raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
 
-    def create_email_template(self, actor: Principal, body: EmailTemplate) -> dict:
+    @staticmethod
+    def _validate_version_refs(conn: sqlite3.Connection, row: sqlite3.Row) -> None:
+        if not conn.execute(
+            "SELECT id FROM integrations WHERE id=? AND enabled=1", (row["integration_id"],)
+        ).fetchone():
+            raise GrantError("INTEGRATION_NOT_FOUND", 404)
+        if not conn.execute(
+            "SELECT id FROM users WHERE id=? AND enabled=1", (row["approver_id"],)
+        ).fetchone():
+            raise GrantError("APPROVER_NOT_FOUND", 404)
+        if row["email_template_id"] and not conn.execute(
+            "SELECT id FROM email_templates WHERE id=? AND enabled=1",
+            (row["email_template_id"],),
+        ).fetchone():
+            raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
+
+    @staticmethod
+    def _branding(conn: sqlite3.Connection) -> dict[str, str]:
+        values = {
+            row["key"]: row["value"]
+            for row in conn.execute(
+                "SELECT key,value FROM runtime WHERE key IN ('notification_brand_name','notification_sender_display_name')"
+            ).fetchall()
+        }
+        return {
+            "brand_name": values.get("notification_brand_name", "DataRelay Grant"),
+            "sender_display_name": values.get(
+                "notification_sender_display_name", "DataRelay Grant"
+            ),
+            "logo_asset": "/assets/datarelay-grant-icon.svg",
+        }
+
+    def notification_branding(self, actor: Principal) -> dict[str, str]:
+        actor.require_admin()
+        with self.db.transaction(write=False) as conn:
+            return self._branding(conn)
+
+    def update_notification_branding(
+        self, actor: Principal, body: NotificationBrandingUpdate
+    ) -> dict[str, str]:
+        actor.require_admin()
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            conn.execute(
+                "INSERT OR REPLACE INTO runtime(key,value) VALUES('notification_brand_name',?)",
+                (body.brand_name,),
+            )
+            conn.execute(
+                "INSERT OR REPLACE INTO runtime(key,value) VALUES('notification_sender_display_name',?)",
+                (body.sender_display_name,),
+            )
+            audit(
+                conn,
+                None,
+                actor.id,
+                "notification.branding_updated",
+                {
+                    "brand_name": body.brand_name,
+                    "sender_display_name": body.sender_display_name,
+                },
+            )
+        return {
+            "brand_name": body.brand_name,
+            "sender_display_name": body.sender_display_name,
+            "logo_asset": "/assets/datarelay-grant-icon.svg",
+        }
+
+    @staticmethod
+    def _template_set_view(row: sqlite3.Row) -> dict:
+        return {
+            "id": row["id"],
+            "name": row["name"],
+            "templates": json.loads(row["event_templates"]),
+            "enabled": bool(row["enabled"]),
+            "created_at": row["created_at"],
+            "updated_at": row["updated_at"],
+        }
+
+    def create_notification_template_set(
+        self, actor: Principal, body: NotificationTemplateSet
+    ) -> dict:
         actor.require_admin()
         ident, now = uid(), time.time()
-        try:
-            with self.db.transaction() as conn:
-                require_current_authority(conn, actor)
+        templates = {key: value.model_dump() for key, value in body.templates.items()}
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            branding = self._branding(conn)
+            try:
                 conn.execute(
                     """INSERT INTO email_templates(
                        id,name,subject_template,body_template,reminder_subject_template,
-                       reminder_body_template,enabled,created_at,updated_at
-                    ) VALUES(?,?,?,?,?,?,1,?,?)""",
+                       reminder_body_template,event_templates,sender_display_name,
+                       enabled,created_at,updated_at
+                    ) VALUES(?,?,?,?,?,?,?,?,1,?,?)""",
                     (
                         ident,
                         body.name,
-                        body.subject_template,
-                        body.body_template,
-                        body.reminder_subject_template,
-                        body.reminder_body_template,
+                        templates["requested"]["subject"],
+                        templates["requested"]["body"],
+                        templates["reminder"]["subject"],
+                        templates["reminder"]["body"],
+                        json_text(templates),
+                        branding["sender_display_name"],
                         now,
                         now,
                     ),
                 )
-                audit(conn, None, actor.id, "email_template.created", {"template_id": ident})
-        except sqlite3.IntegrityError as exc:
-            raise GrantError("EMAIL_TEMPLATE_NAME_EXISTS", 409) from exc
-        return {"id": ident, **body.model_dump(), "enabled": True}
+            except sqlite3.IntegrityError as exc:
+                raise GrantError("EMAIL_TEMPLATE_NAME_EXISTS", 409) from exc
+            audit(
+                conn,
+                None,
+                actor.id,
+                "notification_template_set.created",
+                {"template_set_id": ident},
+            )
+            row = conn.execute("SELECT * FROM email_templates WHERE id=?", (ident,)).fetchone()
+        return self._template_set_view(row)
+
+    def notification_template_sets(self, actor: Principal) -> list[dict]:
+        actor.require_admin()
+        with self.db.transaction(write=False) as conn:
+            rows = conn.execute("SELECT * FROM email_templates ORDER BY name").fetchall()
+        return [self._template_set_view(row) for row in rows]
+
+    def update_notification_template_set(
+        self, actor: Principal, ident: str, body: NotificationTemplateSetUpdate
+    ) -> dict:
+        actor.require_admin()
+        templates = {key: value.model_dump() for key, value in body.templates.items()}
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            if not conn.execute(
+                "SELECT id FROM email_templates WHERE id=?", (ident,)
+            ).fetchone():
+                raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
+            if not body.enabled and conn.execute(
+                """SELECT 1 FROM profile_versions
+                   WHERE email_template_id=? AND lifecycle='ACTIVE' LIMIT 1""",
+                (ident,),
+            ).fetchone():
+                raise GrantError("EMAIL_TEMPLATE_IN_USE", 409)
+            try:
+                conn.execute(
+                    """UPDATE email_templates
+                       SET name=?,subject_template=?,body_template=?,
+                           reminder_subject_template=?,reminder_body_template=?,
+                           event_templates=?,enabled=?,updated_at=?
+                       WHERE id=?""",
+                    (
+                        body.name,
+                        templates["requested"]["subject"],
+                        templates["requested"]["body"],
+                        templates["reminder"]["subject"],
+                        templates["reminder"]["body"],
+                        json_text(templates),
+                        int(body.enabled),
+                        time.time(),
+                        ident,
+                    ),
+                )
+            except sqlite3.IntegrityError as exc:
+                raise GrantError("EMAIL_TEMPLATE_NAME_EXISTS", 409) from exc
+            audit(
+                conn,
+                None,
+                actor.id,
+                "notification_template_set.updated",
+                {"template_set_id": ident, "enabled": body.enabled},
+            )
+            row = conn.execute("SELECT * FROM email_templates WHERE id=?", (ident,)).fetchone()
+        return self._template_set_view(row)
+
+    def create_email_template(self, actor: Principal, body: EmailTemplate) -> dict:
+        templates = {event: dict(value) for event, value in DEFAULT_EVENT_TEMPLATES.items()}
+        templates["requested"] = {
+            "subject": body.subject_template,
+            "body": body.body_template,
+        }
+        templates["reminder"] = {
+            "subject": body.reminder_subject_template,
+            "body": body.reminder_body_template,
+        }
+        created = self.create_notification_template_set(
+            actor, NotificationTemplateSet(name=body.name, templates=templates)
+        )
+        return {"id": created["id"], **body.model_dump(), "enabled": True}
 
     def email_templates(self, actor: Principal) -> list[dict]:
         actor.require_admin()
@@ -189,42 +371,189 @@ class Core:
         self, actor: Principal, ident: str, body: EmailTemplateUpdate
     ) -> dict:
         actor.require_admin()
-        try:
-            with self.db.transaction() as conn:
-                require_current_authority(conn, actor)
-                if not conn.execute("SELECT id FROM email_templates WHERE id=?", (ident,)).fetchone():
-                    raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
-                if not body.enabled and conn.execute(
-                    "SELECT 1 FROM profiles WHERE email_template_id=? AND enabled=1 LIMIT 1",
-                    (ident,),
-                ).fetchone():
-                    raise GrantError("EMAIL_TEMPLATE_IN_USE", 409)
-                conn.execute(
-                    """UPDATE email_templates
-                       SET name=?,subject_template=?,body_template=?,reminder_subject_template=?,
-                           reminder_body_template=?,enabled=?,updated_at=?
-                       WHERE id=?""",
-                    (
-                        body.name,
-                        body.subject_template,
-                        body.body_template,
-                        body.reminder_subject_template,
-                        body.reminder_body_template,
-                        int(body.enabled),
-                        time.time(),
-                        ident,
-                    ),
-                )
-                audit(
-                    conn,
-                    None,
-                    actor.id,
-                    "email_template.updated",
-                    {"template_id": ident, "enabled": body.enabled},
-                )
-        except sqlite3.IntegrityError as exc:
-            raise GrantError("EMAIL_TEMPLATE_NAME_EXISTS", 409) from exc
+        with self.db.transaction(write=False) as conn:
+            row = conn.execute("SELECT * FROM email_templates WHERE id=?", (ident,)).fetchone()
+            if not row:
+                raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
+            templates = json.loads(row["event_templates"])
+        templates["requested"] = {
+            "subject": body.subject_template,
+            "body": body.body_template,
+        }
+        templates["reminder"] = {
+            "subject": body.reminder_subject_template,
+            "body": body.reminder_body_template,
+        }
+        self.update_notification_template_set(
+            actor,
+            ident,
+            NotificationTemplateSetUpdate(
+                name=body.name, templates=templates, enabled=body.enabled
+            ),
+        )
         return {"id": ident, **body.model_dump()}
+
+    def notification_variables(self, actor: Principal) -> dict:
+        actor.require_admin()
+        return {"variables": sorted(ALLOWED_VARIABLES)}
+
+    def preview_notification(
+        self, actor: Principal, ident: str, body: NotificationPreview
+    ) -> dict:
+        actor.require_admin()
+        with self.db.transaction(write=False) as conn:
+            row = conn.execute("SELECT * FROM email_templates WHERE id=?", (ident,)).fetchone()
+            if not row:
+                raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
+            template = snapshot(row, branding=self._branding(conn))
+        rendered = render_from_context(template, body.event, body.sample.model_dump())
+        return {
+            "template_set_id": ident,
+            "event": body.event,
+            "rendered": rendered,
+            "transport_accepted": False,
+            "receipt_confirmed": False,
+            "execution_allowed": False,
+        }
+
+    def test_notification(
+        self, actor: Principal, ident: str, body: NotificationTestSend
+    ) -> dict:
+        from .transport import send_email
+
+        actor.require_admin()
+        principal = actor
+        with self.db.transaction(write=False) as conn:
+            require_current_authority(conn, principal)
+            row = conn.execute("SELECT * FROM email_templates WHERE id=?", (ident,)).fetchone()
+            if not row:
+                raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
+            template = snapshot(row, branding=self._branding(conn))
+            recipient_id = body.recipient_user_id or principal.id
+            # No designated-safe-recipient registry exists yet. Do not let an
+            # administrator turn test delivery into unsolicited mail to users.
+            if recipient_id != principal.id:
+                raise GrantError("TEST_RECIPIENT_NOT_ALLOWED", 403)
+            recipient = conn.execute(
+                "SELECT id,email,enabled FROM users WHERE id=?", (recipient_id,)
+            ).fetchone()
+            if not recipient or not recipient["enabled"]:
+                raise GrantError("TEST_RECIPIENT_NOT_FOUND", 404)
+        rendered = render_from_context(template, body.event, body.sample.model_dump())
+        event_id = uid()
+        with self.db.transaction(write=False) as conn:
+            require_current_authority(conn, principal)
+        send_email(
+            self.settings,
+            {"email": recipient["email"]},
+            json_text(rendered),
+            event_id,
+        )
+        with self.db.transaction() as conn:
+            require_current_authority(conn, principal)
+            audit(
+                conn,
+                None,
+                principal.id,
+                "notification.test_accepted",
+                {
+                    "template_set_id": ident,
+                    "event": body.event,
+                    "recipient_user_id": recipient_id,
+                    "event_id": event_id,
+                },
+            )
+        return {
+            "transport_accepted": True,
+            "receipt_confirmed": False,
+            "execution_allowed": False,
+            "event_id": event_id,
+        }
+
+    def notification_deliveries(self, actor: Principal) -> dict:
+        actor.require_admin()
+        with self.db.transaction(write=False) as conn:
+            rows = conn.execute(
+                """SELECT id,request_id,event_type,state,attempts,last_error,
+                          available_at,delivered_at,created_at
+                   FROM outbox WHERE kind='email'
+                   ORDER BY created_at DESC,id DESC LIMIT 200"""
+            ).fetchall()
+        return {
+            "deliveries": [
+                {
+                    **dict(row),
+                    "transport_accepted": row["state"] == "DELIVERED",
+                    "receipt_confirmed": False,
+                }
+                for row in rows
+            ]
+        }
+
+    def _insert_profile_version(
+        self,
+        conn: sqlite3.Connection,
+        profile_id: str,
+        version: int,
+        body: Profile,
+        *,
+        lifecycle: str = "DRAFT",
+    ) -> str:
+        version_id, now = uid(), time.time()
+        conn.execute(
+            """INSERT INTO profile_versions(
+               id,profile_id,version,name,integration_id,approver_id,action_kind,email_template_id,
+               deadline_seconds,reminder_seconds,max_reminders,grant_seconds,
+               tenant_selector,environment,severity,risk_level,lifecycle,
+               created_at,updated_at,activated_at,disabled_at
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL,NULL)""",
+            (
+                version_id,
+                profile_id,
+                version,
+                body.name,
+                body.integration_id,
+                body.approver_id,
+                body.action_kind,
+                body.email_template_id,
+                body.deadline_seconds,
+                body.reminder_seconds,
+                body.max_reminders,
+                body.grant_seconds,
+                body.tenant_selector,
+                body.environment,
+                body.severity,
+                body.risk_level,
+                lifecycle,
+                now,
+                now,
+            ),
+        )
+        return version_id
+
+    @staticmethod
+    def _mirror_profile(
+        conn: sqlite3.Connection, ident: str, body: Profile, *, enabled: bool
+    ) -> None:
+        conn.execute(
+            """UPDATE profiles
+               SET name=?,integration_id=?,approver_id=?,action_kind=?,email_template_id=?,
+                   deadline_seconds=?,reminder_seconds=?,max_reminders=?,grant_seconds=?,enabled=?
+               WHERE id=?""",
+            (
+                body.name,
+                body.integration_id,
+                body.approver_id,
+                body.action_kind,
+                body.email_template_id,
+                body.deadline_seconds,
+                body.reminder_seconds,
+                body.max_reminders,
+                body.grant_seconds,
+                int(enabled),
+                ident,
+            ),
+        )
 
     def create_profile(self, actor: Principal, body: Profile) -> dict:
         actor.require_admin()
@@ -236,7 +565,7 @@ class Core:
                 """INSERT INTO profiles(
                    id,name,integration_id,approver_id,action_kind,email_template_id,
                    deadline_seconds,reminder_seconds,max_reminders,grant_seconds,enabled
-                ) VALUES(?,?,?,?,?,?,?,?,?,?,1)""",
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,0)""",
                 (
                     ident,
                     body.name,
@@ -250,8 +579,21 @@ class Core:
                     body.grant_seconds,
                 ),
             )
-            audit(conn, None, actor.id, "profile.created", {"profile_id": ident})
-        return {"id": ident, **body.model_dump(), "enabled": True}
+            version_id = self._insert_profile_version(conn, ident, 1, body)
+            audit(
+                conn,
+                None,
+                actor.id,
+                "profile.created",
+                {
+                    "profile_id": ident,
+                    "version_id": version_id,
+                    "version": 1,
+                    "lifecycle": "DRAFT",
+                },
+            )
+            row = latest_version(conn, ident)
+        return version_view(row)
 
     def update_profile(self, actor: Principal, ident: str, body: ProfileUpdate) -> dict:
         actor.require_admin()
@@ -260,52 +602,321 @@ class Core:
             if not conn.execute("SELECT id FROM profiles WHERE id=?", (ident,)).fetchone():
                 raise GrantError("PROFILE_NOT_FOUND", 404)
             self._validate_profile_refs(conn, body)
-            conn.execute(
-                """UPDATE profiles
-                   SET name=?,integration_id=?,approver_id=?,action_kind=?,email_template_id=?,
-                       deadline_seconds=?,reminder_seconds=?,max_reminders=?,grant_seconds=?,enabled=?
-                   WHERE id=?""",
-                (
-                    body.name,
-                    body.integration_id,
-                    body.approver_id,
-                    body.action_kind,
-                    body.email_template_id,
-                    body.deadline_seconds,
-                    body.reminder_seconds,
-                    body.max_reminders,
-                    body.grant_seconds,
-                    int(body.enabled),
-                    ident,
-                ),
-            )
+            current = latest_version(conn, ident)
+            active = active_version(conn, ident)
+            if current["lifecycle"] in ("DRAFT", "TESTING"):
+                conn.execute(
+                    """UPDATE profile_versions
+                       SET name=?,integration_id=?,approver_id=?,action_kind=?,email_template_id=?,
+                           deadline_seconds=?,reminder_seconds=?,max_reminders=?,grant_seconds=?,
+                           tenant_selector=?,environment=?,severity=?,risk_level=?,
+                           lifecycle='DRAFT',updated_at=?,activated_at=NULL,disabled_at=NULL
+                       WHERE id=?""",
+                    (
+                        body.name,
+                        body.integration_id,
+                        body.approver_id,
+                        body.action_kind,
+                        body.email_template_id,
+                        body.deadline_seconds,
+                        body.reminder_seconds,
+                        body.max_reminders,
+                        body.grant_seconds,
+                        body.tenant_selector,
+                        body.environment,
+                        body.severity,
+                        body.risk_level,
+                        time.time(),
+                        current["id"],
+                    ),
+                )
+                version_id = current["id"]
+                version = current["version"]
+            else:
+                version = current["version"] + 1
+                version_id = self._insert_profile_version(conn, ident, version, body)
+            self._mirror_profile(conn, ident, body, enabled=active is not None)
             audit(
                 conn,
                 None,
                 actor.id,
                 "profile.updated",
-                {"profile_id": ident, "enabled": body.enabled},
+                {
+                    "profile_id": ident,
+                    "version_id": version_id,
+                    "version": version,
+                    "lifecycle": "DRAFT",
+                },
             )
-        return {"id": ident, **body.model_dump()}
+            row = latest_version(conn, ident)
+        return version_view(row)
 
     def profiles(self, actor: Principal) -> list[dict]:
-        base = """SELECT p.*,i.kind AS integration_kind,i.tenant,
-                         t.name AS email_template_name
-                  FROM profiles p
-                  JOIN integrations i ON i.id=p.integration_id
-                  LEFT JOIN email_templates t ON t.id=p.email_template_id"""
-        args: tuple = ()
-        if actor.kind == "integration":
-            query = base + " WHERE p.integration_id=? AND p.enabled=1 AND i.enabled=1"
-            args = (actor.integration_id,)
-        elif actor.role == "admin":
-            query = base
-        else:
-            query = base + " WHERE p.enabled=1 AND i.enabled=1"
-        query += " ORDER BY p.name"
         with self.db.transaction(write=False) as conn:
-            rows = conn.execute(query, args).fetchall()
-        return [{**dict(row), "enabled": bool(row["enabled"])} for row in rows]
+            if actor.role == "admin":
+                profile_ids = [
+                    row["id"]
+                    for row in conn.execute("SELECT id FROM profiles ORDER BY name,id").fetchall()
+                ]
+                rows = [latest_version(conn, ident) for ident in profile_ids]
+            else:
+                query = """SELECT pv.*,t.name AS email_template_name
+                           FROM profile_versions pv
+                           JOIN integrations i ON i.id=pv.integration_id
+                           LEFT JOIN email_templates t ON t.id=pv.email_template_id
+                           WHERE pv.lifecycle='ACTIVE' AND i.enabled=1"""
+                args: tuple = ()
+                if actor.kind == "integration":
+                    query += " AND pv.integration_id=?"
+                    args = (actor.integration_id,)
+                query += " ORDER BY pv.name,pv.profile_id"
+                rows = conn.execute(query, args).fetchall()
+            result = []
+            for row in rows:
+                view = version_view(row)
+                integration = conn.execute(
+                    "SELECT kind,tenant FROM integrations WHERE id=?", (row["integration_id"],)
+                ).fetchone()
+                if integration:
+                    view["integration_kind"] = integration["kind"]
+                    view["tenant"] = integration["tenant"]
+                if actor.role == "admin":
+                    active = active_version(conn, row["profile_id"])
+                    view["active_version"] = active["version"] if active else None
+                    view["active_version_id"] = active["id"] if active else None
+                result.append(view)
+        return result
+
+    def transition_profile(self, actor: Principal, ident: str, target: str) -> dict:
+        actor.require_admin()
+        now = time.time()
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            if target == "TESTING":
+                row = latest_version(conn, ident)
+                if row["lifecycle"] != "DRAFT":
+                    raise GrantError("POLICY_TRANSITION_INVALID", 409)
+                conn.execute(
+                    "UPDATE profile_versions SET lifecycle='TESTING',updated_at=? WHERE id=?",
+                    (now, row["id"]),
+                )
+                action = "profile.testing"
+                version_id = row["id"]
+            elif target == "ACTIVE":
+                row = latest_version(conn, ident)
+                if row["lifecycle"] != "TESTING":
+                    raise GrantError("POLICY_TRANSITION_INVALID", 409)
+                self._validate_version_refs(conn, row)
+                conn.execute(
+                    """UPDATE profile_versions
+                       SET lifecycle='DISABLED',disabled_at=?,updated_at=?
+                       WHERE profile_id=? AND lifecycle='ACTIVE' AND id<>?""",
+                    (now, now, ident, row["id"]),
+                )
+                conn.execute(
+                    """UPDATE profile_versions
+                       SET lifecycle='ACTIVE',activated_at=?,disabled_at=NULL,updated_at=?
+                       WHERE id=?""",
+                    (now, now, row["id"]),
+                )
+                conn.execute("UPDATE profiles SET enabled=1 WHERE id=?", (ident,))
+                action = "profile.activated"
+                version_id = row["id"]
+            elif target == "DISABLED":
+                row = active_version(conn, ident)
+                if not row:
+                    raise GrantError("POLICY_TRANSITION_INVALID", 409)
+                conn.execute(
+                    """UPDATE profile_versions
+                       SET lifecycle='DISABLED',disabled_at=?,updated_at=? WHERE id=?""",
+                    (now, now, row["id"]),
+                )
+                conn.execute("UPDATE profiles SET enabled=0 WHERE id=?", (ident,))
+                action = "profile.disabled"
+                version_id = row["id"]
+            else:
+                raise GrantError("POLICY_TRANSITION_INVALID", 409)
+            current = conn.execute(
+                """SELECT pv.*,t.name AS email_template_name
+                   FROM profile_versions pv
+                   LEFT JOIN email_templates t ON t.id=pv.email_template_id
+                   WHERE pv.id=?""",
+                (version_id,),
+            ).fetchone()
+            audit(
+                conn,
+                None,
+                actor.id,
+                action,
+                {
+                    "profile_id": ident,
+                    "version_id": version_id,
+                    "version": current["version"],
+                    "lifecycle": target,
+                },
+                now,
+            )
+        return version_view(current)
+
+    def clone_profile(self, actor: Principal, ident: str) -> dict:
+        actor.require_admin()
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            row = latest_version(conn, ident)
+            new_id = uid()
+            cloned = Profile(
+                name=row["name"] + " copy",
+                integration_id=row["integration_id"],
+                approver_id=row["approver_id"],
+                action_kind=row["action_kind"],
+                email_template_id=row["email_template_id"],
+                deadline_seconds=row["deadline_seconds"],
+                reminder_seconds=row["reminder_seconds"],
+                max_reminders=row["max_reminders"],
+                grant_seconds=row["grant_seconds"],
+                tenant_selector=row["tenant_selector"],
+                environment=row["environment"],
+                severity=row["severity"],
+                risk_level=row["risk_level"],
+            )
+            conn.execute(
+                """INSERT INTO profiles(
+                   id,name,integration_id,approver_id,action_kind,email_template_id,
+                   deadline_seconds,reminder_seconds,max_reminders,grant_seconds,enabled
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,0)""",
+                (
+                    new_id,
+                    cloned.name,
+                    cloned.integration_id,
+                    cloned.approver_id,
+                    cloned.action_kind,
+                    cloned.email_template_id,
+                    cloned.deadline_seconds,
+                    cloned.reminder_seconds,
+                    cloned.max_reminders,
+                    cloned.grant_seconds,
+                ),
+            )
+            version_id = self._insert_profile_version(conn, new_id, 1, cloned)
+            audit(
+                conn,
+                None,
+                actor.id,
+                "profile.cloned",
+                {
+                    "profile_id": new_id,
+                    "source_profile_id": ident,
+                    "version_id": version_id,
+                },
+            )
+            current = latest_version(conn, new_id)
+        return version_view(current)
+
+    def profile_history(self, actor: Principal, ident: str) -> dict:
+        actor.require_admin()
+        with self.db.transaction(write=False) as conn:
+            versions = policy_versions(conn, ident)
+            events = []
+            for row in conn.execute(
+                "SELECT id,at,actor,action,detail FROM audit WHERE action LIKE 'profile.%' ORDER BY at DESC,id DESC"
+            ).fetchall():
+                detail = json.loads(row["detail"])
+                if detail.get("profile_id") == ident:
+                    events.append({**dict(row), "detail": detail})
+        return {"profile_id": ident, "versions": versions, "events": events}
+
+    def preview_policy(self, actor: Principal, body: PolicySample) -> dict:
+        actor.require_admin()
+        bounded_json(body.source)
+        with self.db.transaction(write=False) as conn:
+            row, resolution = resolve_policy(
+                conn,
+                integration_id=body.integration_id,
+                action_kind=body.action_kind,
+                source=body.source,
+            )
+            template = self._notification_snapshot(conn, row)
+            context = {
+                "request_title": body.title,
+                "request_url": self.settings.origin + "/requests/preview",
+                "external_id": "policy-preview",
+                "action_kind": body.action_kind,
+                "target": body.target,
+                "reason": body.reason or "—",
+                "deadline": datetime.fromtimestamp(
+                    time.time() + row["deadline_seconds"], UTC
+                ).isoformat(),
+                "decision_state": "AWAITING",
+                "execution_state": "NOT_STARTED",
+            }
+            rendered = render_from_context(template, "requested", context)
+        return {
+            "policy": version_view(row),
+            "resolution": resolution,
+            "approver_id": row["approver_id"],
+            "timing": {
+                "deadline_seconds": row["deadline_seconds"],
+                "reminder_seconds": row["reminder_seconds"],
+                "max_reminders": row["max_reminders"],
+            },
+            "execution_grant": {
+                "action_kind": row["action_kind"],
+                "validity_seconds": row["grant_seconds"],
+            },
+            "notification": rendered,
+            "execution_allowed": False,
+        }
+
+    def test_profile_request(self, actor: Principal, ident: str, body: PolicySample) -> dict:
+        actor.require_admin()
+        bounded_json(body.source)
+        with self.db.transaction(write=False) as conn:
+            row = latest_version(conn, ident)
+            if row["lifecycle"] != "TESTING":
+                raise GrantError("POLICY_TESTING_REQUIRED", 409)
+            matched = row["integration_id"] == body.integration_id and row["action_kind"] == body.action_kind
+            selectors_match, details, specificity = selector_evaluation(row, body.source)
+            matched = matched and selectors_match
+            template = self._notification_snapshot(conn, row)
+            context = {
+                "request_title": body.title,
+                "request_url": self.settings.origin + "/requests/test",
+                "external_id": "isolated-test",
+                "action_kind": body.action_kind,
+                "target": body.target,
+                "reason": body.reason or "—",
+                "deadline": datetime.fromtimestamp(
+                    time.time() + row["deadline_seconds"], UTC
+                ).isoformat(),
+                "decision_state": "AWAITING",
+                "execution_state": "NOT_STARTED",
+            }
+            rendered = render_from_context(template, "requested", context)
+        return {
+            "test_mode": True,
+            "execution_allowed": False,
+            "policy": version_view(row),
+            "resolution": {
+                "matched": matched,
+                "specificity": specificity,
+                "selectors": details,
+            },
+            "notification": rendered,
+        }
+
+    def _notification_snapshot(
+        self, conn: sqlite3.Connection, profile_version: sqlite3.Row
+    ) -> dict:
+        branding = self._branding(conn)
+        if profile_version["email_template_id"]:
+            row = conn.execute(
+                "SELECT * FROM email_templates WHERE id=? AND enabled=1",
+                (profile_version["email_template_id"],),
+            ).fetchone()
+            if not row:
+                raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 409)
+            return snapshot(row, branding=branding)
+        return snapshot(None, branding=branding)
 
     def _visible(self, row: sqlite3.Row, actor: Principal) -> None:
         if actor.kind == "integration":
@@ -324,20 +935,42 @@ class Core:
             self._visible(row, actor)
         return row
 
-    def _mail(
-        self, conn: sqlite3.Connection, row: sqlite3.Row, now: float, reminder: bool = False
+    def _mail_event(
+        self,
+        conn: sqlite3.Connection,
+        row: sqlite3.Row,
+        now: float,
+        event: str,
     ) -> None:
+        recipient_id = (
+            row["approver_id"]
+            if event in ("requested", "reminder")
+            else (row["requester_id"] or row["approver_id"])
+        )
         user = conn.execute(
-            "SELECT email,enabled FROM users WHERE id=?", (row["approver_id"],)
+            "SELECT email,enabled FROM users WHERE id=?", (recipient_id,)
         ).fetchone()
+        if not user or not user["enabled"]:
+            audit(
+                conn,
+                row["id"],
+                "policy",
+                "notification.recipient_unavailable",
+                {"event_type": event, "recipient_id": recipient_id},
+                now,
+            )
+            return
         ident = uid()
         template = json.loads(row["mail_template"])
-        payload = render_mail(template, row, self.settings.origin, reminder=reminder)
+        payload = render_notification(template, row, self.settings.origin, event=event)
         conn.execute(
-            "INSERT INTO outbox(id,request_id,kind,revision,payload,destination,available_at,created_at) VALUES(?,?,'email',?,?,?,?,?)",
+            """INSERT INTO outbox(
+               id,request_id,kind,event_type,revision,payload,destination,available_at,created_at
+            ) VALUES(?,?,'email',?,?,?,?,?,?)""",
             (
                 ident,
                 row["id"],
+                event,
                 row["revision"],
                 json_text(payload),
                 self.settings.seal({"email": user["email"]}),
@@ -345,6 +978,11 @@ class Core:
                 now,
             ),
         )
+
+    def _mail(
+        self, conn: sqlite3.Connection, row: sqlite3.Row, now: float, reminder: bool = False
+    ) -> None:
+        self._mail_event(conn, row, now, "reminder" if reminder else "requested")
 
     def _event(
         self, conn: sqlite3.Connection, row: sqlite3.Row, now: float, reason: str = ""
@@ -373,7 +1011,9 @@ class Core:
             "request_url": self.settings.origin + "/requests/" + row["id"],
         }
         conn.execute(
-            "INSERT INTO outbox(id,request_id,kind,revision,payload,destination,available_at,created_at) VALUES(?,?,'webhook',?,?,?,?,?)",
+            """INSERT INTO outbox(
+               id,request_id,kind,event_type,revision,payload,destination,available_at,created_at
+            ) VALUES(?,?,'webhook','approval_outcome',?,?,?,?,?)""",
             (ident, row["id"], row["revision"], json_text(payload), integration[0], now, now),
         )
 
@@ -397,6 +1037,7 @@ class Core:
         self._event(
             conn, updated, now, "Deadline or execution validity elapsed; not a human denial"
         )
+        self._mail_event(conn, updated, now, "expired")
         return True
 
     def create_request(self, actor: Principal, body: Intake) -> dict:
@@ -409,34 +1050,81 @@ class Core:
         action = body.action.model_dump()
         action_hash, intake_hash = fingerprint(action), fingerprint(data)
         now, ident = time.time(), uid()
+        requester = actor.id if actor.kind == "human" else None
         with self.db.transaction() as conn:
             require_current_authority(conn, actor, "request:create")
-            profile = conn.execute(
-                "SELECT p.*,i.enabled AS integration_enabled,i.tenant,i.kind FROM profiles p JOIN integrations i ON i.id=p.integration_id WHERE p.id=?",
-                (body.profile_id,),
-            ).fetchone()
-            if not profile or not profile["enabled"] or not profile["integration_enabled"]:
-                raise GrantError("PROFILE_NOT_FOUND", 404)
-            integration_id = profile["integration_id"]
-            if actor.kind == "integration" and actor.integration_id != integration_id:
-                raise GrantError("PROFILE_NOT_FOUND", 404)
-            if profile["tenant"] and body.source.get("tenant_id") != profile["tenant"]:
-                raise GrantError("SOURCE_TENANT_MISMATCH", 403)
+
+            if actor.kind == "integration":
+                existing = conn.execute(
+                    "SELECT * FROM requests WHERE integration_id=? AND external_id=?",
+                    (actor.integration_id, body.external_id),
+                ).fetchone()
+            else:
+                selected_profile = conn.execute(
+                    "SELECT integration_id FROM profiles WHERE id=?", (body.profile_id,)
+                ).fetchone()
+                if not selected_profile:
+                    raise GrantError("PROFILE_NOT_FOUND", 404)
+                expected_active = active_version(conn, body.profile_id)
+                idempotency_integration_id = (
+                    expected_active["integration_id"]
+                    if expected_active
+                    else selected_profile["integration_id"]
+                )
+                existing = conn.execute(
+                    "SELECT * FROM requests WHERE integration_id=? AND external_id=?",
+                    (idempotency_integration_id, body.external_id),
+                ).fetchone()
+            if existing:
+                self._visible(existing, actor)
+                if (
+                    existing["intake_hash"] != intake_hash
+                    or existing["requester_id"] != requester
+                    or existing["profile_id"] != body.profile_id
+                ):
+                    raise GrantError("IDEMPOTENCY_CONFLICT", 409)
+                return self._project(conn, existing)
+
             if str(body.source.get("event_type", "")).startswith("grant."):
                 raise GrantError("OUTCOME_FEEDBACK_LOOP", 422)
-            if action["kind"] != profile["action_kind"]:
-                raise GrantError("ACTION_NOT_ALLOWED", 403)
-            if profile["email_template_id"]:
-                template_row = conn.execute(
-                    "SELECT * FROM email_templates WHERE id=? AND enabled=1",
-                    (profile["email_template_id"],),
-                ).fetchone()
-                if not template_row:
-                    raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 409)
-                mail_template = snapshot(template_row)
+
+            selected_profile = conn.execute(
+                "SELECT id,integration_id FROM profiles WHERE id=?", (body.profile_id,)
+            ).fetchone()
+            if not selected_profile:
+                raise GrantError("PROFILE_NOT_FOUND", 404)
+            expected_active = active_version(conn, body.profile_id)
+            if actor.kind == "integration":
+                integration_id = actor.integration_id
+            elif expected_active:
+                integration_id = expected_active["integration_id"]
             else:
-                mail_template = dict(DEFAULT_MAIL_TEMPLATE)
-            requester = actor.id if actor.kind == "human" else None
+                integration_id = selected_profile["integration_id"]
+
+            integration = conn.execute(
+                "SELECT enabled,tenant FROM integrations WHERE id=?",
+                (integration_id,),
+            ).fetchone()
+            if not integration or not integration["enabled"]:
+                raise GrantError("PROFILE_NOT_FOUND", 404)
+            if integration["tenant"] and body.source.get("tenant_id") != integration["tenant"]:
+                raise GrantError("SOURCE_TENANT_MISMATCH", 403)
+
+            try:
+                profile, resolution = resolve_policy(
+                    conn,
+                    integration_id=integration_id,
+                    action_kind=action["kind"],
+                    source=body.source,
+                )
+            except GrantError as exc:
+                if exc.code == "POLICY_NO_MATCH" and expected_active is None:
+                    raise GrantError("PROFILE_SELECTION_MISMATCH", 409) from exc
+                raise
+            if profile["profile_id"] != body.profile_id:
+                raise GrantError("PROFILE_SELECTION_MISMATCH", 409)
+
+            mail_template = self._notification_snapshot(conn, profile)
             if requester == profile["approver_id"]:
                 raise GrantError("SELF_APPROVAL_PROHIBITED", 403)
             approver = conn.execute(
@@ -444,24 +1132,21 @@ class Core:
             ).fetchone()
             if not approver or not approver[0]:
                 raise GrantError("APPROVER_UNAVAILABLE", 409)
-            existing = conn.execute(
-                "SELECT * FROM requests WHERE integration_id=? AND external_id=?",
-                (integration_id, body.external_id),
-            ).fetchone()
-            if existing:
-                self._visible(existing, actor)
-                if existing["intake_hash"] != intake_hash or existing["requester_id"] != requester:
-                    raise GrantError("IDEMPOTENCY_CONFLICT", 409)
-                return self._project(conn, existing)
+
             if body.predecessor_id:
                 previous = self._load(conn, body.predecessor_id, actor)
-                if previous["integration_id"] != integration_id or previous["state"] != "CANCELLED":
+                if (
+                    previous["integration_id"] != integration_id
+                    or previous["state"] != "CANCELLED"
+                ):
                     raise GrantError("PREDECESSOR_MUST_BE_CANCELLED", 409)
+
             values = {
                 "id": ident,
                 "integration_id": integration_id,
                 "external_id": body.external_id,
                 "profile_id": body.profile_id,
+                "profile_version_id": profile["id"],
                 "requester_id": requester,
                 "approver_id": profile["approver_id"],
                 "title": body.title,
@@ -486,8 +1171,20 @@ class Core:
                 tuple(values.values()),
             )
             row = self._load(conn, ident)
-            audit(conn, ident, actor.id, "request.created", {"action_hash": action_hash}, now)
-            self._mail(conn, row, now)
+            audit(
+                conn,
+                ident,
+                actor.id,
+                "request.created",
+                {
+                    "action_hash": action_hash,
+                    "policy_version_id": profile["id"],
+                    "policy_version": profile["version"],
+                    "policy_resolution": resolution,
+                },
+                now,
+            )
+            self._mail_event(conn, row, now, "requested")
             return self._project(conn, row)
 
     def get(self, actor: Principal, ident: str) -> dict:
@@ -546,7 +1243,10 @@ class Core:
                     {"reason": body.reason},
                     now,
                 )
-                self._event(conn, self._load(conn, ident), now, body.reason)
+                updated = self._load(conn, ident)
+                self._event(conn, updated, now, body.reason)
+                if body.decision in ("APPROVED", "DENIED"):
+                    self._mail_event(conn, updated, now, body.decision.lower())
             result = self._project(conn, self._load(conn, ident))
         if error:
             raise error
@@ -576,7 +1276,9 @@ class Core:
                     "UPDATE requests SET state='CANCELLED',revision=revision+1 WHERE id=?", (ident,)
                 )
                 audit(conn, ident, actor.id, "request.cancelled", {"reason": body.reason}, now)
-                self._event(conn, self._load(conn, ident), now, body.reason)
+                updated = self._load(conn, ident)
+                self._event(conn, updated, now, body.reason)
+                self._mail_event(conn, updated, now, "cancelled")
             result = self._project(conn, self._load(conn, ident))
         if error:
             raise error
@@ -655,7 +1357,15 @@ class Core:
                 "execution.result_reported",
                 {"status": body.status, "evidence": body.evidence},
             )
-            return self._project(conn, self._load(conn, ident))
+            updated = self._load(conn, ident)
+            event = {
+                "REPORTED_SUCCEEDED": "execution_succeeded",
+                "REPORTED_FAILED": "execution_failed",
+                "UNKNOWN": "execution_unknown",
+            }.get(body.status)
+            if event:
+                self._mail_event(conn, updated, time.time(), event)
+            return self._project(conn, updated)
 
     def resume_after_restore(self, *, acknowledged: bool) -> dict:
         """Conservative local recovery: no restored pending approval can be reused."""
@@ -733,7 +1443,7 @@ class Core:
                     and row["next_reminder"] <= now
                     and row["reminder_count"] < row["max_reminders"]
                 ):
-                    self._mail(conn, row, now, reminder=True)
+                    self._mail_event(conn, row, now, "reminder")
                     conn.execute(
                         "UPDATE requests SET reminder_count=reminder_count+1,next_reminder=? WHERE id=?",
                         (now + row["reminder_seconds"], row["id"]),
@@ -752,6 +1462,13 @@ class Core:
             "mail_template",
         ):
             out.pop(field, None)
+        version = None
+        if out.get("profile_version_id"):
+            version_row = conn.execute(
+                "SELECT version FROM profile_versions WHERE id=?", (out["profile_version_id"],)
+            ).fetchone()
+            version = version_row["version"] if version_row else None
+        out["policy_version"] = version
         deliveries = [
             dict(r)
             for r in conn.execute(
@@ -761,6 +1478,11 @@ class Core:
         ]
         out["delivery_state"] = next(
             (d["state"] for d in reversed(deliveries) if d["kind"] == "webhook"), "NOT_SCHEDULED"
+        )
+        # The callback channel is not the notification channel. A failed SMTP
+        # outbox attempt must be visible independently in the action center.
+        out["notification_failure_count"] = sum(
+            d["kind"] == "email" and d["state"] == "FAILED" for d in deliveries
         )
         if detail:
             out["deliveries"] = deliveries

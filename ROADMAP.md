@@ -28,9 +28,11 @@ The current development candidate already provides:
 - immutable requested action and fingerprint;
 - explicit approve/hold/deny;
 - request deadlines, reminders, cancellation and linked replacement;
-- administrator-managed approval policies;
-- administrator-managed plain-text approval/reminder templates;
-- request-time policy/template snapshot behavior;
+- versioned approval policies with Draft -> Testing -> Active -> Disabled lifecycle,
+  bounded deterministic matching, clone/history and shared runtime/preview resolution;
+- event-oriented notification template sets with safe variables, preview/test send,
+  delivery health, branding and sender display name;
+- request-time policy-version and complete notification snapshot behavior;
 - scoped integration identities and credentials;
 - durable SMTP/HTTP outbox and signed outcome callbacks;
 - action-bound consume/replay protocol and result reporting;
@@ -41,6 +43,53 @@ The current development candidate already provides:
 This baseline is not the 1.0 completion bar.
 
 ## 1.0 workstreams
+
+### G0 — Product Foundation convergence and task-oriented UX
+
+Priority: **P0 — precedes additional product-surface expansion**
+
+Grant must consume the pinned DataRelay Product Foundation as the common application
+platform rather than independently recreating login, shell, account/session or System
+Administration interaction patterns.
+
+Deliver:
+
+- consume the exact reviewed Foundation package set through the consumer SDK and typed
+  product adapters; no copied/forked Foundation source in Grant;
+- Foundation Auth UI for DataRelay-family sign-in/MFA/session presentation, with the
+  same centered product composition used by the mature Control reference while Grant
+  keeps its own cookie/session authority;
+- Foundation Product Shell baseline: semantic tokens, 260px/57px responsive sidebar,
+  grouped navigation, product identity, user/session footer, focus/mobile behavior;
+- task-oriented primary information architecture:
+  - **Home**
+  - **Work** — My approvals, Requests
+  - **Configuration** — Approval policies, Notifications, Integrations
+  - **Administration** — Administration
+  - Account & Security lives with the signed-in user instead of consuming primary
+    navigation space;
+- Home is an action center, not an NOC/BI dashboard: work needing a human decision,
+  overdue/exception work, and recent requests take priority over charts;
+- Request surfaces use queue/table patterns for scanning, filtering and action;
+- Approval Policies use list -> policy detail with bounded lifecycle/preview/history
+  sections rather than one permanently expanded settings form;
+- Notifications use Template Sets / Delivery Health / Branding with template detail and
+  event-focused editing instead of one long settings canvas;
+- common System Administration uses Foundation capability projections, adapters and
+  AdminTaskCatalog/shared status/account/audit components; unsupported operations remain
+  explicitly unavailable;
+- shared styling uses Foundation semantic tokens and icons; Grant CSS is limited to
+  domain layout and product-specific composition.
+
+Exit evidence:
+
+- no Grant-owned duplicate login/sidebar/common System Administration implementation;
+- Foundation adapter/capability conformance remains PASS;
+- desktop/mobile browser evidence covers login, shell collapse/navigation, account
+  security and Administration task entry;
+- product browser regression remains clean after shared-surface replacement;
+- docs/UX_INFORMATION_ARCHITECTURE.md and docs/PRODUCT_STANDARD.md agree with the
+  implemented navigation and shared-UX boundary.
 
 ### G1 — Policy lifecycle and safe administration
 
@@ -347,46 +396,39 @@ Required final sequence:
 No earlier local fixture or different-HEAD result substitutes for final same-candidate
 evidence.
 
-## 1.0 administrator information architecture
+## 1.0 UX and information architecture direction
 
-```text
-Administration
-├── Approval Policies
-│   ├── Policies
-│   ├── Preview & Test
-│   └── Version / Change History
+The accepted 1.0 application structure is task-oriented rather than monitor-oriented.
+The canonical requirements are in `docs/PRODUCT_STANDARD.md`; the implementation/design
+guide and competitive rationale are in `docs/UX_INFORMATION_ARCHITECTURE.md`.
+
+Primary navigation converges to:
+
+~~~text
+Home
+
+Work
+├── My approvals
+└── Requests
+
+Configuration
+├── Approval policies
 ├── Notifications
-│   ├── Template Sets
-│   ├── Delivery Health
-│   └── Branding
-├── Approvers
-│   ├── Users
-│   ├── Groups
-│   ├── Delegation
-│   └── Reassignment
 ├── Integrations
-│   ├── DataRelay
-│   ├── Stellar Cyber
-│   └── Credentials / Health
-└── System
-    ├── Accounts / Sessions / MFA
-    ├── Audit
-    ├── Backup / Recovery
-    └── Health
-```
+└── Approvers          # when G3/G4 capability exists
 
-## Product 1.0 navigation
+Administration
+└── Administration
 
-Primary user navigation should converge toward:
+Signed-in user
+└── Account & Security
+~~~
 
-- Approval Inbox
-- My Requests
-- All Requests (authorized roles)
-- Operations
-- Administration
-- My Security
-
-Do not expose each internal configuration object as a top-level navigation item.
+Home is an action center, not an NOC/BI dashboard. Requests and approvals are work
+queues. Policy and notification administration use list/detail and progressive
+disclosure rather than permanently expanded settings walls. Login and shared shell
+composition follow the DataRelay Product Foundation and the mature DataRelay Control
+family reference without copying Control product internals.
 
 ## 1.0 usability requirements
 
@@ -441,7 +483,7 @@ Implementation should progress in coherent user-visible slices, not one massive 
 
 Recommended sequence:
 
-`G1/G2 -> G3/G4 -> G5/G6 -> G7/G8 -> G9/G10 -> G11 -> G12`
+`G0 convergence + G1/G2 closure -> G3/G4 -> G5/G6 -> G7/G8 -> G9/G10 -> G11 -> G12`
 
 Current approval/execution integrity and existing tests are preserved throughout.
 External integration waits must not block independent product work.
@@ -450,7 +492,9 @@ External integration waits must not block independent product work.
 
 - Product requirements: `docs/PRODUCT_STANDARD.md`
 - Product roadmap and sequencing: this file
-- Actual implementation/evidence: `docs/STATUS.md` and GitHub Work Packet #33
+- Actual implementation/evidence: `docs/STATUS.md` and active GitHub Work Packet #38
+- External-integration waiting evidence: GitHub Work Packet #33
+- UX/IA design guide: `docs/UX_INFORMATION_ARCHITECTURE.md`
 - Architecture/security details: `docs/ARCHITECTURE.md`
 - User quality gates: `docs/SURFACE_RECONCILIATION.md`, `docs/FULL_USER_E2E.md`
 - Engineering process: repository `AGENTS.md` and adopted Engineering System

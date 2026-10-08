@@ -1,7 +1,7 @@
-# R1 implementation status
+# Grant 1.0 implementation status
 
-Updated: 2026-10-07. Canonical coordination: GitHub Issue #33, PR #34.
-Status: development candidate, not production/GA or full R1 acceptance.
+Updated: 2026-10-08. G1/G2 coordination: GitHub Issue #38; baseline/external lane: Issue #33 / PR #34.
+Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
@@ -12,13 +12,34 @@ sequenced by `ROADMAP.md`. The current branch remains a development baseline, no
 claim that all 1.0 workstreams are implemented. Existing R1 evidence is retained as
 historical/current baseline evidence and maps into the broader 1.0 roadmap.
 
+## Accepted UX/IA direction
+
+The accepted Grant 1.0 UX/IA direction is recorded in
+`docs/UX_INFORMATION_ARCHITECTURE.md` and the Product Standard sections 11-13. It adds
+G0 Product Foundation/task-oriented UX convergence ahead of further product-surface
+expansion. Acceptance of this direction is not implementation evidence; current
+capability remains whatever is present and tested at the committed candidate HEAD.
+
 ## Implemented candidate
 
-- Pinned unpublished Foundation SDK and public imports; real shell, login,
-  MFA/recovery, accounts/sessions, health and audit adapters.
-- Administrator-managed approval policies and bounded plain-text approval/reminder
-  templates. Each request snapshots the assigned approver, timing policy and selected
-  template so later administration changes apply only to new requests.
+- Pinned unpublished Foundation SDK and public imports with Foundation-backed auth,
+  shell, MFA/recovery, accounts/sessions, health and audit adapters. The accepted G0
+  grouped task-oriented navigation, centered DataRelay-family login composition, action
+  center Home and focused Administration/configuration layouts are roadmap/design targets
+  until committed implementation and browser evidence establish them.
+- Versioned approval policies with explicit Draft -> Testing -> Active -> Disabled
+  lifecycle, clone/history, bounded deterministic selectors and shared runtime/preview
+  resolution. The browser request form populates configured policy selectors
+  (tenant/environment/severity/risk) and disabling an old ACTIVE version does not
+  overwrite the latest DRAFT editor. Saving never makes a policy live; isolated
+  tests cannot authorize execution.
+- A coherent Notifications area with complete event template sets, explicit safe
+  variables, rendered preview/test send, delivery health/retry visibility and system
+  branding. SMTP failure counts are separate from webhook delivery state. Until an
+  explicit safe-test-recipient registry is implemented, sending a notification test
+  is restricted to the currently authenticated administrator's own mailbox. Each
+  request snapshots the exact policy version and notification content so
+  later policy/template/branding changes apply only to new requests.
 - One fixed approver per policy; immutable action, explicit approve/hold/deny,
   expiry, bounded reminders, cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.
@@ -35,15 +56,25 @@ historical/current baseline evidence and maps into the broader 1.0 roadmap.
 
 ## Observed development evidence
 
-The current development tree passes 128 Python contract/lifecycle cases, 12 frontend
-adapter cases, typecheck/build, and five real browser journeys. The browser administration
-journey now creates an email template and binds it to an approval policy. Final exact-HEAD
-confirmation and CI are recorded in Issue #33.
+PR #39 review hardening covers all five latest actionable findings:
+selector-complete browser requests, self-only notification test sends, latest
+draft retained after active disable, expired requests counted as overdue, and
+SMTP failures surfaced separately from callback failures. These changes have
+focused deterministic API and real-browser regressions. Final commit and
+exact-head CI/review evidence are recorded in Work Packet #38, not this source file.
+
+The current G1/G2 review-hardening development tree passes 139 Python/API cases,
+12 frontend unit cases, static checks, typecheck/build and seven real Chromium
+browser journeys, including policy-selector creation and draft-preserving disable.
+The browser administration journey exercises Notification template-set preview/test send
+and Approval Policy Draft -> Testing -> isolated test -> Activate -> runtime preview ->
+history. Final exact-HEAD confirmation and CI belong in active Work Packet #38.
 
 Browser cases include two independently signed-in requester/approver passes,
 mobile shared administration, cancellation/replacement, account creation,
-email-template/approval-policy creation and scoped credential revocation. Screenshots were inspected. Browser tests use
-actual loopback SMTP/HTTP and disposable accounts; the executor is explicitly a
+notification-template/policy lifecycle administration and scoped credential revocation.
+Screenshots were inspected. Browser tests use actual loopback SMTP/HTTP and disposable
+accounts; the executor is explicitly a
 fixture, not the real DataRelay consumer. Never promote these into external PASS.
 Raw fixture credentials and trace archives remain private and untracked.
 A Starlette TestClient deprecation warning is recorded without suppressing it.
@@ -53,7 +84,7 @@ A Starlette TestClient deprecation warning is recorded without suppressing it.
 | Milestone | Disposition |
 | --- | --- |
 | M0 | Foundation/auth/admin baseline implemented and locally tested; unsupported lifecycle/TLS mutations stay unavailable |
-| M1 | Core/UI plus approval-policy and email-template administration tested; Gmail STARTTLS/AUTH/submission and actual receipt at a distinct designated mailbox verified |
+| M1 | Core/UI plus versioned approval-policy and Notification administration tested; baseline Gmail STARTTLS/AUTH/submission and actual receipt at a distinct designated mailbox verified |
 | M2 | API, strict consumer replies, durable transport and recovery tested on the development server |
 | M3 | Consumer contract/client implemented; actual existing DataRelay operation NOT integrated/accepted |
 | M4 | Stellar request/tenant/callback contract and guide implemented; actual Stellar receiver evidence missing |

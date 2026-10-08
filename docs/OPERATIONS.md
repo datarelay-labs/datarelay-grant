@@ -57,6 +57,10 @@ exact approved HTTPS callback URLs in `callback_urls`. Do not put secret values 
 Git, issue bodies, screenshots, request parameters, shell history or mail subjects.
 A disabled STARTTLS option is allowed only for explicit loopback test SMTP.
 Restart and use **Send test email to me**. SMTP acceptance is not actual inbox receipt.
+Notification test sends are restricted to the authenticated administrator's
+own mailbox until a designated-safe-recipient registry and explicit allowlist
+are implemented and audited. The currently available UI cannot send an
+arbitrary test message to another enabled user.
 In Integrations create the matching destination, protected headers and optional
 HMAC secret. **Test connection** sends a diagnostic event, never an approval.
 Tokens are shown once. Use separate creation and execution/reporting credentials;
@@ -126,13 +130,15 @@ Stop the old loopback process, take a new backup, run `check` and the candidate
 against an isolated copy before pointing a service at it. The default web path is
 resolved from the active source tree; remove a legacy hard-coded `web_root` only
 after verifying the new compiled assets. Run the same user scenarios on that build.
-Schema v2 adds administrator-managed mail templates, policy references and immutable
-request template snapshots. Opening a schema-v1 database with this candidate migrates
-it forward to v2 in place; take a backup first for any non-disposable installation.
-Pre-v2 binaries reject schema v2 and therefore are not a valid code-only rollback target.
-Do not downgrade/stamp the database. If a schema rollback is ever required, use the
-protected pre-upgrade backup through the reconciliation procedure above. Real
-upgrade/rollback requires the operator's deployment approval.
+Schema v3 adds versioned policy lifecycle/selectors, event-oriented notification
+template sets/branding snapshots, request policy-version references and event-typed
+delivery state on top of the schema-v2 approval/mail snapshot baseline. Opening a
+schema-v1 or schema-v2 database with this candidate migrates it forward to v3 in place;
+take a backup first for any non-disposable installation. Pre-v3 binaries reject schema
+v3 and therefore are not a valid code-only rollback target. Do not downgrade/stamp the
+database. If a schema rollback is ever required, use the protected pre-upgrade backup
+through the reconciliation procedure above. Real upgrade/rollback requires the
+operator's deployment approval.
 
 ## Browser checks
 

@@ -89,6 +89,8 @@ def test_stellar_tenant_and_loop_prevention(env):
             action_kind="service.restart",
         ),
     )
+    env.core.transition_profile(env.admin, p["id"], "TESTING")
+    p = env.core.transition_profile(env.admin, p["id"], "ACTIVE")
     t = env.auth.issue_token(env.admin, i["id"], ["request:create"])
     api = TestClient(env.app, headers={"authorization": "Bearer " + t["token"]})
     assert (

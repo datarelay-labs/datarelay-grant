@@ -14,6 +14,29 @@ member accounts with random credentials, a temporary DB and loopback receivers.
 Never use production credentials or a real customer's system for this fixture.
 All pages use the built web app and real product API. Browser errors fail the test.
 
+## Shared login, shell and task-oriented navigation
+
+Before domain workflow confirmation, verify the shared user frame in a real browser:
+
+1. Sign-in is centered using the DataRelay-family Foundation composition, with Grant
+   identity/context separated from the bounded credential card.
+2. The credential card shows the common DataRelay welcome/sign-in framing, password
+   visibility behavior and administrator-managed-account guidance. MFA/recovery remains
+   in the same shared auth frame.
+3. After sign-in, desktop navigation is grouped into Home, Work, Configuration and
+   Administration goals; Account & Security and sign-out are associated with the
+   signed-in user rather than consuming primary navigation space.
+4. Collapse and expand the desktop sidebar and verify the mobile off-canvas navigation.
+   Focus, labels and the active route remain understandable in each state.
+5. Home behaves as an action center: work needing a decision and exceptions/recent work
+   are primary. It must not become a chart-first NOC/SOC dashboard.
+6. Requests/My approvals are scan-oriented work surfaces. Approval Policies and
+   Notifications enter focused list/detail flows rather than one permanently expanded
+   settings canvas.
+
+These checks validate shared presentation only. Grant server-side authorization and
+approval/execution authority remain independently verified by the domain scenarios below.
+
 ## Two independent complete passes
 
 Perform each pass with NEW isolated browser contexts and separate sign-ins:
@@ -53,9 +76,13 @@ An administrator signs in through the normal login screen. System administration
 shows actual accounts, health and audit through Foundation adapters. Create a
 separate disposable account through the UI; never assume mock account creation.
 Configure a DataRelay fixture integration against the registered receiver and test
-its connection. Create a bounded approval/reminder email template through the UI, then
-configure a single-approver approval policy for a fixed action kind and select that
-template. Confirm policy/template edits apply only to new request snapshots.
+its connection. In Notifications, create a complete bounded event template set, preview
+the rendered requested message, and send a non-authorizing test notification while
+keeping transport acceptance distinct from inbox receipt. In Approval Policies, create
+a single-approver Draft for a fixed action kind, select the notification template set,
+move it to Testing, run an isolated non-executing test, explicitly Activate it and inspect
+version/change history. Confirm policy/template/branding edits apply only to new request
+snapshots; saving a policy alone must never make it live.
 Issue a scoped credential through the UI, inspect metadata without raw secret/hash
 exposure, request revocation and confirm it. Verify the revoked credential cannot
 read requests. Revocation cancellation must leave it usable. A requester/member

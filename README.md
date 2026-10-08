@@ -29,7 +29,7 @@ approved operational procedure.
 | Integration | Scoped input API, reliable outcome webhook, execution commitment and reported result API |
 | Transport | Registered destinations, verified HTTPS, optional HMAC, stable event IDs, bounded retry and resend |
 | Recovery | Persistent SQLite state/outbox, new-path backup/restore, paused reconciliation, no replay of business actions |
-| Management | Approval policies, email templates, integrations, connection/mail tests, scoped credential metadata and revocation |
+| Management | Versioned approval policies, Notifications template sets/preview/test/delivery health/branding, integrations, connection tests, scoped credential metadata and revocation |
 
 Approval, notification acceptance and execution success are different states.
 A bare approval webhook cannot enforce an external system that does not check it.
