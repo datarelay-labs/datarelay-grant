@@ -271,6 +271,223 @@ third-party copied documentation does not grant API eligibility.
    to understand BotFather, WABA IDs, API keys or webhooks
    as a default product path.
 
+## Managed Bots implementation feasibility — executed probe (2026-10-09)
+
+**Verdict: CONDITIONAL TECHNICAL GO for zero-manual-BotFather customer
+onboarding, NOT a live end-to-end verification or owner approval of
+a new hosted service.** Telegram's own Bot API, not an unstable
+community hack, implements creation prompts and token export.
+
+### First-party API implementation and concrete prerequisites
+
+- Telegram [Bot API changelog — 2026-04-03, v9.6](https://core.telegram.org/bots/api-changelog)
+  introduced `KeyboardButtonRequestManagedBot`, `managed_bot_created`,
+  `ManagedBotUpdated`, `getManagedBotToken`,
+  `replaceManagedBotToken`, and the `t.me/newbot/...` deep link.
+- Telegram [Managed Bots / MTProto](https://core.telegram.org/api/bots/managed-bots)
+  states **a real signed-in user, not a bot or Mini App, creates/owns**
+  a managed bot. A *manager bot* with `bot_can_manage_bots=true`
+  is assigned to manage it. Grant cannot bypass real owner creation
+  consent, Telegram account bot ownership limits or username
+  availability.
+- The [Bot Features / Managed Bots](https://core.telegram.org/bots/features)
+  page describes **one-time provider bootstrap**: Grant must
+  create/choose its manager bot (via BotFather) and turn on
+  **Bot Management Mode** in BotFather's Mini App. The customer's
+  own Telegram app can then click a prefilled link:
+  `https://t.me/newbot/{manager_bot_username}/{new_username}?name={display_name}`.
+  It shows a user-controlled final creation dialog.
+  **The customer does NOT need BotFather** after provider bootstrap.
+- Alternatively Grant can first enroll the customer admin via a
+  manager-bot private `/start <one_time_binding>` deep link and
+  send a ReplyKeyboard with `request_managed_bot` and
+  `request_id`. The user taps **Create bot** and authorizes;
+  Telegram delivers `Update.managed_bot` containing the
+  creator's Telegram numeric user ID and created bot ID.
+  A `managed_bot_created` message is also defined. The manager
+  uses the Bot API `getManagedBotToken(user_id=child_bot_id)`
+  to fetch the child token; `replaceManagedBotToken` can
+  invalidate/reissue it. This requires manager-bot credentials
+  on the provider's trusted service, **not a per-customer token
+  pasted by hand**.
+- `KeyboardButtonRequestManagedBot` is only available in
+  **private chats**; group creation approval is NOT silently
+  available to a Grant bot. Customer's child bot username
+  must be available and end in `bot` (5–32 characters total);
+  creation can fail at account bot ownership limits.
+- **Managed-bot `restricted` access** supports its creator
+  plus only **10 extra users** in the *Telegram-side access
+  restriction*. For a larger enterprise approver team, this
+  is not a generic native allowlist solution: prefer ordinary
+  bot messaging with strict server-side Grant approver ID
+  enrollment/authorization, or prove an alternative product
+  mode before claiming native >10-user restriction.
+  [Official method](https://core.telegram.org/method/bots.editAccessSettings).
+- For the on-prem child bot, Telegram's
+  [getUpdates](https://core.telegram.org/bots/api#getupdates)
+  supports **outbound long polling**; no customer HTTPS
+  endpoint, public inbound IP, raw webhook URL or separate
+  group is needed. The installed Grant must have outbound
+  HTTPS access to Telegram, and polling/webhook are mutually
+  exclusive for one bot. Use the Bot API directly or a
+  maintained SDK (aiogram >=3.27 includes Managed Bots API 9.6
+  [release history](https://github.com/aiogram/aiogram/blob/dev-3.x/CHANGES.rst)).
+
+### Actual dev-atlas evidence (credential-free)
+
+On the authorized **dev-atlas** development device:
+
+- TLS/HTTPS to `https://api.telegram.org/`: **CONNECTED**
+  (HTTP 302 root response; TLS handshake ~0.58s).
+- HTTPS to `https://core.telegram.org/bots/api`: **HTTP 200**
+  (TLS handshake ~0.58s).
+- Executed 12 credential-free contract smoke tests from temporary
+  `/tmp/grant-managedbots-contract-probe-20261009.py`:
+  **12 PASS / 0 FAIL / exit 0**. Assertions included official
+  live Bot API HTML method names; suggested `newbot` link
+  formatting/username rejection; proper `request_managed_bot`
+  request fields; scoped owner onboarding; rejection of wrong
+  owner/tenant, expired or replayed enrollment; simulated
+  `managed_bot` creator/bot event; token-export request
+  method construction. **These are synthetic parser/contract
+  assertions, NOT Telegram bot creation or actual token export.**
+- **Not tested:** real provider Bot Management Mode, signed-in
+  user clicking the creation dialog, actual `managed_bot`
+  event delivery, real `getManagedBotToken` credential retrieval,
+  secure installation handoff, per-approver private message,
+  approval callback, or a live 2-person E2E. No customer/production
+  bot, group, token, provider service or security credential was
+  created/modified. No user-owned Telegram credentials are known
+  or required for these limited tests.
+
+### On-prem customer deployment: minimal provisioner, not full SaaS relay
+
+One-time **Grant-owned manager bot** still requires an always-
+reachable manager service somewhere to receive manager updates and
+perform the token retrieval. The customer-owned **child bot** can
+then be polled directly by the customer's on-prem Grant service
+over HTTPS. Thus a full central *message/case-data relay* is
+NOT intrinsic to the child bot operation, but a provider-managed
+**onboarding/token provisioning service** still needs explicit
+architecture, data-flow and operational authorization.
+
+Proposed no-copied-key customer journey:
+
+1. Customer Grant administrator signs into their local Admin UI
+   and clicks **Connect Telegram**. Local Grant issues a short-
+   lived tenant/install/admin-bound pairing request.
+2. Customer opens the Grant manager bot with a deep link
+   `t.me/{manager_bot}?start={one_use_pair}` and taps Start.
+   Grant securely binds Telegram `from.id` to the pending
+   verified local administrator (not just display name).
+3. Manager sends a **Create Grant bot** request keyboard, or
+   a prefilled `t.me/newbot/...` link. Customer confirms
+   a uniquely named new bot on Telegram's own interface.
+4. Provider manager receives `managed_bot`, verifies
+   `user.id` against pending pairing, resolves installed
+   customer/tenant and obtains child token through
+   `getManagedBotToken`. Mismatched, stale, or duplicate
+   events are discarded. No guessed group or chat ID.
+5. **Secure outbound claim** from customer installation:
+   through authenticated HTTPS to a separately authorized
+   provisioning service, obtain the new child token using
+   single-use short-lived installation pairing, encrypt it
+   at rest on customer Grant and immediately verify `getMe`
+   against intended child bot ID. The provider must never
+   put tokens in URLs, client JS, logs, Telegram messages or
+   plaintext analytics. Define installation identity/
+   anti-replay and revocation/incident recovery before
+   production implementation; a link alone is insufficient
+   to authenticate a target installation.
+6. Each human reviewer independently taps Start on the
+   **customer-owned child bot** using a personal one-time
+   enrollment link. Grant checks their Telegram numeric ID
+   against their approval seat and sends action choices by
+   direct message. **No Telegram group is required.**
+   Where allowed, optional redacted group status/alerts
+   remain a separate customer-admin consent step.
+7. The customer's on-prem Grant process receives updates
+   via outbound long polling `getUpdates`; verifies enrolled
+   `from.id` and bound request/seat/action/outcome on every
+   answer. It requires an explicit confirmation and any
+   customer-policy OTP/MFA before recording a decision;
+   business execution remains independently consumer-owned.
+
+### Material security and commercial blockers
+
+**Manager token custodianship (P0 go/no-go):** Telegram officially
+allows the management bot to retrieve **and rotate** a managed
+child's token. Therefore a *Grant-owned manager bot retains a
+highly privileged control path over every managed child*, even
+if the customer server has its own copy of the token. Merely
+handing the token to the customer does NOT produce exclusive
+customer control. Whether the owner can **permanently revoke
+or unlink manager rights while retaining a working child bot**
+through a first-party documented process has **not** been
+verified. Treat that as UNPROVEN; do not promise exclusive
+customer custody, especially to regulated/on-prem customers.
+A security review of the provider credential control plane
+is mandatory if this architecture is selected.
+
+**Provider bootstrap is not zero-work:** Grant operator must
+create/own a manager bot once and enable Bot Management Mode
+through Telegram; this does not recur for each customer.
+Each customer must still use a Telegram account, confirm bot
+creation and each recipient must personally start the child
+bot. None of these steps can be silently forced by the provider.
+
+**Customer SaaS/hosted dependency:** current Grant 1.0 is an
+on-prem/single-installation product. A provider-run manager
+and token provisioning service add new availability,
+authentication, privacy and key-management obligations,
+even when private approval messages never transit it.
+Explicit owner scope and deployment approval required.
+Direct polling needs customer outbound network access
+to Telegram, which may be blocked by dark-site deployments.
+
+**No direct real-world E2E without bootstrap:** A live
+`getManagedBotToken` call requires an actual manager bot
+configured with Bot Management Mode and an actual Telegram
+human who approves child-bot creation. We did not find
+confirmed non-secret metadata for such a manager in the
+current Grant project. Do not borrow unrelated Telegram
+notification secrets to bypass this bootstrap.
+
+### Exact remaining real-world acceptance before product GO
+
+1. Provider creates one **disposable manager bot** and
+   enables Bot Management Mode; record only the *public
+   manager username* in review, never its token.
+2. The user/customer with a separate Telegram account
+   opens the real `newbot` link, confirms a test child
+   bot, and manager receives its `managed_bot` event.
+3. Manager fetches the child token using the actual Bot
+   API, securely provisions an isolated disposable
+   Grant installation without human token copy, then
+   demonstrates `getMe`, outbound `getUpdates` and
+   1:1 send/receive while keeping token material secret.
+4. Verify owner/manager rights, customer self-service
+   disconnect, token rotation/revocation, recovery
+   and whether provider management rights can be
+   eliminated. If custody cannot satisfy selected
+   customer policy, fail closed or retain email-only
+   for that customer; no deceptive "fully customer-owned"
+   marketing.
+5. Two independent nontechnical customer operators
+   complete initial bot setup + reviewer onboarding
+   without typing token/chat ID/webhook. Measure time,
+   failed attempts, client support and ongoing support
+   burden. Demonstrate original/delegate/quorum/hold
+   and 2-person per-approver E2E using actual Telegram
+   updates and Grant audit/consume separation.
+
+**Recommendation:** advance a narrowly scoped Telegram
+managed-bot onboarding **technical pilot only** after the
+one-time provider bootstrap and explicit owner approval
+for a central provisioning component. Do not declare
+Telegram production-capable, ignore custodianship risk
+or broaden 1.0/G12 scope based on the 12 protocol tests.
+
 ## Proposed roadmap — research candidate only
 
 **Prerequisite:** finish accepted Grant 1.0 G10A email-PIN policy,
