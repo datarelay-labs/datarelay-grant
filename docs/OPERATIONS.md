@@ -155,6 +155,36 @@ versioned policies, request action fingerprints, approver groups, delegations,
 comments and credential status. Isolated database copies are not evidence
 that external execution effects were reconciled.
 
+## Security controls and repeatable browser qualification
+
+A cached human authorization does not survive account role demotion, disabled
+account status or an ended browser session. Admin read/search/export requests
+revalidate current session and role in the database transaction. Request
+list searches revalidate integration credential status/current request-read
+scope both before maintenance and while reading the filtered source records.
+Grant consumption remains separately bound to its actual execution privilege,
+durable execution ID and immutable action fingerprint. A report or request
+read never commits a business operation.
+
+The audit exporter allows only typed reference fields, drops nonfinite or
+out-of-bounds legacy audit numbers, redacts arbitrary note/reason values and
+neutralizes formula operators even after leading whitespace in CSV cells.
+Import conflict preview does not apply policy, template, identity, credential
+or callback changes; invalid schema/secret fields, CSRF-less and foreign-Origin
+requests fail closed.
+
+**Browser E2E build sequencing:** run static and Web typecheck/production
+build to completion before running the real Playwright browser suite. Do not
+run a second Web build concurrently with Playwright: Vite replaces the dist
+directory and the application may briefly return FRONTEND_NOT_BUILT.
+This was reproduced during G9 concurrent runs and resolved by serializing
+build then browser qualification. On Linux with util-linux flock available,
+scripts/checks.sh web and browser share a per-worktree advisory lock under
+.dev; a bounded same-file lock smoke validated that an existing holder delays
+the Web build (LOCK_SERIALIZATION PASS). Other hosts must explicitly sequence
+the two commands. Isolated fixture E2E never represents actual
+DataRelay consumer or Stellar receiver acceptance.
+
 ## Backup, restore and restart
 
 ```sh

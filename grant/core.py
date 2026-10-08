@@ -1552,8 +1552,11 @@ class Core:
             "viewer_delegated_for": represented if represented != actor.id else None,
         }
 
-    def get(self, actor: Principal, ident: str) -> dict:
+    def get(
+        self, actor: Principal, ident: str, *, required_scope: str = ""
+    ) -> dict:
         with self.db.transaction() as conn:
+            require_current_authority(conn, actor, required_scope)
             row = self._load(conn, ident, actor)
             now = time.time()
             self._expire(conn, row, now)
@@ -1565,6 +1568,9 @@ class Core:
 
     def compare_replacement(self, actor: Principal, ident: str) -> dict:
         with self.db.transaction(write=False) as conn:
+            require_current_authority(
+                conn, actor, "request:read" if actor.kind == "integration" else ""
+            )
             latest = self._load(conn, ident, actor)
             if not latest["predecessor_id"]:
                 raise GrantError("REVISION_COMPARISON_NOT_AVAILABLE", 409)
@@ -1746,6 +1752,12 @@ class Core:
         if actor.kind not in ("human", "integration"):
             raise GrantError("AUTHENTICATION_REQUIRED", 401)
 
+        # Maintenance may expire approvals and schedule notifications.
+        # Reject a revoked/demoted principal before these side effects.
+        with self.db.transaction(write=False) as conn:
+            require_current_authority(
+                conn, actor, "request:read" if actor.kind == "integration" else ""
+            )
         self.maintenance()
         now = time.time()
         clauses: list[str] = []
@@ -1877,6 +1889,9 @@ class Core:
         cursor = 0
         chunk = max(100, min(200, limit * 2))
         with self.db.transaction(write=False) as conn:
+            require_current_authority(
+                conn, actor, "request:read" if actor.kind == "integration" else ""
+            )
             # Streaming bounded fetches keep page results correct even when
             # viewer/delegation/outbox filters are computed after SQL predicates.
             while len(result) < limit:

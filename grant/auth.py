@@ -66,8 +66,11 @@ def require_current_authority(conn: sqlite3.Connection, actor: Principal, scope:
         if scope and scope not in json.loads(row["scopes"]):
             raise GrantError("SCOPE_REQUIRED", 403)
     elif actor.kind == "human":
-        row = conn.execute("SELECT enabled FROM users WHERE id=?", (actor.id,)).fetchone()
-        if not row or not row["enabled"]:
+        row = conn.execute(
+            "SELECT enabled,role FROM users WHERE id=?", (actor.id,)
+        ).fetchone()
+        if not row or not row["enabled"] or row["role"] != actor.role:
+            # Cached admin/member claims must not survive a role change.
             raise GrantError("AUTHENTICATION_REQUIRED", 401)
         if (
             actor.session_id

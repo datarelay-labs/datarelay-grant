@@ -4,6 +4,14 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 export PATH="$ROOT/.dev/node-runtime/node_modules/.bin:$ROOT/.dev/toolchain/bin:$PATH"
+# Vite builds replace web/dist. Serialize only web and browser qualifications,
+# preventing a concurrent Playwright run from observing FRONTEND_NOT_BUILT.
+if [[ "${1:-}" == "web" || "${1:-}" == "browser" ]] && command -v flock >/dev/null 2>&1; then
+  if [[ "${GRANT_WEB_BROWSER_LOCK_HELD:-}" != "1" ]]; then
+    mkdir -p "$ROOT/.dev"
+    exec flock -w 180 "$ROOT/.dev/web-browser-qualification.lock"       env GRANT_WEB_BROWSER_LOCK_HELD=1 bash "$0" "$@"
+  fi
+fi
 case "${1:-all}" in
   setup-api)
     if [[ "$(uv --version 2>/dev/null || true)" != uv\ 0.12.18* ]]; then
