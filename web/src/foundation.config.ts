@@ -116,6 +116,14 @@ export function productConfig(user: User) {
         requiredCapability: 'grant.integrations.manage',
       },
       {
+        id: 'operations',
+        label: 'Operations',
+        path: '/operations',
+        icon: 'activity',
+        group: 'Administration',
+        requiredCapability: 'health.read',
+      },
+      {
         id: 'system',
         label: 'Administration',
         path: '/system',

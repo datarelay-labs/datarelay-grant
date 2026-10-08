@@ -78,6 +78,23 @@ A repeated consume returns `replay: true`; reconcile the consumer's durable oper
 ledger, never execute a second time. Transport ambiguity or an UNKNOWN execution
 requires external result inspection. Grant cannot undo a committed external action.
 
+## Operations dashboard and exception queues
+
+The administrator **Operations** page reads the current authoritative request,
+decision, delivery and execution records. Each card drills into server-filtered
+Requests; the aggregate counts are distinct affected requests, not transport
+attempts. Approval latency is creation-to-final-human-decision elapsed time.
+Overdue counts expired approval deadlines on undecided requests or due escalations;
+an already-approved execution grant that later expires is not a late human decision.
+Unused approvals are still-approved requests not yet consumed.
+
+Integration observations include the last *outgoing callback transport
+acceptance* (HTTP delivery 2xx), never proof that the consumer executed an
+action. A failed callback, SMTP failure or UNKNOWN execution requires human
+reconciliation. The dashboard exposes no token, secret or destination URL and
+has no action replay controls. A restored installation remains subject to the
+existing recovery-paused/explicit reconciliation procedure.
+
 ## Backup, restore and restart
 
 ```sh

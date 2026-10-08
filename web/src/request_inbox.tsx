@@ -7,7 +7,7 @@ import type { ApproverGroup, Integration, Profile, RequestRow, User } from './ty
 type Navigate = (path: string) => void;
 export type InboxMode = 'all' | 'approvals' | 'requester';
 
-type Filters = {
+export type Filters = {
   view: string;
   search: string;
   state: string;
@@ -38,6 +38,15 @@ const viewOptions: { value: string; label: string }[] = [
   { value: 'recent', label: 'Recently decided' },
   { value: 'requester', label: 'My submitted requests' },
   { value: 'escalated', label: 'Escalated requests' },
+  { value: 'ops_pending', label: 'All pending approvals' },
+  { value: 'ops_overdue', label: 'All overdue approvals' },
+  { value: 'ops_approved_unused', label: 'Approved but unused' },
+  { value: 'ops_execution_unknown', label: 'Execution unknown' },
+  { value: 'ops_execution_failed', label: 'Execution failed' },
+  { value: 'ops_email_failed', label: 'Email delivery failed' },
+  { value: 'ops_webhook_failed', label: 'Callback delivery failed' },
+  { value: 'ops_delivery_failed', label: 'Any delivery failed' },
+  { value: 'ops_decided', label: 'All human-decided requests' },
 ];
 const labels: Record<string, string> = {
   APPROVERS: 'Waiting on approvers',
@@ -72,9 +81,9 @@ function queryFor(filters: Filters, offset: number): string {
 }
 
 export function RequestList({
-  user, mode, navigate,
-}: { user: User; mode: InboxMode; navigate: Navigate }) {
-  const initial = () => initialFilters(mode);
+  user, mode, navigate, preset,
+}: { user: User; mode: InboxMode; navigate: Navigate; preset?: Partial<Filters> }) {
+  const initial = () => ({ ...initialFilters(mode), ...preset });
   const [draft, setDraft] = useState<Filters>(initial);
   const [applied, setApplied] = useState<Filters>(initial);
   const [offset, setOffset] = useState(0);
@@ -119,7 +128,7 @@ export function RequestList({
     setApplied({ ...draft });
   }
   function reset() {
-    const defaults = initialFilters(mode);
+    const defaults = initial();
     setDraft(defaults);
     setOffset(0);
     setApplied(defaults);
@@ -128,7 +137,7 @@ export function RequestList({
     ? viewOptions.filter((item) => item.value === 'requester')
     : mode === 'approvals'
       ? viewOptions.filter((item) => ['needs', 'held', 'overdue', 'delegated', 'recent'].includes(item.value))
-      : viewOptions;
+      : viewOptions.filter((item) => admin || !item.value.startsWith('ops_'));
   const heading = mode === 'approvals'
     ? 'Your approval queue'
     : mode === 'requester' ? 'My submitted requests' : 'Approval requests';

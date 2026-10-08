@@ -286,6 +286,12 @@ Exit evidence:
 - dashboard values reconcile with request lists;
 - restart/restore does not create false operational state.
 
+Development candidate: G7 read-only operator counts, integration transport
+observations and role-checked exception queues implemented in Work Packet #44.
+G0-G7 combined development worktree passed 187 Python/API, 12 frontend and
+15 real-browser scenarios; exact committed-head CI, external integration and
+release/owner acceptance remain separately required.
+
 ### G8 — Integration management
 
 Priority: **P0**

@@ -7,6 +7,7 @@ from .auth import require_current_authority
 from .db import audit
 from .errors import GrantError
 from .models import NewUser
+from .operations import operations_summary
 
 
 def register_admin(app, actor):
@@ -85,6 +86,17 @@ def register_admin(app, actor):
             }
             for r in rows
         ]
+
+    @app.get("/api/v1/admin/operations")
+    def operations(request: Request):
+        principal = actor(request)
+        principal.require_admin()
+        # Maintenance can transition expired requests and schedule notifications.
+        # Revalidate the current session before allowing those side effects.
+        with app.state.db.transaction(write=False) as conn:
+            require_current_authority(conn, principal)
+        app.state.core.maintenance()
+        return operations_summary(app.state.db, principal)
 
     @app.get("/api/v1/admin/health")
     def health(request: Request):

@@ -1720,6 +1720,10 @@ class Core:
         allowed_views = {
             "all", "needs", "overdue", "held", "delegated",
             "recent", "requester", "escalated",
+            "ops_pending", "ops_overdue", "ops_approved_unused",
+            "ops_execution_unknown", "ops_execution_failed",
+            "ops_email_failed", "ops_webhook_failed", "ops_delivery_failed",
+            "ops_decided",
         }
         if (
             view not in allowed_views
@@ -1735,6 +1739,8 @@ class Core:
             or limit < 1 or limit > 100 or offset < 0
         ):
             raise GrantError("REQUEST_FILTER_INVALID", 422)
+        if view.startswith("ops_"):
+            actor.require_admin()
         if actor.kind == "integration" and view != "all":
             raise GrantError("HUMAN_REQUIRED", 403)
         if actor.kind not in ("human", "integration"):
@@ -1816,6 +1822,32 @@ class Core:
         def included(row: dict) -> bool:
             if delivery_state is not None and row["delivery_state"] != delivery_state:
                 return False
+            if view.startswith("ops_"):
+                if view == "ops_pending":
+                    return row["state"] in ("AWAITING", "HELD")
+                if view == "ops_overdue":
+                    return bool(
+                        row["overdue"]
+                        or (
+                            row["state"] == "EXPIRED"
+                            and row["decision"] is None
+                            and row["deadline"] <= now
+                        )
+                    )
+                if view == "ops_approved_unused":
+                    return row["state"] == "APPROVED" and row["execution_state"] == "NOT_STARTED"
+                if view == "ops_execution_unknown":
+                    return row["execution_state"] == "UNKNOWN"
+                if view == "ops_execution_failed":
+                    return row["execution_state"] == "REPORTED_FAILED"
+                if view == "ops_email_failed":
+                    return row["notification_failure_count"] > 0
+                if view == "ops_webhook_failed":
+                    return row["delivery_state"] == "FAILED"
+                if view == "ops_delivery_failed":
+                    return row["delivery_state"] == "FAILED" or row["notification_failure_count"] > 0
+                if view == "ops_decided":
+                    return row["decision_at"] is not None
             assigned = row["viewer_assigned"]
             if view == "needs":
                 return bool(row["viewer_can_decide"])

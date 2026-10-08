@@ -3,6 +3,7 @@ import { Alert, Button, Card, TextField } from '@datarelay-labs/foundation';
 import { api } from './api';
 import { RequestAdminControls } from './request_admin';
 export { RequestList } from './request_inbox';
+export type { Filters } from './request_inbox';
 import { RequestCollaboration } from './collaboration';
 import { RevisionComparison } from './revision_diff';
 import { Form, Select, State, TextArea, useTask, when } from './common';
