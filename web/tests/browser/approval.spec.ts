@@ -563,8 +563,20 @@ test('G9 admin audit search, CSV/JSON download and request evidence chain',async
  await login(page,'admin');await page.goto('/audit');
  await expect(page.getByText('Audit evidence explorer',{exact:true})).toBeVisible();
  await page.getByLabel('Request ID',{exact:true}).fill(item.id);
+ // Wait for this exact filtered API response, not stale rows from the initial audit page.
+ const filtered=page.waitForResponse(response=>{
+  const url=new URL(response.url());
+  return url.pathname==='/api/v1/admin/audit/search' && url.searchParams.get('request_id')===item.id;
+ });
  await page.getByRole('button',{name:'Search evidence',exact:true}).click();
- await expect(page.getByText('request.created',{exact:true})).toBeVisible();
+ const filteredResponse=await filtered;
+ expect(filteredResponse.status()).toBe(200);
+ const scopedPage=await filteredResponse.json();
+ expect(scopedPage.items.length).toBeGreaterThan(0);
+ expect(scopedPage.items.every((event:{request_id:string|null})=>event.request_id===item.id)).toBe(true);
+ expect(scopedPage.items.some((event:{action:string})=>event.action==='request.created')).toBe(true);
+ // The UI must render the filtered result, not just return correct API data.
+ await expect(page.getByRole('cell',{name:'request.created',exact:true})).toHaveCount(1);
  await page.getByRole('button',{name:'Inspect request evidence',exact:true}).first().click();
  await expect(page.getByText('Request-to-result evidence chain',{exact:true})).toBeVisible();
  await expect(page.getByText(item.action_hash,{exact:true})).toBeVisible();
