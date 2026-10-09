@@ -64,7 +64,7 @@ test('Foundation login and grouped Grant shell follow the DataRelay family layou
 
 test('Foundation administration and mobile approval page are real adapters',async({browser})=>{
  const context=await browser.newContext({viewport:{width:390,height:844}});const page=await context.newPage();await login(page,'admin');
- await page.goto('/system');await expect(page.getByText('System health',{exact:true})).toBeVisible();await expect(page.getByText('Accounts',{exact:true})).toBeVisible();await page.getByRole('button',{name:'View',exact:true}).first().click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
+ await page.goto('/system');await expect(page.getByText('System health',{exact:true})).toBeVisible();await expect(page.getByText('User Management',{exact:true})).toBeVisible();await page.locator('.dr-card').filter({hasText:'System health'}).getByRole('button',{name:'View',exact:true}).click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
  await page.goto('/integrations');await expect(page.locator('strong').filter({hasText:/^Isolated DataRelay fixture$/})).toBeVisible();await page.getByRole('button',{name:'Test connection',exact:true}).click();await expect(page.getByText('Test event accepted by the HTTP receiver. This is not approval or execution.')).toBeVisible();
  await page.goto('/notifications');await expect(page.getByRole('heading',{name:'Notifications',exact:true,level:2})).toBeVisible();
  await page.goto('/profiles');await expect(page.getByRole('heading',{name:'Approval policies',exact:true,level:2})).toBeVisible();
@@ -105,7 +105,7 @@ test('requester cancels and creates a newly approved replacement through the UI'
 test('administrator configures accounts/profile and explicitly revokes a scoped credential',async({browser,request})=>{
  const f=fixture();const context=await browser.newContext();const page=await context.newPage();
  await login(page,'admin');await page.goto('/system');
- const accountsCard=page.locator('.dr-card').filter({hasText:'Accounts'}).first();await accountsCard.getByRole('button',{name:'Manage',exact:true}).click();
+ const accountsCard=page.locator('.dr-card').filter({hasText:'User Management'}).first();await accountsCard.getByRole('button',{name:'Manage',exact:true}).click();
  await page.getByLabel('New username',{exact:true}).fill('browser-member');
  await page.getByLabel('New user email',{exact:true}).fill('browser-member@example.invalid');
  await page.getByLabel('Initial password',{exact:true}).fill(f.password);
@@ -706,4 +706,51 @@ test('G12 a queue preset survives Clear filters outside the Home deep link',asyn
   await page.getByRole('button',{name:'Clear filters',exact:true}).click();
   await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('ops_pending');
  }finally{await context.close();}
+});
+
+test('G12 grouped Foundation Administration mirrors Control information architecture without fake controls',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ await login(page,'admin');
+ await page.goto('/system');
+ const groups=page.getByTestId('grant-admin-task-groups');
+ await expect(groups).toBeVisible();
+ for(const name of ['Access & security','Platform & network','Lifecycle & recovery','Operations & audit']){
+  await expect(groups.getByRole('heading',{name,exact:true})).toBeVisible();
+ }
+ const access=page.getByTestId('grant-admin-group-access-security');
+ const https=access.locator('.dr-card').filter({hasText:'HTTPS'});
+ await expect(https.getByText('unavailable',{exact:true})).toBeVisible();
+ await expect(https.getByRole('button',{name:'Manage'})).toHaveCount(0);
+ const network=page.getByTestId('grant-admin-group-platform-network');
+ await expect(network.getByText('Network',{exact:true})).toBeVisible();
+ await expect(network.getByRole('button',{name:'Manage'})).toHaveCount(0);
+ const accounts=access.locator('.dr-card').filter({hasText:'User Management'});
+ await accounts.getByRole('button',{name:'Manage'}).click();
+ await expect(page.getByTestId('grant-admin-selected-task')).toBeFocused();
+ await expect(page.getByText('Create local account',{exact:true})).toBeVisible();
+ const operational=page.getByTestId('grant-admin-group-operations-audit');
+ await operational.locator('.dr-card').filter({hasText:'System health'}).getByRole('button',{name:'View'}).click();
+ await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
+ await access.locator('.dr-card').filter({hasText:'Password & MFA'}).getByRole('button',{name:'Manage'}).click();
+ await expect(page).toHaveURL(/\/security$/);
+ await expect(page.getByText('Active sessions',{exact:true})).toBeVisible();
+ await page.goto('/system');
+ await page.getByTestId('grant-admin-group-lifecycle-recovery').locator('.dr-card')
+  .filter({hasText:'Configuration preview'}).getByRole('button',{name:'View'}).click();
+ await expect(page).toHaveURL(/\/integrations$/);
+ await context.close();
+});
+
+test('G12 Foundation Administration groups stay usable at mobile width',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:390,height:844}});
+ const page=await context.newPage();
+ await login(page,'admin');
+ await page.goto('/system');
+ const groups=page.getByTestId('grant-admin-task-groups');
+ await expect(groups.getByRole('heading',{name:'Access & security'})).toBeVisible();
+ await expect(groups.getByRole('heading',{name:'Operations & audit'})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:'../.e2e/screenshots/grouped-administration-mobile.png',fullPage:true});
+ await context.close();
 });

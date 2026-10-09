@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccountList,
   AdminTaskCatalog,
@@ -28,8 +28,16 @@ import {
 } from './foundation.config';
 import { Form, Select, useTask } from './common';
 import type { User } from './types';
+import './administration-layout.css';
 
 type AdminSection = 'health' | 'accounts' | 'audit' | 'mail' | 'lifecycle' | null;
+
+type AdminTaskGroup = {
+  id: string;
+  title: string;
+  description: string;
+  tasks: readonly AdminTask[];
+};
 
 function availability(user: User, capability: string): CapabilityAvailability {
   const capabilities = productConfig(user).capabilities as Record<string, boolean | CapabilityAvailability>;
@@ -45,44 +53,117 @@ export function Administration({ user }: { user: User }) {
   const [health, setHealth] = useState<HealthProjection>();
   const [info, setInfo] = useState<SystemInfoProjection>();
   const [section, setSection] = useState<AdminSection>(null);
+  const selectedTaskRef = useRef<HTMLDivElement>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('member');
   const task = useTask();
 
-  const tasks = useMemo<readonly AdminTask[]>(
+  // Same Foundation AdminTaskCatalog used by Control, but grouped by actual
+  // Grant capabilities. Missing server implementations never get Manage actions.
+  const groups = useMemo<readonly AdminTaskGroup[]>(
     () => [
       {
-        id: 'health.read',
-        label: 'System health',
-        description: 'Read Grant health and authoritative system information.',
-        availability: availability(user, 'health.read'),
+        id: 'access-security',
+        title: 'Access & security',
+        description: 'Grant accounts, personal credentials, and transport security.',
+        tasks: [
+          {
+            id: 'tls.configure',
+            label: 'HTTPS',
+            description: 'TLS certificates, listener, and HTTPS redirect.',
+            availability: availability(user, 'tls.configure'),
+            notes: 'Not available in Grant. TLS is configured by the approved reverse proxy.',
+          },
+          {
+            id: 'users.manage',
+            label: 'User Management',
+            description: 'Review Grant accounts and create administrator-managed users.',
+            availability: availability(user, 'users.manage'),
+            effects: ['security_sensitive'],
+          },
+          {
+            id: 'identity.password.change',
+            label: 'Password & MFA',
+            description: 'Change your own password, manage MFA and active sessions.',
+            availability: availability(user, 'identity.password.change'),
+            notes: 'Personal account security only; no administrator-wide password policy.',
+          },
+        ],
       },
       {
-        id: 'users.manage',
-        label: 'Accounts',
-        description: 'Review local accounts and create administrator-managed Grant users.',
-        availability: availability(user, 'users.manage'),
-        effects: ['security_sensitive'],
+        id: 'platform-network',
+        title: 'Platform & network',
+        description: 'Display timezone and reverse-proxy networking boundaries.',
+        tasks: [
+          {
+            id: 'grant.timezone.configure',
+            label: 'Display timezone',
+            description: 'Personal or system-wide time display preferences.',
+            availability: 'unavailable',
+            notes: 'Grant currently uses the browser locale; no timezone editor is implemented.',
+          },
+          {
+            id: 'grant.network.configure',
+            label: 'Network',
+            description: 'Published ports, proxy destinations and network listener settings.',
+            availability: 'unavailable',
+            notes: 'Configured by the deployment operator; no Grant network settings API.',
+          },
+        ],
       },
       {
-        id: 'audit.read',
-        label: 'Audit history',
-        description: 'Review authentication, administration and approval-control audit events.',
-        availability: availability(user, 'audit.read'),
+        id: 'lifecycle-recovery',
+        title: 'Lifecycle & recovery',
+        description: 'Data retention, backup and non-applying configuration portability.',
+        tasks: [
+          {
+            id: 'grant.retention.configure',
+            label: 'Retention',
+            description: 'Cleanup schedules and record retention policies.',
+            availability: 'unavailable',
+            notes: 'Grant has no administrator retention-policy editor.',
+          },
+          {
+            id: 'grant.lifecycle.guidance',
+            label: 'Backup & restore',
+            description: 'Read the supported CLI-only backup and recovery procedure.',
+            availability: availability(user, 'grant.lifecycle.guidance'),
+          },
+          {
+            id: 'grant.configuration.preview',
+            label: 'Configuration preview',
+            description: 'Review safe export and dry-run import conflicts in Integrations.',
+            availability: availability(user, 'grant.lifecycle.guidance'),
+            notes: 'Read-only preview; no configuration import/apply control exists.',
+          },
+        ],
       },
       {
-        id: 'grant.smtp.test',
-        label: 'Mail delivery test',
-        description: 'Submit a non-authorizing test message to the authenticated administrator.',
-        availability: availability(user, 'grant.smtp.test'),
-      },
-      {
-        id: 'grant.lifecycle.guidance',
-        label: 'Lifecycle & recovery',
-        description: 'Read the supported backup, restore, TLS and upgrade operating boundary.',
-        availability: availability(user, 'grant.lifecycle.guidance'),
+        id: 'operations-audit',
+        title: 'Operations & audit',
+        description: 'Authoritative health, historical evidence and notification diagnostics.',
+        tasks: [
+          {
+            id: 'audit.read',
+            label: 'Audit history',
+            description: 'Review Grant authentication, administration and approval audit events.',
+            availability: availability(user, 'audit.read'),
+          },
+          {
+            id: 'health.read',
+            label: 'System health',
+            description: 'Read authoritative Grant health and installation information.',
+            availability: availability(user, 'health.read'),
+          },
+          {
+            id: 'grant.smtp.test',
+            label: 'Mail delivery test',
+            description: 'Send a non-authorizing email to the signed-in administrator.',
+            availability: availability(user, 'grant.smtp.test'),
+          },
+        ],
       },
     ],
     [user],
@@ -105,7 +186,23 @@ export function Administration({ user }: { user: User }) {
     void task.run(load);
   }, []);
 
+  // Details render below four task groups. Move focus and the viewport so
+  // Manage/View does not appear to do nothing in a long Administration page.
+  useEffect(() => {
+    if (!section) return;
+    selectedTaskRef.current?.focus({ preventScroll: true });
+    selectedTaskRef.current?.scrollIntoView({ block: 'start' });
+  }, [section]);
+
   function openTask(selected: AdminTask) {
+    if (selected.id === 'identity.password.change') {
+      window.location.assign('/security');
+      return;
+    }
+    if (selected.id === 'grant.configuration.preview') {
+      window.location.assign('/integrations');
+      return;
+    }
     const next: Record<string, AdminSection> = {
       'health.read': 'health',
       'users.manage': 'accounts',
@@ -117,15 +214,15 @@ export function Administration({ user }: { user: User }) {
   }
 
   return (
-    <div className="grant-stack">
+    <div className="grant-stack grant-admin-workspace" data-testid="grant-admin-workspace">
       {task.feedback}
       <section className="grant-admin-heading" aria-labelledby="grant-admin-title">
         <div>
-          <p className="grant-eyebrow">Foundation administration</p>
+          <p className="grant-eyebrow">Platform administration</p>
           <h2 id="grant-admin-title">Administration</h2>
           <p>
-            Common administration follows DataRelay Product Foundation capability and adapter
-            contracts. Unsupported operations are not presented as working controls.
+            Choose a configuration task for access, security, recovery or audit.
+            Approval policies, notifications and integrations stay in their own workspaces.
           </p>
         </div>
         <Button variant="secondary" disabled={task.busy} onClick={() => void task.run(load)}>
@@ -133,8 +230,36 @@ export function Administration({ user }: { user: User }) {
         </Button>
       </section>
 
-      <AdminTaskCatalog tasks={tasks} onOpen={openTask} />
+      <div className="grant-admin-access-context" role="status">
+        <strong>Signed in as Administrator.</strong>
+        <p>
+          Changes to Grant users and mail require administrator authority.
+          Unavailable platform settings are shown for clarity, without working controls.
+        </p>
+      </div>
 
+      <div className="grant-admin-task-groups" data-testid="grant-admin-task-groups">
+        {groups.map((group) => (
+          <section className="grant-admin-task-group" key={group.id}
+            aria-labelledby={group.id + '-heading'} data-testid={'grant-admin-group-' + group.id}>
+            <header>
+              <h3 id={group.id + '-heading'}>{group.title}</h3>
+              <p>{group.description}</p>
+            </header>
+            <AdminTaskCatalog tasks={group.tasks} onOpen={openTask} showUnavailable />
+          </section>
+        ))}
+      </div>
+
+      {section ? (
+        <div
+          ref={selectedTaskRef}
+          className="grant-admin-selected-task"
+          role="region"
+          aria-label="Selected administration task"
+          data-testid="grant-admin-selected-task"
+          tabIndex={-1}
+        >
       {section === 'health' ? <SystemStatus health={health} info={info} /> : null}
 
       {section === 'accounts' ? (
@@ -229,6 +354,8 @@ export function Administration({ user }: { user: User }) {
             patterns; Grant remains authoritative for its state, validation and audit.
           </p>
         </Card>
+      ) : null}
+        </div>
       ) : null}
     </div>
   );
