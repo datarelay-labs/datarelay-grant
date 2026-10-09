@@ -20,6 +20,28 @@ G0 Product Foundation/task-oriented UX convergence ahead of further product-surf
 expansion. Acceptance of this direction is not implementation evidence; current
 capability remains whatever is present and tested at the committed candidate HEAD.
 
+## G0 approval-workspace Home refinement (2026-10-09)
+
+The isolated PF8-based Home candidate prioritizes current approver tasks
+by earliest deadline, distinguishes assigned-but-ineligible, expired,
+information-blocked and held seats, and surfaces the authenticated requester's
+own submissions and information/change responses. The former large
+operational exception summary moved below the personal work queue into
+administrator-only, source-filtered drilldowns. Approve/deny/execute controls
+remain entirely on their separately authorized request/consume surfaces.
+
+Home still reads only the existing server role-visible GET /requests
+pagination, bounded at 1,000 results with lower-bound count labels when
+incomplete. A stale terminal collaboration state must not advertise
+an impossible action; an expired change request may still direct the
+requester to its bounded linked replacement flow. The accepted G12 overdue
+filter deep link and all existing route paths remain unchanged.
+
+This is a candidate Home component change with deterministic data and
+role-aware server-rendered markup unit regressions. It has **not**
+independently passed ChatGPT-driven real-user browser E2E, the platform-blocked
+320px/375px mobile screenshot gate, or Grant 1.0 release acceptance.
+
 ## Implemented candidate
 
 - Pinned unpublished Foundation SDK and public imports with Foundation-backed auth,
