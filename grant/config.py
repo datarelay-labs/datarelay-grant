@@ -28,6 +28,8 @@ class Settings:
     session_seconds: int = 28800
     max_body_bytes: int = 65536
     max_delivery_attempts: int = 5
+    decision_link_ttl_seconds: int = 604800  # seven days; bounded by request deadline
+    decision_verification_default: str = "EMAIL_PIN"
     web_root: Path = Path(__file__).resolve().parents[1] / "web/dist"
 
     def __post_init__(self) -> None:
@@ -59,6 +61,12 @@ class Settings:
             raise ValueError("smtp_port outside supported bounds")
         if any(c in self.smtp_host + self.smtp_from for c in "\r\n\x00"):
             raise ValueError("Invalid SMTP header or hostname")
+        from .verification_policy import MODES
+
+        if self.decision_verification_default not in MODES:
+            raise ValueError("Invalid decision_verification_default")
+        if not 300 <= self.decision_link_ttl_seconds <= 2592000:
+            raise ValueError("decision_link_ttl_seconds outside supported bounds")
         if not 1 <= self.max_delivery_attempts <= 20:
             raise ValueError("max_delivery_attempts must be between 1 and 20")
         if not 1024 <= self.max_body_bytes <= 1048576:

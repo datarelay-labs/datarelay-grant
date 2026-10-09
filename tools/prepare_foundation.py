@@ -15,6 +15,15 @@ def run(args, cwd=None):
     subprocess.run(args, cwd=cwd, check=True)
 
 
+def locked_source_repository(lock: dict) -> str:
+    """Read the pinned Foundation source from the v1 nested registry contract."""
+    registry = lock.get("registry")
+    source = registry.get("repository") if isinstance(registry, dict) else None
+    if not isinstance(source, str) or not source.strip():
+        raise SystemExit("Foundation lock is missing registry.repository")
+    return source
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -31,7 +40,7 @@ def main():
                 "clone",
                 "--no-hardlinks",
                 "--no-checkout",
-                str(args.source) if args.source else LOCK["repository"],
+                str(args.source) if args.source else locked_source_repository(LOCK),
                 str(source),
             ]
         )

@@ -113,6 +113,42 @@ def operations_summary(db: Database, actor: Principal) -> dict:
                     "health": health,
                 }
             )
+        # Scoped email-decision lifecycle metrics; counts only. This does
+        # not expose mailboxes, issued bearer links, PIN/OTP digests or content.
+        email_security = conn.execute(
+            """SELECT
+                 SUM(CASE WHEN x.state='ACTIVE' AND x.expires_at>?
+                              AND r.state IN ('AWAITING','HELD')
+                     THEN 1 ELSE 0 END) AS active_issuances,
+                 SUM(CASE WHEN x.state='LOCKED'
+                     THEN 1 ELSE 0 END) AS locked_issuances,
+                 SUM(CASE WHEN x.state='REVOKED'
+                     THEN 1 ELSE 0 END) AS revoked_issuances,
+                 SUM(CASE WHEN x.state='CONSUMED'
+                     THEN 1 ELSE 0 END) AS consumed_issuances,
+                 SUM(CASE WHEN x.state='ACTIVE' AND x.expires_at<=?
+                     THEN 1 ELSE 0 END) AS expired_issuances
+               FROM decision_issuances x
+               JOIN requests r ON r.id=x.request_id""",
+            (now, now),
+        ).fetchone()
+        otp_security = conn.execute(
+            """SELECT
+                 SUM(CASE WHEN state='ACTIVE' AND expires_at>? THEN 1
+                     ELSE 0 END) AS active_challenges,
+                 SUM(CASE WHEN state='LOCKED' THEN 1 ELSE 0 END) AS locked_challenges,
+                 SUM(CASE WHEN state='CONSUMED' THEN 1 ELSE 0 END)
+                     AS verified_challenges
+               FROM decision_otp_challenges""",
+            (now,),
+        ).fetchone()
+        step_up_unavailable = conn.execute(
+            """SELECT COUNT(*) FROM requests r JOIN integrations i
+                 ON i.id=r.integration_id
+               WHERE r.state IN ('AWAITING','HELD')
+                 AND (r.decision_verification_mode='EMAIL_PIN_PLUS_MFA'
+                      OR i.decision_verification_minimum='EMAIL_PIN_PLUS_MFA')"""
+        ).fetchone()[0]
         paused = conn.execute(
             "SELECT value FROM runtime WHERE key='paused'"
         ).fetchone()[0] == "1"
@@ -120,6 +156,18 @@ def operations_summary(db: Database, actor: Principal) -> dict:
         "as_of": now,
         "recovery_paused": paused,
         "counts": counts,
+        "decision_email_security": {
+            **{name: int(email_security[name] or 0) for name in (
+                "active_issuances", "locked_issuances", "revoked_issuances",
+                "consumed_issuances", "expired_issuances",
+            )},
+            **{name: int(otp_security[name] or 0) for name in (
+                "active_challenges", "locked_challenges", "verified_challenges",
+            )},
+            "pending_fresh_mfa": step_up_unavailable,
+            "mailbox_code_is_mfa": False,
+            "recipient_receipt_verified": False,
+        },
         "approval_latency_seconds": (
             round(aggregate["approval_latency_seconds"], 3)
             if aggregate["approval_latency_seconds"] is not None
@@ -130,6 +178,10 @@ def operations_summary(db: Database, actor: Principal) -> dict:
             "counts": "Distinct requests, not delivery attempts.",
             "callback": "HTTP callback transport acceptance; not execution success or receipt verification.",
             "overdue": "Requests whose approval deadline expired or whose escalation is due.",
-            "latency": "Mean elapsed seconds from creation to final recorded human decision.",
+            "latency": "Mean elapsed seconds from creation to final recorded decision.",
+            "decision_email_security": (
+                "Mail/PIN/OTP lifecycle counters only; email transport acceptance "
+                "does not prove recipient receipt, a verified person or independent MFA."
+            ),
         },
     }

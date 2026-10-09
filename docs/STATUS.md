@@ -5,6 +5,90 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G10A / G0 integrated development candidate (2026-10-09)
+
+This integration branch combines the existing G10A v12 approval backend and
+its protected email PIN / optional OTP / first-party TOTP verification code
+with the committed PF8 shared application shell, G0 approval workspaces,
+policy/integration verification settings and Notifications saved-preview UX.
+The merged backend/source uses the exact previously reviewed backend
+candidate; the Web components do not bypass authentication, approve on mail
+receipt, or execute external actions on a human decision.
+
+The Foundation shared dependencies remain pinned as committed. Integration
+source and deterministic test evidence must be distinguished from the
+undeployed :18994 owner preview, direct-user browser/email evidence,
+actual DataRelay/Stellar business effects and owner release acceptance.
+
+## G10A backend-only implementation lane (2026-10-09)
+
+In the isolated feat/grant-1.0-g10a-backend branch, G10A-0 now has
+durable v9 approval seats/steps/assignment epochs independent of ordinary
+request revision, non-exclusive original/delegate voting for one seat,
+seat-local parallel Hold, sequential step blocking, and versioned
+optional/required Deny reason with request-time policy snapshot.
+
+G10A-1 and **backend-only G10A-2** additionally have additive v10
+protected email issuance: recipient-specific plain+HTML messages, independently
+generated Approve/Hold/Deny links and random four-digit PIN, sealed SMTP
+outbox, read-only GET/HEAD, bounded PIN-verification POST, short-lived
+single-use decision confirmation POST, atomic sibling revocation, five-attempt
+PIN lockout, authenticated administrative reissue, delegation/email-change
+revocation checks, and recovery-paused backup/restore. A same-email PIN is
+**not MFA** or independent proof of an identified person; request decision
+attribution keeps verified_person_id unset for that assurance tier.
+
+This is not a completed email decision product experience: no matching
+passwordless decision Web screen is implemented in this backend lane; no
+real external mailbox delivery or direct two-person Full User E2E has passed.
+G10A-3 now also includes additive v11 installation default, registered
+integration minimum and per-policy versioned EMAIL_PIN / EMAIL_PIN_PLUS_OTP /
+EMAIL_PIN_PLUS_MFA configuration, a bounded per-policy decision link TTL,
+request-time effective verification snapshot, and a conservative trusted
+action/integration security floor so requester-controlled risk/severity labels
+cannot downgrade verification. Active integration minimum tightening is
+enforced at final confirmation; relaxing it cannot weaken in-flight snapshots.
+Admin-only integration minimum changes are audited.
+
+For EMAIL_PIN_PLUS_OTP, a deliberate scoped POST requests a separately
+queued encrypted six-digit email code; a distinct POST verifies it for
+one intent/confirmation context (short expiry, limited retries, reissue
+cooldown) before the final explicit decision. That extra code goes to the
+same mailbox and is **not MFA**. Additive v12 backend EMAIL_PIN_PLUS_MFA
+can now require a current registered Grant user session plus a fresh
+rate-limited one-use TOTP code, binding that proof to the same recipient,
+intent, and single-use confirmation. The final decision rechecks the
+same live session, current recipient and independently recorded TOTP
+proof. A revoked session, unknown/unconfigured IdP or absent enrolled
+TOTP still fails closed; the older authenticated approval API cannot
+bypass required step-up. Attribution identifies a verified local Grant
+account, not a legal identity or independently tested external SSO.
+Customer OTP/MFA Web experience, real external mailbox receipts and
+complete operator/user/release gates remain outstanding. This branch
+is not released or accepted.
+
+The loginless decision confirmation backend additionally guards against
+ambient expired/revoked/unrelated Grant sessions: default EMAIL_PIN and
+EMAIL_PIN_PLUS_OTP approval posts inspect only their scoped confirmed
+mailbox capability and do not authenticate incidental browser cookies.
+Only EMAIL_PIN_PLUS_MFA resolves the current authenticated recipient
+session with a matching CSRF token and checks its fresh TOTP proof.
+Disposable API regressions cover both stale-cookie variants, active but
+unrelated user identity non-attribution, and MFA fail-closed behavior.
+This is not a real-mailbox or direct-browser user E2E PASS.
+
+G10A-4 backend evidence now projects immutable seat IDs and epochs,
+original versus delegated mailbox issuance generations, bounded OTP
+challenge states, and typed assurance/failure history through the
+existing administrator-only request audit chain. Audit search/export
+allowlist security-relevant enum/ID/count fields while excluding raw
+message text, PIN/OTP digests, or bearer tokens. Operations reports
+aggregate issuance lockout/revocation and OTP status without addresses
+or delivery content. SMTP transport acceptance remains distinct from
+actual mailbox receipt. The operator runbook defines safe reissue and
+recovery handling; none of this establishes direct two-human E2E,
+independently verified MFA or product release.
+
 ## Product direction
 
 The accepted target is now **Grant 1.0**, governed by `docs/PRODUCT_STANDARD.md` and

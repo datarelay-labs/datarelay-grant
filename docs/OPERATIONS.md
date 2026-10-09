@@ -275,18 +275,76 @@ If a change-request deadline expires, the requester may create a new linked
 replacement without cancelling the now-expired original. Every replacement
 requires fresh action-bound approval; the original timeline remains immutable.
 
-Current development schema v8 contains versioned policy lifecycle/selectors,
-notification/event snapshots, per-approver decision ledgers, time-bounded delegation,
-group/user escalation, append-only request collaboration comments, and the separate
-OPEN / INFO_REQUESTED / CHANGES_REQUESTED collaboration state. Supported older
-schema versions (v1-v7) migrate forward on opening a database; the v7-to-v8 step is
-safe to re-enter when the collaboration column already exists. Back up before any
-non-disposable upgrade and test upgrade against an isolated copy. Older binaries
-must reject schema v8 rather than quietly reinterpret policy, collaboration or
-authorization data; a code-only downgrade or manual PRAGMA user_version change is
-not a supported rollback. Recover from the protected pre-upgrade backup with the
-separate-installation reconciliation procedure above. The migration does not publish
-a release or authorize a production upgrade; that requires separate owner approval.
+The G10A **backend-only development branch** now uses additive schema v12:
+v8 is the prior collaboration baseline, v9 introduces durable approval
+assignments and policy-versioned Deny reasons, v10 adds protected email PIN
+issuance and confirmation, v11 introduces customer verification snapshots
+and short-lived extra-email OTP challenges, and v12 adds scoped fresh
+Grant account TOTP evidence bound to a live signed-in session. Legacy v1-v11
+schemas migrate forward through supported steps, including re-entry
+safety for previously added columns. Existing persisted requests do NOT
+automatically acquire fresh loginless decision links on migration.
+Back up before a non-disposable upgrade and validate on an isolated
+copy. Older binaries must reject newer schema versions instead of
+silently misinterpreting authorization. Manually changing
+PRAGMA user_version is never a rollback. Use the protected pre-upgrade
+backup and operator reconciliation procedure above. No upgrade, production
+deployment or release is approved by these developer-only migrations.
+
+## G10A mailbox-decision operator investigation (backend candidate only)
+
+For authorized administrators, inspect the existing read-only
+GET /api/v1/admin/audit/chain/{request_id} evidence projection. It shows
+the immutable action hash, approval assignments/steps and epochs,
+per-recipient issuance IDs, original/delegate status, requested
+verification floor, bounded typed PIN/OTP/fresh TOTP failure history,
+verified local Grant user ID only when an actual fresh proof exists, issuance
+state, and sanitized outbox metadata. It **never** returns raw
+Approve/Hold/Deny bearer URLs, PIN/OTP codes, keyed digests, SMTP
+credentials or queued email body. Receipt beyond SMTP acceptance is
+unverified. The GET does not create new approval authority.
+
+GET /api/v1/admin/operations includes additive decision_email_security
+counts: current, locked, revoked, consumed or expired link issuances;
+active/locked/verified extra-mail OTP challenges; and requests requiring
+fresh independently verified MFA which the backend currently cannot
+satisfy. These counts have no recipient addresses or secret values.
+Normal request/consume/execution metrics remain separate.
+
+If a PIN is locked, **do not** reset attempts, edit databases or copy an
+email code into support tickets. After independently validating the
+appropriate request and target mailbox, the authorized administrator can
+POST /api/v1/admin/requests/{request_id}/decision-links/reissue with
+a JSON body containing recipient_user_id and a bounded reason.
+This rotates that recipient's old issuance and codes inside the same
+request deadline. It fails closed for a disabled recipient, ambiguous
+multiple represented seats or recovery pause. Reissuing does not approve
+a request. Suspicious activity should be investigated from the typed
+decision.pin_failed and decision.otp_failed audit events and the current
+integration/account authority before a reissue.
+
+A stale or revoked Grant login cookie in an otherwise valid mailbox
+recipient's browser must not prevent a default EMAIL_PIN/EMAIL_PIN_PLUS_OTP
+decision. Those mailbox-only policies ignore ambient account sessions and
+continue to attribute only the email issuance, not a verified person. If
+the effective policy is EMAIL_PIN_PLUS_MFA, the exact enabled recipient's
+currently authenticated session, CSRF and fresh TOTP proof are still
+required. Keep the two assurances visibly distinct during incidents.
+
+An extra six-digit OTP is requested only through the protected decision
+POST after the mailbox PIN and can prove continued access to that
+**same email mailbox only**. It is not independent MFA or proof of
+named-person identity. For EMAIL_PIN_PLUS_MFA, the backend can instead
+use a currently signed-in, enabled Grant recipient who has already
+enrolled TOTP. A separate protected POST must verify a NEW TOTP step
+and bind that verified local account and live session to the decision
+context; the final POST requires the same session and rechecks current
+authority. The current local-account TOTP method is not external SSO
+or evidence that a legally named individual acted. Unsupported SSO
+providers, absent TOTP, revoked sessions and replay fail closed.
+Never force a lower policy, bypass recovery pause or claim completed
+real-user browser/mailbox E2E. Full external and user acceptance
+remains a separate release gate.
 
 ## Browser checks
 

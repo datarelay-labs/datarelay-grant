@@ -180,6 +180,117 @@ Important columns/filters include:
 The request detail remains the authority surface for the immutable action, explicit
 decision, delivery history, execution result and audit timeline.
 
+### G10A owner-accepted email decision UX (NOT IMPLEMENTED)
+
+**Default: no Grant login is required for the email decision flow.**
+
+The email is recipient-specific (not a bulk-CC message) and presents
+four actions — **Approve**, **Hold**, **Deny**, **View Details** — plus one
+distinct four-digit code for that approval request/recipient/issuance.
+The three action buttons have different unguessable URLs. The code
+is printed in the *same* email body, not in the URLs. Example UI:
+
+~~~text
+Approval requested — Production DB Access
+Assigned mailbox: approver@example.com
+Approval deadline: (customer policy timestamp)
+
+[ APPROVE ]  [ HOLD ]  [ DENY ]   [ VIEW DETAILS ]
+
+Four-digit confirmation number: 4821
+Opening a button does not record a decision.
+~~~
+
+**Step 1: email action → safe landing (GET).** The chosen button only
+preselects Approve, Hold, or Deny. Without verification, show a
+generic decision context, the chosen action, 4-digit input and
+`Continue`. Do **not** display restricted asset/action details,
+send new OTP, record approval or require a product login.
+Mail scanners and previews see only an inert page.
+
+**Step 2: PIN verification (protected POST).** Check the 4-digit code
+and unique link together, with bounded attempts and throttling.
+On success issue a short-lived single-purpose decision-confirmation
+context, **not** a full user/session or elevated account role.
+Then display safe actionable context — exact immutable action,
+target, requester, assigned recipient, deadline and current
+approval-stage status. Show clearly:
+`You selected APPROVE; your decision has NOT yet been recorded.`
+
+**Step 3: optional extra check.** Only where customer policy
+requires it, ask for a fresh separately delivered OTP or true
+identity/MFA step-up. The former may use the same email (not MFA);
+the latter must use an independently supported authenticator.
+Mobile copy/paste, autofill, accessible labels and error recovery
+are mandatory. No automatic downgrade when required step-up fails.
+
+**Step 4: final explicit decision POST.** The CTA is
+`Confirm Approve`, `Confirm Hold` or `Confirm Deny`. A policy's
+`denial_reason_required` switch controls whether Deny needs a
+nonblank reason; default optional. When required, clearly mark
+the field required and prevent confirmation while empty.
+The server must independently reject missing required reasons;
+UI enforcement alone is never sufficient. Only this
+deliberate action may update approval state. On success,
+show `Decision recorded`, which seat/outcome was recorded,
+remaining reviewer/quorum status and a separate execution status,
+never `Business action executed` from the approval alone.
+Anonymous EMAIL_PIN mode must not claim a named person was
+independently identified: audit/UI can say `Confirmed via assigned
+mailbox and 4-digit email code`. Verified actor names are shown
+only after independently authenticated step-up.
+
+**Hold UX:** for parallel modes it changes only that seat to
+provisional Hold; other reviewers remain actionable and the
+quorum can still complete. In SEQUENTIAL mode, clearly show
+`Next approval step waiting for this step's approval` until
+the current seat approves; no next-stage email sent on Hold.
+
+**Non-exclusive delegation UX (owner-accepted):** while a
+delegation window remains valid, send original approver and
+delegate independent response links and PINs, but visually
+show *one represented approval obligation*. Either may select
+Hold, and either may later record the first final Approve/Deny
+for that one seat. If the other already completed it, show
+`This approval has already been decided` and the authorized
+current state; no new vote or notification execution follows.
+A revoked/expired delegation makes only the delegate's
+choice unavailable. For EMAIL_PIN without identity step-up,
+show `Decision confirmed using the assigned recipient's
+email link` rather than claiming personal identity proof.
+Administration/audit shows original assignee, which
+original/delegate email capability was used and independently
+verified person if one exists.
+
+**Expired/revoked/error state:** show a generic no-data disclosure
+result and safe reissue/requester support path. Repeated invalid
+PINs produce bounded lockout and authorized reissue, not an
+alternate route that bypasses the verification policy.
+
+**Customer administration:** extend the existing focused
+`Approval Policies → Decision Verification` editor with:
+`EMAIL_PIN` (default), optional `EMAIL_PIN_PLUS_OTP`,
+optional `EMAIL_PIN_PLUS_MFA`, and configurable link validity
+with default maximum seven days (always no longer than
+the request's approval deadline). Expose code retry/reissue
+controls, auditable operator actions and risk classification.
+In the policy Approval section show a **Require denial reason**
+toggle (default off), version history/preview and example
+required/optional Deny confirmation. In the approver delegation
+detail explain **Original OR delegate — first final vote wins**,
+display expiry/current eligibility and no double-count guarantee.
+`Notifications` manages HTML and text email layouts, per-recipient
+delivery health, masked-code previews and safe test sends.
+Reuse existing Foundation common app shell and auth/MFA adapters;
+the bounded email decision page is Grant-specific and must not
+fork Foundation's shared sign-in screen.
+
+The neutral authenticated request-detail page remains supported
+for existing in-flight approvals and customers who elect to
+sign in. The default no-login email path is a scoped decision
+capability only, not a replacement for account-based administration
+or an external-system execution permission.
+
 ## Approval Policies
 
 The landing surface is a list/table, not an always-expanded editor.

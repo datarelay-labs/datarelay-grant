@@ -92,6 +92,8 @@ def send_email(settings: Settings, destination: dict, payload: str, event_id: st
     message["Subject"] = data["subject"].replace("\r", " ").replace("\n", " ")
     message["Message-ID"] = f"<{event_id}@grant.local>"
     message.set_content(data["body"])
+    if "html" in data:
+        message.add_alternative(data["html"], subtype="html")
     with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=10) as smtp:
         smtp.ehlo()
         if settings.smtp_starttls:
@@ -140,6 +142,17 @@ class Worker:
                 stale_outcome = (
                     row["kind"] == "webhook" and json.loads(row["payload"])["state"] != req["state"]
                 )
+                from .decision_links import deliverable
+                from .decision_otp import otp_deliverable
+
+                stale_otp = (
+                    bool(row["otp_challenge_id"])
+                    and not otp_deliverable(conn, self.settings, row["otp_challenge_id"], now)
+                )
+                stale_sealed_issuance = (
+                    bool(row["issuance_id"])
+                    and not deliverable(conn, self.settings, row["issuance_id"], now)
+                )
                 stale_approval_email = (
                     row["kind"] == "email"
                     and row["event_type"] in ("requested", "reminder", "legacy")
@@ -151,7 +164,10 @@ class Worker:
                         )
                     )
                 )
-                if not req["enabled"] or stale_outcome or stale_approval_email:
+                if (
+                    not req["enabled"] or stale_outcome or stale_approval_email
+                    or stale_sealed_issuance or stale_otp
+                ):
                     conn.execute(
                         "UPDATE outbox SET state='SUPERSEDED',lease_token=NULL,last_error=NULL WHERE id=?",
                         (row["id"],),
@@ -167,7 +183,11 @@ class Worker:
             try:
                 destination = self.settings.unseal(item["destination"])
                 sender = send_webhook if item["kind"] == "webhook" else send_email
-                sender(self.settings, destination, item["payload"], item["id"])
+                payload = (
+                    json.dumps(self.settings.unseal(item["payload"]), ensure_ascii=False)
+                    if item["sealed_payload"] else item["payload"]
+                )
+                sender(self.settings, destination, payload, item["id"])
             except Exception as exc:  # noqa: BLE001 - isolate worker failures; never log secret values
                 error = exc.code if isinstance(exc, GrantError) else type(exc).__name__
             with self.db.transaction() as conn:

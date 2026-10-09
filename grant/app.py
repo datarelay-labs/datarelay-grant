@@ -122,7 +122,13 @@ def create_app(settings: Settings) -> FastAPI:
                             json.loads(body, object_pairs_hook=unique_object)
                         except (ValueError, RecursionError, UnicodeError) as exc:
                             raise GrantError("INVALID_JSON", 422) from exc
-                if request.url.path != "/api/v1/auth/login":
+                if (
+                    request.url.path != "/api/v1/auth/login"
+                    and not (
+                        request.method in ("GET", "HEAD")
+                        and request.url.path.startswith("/api/v1/decision-intents/")
+                    )
+                ):
                     auth.rate("http:" + (request.client.host if request.client else "unknown"), 600)
             response = await call_next(request)
         except GrantError as exc:

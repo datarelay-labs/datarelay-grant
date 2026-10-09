@@ -163,7 +163,7 @@ def test_restored_database_preserves_preexisting_operational_metrics(env, tmp_pa
     env.db.backup(destination)
     restored = Database(destination)
     with restored.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 8
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
         rows = conn.execute("SELECT state FROM requests").fetchall()
         assert [r["state"] for r in rows] == ["AWAITING"]
         assert conn.execute(
