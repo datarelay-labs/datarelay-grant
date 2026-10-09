@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from 'react';
 import {
   canConfirmEmailDecision, decisionReason, isFourDigitPin, isSixDigitCode,
-  stageForProof,
+  initialStageForProof, stageAfterStepUp,
   type EmailDecisionChoice, type EmailDecisionProof, type EmailDecisionStage,
 } from './email_decision_flow';
 
@@ -64,11 +64,12 @@ export function EmailDecisionPortal({ choice, adapter }: EmailDecisionPortalProp
   }
 
   function acceptProof(next: EmailDecisionProof, previous?: EmailDecisionProof) {
-    const step = stageForProof(next, choice);
-    // A step-up response cannot silently downgrade its previously required mode.
-    if (step === 'invalid' ||
-        (previous && (previous.mode !== next.mode || previous.choice !== next.choice ||
-          previous.denialReasonRequired !== next.denialReasonRequired))) {
+    const step = previous
+      ? stageAfterStepUp(previous, next, choice)
+      : initialStageForProof(next, choice);
+    // PIN verification must never skip a mandatory separate OTP/MFA step.
+    // Step-up verification must not switch the request/action/policy context.
+    if (step === 'invalid') {
       setProof(null);
       setCode('');
       setPin('');

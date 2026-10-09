@@ -62,6 +62,52 @@ export function stageForProof(
   return 'invalid';
 }
 
+/**
+ * A PIN verification response cannot pre-satisfy optional OTP/MFA.
+ * Those modes require their own deliberate subsequent verification POST.
+ */
+export function initialStageForProof(
+  proof: EmailDecisionProof | null | undefined,
+  choice: EmailDecisionChoice,
+): EmailDecisionStage {
+  const stage = stageForProof(proof, choice);
+  if (!proof) return 'invalid';
+  if (proof.mode === 'EMAIL_PIN') {
+    return stage === 'ready' ? 'ready' : 'invalid';
+  }
+  if (proof.mode === 'EMAIL_PIN_PLUS_OTP') {
+    return stage === 'otp' ? 'otp' : 'invalid';
+  }
+  if (proof.mode === 'EMAIL_PIN_PLUS_MFA') {
+    return stage === 'mfa' ? 'mfa' : 'invalid';
+  }
+  return 'invalid';
+}
+
+/**
+ * The second POST must complete the same policy, outcome and request display
+ * bound to the already-verified PIN; no silent downgrade or action swap.
+ * A server may rotate its short-lived opaque context; server-side binding,
+ * one-use and authentication checks remain mandatory and authoritative.
+ */
+export function stageAfterStepUp(
+  previous: EmailDecisionProof,
+  next: EmailDecisionProof,
+  choice: EmailDecisionChoice,
+): EmailDecisionStage {
+  const waiting = initialStageForProof(previous, choice);
+  if ((waiting !== 'otp' && waiting !== 'mfa') ||
+      stageForProof(next, choice) !== 'ready' ||
+      previous.mode !== next.mode ||
+      previous.choice !== next.choice ||
+      previous.denialReasonRequired !== next.denialReasonRequired ||
+      previous.summary.subject !== next.summary.subject ||
+      previous.summary.action !== next.summary.action) {
+    return 'invalid';
+  }
+  return 'ready';
+}
+
 export function canConfirmEmailDecision(
   proof: EmailDecisionProof | null | undefined,
   choice: EmailDecisionChoice,

@@ -4,7 +4,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { EmailDecisionPortal } from '../../src/email_decision_portal';
 import {
   canConfirmEmailDecision, decisionReason, isFourDigitPin, isSixDigitCode,
-  stageForProof, type EmailDecisionProof,
+  stageForProof, initialStageForProof, stageAfterStepUp,
+  type EmailDecisionProof,
 } from '../../src/email_decision_flow';
 
 const valid: EmailDecisionProof = {
@@ -96,6 +97,42 @@ describe('G10A loginless capability confirmation safety', () => {
     const proof: EmailDecisionProof = { ...valid, choice: 'HOLD' };
     expect(stageForProof(proof, 'HOLD')).toBe('ready');
     expect(stageForProof(proof, 'APPROVE')).toBe('invalid');
+  });
+
+  it('rejects fabricated OTP/MFA completion directly from the PIN verification response', () => {
+    expect(initialStageForProof(valid, 'APPROVE')).toBe('ready');
+    const otp = { ...valid, mode: 'EMAIL_PIN_PLUS_OTP' as const };
+    const mfa = { ...valid, mode: 'EMAIL_PIN_PLUS_MFA' as const };
+    expect(initialStageForProof({ ...otp, assurance: 'OTP_REQUIRED' }, 'APPROVE')).toBe('otp');
+    expect(initialStageForProof({ ...mfa, assurance: 'MFA_REQUIRED' }, 'APPROVE')).toBe('mfa');
+    for (const assurance of ['OTP_VERIFIED', 'MFA_VERIFIED', 'PIN_VERIFIED'] as const) {
+      expect(initialStageForProof({ ...otp, assurance }, 'APPROVE')).toBe('invalid');
+      expect(initialStageForProof({ ...mfa, assurance }, 'APPROVE')).toBe('invalid');
+    }
+  });
+
+  it('permits final confirmation only after matching OTP/MFA step-up, not mismatched proofs', () => {
+    for (const [mode, pending, verified] of [
+      ['EMAIL_PIN_PLUS_OTP', 'OTP_REQUIRED', 'OTP_VERIFIED'],
+      ['EMAIL_PIN_PLUS_MFA', 'MFA_REQUIRED', 'MFA_VERIFIED'],
+    ] as const) {
+      const before: EmailDecisionProof = { ...valid, mode, assurance: pending };
+      const after: EmailDecisionProof = { ...before, assurance: verified };
+      expect(stageAfterStepUp(before, after, 'APPROVE')).toBe('ready');
+      // A legitimate server may rotate the short-lived opaque POST context.
+      expect(stageAfterStepUp(before, { ...after, context: 'rotated-secure-context' }, 'APPROVE')).toBe('ready');
+      for (const tampered of [
+        { ...after, choice: 'DENY' },
+        { ...after, mode: 'EMAIL_PIN' },
+        { ...after, denialReasonRequired: true },
+        { ...after, summary: { ...after.summary, subject: 'Different action' } },
+        { ...after, summary: { ...after.summary, action: 'Different protected operation' } },
+        { ...before },
+      ]) {
+        expect(stageAfterStepUp(before, tampered as EmailDecisionProof, 'APPROVE')).toBe('invalid');
+      }
+      expect(stageAfterStepUp(valid, after, 'APPROVE')).toBe('invalid');
+    }
   });
 
   it('renders an inert GET/SSR PIN form without dispatching any adapter action or leaking context/details', () => {

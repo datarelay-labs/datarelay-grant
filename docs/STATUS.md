@@ -24,6 +24,15 @@ adapter wiring, security headers, direct two-user independent mailbox proof,
 G11 integrations and G12 release gates remain outstanding. Automated component
 and logic tests are supplementary evidence, not product acceptance.
 
+The standalone G10A-5 client verification state machine additionally enforces
+**phase-specific** assurance transitions: a PIN verification response cannot
+claim OTP or MFA has already been completed to skip a deliberate separate
+step-up, and a later step-up result must preserve the same selected outcome,
+policy mode, protected request summary/action and Deny-reason requirement.
+The server must still independently authorize and atomically validate each
+request; this Web defense-in-depth does **not** establish real recipient or
+browser E2E acceptance.
+
 ## G10A / G0 integrated development candidate (2026-10-09)
 
 This integration branch combines the existing G10A v12 approval backend and
