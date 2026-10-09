@@ -821,7 +821,18 @@ version; it does not submit a lifecycle API mutation. Confirmation first
 refetches the current policy and refuses changed identity, version, state or
 active lineage before sending the existing authorized transition POST. Cancel
 and back are nonmutating, and current server-side lifecycle/RBAC checks remain
-the authority. Existing requests retain their original policy snapshots.
+the authority.
+Saved-versus-editor policy integrity is also required for lifecycle actions.
+An unsaved edit to any policy field, including group/quorum, notification
+template, action selector, timings, Deny-reason switch and verification
+mode/link TTL, must prevent Testing, Activate, Disable and Clone from acting
+on an older saved version without operator awareness. The interface shows
+an explicit unsaved-state warning with Save Draft and nonmutating Discard.
+Revert-to-saved values restores eligibility; the final action must refetch
+the same server version and live lineage, and missing versioned security
+fields fail closed. This client-side guard does not replace server RBAC,
+policy lifecycle, action binding, or transactional authorization.
+ Existing requests retain their original policy snapshots.
 
 ## 14. Operational dashboard
 

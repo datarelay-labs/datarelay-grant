@@ -5,6 +5,22 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G1 save-first policy lifecycle draft-integrity guard (2026-10-09)
+
+Work Packet #85 extends the integrated policy editor so the exact form used
+for saving is compared against the latest displayed and re-fetched saved
+policy version. Editing identity, action, approver group/quorum, matching
+selectors, notification template, timing/validity or the G10A versioned
+Deny-reason/PIN/OTP/MFA/link TTL controls flags unsaved changes. Test,
+Activate, Disable active and detail Clone then stay disabled, with a visible
+Save Draft warning and nonmutating Discard edits action. Confirmed live
+actions first refresh the latest server policy; local edits also invalidate
+an existing staged confirmation. Missing/invalid verification contract
+or changed server version fails closed. Saved/reverted equivalent numeric
+values do not spuriously block. This is a UI operator-integrity safeguard,
+not stronger server policy authorization, independent human acceptance
+or production release.
+
 ## G1 explicit confirmation for live approval-policy lifecycle (2026-10-09)
 
 On the integrated Grant approval policy detail, Activate and Disable active

@@ -4,7 +4,7 @@ import { api } from './api';
 import { Form, Select, TextArea, useTask, when } from './common';
 import {
   DecisionSecurityFields, policyDecisionSecuritySummary,
-  readDecisionSecurity, serializeDecisionSecurity,
+  readDecisionSecurity, serializeDecisionSecurity, type DecisionSecurityDraft,
 } from './policy_decision_security';
 import type {
   ApproverGroup,
@@ -124,6 +124,122 @@ export function filterPolicyList(
   });
 }
 
+export type PolicyEditorDraft = {
+  name: string;
+  integration: string;
+  approver: string;
+  approvalMode: string;
+  approverGroup: string;
+  approvalsRequired: string;
+  action: string;
+  template: string;
+  deadline: string;
+  reminder: string;
+  count: string;
+  validity: string;
+  tenant: string;
+  environment: string;
+  severity: string;
+  risk: string;
+  decisionSecurity: DecisionSecurityDraft;
+};
+
+function boundedPolicyNumber(raw: string, min: number, max: number): number {
+  const normalized = raw.trim();
+  const value = Number(normalized);
+  if (!/^\d+$/.test(normalized) || !Number.isSafeInteger(value) ||
+      value < min || value > max) {
+    throw new Error('POLICY_DRAFT_INVALID_NUMBER');
+  }
+  return value;
+}
+
+// This exact payload feeds both Save Draft and the form comparison. Fields
+// hidden for a chosen approval mode do not create artificial differences.
+export function policyEditorPayload(draft: PolicyEditorDraft) {
+  if (!['SINGLE', 'ANY_ONE', 'ALL', 'N_OF_M', 'SEQUENTIAL'].includes(draft.approvalMode)) {
+    throw new Error('POLICY_DRAFT_INVALID_MODE');
+  }
+  return {
+    name: draft.name,
+    integration_id: draft.integration,
+    approver_id: draft.approver,
+    approval_mode: draft.approvalMode,
+    approver_group_id: draft.approvalMode === 'SINGLE' ? null : draft.approverGroup,
+    approvals_required: draft.approvalMode === 'N_OF_M'
+      ? boundedPolicyNumber(draft.approvalsRequired, 1, 50) : null,
+    action_kind: draft.action,
+    email_template_id: draft.template || null,
+    deadline_seconds: boundedPolicyNumber(draft.deadline, 60, 604800),
+    reminder_seconds: boundedPolicyNumber(draft.reminder, 60, 86400),
+    max_reminders: boundedPolicyNumber(draft.count, 0, 20),
+    grant_seconds: boundedPolicyNumber(draft.validity, 30, 86400),
+    tenant_selector: draft.tenant,
+    environment: draft.environment,
+    severity: draft.severity,
+    risk_level: draft.risk,
+    ...serializeDecisionSecurity(draft.decisionSecurity),
+  };
+}
+
+function savedPolicyDraft(row: Profile): PolicyEditorDraft {
+  return {
+    name: row.name,
+    integration: row.integration_id,
+    approver: row.approver_id,
+    approvalMode: row.approval_mode,
+    approverGroup: row.approver_group_id ?? '',
+    approvalsRequired: String(row.approvals_required ?? 2),
+    action: row.action_kind,
+    template: row.email_template_id ?? '',
+    deadline: String(row.deadline_seconds),
+    reminder: String(row.reminder_seconds),
+    count: String(row.max_reminders),
+    validity: String(row.grant_seconds),
+    tenant: row.tenant_selector,
+    environment: row.environment,
+    severity: row.severity,
+    risk: row.risk_level,
+    decisionSecurity: readDecisionSecurity(row),
+  };
+}
+
+// Fail closed on missing/unversioned security or a changed server version,
+// even if the later version happens to have identical form field values.
+export function isPolicyEditorUnchanged(
+  current: Profile | null | undefined,
+  baseline: Profile | null | undefined,
+  draft: PolicyEditorDraft,
+): boolean {
+  if (!current || !baseline ||
+      current.id !== baseline.id ||
+      current.version_id !== baseline.version_id ||
+      current.version !== baseline.version ||
+      current.lifecycle !== baseline.lifecycle ||
+      (current.active_version ?? null) !== (baseline.active_version ?? null) ||
+      (current.active_version_id ?? null) !== (baseline.active_version_id ?? null)) {
+    return false;
+  }
+  try {
+    return JSON.stringify(policyEditorPayload(draft)) ===
+      JSON.stringify(policyEditorPayload(savedPolicyDraft(current)));
+  } catch {
+    return false;
+  }
+}
+
+export function PolicyUnsavedNotice({ busy, onDiscard }: {
+  busy: boolean; onDiscard: () => void;
+}) {
+  return <Alert tone="warning" title="Unsaved policy changes">
+    <p>Save draft before Testing, activation, disabling or cloning.
+       These actions use the saved policy, not the values still in this editor.</p>
+    <Button variant="secondary" disabled={busy} onClick={onDiscard}>
+      Discard edits
+    </Button>
+  </Alert>;
+}
+
 export type PolicyTransitionIntent = {
   policyId: string;
   action: 'activate' | 'disable';
@@ -148,15 +264,18 @@ export function canConfirmPolicyTransition(
     : intent.action === 'disable' && intent.activeVersion !== null;
 }
 
-export function PolicyLifecycleConfirmation({ intent, policy, busy, onCancel, onConfirm }: {
+export function PolicyLifecycleConfirmation({
+  intent, policy, busy, editorUnchanged = true, onCancel, onConfirm,
+}: {
   intent: PolicyTransitionIntent | null;
   policy: Profile | null | undefined;
   busy: boolean;
+  editorUnchanged?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
   if (!intent) return null;
-  const canConfirm = canConfirmPolicyTransition(intent, policy);
+  const canConfirm = editorUnchanged && canConfirmPolicyTransition(intent, policy);
   const activating = intent.action === 'activate';
   return <Alert tone="warning"
     title={activating ? 'Confirm policy activation' : 'Confirm active policy disable'}>
@@ -166,7 +285,9 @@ export function PolicyLifecycleConfirmation({ intent, policy, busy, onCancel, on
         ' for new matching requests. The change applies only to future matches; existing requests retain their original policy snapshot.'
       : 'Disable currently active policy v' + intent.activeVersion +
         ' for future requests. The change applies only to future matches; existing requests retain their original policy snapshot.'}</p>
-    {!canConfirm ? <p role="alert">
+    {!editorUnchanged ? <p role="alert">
+      Policy editor has unsaved changes. Save draft or discard edits, then review this action again.
+    </p> : !canConfirm ? <p role="alert">
       Policy changed since review. Cancel and reopen the current policy before taking action.
     </p> : null}
     <div className="grant-actions">
@@ -187,6 +308,7 @@ export function Profiles() {
   const [listLifecycle, setListLifecycle] = useState<PolicyListFilter['lifecycle']>('ALL');
   const [view, setView] = useState<PolicyView>('list');
   const [editing, setEditing] = useState('');
+  const [editingBaseline, setEditingBaseline] = useState<Profile | null>(null);
   const [pendingTransition, setPendingTransition] = useState<PolicyTransitionIntent | null>(null);
   const [name, setName] = useState('');
   const [integration, setIntegration] = useState('');
@@ -233,6 +355,7 @@ export function Profiles() {
 
   function resetEditor() {
     setPendingTransition(null);
+    setEditingBaseline(null);
     setEditing('');
     setName('');
     setIntegration('');
@@ -258,6 +381,7 @@ export function Profiles() {
 
   function edit(row: Profile) {
     setPendingTransition(null);
+    setEditingBaseline({ ...row });
     setEditing(row.id);
     setName(row.name);
     setIntegration(row.integration_id);
@@ -299,42 +423,53 @@ export function Profiles() {
   }
 
   async function save() {
-    const body = {
-      name,
-      integration_id: integration,
-      approver_id: approver,
-      approval_mode: approvalMode,
-      approver_group_id: approvalMode === 'SINGLE' ? null : approverGroup,
-      approvals_required: approvalMode === 'N_OF_M' ? Number(approvalsRequired) : null,
-      action_kind: action,
-      email_template_id: template || null,
-      deadline_seconds: Number(deadline),
-      reminder_seconds: Number(reminder),
-      max_reminders: Number(count),
-      grant_seconds: Number(validity),
-      tenant_selector: tenant,
-      environment,
-      severity,
-      risk_level: risk,
-      ...serializeDecisionSecurity(decisionSecurity),
-    };
+    const body = policyEditorPayload(editorDraft);
     const saved = await api<Profile>(
       editing ? '/profiles/' + editing : '/profiles',
       editing ? 'PUT' : 'POST',
       body,
     );
-    setPendingTransition(null);
-    setEditing(saved.id);
-    setSample((current) => ({
-      ...current,
-      integration_id: saved.integration_id,
-      action_kind: saved.action_kind,
-    }));
-    await load();
+    const currentPolicies = await load();
+    // Adopt exactly the authoritative newly saved values and version, rather
+    // than leaving the editor bound to a previous baseline or inferred state.
+    edit(currentPolicies.find((row) => row.id === saved.id) ?? saved);
     setView('details');
     task.setNotice(
       'Draft saved. It is not live until it passes Testing and is explicitly activated.',
     );
+  }
+
+  async function currentStoredPolicy(): Promise<Profile> {
+    if (!editing || !isPolicyEditorUnchanged(
+      rows.find((row) => row.id === editing), editingBaseline, editorDraft,
+    )) {
+      throw new Error('POLICY_UNSAVED_CHANGES_SAVE_FIRST');
+    }
+    const fresh = (await load()).find((row) => row.id === editing);
+    if (!isPolicyEditorUnchanged(fresh, editingBaseline, editorDraft)) {
+      setPendingTransition(null);
+      throw new Error('POLICY_CHANGED_REVIEW_REQUIRED');
+    }
+    return fresh!;
+  }
+
+  async function testStoredPolicy() {
+    const current = await currentStoredPolicy();
+    if (current.lifecycle !== 'DRAFT') throw new Error('POLICY_CHANGED_REVIEW_REQUIRED');
+    await transition(current.id, 'test');
+  }
+
+  async function cloneStoredPolicy() {
+    const current = await currentStoredPolicy();
+    await clone(current.id);
+  }
+
+  async function discardEditorChanges() {
+    if (!editing) return;
+    const current = (await load()).find((row) => row.id === editing);
+    if (!current) throw new Error('POLICY_CHANGED_REVIEW_REQUIRED');
+    edit(current);
+    task.setNotice('Unsaved changes discarded. The latest saved policy is now shown.');
   }
 
   async function transition(id: string, actionName: 'test' | 'activate' | 'disable') {
@@ -358,7 +493,7 @@ export function Profiles() {
 
   function stageLiveTransition(actionName: 'activate' | 'disable') {
     const current = rows.find((row) => row.id === editing);
-    if (!current) return;
+    if (!current || !isPolicyEditorUnchanged(current, editingBaseline, editorDraft)) return;
     const intent: PolicyTransitionIntent = {
       policyId: current.id,
       action: actionName,
@@ -372,10 +507,9 @@ export function Profiles() {
   async function confirmLiveTransition() {
     const staged = pendingTransition;
     if (!staged) return;
-    // Refetch CURRENT authority, identity, version and active lineage after
-    // review, never rely solely on a browser-cached policy.
-    const freshPolicies = await load();
-    const latest = freshPolicies.find((row) => row.id === staged.policyId);
+    // Recheck the unchanged draft as well as live authority and version after
+    // review. A local edit during confirmation cannot commit old saved values.
+    const latest = await currentStoredPolicy();
     if (!canConfirmPolicyTransition(staged, latest)) {
       setPendingTransition(null);
       throw new Error('POLICY_CHANGED_REVIEW_REQUIRED');
@@ -426,6 +560,13 @@ export function Profiles() {
   }
 
   const selected = rows.find((row) => row.id === editing);
+  const editorDraft: PolicyEditorDraft = {
+    name, integration, approver, approvalMode, approverGroup, approvalsRequired,
+    action, template, deadline, reminder, count, validity, tenant, environment,
+    severity, risk, decisionSecurity,
+  };
+  const editorUnchanged = isPolicyEditorUnchanged(selected, editingBaseline, editorDraft);
+  const unsavedExistingPolicy = Boolean(editing && !editorUnchanged);
 
   if (view === 'list') {
     const visibleRows = filterPolicyList(rows, integrations, users, {
@@ -573,15 +714,15 @@ export function Profiles() {
             {selected?.lifecycle === 'DRAFT' ? (
               <Button
                 variant="secondary"
-                disabled={task.busy}
-                onClick={() => void task.run(() => transition(editing, 'test'))}
+                disabled={task.busy || !editorUnchanged}
+                onClick={() => void task.run(testStoredPolicy)}
               >
                 Test policy
               </Button>
             ) : null}
             {selected?.lifecycle === 'TESTING' ? (
               <Button
-                disabled={task.busy}
+                disabled={task.busy || !editorUnchanged}
                 onClick={() => stageLiveTransition('activate')}
               >
                 Activate policy
@@ -590,7 +731,7 @@ export function Profiles() {
             {selected?.active_version ? (
               <Button
                 variant="secondary"
-                disabled={task.busy}
+                disabled={task.busy || !editorUnchanged}
                 onClick={() => stageLiveTransition('disable')}
               >
                 Disable active
@@ -598,8 +739,8 @@ export function Profiles() {
             ) : null}
             <Button
               variant="ghost"
-              disabled={task.busy}
-              onClick={() => void task.run(() => clone(editing))}
+              disabled={task.busy || !editorUnchanged}
+              onClick={() => void task.run(cloneStoredPolicy)}
             >
               Clone
             </Button>
@@ -607,9 +748,15 @@ export function Profiles() {
         ) : null}
       </section>
 
+      {unsavedExistingPolicy ? <PolicyUnsavedNotice
+        busy={task.busy}
+        onDiscard={() => void task.run(discardEditorChanges)}
+      /> : null}
+
       <PolicyLifecycleConfirmation
         intent={pendingTransition}
         policy={selected}
+        editorUnchanged={editorUnchanged}
         busy={task.busy}
         onCancel={() => setPendingTransition(null)}
         onConfirm={() => void task.run(confirmLiveTransition)}
@@ -654,6 +801,7 @@ export function Profiles() {
             </Alert>
           ) : null}
           {decisionSecurity.contractAvailable ? (
+          <div onChangeCapture={() => setPendingTransition(null)}>
           <Form
             busy={task.busy}
             onSubmit={() => void task.run(save)}
@@ -761,6 +909,7 @@ export function Profiles() {
               </Select>
             </PolicyEditorSection>
           </Form>
+          </div>
           ) : null}
         </Card>
       ) : null}
