@@ -326,16 +326,32 @@ permanently expanded global page.
 Administration uses Product Foundation capability-driven task presentation instead of a
 wall of settings panels.
 
-Initial Grant tasks:
+The current integrated candidate uses the Foundation `AdministrationHub` and
+`createStandardAdministrationTasks` to render the **four shared Control-family
+task groups** without forking their layout or labels:
 
-- System health / information
-- Accounts
-- Audit history
-- Mail delivery test
-- Lifecycle / recovery guidance
+- **Access & security**: real Grant User Management. System-wide password
+  policy and HTTPS certificate editors are unavailable; a separate
+  **My account & MFA** shortcut opens supported personal security.
+- **Platform & network**: unavailable timezone and network configuration
+  remain visibly non-actionable instead of showing fake Manage controls.
+- **Lifecycle & recovery**: read-only CLI backup/recovery guidance.
+  **Configuration preview** navigates to the existing safe, non-applying
+  import-conflict preview under Integrations for administrators only.
+- **Operations & audit**: authoritative system health and audit readbacks.
+- **Grant Mail & Notifications extension**: working non-authorizing mail
+  delivery test. SMTP server editing stays explicitly unavailable until a
+  reviewed backend configuration API exists.
 
-Foundation renders shared task/status/account/audit patterns. Grant adapters remain the
-authority for reads and mutations.
+A selected in-page task opens below the shared Hub; Grant must move keyboard
+focus and the viewport to that details region, rather than leaving a clicked
+Manage/View action appearing inert. This focus/shortcut composition is
+Grant-owned, while Foundation still owns the common Administration Hub,
+groups, task names, cards and capability semantics.
+
+Foundation renders shared task/status/account/audit patterns. Grant adapters
+remain authoritative for all reads and mutations. Neither a mail test nor
+a configuration preview authorizes an approval or protected execution.
 
 ## Login and application frame
 

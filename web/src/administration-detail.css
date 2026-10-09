@@ -1,0 +1,20 @@
+/* Grant task navigation only; the Foundation AdministrationHub owns grouping. */
+.grant-admin-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dr-space-2);
+}
+
+.grant-admin-selected-detail {
+  display: grid;
+  min-width: 0;
+  gap: var(--dr-space-4);
+  scroll-margin-block-start: var(--dr-space-5);
+}
+
+.grant-admin-selected-detail:focus-visible {
+  outline: 2px solid var(--dr-border-default);
+  outline-offset: 2px;
+  border-radius: var(--dr-radius-card);
+}

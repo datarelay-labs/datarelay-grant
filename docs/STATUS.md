@@ -5,6 +5,30 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G0 integrated Foundation Administration task navigation (2026-10-09)
+
+The current integrated Grant candidate preserves the **shared** DataRelay
+Product Foundation `AdministrationHub` with its Control-family core groups,
+capability projections, and a Grant-specific Mail & Notifications extension.
+It does not copy an older manual `AdminTaskCatalog` layout or claim support
+for unimplemented TLS, system password-policy, timezone, network, retention or
+SMTP server configuration.
+
+The Grant administration intro now offers real personal Account & MFA
+navigation and an administrator-only shortcut to the existing **non-applying**
+configuration conflict preview in Integrations. Selecting an in-page
+Manage/View task focuses and scrolls its actual detail region, improving
+task discovery and keyboard navigation. All actions retain existing Grant
+backend authorization; no credentials, mail delivery, execution or
+configuration are changed by these navigation shortcuts.
+
+Affected source qualification: official Web unit **104/104 PASS**,
+TypeScript and production build PASS, static PASS; focused scripted
+desktop Administration browser scenario **1/1 PASS**. This is a product
+UI implementation receipt, not two-independent-person Full User E2E.
+The separately running owner preview at :18994 is an older candidate
+and has **not** been updated by this source change.
+
 ## G10A-5 standalone email decision presentation component (2026-10-09)
 
 The integrated development branch includes an **unmounted** loginless decision

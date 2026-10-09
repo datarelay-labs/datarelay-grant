@@ -90,6 +90,26 @@ test('Foundation administration and mobile approval page are real adapters',asyn
 });
 
 
+test('Grant Foundation Administration shortcuts and selected task focus work on desktop',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ try{
+  await login(page,'admin');
+  await page.goto('/system');
+  await expect(page.getByRole('button',{name:'My account & MFA',exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Configuration preview',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'View System Health',exact:true}).click();
+  await expect(page.getByTestId('grant-admin-selected-detail')).toBeFocused();
+  await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'My account & MFA',exact:true}).click();
+  await expect(page).toHaveURL(/\/security$/);
+  await expect(page.getByText('Active sessions',{exact:true})).toBeVisible();
+  await page.goto('/system');
+  await page.getByRole('button',{name:'Configuration preview',exact:true}).click();
+  await expect(page).toHaveURL(/\/integrations$/);
+ }finally{await context.close();}
+});
+
 test('requester cancels and creates a newly approved replacement through the UI',async({browser,request})=>{
  const f=fixture();const context=await browser.newContext();const page=await context.newPage();
  await login(page,'requester');await page.getByRole('button',{name:'New request',exact:true}).click();

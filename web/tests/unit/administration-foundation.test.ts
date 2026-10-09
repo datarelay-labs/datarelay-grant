@@ -47,11 +47,23 @@ describe('Grant administration consumes the public Foundation shared Hub', () =>
     expect(html).toContain('no accepted editable Web API');
   });
 
+  it('offers real Grant account-security and safe configuration-preview shortcuts without a Foundation fork', () => {
+    const html = renderToStaticMarkup(createElement(Administration, { user: administrator }));
+    expect(html).toContain('class="grant-admin-shortcuts"');
+    expect(html).toContain('My account &amp; MFA');
+    expect(html).toContain('Configuration preview');
+    expect(html).toContain('foundation-administration-hub');
+    // These are personal and read-only Grant routes, not imaginary platform controls.
+    expect(html).not.toContain('aria-label="Manage SMTP server configuration"');
+  });
+
   it('keeps non-administrators from mutating supported administrative tasks', () => {
     const member: User = { ...administrator, id: 'member', username: 'member', role: 'member' };
     const html = renderToStaticMarkup(createElement(Administration, { user: member }));
     expect(html).toContain('foundation-administration-hub');
     expect(html).not.toContain('aria-label="Manage User Management"');
     expect(html).not.toContain('aria-label="Manage Mail delivery test"');
+    expect(html).toContain('My account &amp; MFA');
+    expect(html).not.toContain('Configuration preview');
   });
 });

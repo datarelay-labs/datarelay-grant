@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccountList,
   AdministrationHub,
@@ -30,6 +30,7 @@ import {
 } from './foundation.config';
 import { Form, Select, useTask } from './common';
 import type { User } from './types';
+import './administration-detail.css';
 
 type AdminSection = 'health' | 'accounts' | 'audit' | 'mail' | 'lifecycle' | null;
 
@@ -47,6 +48,7 @@ export function Administration({ user }: { user: User }) {
   const [health, setHealth] = useState<HealthProjection>();
   const [info, setInfo] = useState<SystemInfoProjection>();
   const [section, setSection] = useState<AdminSection>(null);
+  const selectedDetailRef = useRef<HTMLDivElement>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -115,6 +117,15 @@ export function Administration({ user }: { user: User }) {
     void task.run(load);
   }, []);
 
+  // Foundation owns the Administration groups. Grant owns task content below
+  // the hub and moves keyboard focus to the selected detail rather than
+  // leaving the person looking at the original card after pressing Manage.
+  useEffect(() => {
+    if (!section) return;
+    selectedDetailRef.current?.focus({ preventScroll: true });
+    selectedDetailRef.current?.scrollIntoView({ block: 'start' });
+  }, [section]);
+
   function openTask(selected: AdministrationHubTask) {
     const next: Record<string, AdminSection> = {
       'core.health': 'health',
@@ -139,14 +150,33 @@ export function Administration({ user }: { user: User }) {
           <div className="grant-admin-heading">
             <p>Shared system administration is provided by DataRelay Product Foundation.
               Unsupported Grant operations have no active Configure action.</p>
-            <Button variant="secondary" disabled={task.busy} onClick={() => void task.run(load)}>
-              Refresh
-            </Button>
+            <div className="grant-admin-shortcuts" aria-label="Administration task shortcuts">
+              <Button variant="secondary" onClick={() => window.location.assign('/security')}>
+                My account & MFA
+              </Button>
+              {availability(user, 'grant.integrations.manage') === 'supported' ? (
+                <Button variant="secondary" onClick={() => window.location.assign('/integrations')}>
+                  Configuration preview
+                </Button>
+              ) : null}
+              <Button variant="secondary" disabled={task.busy} onClick={() => void task.run(load)}>
+                Refresh
+              </Button>
+            </div>
           </div>
         }
         onOpen={openTask}
       />
 
+      {section ? (
+        <div
+          ref={selectedDetailRef}
+          role="region"
+          aria-label="Selected administration task"
+          className="grant-admin-selected-detail"
+          data-testid="grant-admin-selected-detail"
+          tabIndex={-1}
+        >
       {section === 'health' ? <SystemStatus health={health} info={info} /> : null}
 
       {section === 'accounts' ? (
@@ -241,6 +271,8 @@ export function Administration({ user }: { user: User }) {
             patterns; Grant remains authoritative for its state, validation and audit.
           </p>
         </Card>
+      ) : null}
+        </div>
       ) : null}
     </div>
   );
