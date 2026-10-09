@@ -457,6 +457,17 @@ separate, incomplete gates.
   effects. G11 M3/M4 remain WAITING_INTEGRATION pending a real product-owned
   guard/ledger and an actual supported Stellar receiving path; see
   docs/G11_EXTERNAL_ACCEPTANCE.md.
+- G11 phase 1 (2026-10-09) checked the actual Control development API
+  `GET /health` (HTTP 200) and read-only replay route/schema plus GitHub
+  source. Running Control `fc89dad` differs from current `main-v2@b45ad9d`,
+  so same-source live acceptance remains unavailable. Its replay POST defaults
+  to a real send; even dry-run writes replay stage/audit rows, so no live POST
+  was attempted. Existing Control source and regression tests establish that
+  legacy failed-delivery replay can send twice when repeated and has no Grant
+  consume/effect ledger. Grant's pure replay readback checker now optionally
+  binds positive exact Control route and destination IDs before returning
+  a **non-independent** candidate record; no business effect or M3 PASS is
+  claimed. Details: docs/G11_EXTERNAL_ACCEPTANCE.md.
 - G12 acceptance-validator hardening (active Work Packet #54): the evidence
   CLI now runs in the locked development dependency set. Structural-only
   quality-close returns a nonzero process status while it reports unverified

@@ -4,6 +4,66 @@ Observed 2026-10-08 by read-only inspection. This document is an acceptance
 readiness ledger, not an external integration PASS. Authority: Grant 1.0
 Product Standard, Roadmap G11, Integration Contract, Full User E2E.
 
+## 2026-10-09 phase 1: source and safe API contract verification
+
+**Scope:** Grant and Control development sources and read-only service health.
+No actual Control replay POST, destination send, customer email, credential
+exchange or product database change was performed.
+
+- Grant integrated candidate baseline `c0a54db2434d9780b6e451b016fa60c33a7efc4e`
+  was clean and synchronized before the work. Existing pure Guard contract:
+  `tests/test_consumer_guard.py` **29/29 PASS** before extension.
+- Control running service `http://127.0.0.1:8000/health` returned **HTTP 200**
+  with `build_identity.git_sha=fc89dadcb01a262ef7881a6bca94dd4989a8b496`,
+  `git_dirty=false`, equal live/build digests and Route Processing enabled.
+  This is **service health only**, not approval-path acceptance. The running
+  Control development tree is clean at that SHA; GitHub `main-v2` was
+  separately observed at `b45ad9d37079a822ede0349fe0f1b00f01b38ce5`.
+  Those are **different builds**, not a frozen two-product candidate.
+- On the running Control source, imported Pydantic
+  `DeliveryLogReplayRequest` has exactly one field `dry_run`, whose default
+  is **false**. `DeliveryLogReplayResponse` includes `log_id`, `dry_run`,
+  `outcome` (`dry_run_ok`/`delivered`/`failed`), `event_count`,
+  `route_id`, `destination_id`, `stream_id`, `replay_run_id`, preview and
+  bounded error fields. The current GitHub `main-v2` router confirms
+  `POST /api/v1/runtime/replay/delivery-log/{log_id}` and the same models.
+  A live GET of `/openapi.json` timed out, so **live OpenAPI parity is NOT
+  confirmed**.
+- Control's existing router and service write replay stage records and
+  operator audit for **both** `dry_run=true` and `dry_run=false`; only the
+  former avoids the destination send. Therefore even a dry-run POST was
+  withheld in this source-only/read-only phase.
+- Control `main-v2` currently calls its destination adapter's `send`
+  without a Grant consume claim, exact action binding or product-side
+  idempotency ledger in that path. Its canonical
+  `tests/test_replay_hardening_m11_1.py` includes
+  `test_delivery_log_replay_allows_duplicate_send_without_row_lock`, which
+  explicitly expects **two** mocked destination sends for duplicate legacy
+  replay calls. That existing behavior is **not safe as a protected
+  approval-controlled execution endpoint** without Control-owned gating.
+- The Grant pure receipt checker now optionally binds both the expected
+  Control route ID and destination ID to the returned values (strict positive
+  integers, rejecting `bool`, wrong, absent, swapped or partial IDs).
+  Returning a matching candidate record **never asserts independent effect
+  verification**. Positive claims still require a product atomic effect lock.
+
+**Phase 1 verdict:** read-only health **PASS**; source schema and mock/local
+pure contract verification **PASS**; API availability for actual protected
+business effects **NOT VALIDATED**; G11 M3 real integration **WAITING**.
+Do not replace actual Control destination/ledger readback with this evidence.
+
+**Phase 2 prerequisite:** In a separate explicitly scoped Control development
+worktree, add an opt-in, product-owned Grant consume guard with a durable
+exact-operation effect ledger at the chosen replay boundary. A missing/denied,
+held, expired, mismatched or replayed claim must never reach
+`DestinationAdapter.send`; ambiguous post-send outcomes must reconcile the
+product ledger before another send. Validate against a **disposable** replay
+log and non-production destination, with an observed effect count of exactly
+one and stable Control checkpoint. Do not retrofit a bypass-prone alternate
+route or change the existing production route before the bounded design is
+accepted. Once implemented, verify Control and Grant on the *same* source
+candidate with independent external effect readback, not just mocked tests.
+
 ## DataRelay Control: representative product-owned operation
 
 The online dev-drcontrol development host was queried read-only. HTTPS /health

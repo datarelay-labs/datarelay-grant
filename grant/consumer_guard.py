@@ -113,6 +113,8 @@ def validate_control_replay_readback(
     response: dict,
     checkpoint_before: dict,
     checkpoint_after: dict,
+    expected_route_id: int | None = None,
+    expected_destination_id: int | None = None,
 ) -> dict:
     """Compare a DataRelay Control replay result against product-owned readbacks.
 
@@ -134,6 +136,20 @@ def validate_control_replay_readback(
         or response["event_count"] < 1
         or response["event_count"] > 500
         or type(response.get("replay_run_id")) is not str
+        or (expected_route_id is None) != (expected_destination_id is None)
+        or (
+            expected_route_id is not None
+            and (
+                type(expected_route_id) is not int
+                or expected_route_id <= 0
+                or type(expected_destination_id) is not int
+                or expected_destination_id <= 0
+                or type(response.get("route_id")) is not int
+                or response["route_id"] != expected_route_id
+                or type(response.get("destination_id")) is not int
+                or response["destination_id"] != expected_destination_id
+            )
+        )
     ):
         raise ConsumerGuardError("CONTROL_REPLAY_EVIDENCE_INVALID")
     try:
@@ -144,6 +160,8 @@ def validate_control_replay_readback(
         "product": "datarelay-control",
         "operation": "delivery-log-replay",
         "delivery_log_id": delivery_log_id,
+        "route_id": expected_route_id,
+        "destination_id": expected_destination_id,
         "replay_run_id": run_id,
         "event_count": response["event_count"],
         "outcome": response["outcome"],

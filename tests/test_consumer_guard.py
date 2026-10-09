@@ -137,6 +137,53 @@ def test_control_replay_readback_rejects_dry_run_wrong_target_or_fake_identity(b
         )
 
 
+def test_control_replay_readback_binds_selected_route_and_destination_without_claiming_acceptance():
+    response = {
+        "log_id": 42, "dry_run": False, "outcome": "delivered",
+        "event_count": 2, "replay_run_id": str(uuid.uuid4()),
+        "route_id": 71, "destination_id": 82,
+    }
+    info = validate_control_replay_readback(
+        delivery_log_id=42, response=response,
+        checkpoint_before={"offset": 7}, checkpoint_after={"offset": 7},
+        expected_route_id=71, expected_destination_id=82,
+    )
+    assert info["route_id"] == 71
+    assert info["destination_id"] == 82
+    assert info["independently_verified"] is False
+    assert info["acceptance_state"] != "PASS"
+
+
+@pytest.mark.parametrize("route,destination,returned_route,returned_destination", [
+    (71, 82, 72, 82),
+    (71, 82, 71, 83),
+    (71, 82, None, 82),
+    (71, 82, 71, None),
+    (71, 82, True, 82),
+    (71, 82, 71, False),
+    (0, 82, 71, 82),
+    (71, -2, 71, 82),
+    (True, 82, 71, 82),
+    (71, "82", 71, 82),
+    (71, None, 71, 82),
+    (None, 82, 71, 82),
+])
+def test_control_replay_readback_rejects_mismatched_or_unscoped_delivery_identity(
+    route, destination, returned_route, returned_destination,
+):
+    with pytest.raises(ConsumerGuardError, match="CONTROL_REPLAY_EVIDENCE_INVALID"):
+        validate_control_replay_readback(
+            delivery_log_id=42,
+            response={
+                "log_id": 42, "dry_run": False, "outcome": "delivered",
+                "event_count": 1, "replay_run_id": str(uuid.uuid4()),
+                "route_id": returned_route, "destination_id": returned_destination,
+            },
+            checkpoint_before={}, checkpoint_after={},
+            expected_route_id=route, expected_destination_id=destination,
+        )
+
+
 def test_control_replay_checkpoint_mismatch_rejected():
     with pytest.raises(ConsumerGuardError):
         validate_control_replay_readback(
