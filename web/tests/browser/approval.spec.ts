@@ -131,6 +131,49 @@ test('G9 configuration preview shows manual migration tasks without an Apply act
  }finally{await context.close();}
 });
 
+// Disposable browser_server fixture, one administrator only. Not independent-user E2E.
+test('G9 v2 imports explicitly mapped settings as disabled Drafts via the real admin UI',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800},acceptDownloads:true});
+ const page=await context.newPage();
+ try{
+  await login(page,'admin');
+  const exportResponse=await context.request.get('/api/v1/admin/configuration/export-v2');
+  expect(exportResponse.status()).toBe(200);
+  const bundle=await exportResponse.json();
+  expect(bundle.schema_version).toBe(2);
+  expect(bundle.policies.length).toBeGreaterThan(0);
+  for(const policy of bundle.policies)policy.config.name='Browser imported '+policy.config.name;
+  for(const template of bundle.templates)template.name='Browser imported '+template.name;
+  await page.goto('/integrations');
+  await page.getByTestId('grant-v2-json-file').setInputFiles({
+   name:'isolated-v2-bundle.json',mimeType:'application/json',
+   buffer:Buffer.from(JSON.stringify(bundle)),
+  });
+  await expect(page.getByRole('button',{name:'Validate Draft-only import'})).toBeVisible();
+  for(const source of bundle.integrations){
+   await page.getByLabel('Map source integration: '+source.name).selectOption({index:1});
+  }
+  for(const id of new Set(bundle.policies.map((p:any)=>p.config.approver_id))){
+   await page.getByLabel('Map source approver: '+id).selectOption({label:'approver'});
+  }
+  await page.getByRole('button',{name:'Validate Draft-only import'}).click();
+  const preview=page.getByTestId('grant-v2-preview');
+  await expect(preview).toBeVisible();
+  await expect(preview.getByText('Ready for Draft-only import',{exact:true})).toBeVisible();
+  await page.getByLabel('Import confirmation',{exact:true}).fill('IMPORT_DRAFTS_ONLY');
+  await page.getByRole('button',{name:'Create reviewed Drafts only'}).click();
+  await expect(page.getByText('Disabled Draft import recorded',{exact:true})).toBeVisible();
+  const read=await context.request.get('/api/v1/profiles');
+  expect(read.status()).toBe(200);
+  const policies=await read.json();
+  const created=policies.find((p:any)=>p.name===bundle.policies[0].config.name);
+  expect(created).toBeTruthy();
+  expect(created.lifecycle).toBe('DRAFT');
+  expect(created.enabled).toBe(false);
+  await expect(page.getByRole('button',{name:'Create reviewed Drafts only'})).toHaveCount(0);
+ }finally{await context.close();}
+});
+
 test('requester cancels and creates a newly approved replacement through the UI',async({browser,request})=>{
  const f=fixture();const context=await browser.newContext();const page=await context.newPage();
  await login(page,'requester');await page.getByRole('button',{name:'New request',exact:true}).click();

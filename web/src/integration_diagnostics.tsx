@@ -4,6 +4,7 @@ import { api } from './api';
 import { TextArea } from './common';
 import { Select, useTask, when } from './common';
 import type { Integration } from './types';
+import { ConfigurationPortabilityV2 } from './configuration_portability_v2';
 
 type CredentialMetadata = {
   id: string;
@@ -217,5 +218,6 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
       </div>
       {conflictPreview ? <ConfigurationImportReadiness preview={conflictPreview} /> : null}
     </Card>
+    <ConfigurationPortabilityV2 integrations={integrations} />
   </div>;
 }

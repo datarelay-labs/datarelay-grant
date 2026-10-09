@@ -5,6 +5,43 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G9 version-2 reviewed policy/template Draft import (2026-10-09)
+
+The accepted G9 portability scope now has **separate v2 endpoints**:
+`GET /api/v1/admin/configuration/export-v2` produces reviewed policy
+configuration and full nine-event notification subject/body sets. Source
+integration IDs/kind/tenant, source approver IDs and source group IDs
+allow explicit local identity mapping; destination/callback URLs, SMTP,
+API tokens, passwords, MFA/recovery secrets, users and groups are
+**not exported or imported**. Notification message content is included
+and must be treated as sensitive administrative export material.
+
+`POST /api/v1/admin/configuration/preview-v2` validates strict bounded
+schema, mappings to **enabled existing local** integration/users/groups,
+local kind/tenant, quorum and name collisions. It returns a digest of
+the proposed source+mappings and currently observed local authorities,
+with no persisted effect. The separate authenticated administrator
+`POST /api/v1/admin/configuration/import-v2` requires the exact
+unchanged digest and deliberate `IMPORT_DRAFTS_ONLY` confirmation;
+it rechecks current authority, identities and all name conflicts
+**inside a single write transaction**. It inserts only **new**
+notification sets and version-1 `DRAFT` policies with
+`profiles.enabled=0`. Any error rolls back the entire batch. Source
+`ACTIVE` never activates at the destination: existing administrator
+Testing → Activate flow remains the sole promotion path.
+
+The real Integrations page supports complete JSON export/download,
+file selection, local integration/approver/group mapping, source-policy
+review, validated preview and explicit Draft import, with the new
+policies remaining disabled. Legacy schema-v1 metadata export/preview
+remains unmodified and nonimportable. No customer records, production
+services, external callbacks, actual credentials or running owner
+preview are changed by the isolated implementation/testing.
+
+Security/source and browser evidence belong to current G9 Work Packet #77
+at exact committed HEAD when qualified. This is a development candidate,
+**not production release or independent two-person Full User E2E**.
+
 ## G9 safe configuration import readiness (2026-10-09)
 
 The existing schema-v1 **secret-free metadata** export and administrator-only

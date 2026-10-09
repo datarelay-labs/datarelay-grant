@@ -895,6 +895,39 @@ encryption keys.
 
 Conflict/preview is shown before applying imported configuration.
 
+### 18.1 Version-2 reviewed Draft import (owner-accepted 2026-10-09)
+
+Grant's legacy **schema-v1 metadata manifest remains read-only and non-importable**.
+A separate bounded `grant.configuration` version-2 export carries **complete,
+validated** approval-policy settings and all nine notification event
+subject/body templates. Only opaque source integration, approver and group IDs
+are included to support review. It excludes integration callback destinations,
+SMTP configuration, API tokens, passwords, recovery/TOTP material, installation
+keys and historical request/execution state. Message text is included and must
+be treated as administrator-sensitive export content; neither an automatic
+secret detector nor credential migration is implied.
+
+A destination administrator supplies explicit source-ID → **already existing
+and enabled** local integration/user/group mappings. Integration kind and
+tenant must match, and the effective local approver plan, group membership,
+quorum, referenced templates and policy settings must validate against
+ordinary Grant rules. Unknown, revoked, colliding, incomplete or stale
+references fail closed. Preview is a read-only calculation: it returns
+conflicts plus a source-and-destination-bound digest, **not** permission to
+mutate. An explicit second `IMPORT_DRAFTS_ONLY` confirmation and the
+unchanged reviewed digest are required at import time; all mappings,
+references and name conflicts are rechecked under a single write transaction.
+
+An import creates only **new** template sets and new approval policies,
+without overwriting any existing record, setting active defaults or
+modifying integrations/users/groups/credentials. Every imported policy is
+inserted at version 1 in `DRAFT` with `profiles.enabled=0`, regardless of
+the source lifecycle. No mail, webhook, decision, Grant consume or protected
+execution may be triggered by import. Only the **separate existing
+administrator-owned** Testing → Activate flow may subsequently enable a
+verified policy. A failed batch leaves no partial templates or policies.
+The operation emits bounded administrative audit evidence.
+
 ## 19. Product 1.0 scope boundary
 
 Product 1.0 intentionally does **not** become:

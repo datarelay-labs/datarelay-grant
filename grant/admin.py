@@ -1,5 +1,6 @@
 """Read-only common administration projections for Foundation."""
 
+import json
 from typing import Literal
 
 from fastapi import Query, Request, Response
@@ -7,6 +8,13 @@ from fastapi import Query, Request, Response
 from . import __version__
 from .audit_evidence import audit_export, audit_search, request_chain, sanitized_detail
 from .auth import require_current_authority
+from .configuration_portability_v2 import (
+    V2ImportInput,
+    V2PreviewInput,
+    export_v2,
+    import_v2,
+    preview_v2,
+)
 from .configuration_preview import preview_configuration
 from .db import audit
 from .errors import GrantError
@@ -153,6 +161,29 @@ def register_admin(app, actor):
     @app.post("/api/v1/admin/configuration/preview")
     def configuration_import_preview(payload: dict, request: Request):
         return preview_configuration(app.state.db, actor(request), payload)
+
+    @app.get("/api/v1/admin/configuration/export-v2")
+    def export_configuration_v2(request: Request):
+        return Response(
+            content=json.dumps(
+                export_v2(app.state.db, actor(request)),
+                ensure_ascii=False, separators=(",", ":"),
+            ),
+            media_type="application/json",
+            headers={
+                "Cache-Control": "no-store",
+                "X-Content-Type-Options": "nosniff",
+                "Content-Disposition": 'attachment; filename="grant-configuration-v2.json"',
+            },
+        )
+
+    @app.post("/api/v1/admin/configuration/preview-v2")
+    def preview_configuration_v2(body: V2PreviewInput, request: Request):
+        return preview_v2(app.state.db, actor(request), body)
+
+    @app.post("/api/v1/admin/configuration/import-v2", status_code=201)
+    def import_configuration_v2(body: V2ImportInput, request: Request):
+        return import_v2(app.state.db, app.state.core, actor(request), body)
 
     @app.get("/api/v1/admin/operations")
     def operations(request: Request):
