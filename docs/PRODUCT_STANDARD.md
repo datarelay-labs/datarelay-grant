@@ -820,7 +820,18 @@ Required operational indicators:
 - execution failures;
 - integration health / last successful callback.
 
-Every metric links to the underlying requests.
+Every request-state metric links to the underlying requests.
+
+The administrator Operations workspace also displays the existing protected
+email-decision lifecycle counters: active, locked, expired, revoked and consumed
+per-recipient link issuances; active, locked and verified separately requested
+email OTP challenges; and open requests with a fresh independent MFA policy.
+These are **aggregate observations**, not request/recipient identifiers or an
+action queue. They must never present PIN/link/OTP success as verification of a
+named human, nor same-mailbox OTP as independent MFA. The UI offers no
+reissue, unlock, decision, replay or other privileged mutation. Missing or
+invalid counters must display as unavailable, never silently as zero.
+Existing role-checked G7 request exception drill-down remains unchanged.
 
 ## 15. Integration standard
 

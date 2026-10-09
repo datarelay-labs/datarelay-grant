@@ -5,6 +5,21 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G7 operator visibility for G10A email-decision lifecycle (2026-10-09)
+
+The Grant administrator Operations page now renders the *existing*
+`decision_email_security` API aggregates without exposing recipient emails,
+bearer decision links, four-digit codes, OTP challenges or raw audit identities.
+Read-only tables separate link issuance states, separate-email OTP challenge
+states, and open requests governed by independent fresh MFA requirements.
+Unavailable/malformed counters remain explicitly unavailable rather than
+fabricated healthy zeros; no reissue, replay, unlock or verification action
+is introduced. The page distinguishes mailbox access from independently
+verified human identity and explicitly states that same-mailbox OTP is not MFA.
+Backend authority and persisted schema are unchanged. This is development
+source with targeted Web unit/build/static proof in Work Packet #78, not a
+deployed owner preview, human acceptance or external integration result.
+
 ## G9 version-2 reviewed policy/template Draft import (2026-10-09)
 
 The accepted G9 portability scope now has **separate v2 endpoints**:

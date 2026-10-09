@@ -31,14 +31,83 @@ type IntegrationHealth = {
   failed_callback_events: number;
   health: 'disabled' | 'degraded' | 'transport_accepted' | 'not_verified';
 };
+type EmailSecurityKey =
+  | 'active_issuances' | 'locked_issuances' | 'revoked_issuances'
+  | 'consumed_issuances' | 'expired_issuances'
+  | 'active_challenges' | 'locked_challenges' | 'verified_challenges'
+  | 'pending_fresh_mfa';
+type DecisionEmailSecurity = Partial<Record<EmailSecurityKey, number>> & {
+  mailbox_code_is_mfa?: boolean;
+  recipient_receipt_verified?: boolean;
+};
 type OperationsSummary = {
   as_of: number;
   recovery_paused: boolean;
   counts: Counts;
   approval_latency_seconds: number | null;
   integrations: IntegrationHealth[];
+  decision_email_security?: DecisionEmailSecurity;
   semantics: Record<string, string>;
 };
+type EmailSecurityRow = {
+  key: EmailSecurityKey;
+  stage: string;
+  status: string;
+  meaning: string;
+};
+const emailSecurityRows: EmailSecurityRow[] = [
+  { key: 'active_issuances', stage: 'Decision links', status: 'Active',
+    meaning: 'Unexpired issuances for open requests, not unique approvers.' },
+  { key: 'locked_issuances', stage: 'Decision links', status: 'Locked',
+    meaning: 'Issuances blocked by failed verification attempts.' },
+  { key: 'expired_issuances', stage: 'Decision links', status: 'Expired',
+    meaning: 'Issuances past their own verification expiry.' },
+  { key: 'revoked_issuances', stage: 'Decision links', status: 'Revoked',
+    meaning: 'Issuances no longer eligible to authorize a decision.' },
+  { key: 'consumed_issuances', stage: 'Decision links', status: 'Consumed',
+    meaning: 'Issuances recorded as consumed, not proof of named human identity.' },
+  { key: 'active_challenges', stage: 'Separate email OTP', status: 'Active',
+    meaning: 'Outstanding separately requested email OTP challenges.' },
+  { key: 'locked_challenges', stage: 'Separate email OTP', status: 'Locked',
+    meaning: 'Challenges blocked by failed verification attempts.' },
+  { key: 'verified_challenges', stage: 'Separate email OTP', status: 'Verified',
+    meaning: 'Completed email OTP challenges, not independent MFA.' },
+  { key: 'pending_fresh_mfa', stage: 'Fresh independent MFA', status: 'Required',
+    meaning: 'Open requests requiring fresh MFA under the decision policy or integration minimum.' },
+];
+
+function securityCount(value: unknown): string {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+    ? String(value) : 'Unavailable';
+}
+
+// The endpoint is admin-only. This component is a read-only aggregate display:
+// it never obtains or exposes a recipient, PIN, opaque intent or any replay action.
+export function DecisionEmailSecurityPanel({ summary }: {
+  summary?: DecisionEmailSecurity | null;
+}) {
+  return <Card title="Email approval verification"
+    description="Administrator-only issuance and challenge state, not a mailbox delivery or authenticated-user report.">
+    {summary ? <div className="grant-table-scroll">
+      <table className="grant-table" aria-label="Email decision verification lifecycle">
+        <thead><tr>
+          <th scope="col">Stage</th><th scope="col">Status</th>
+          <th scope="col">Count</th><th scope="col">Meaning</th>
+        </tr></thead>
+        <tbody>{emailSecurityRows.map((row) => <tr key={row.key}>
+          <th scope="row">{row.stage}</th>
+          <td>{row.status}</td><td>{securityCount(summary[row.key])}</td>
+          <td>{row.meaning}</td>
+        </tr>)}</tbody>
+      </table>
+    </div> : <Alert tone="warning" title="Counters unavailable">
+      This server did not provide email-decision security counters. No zero or healthy state is assumed.
+    </Alert>}
+    <p>A link and four-digit code in one email demonstrates mailbox access;
+       it does not verify the named recipient. A same-mailbox OTP is not independent MFA.
+       These counters do not confirm receipt or execution and cannot authorize actions.</p>
+  </Card>;
+}
 type Metric = {
   key: keyof Counts | 'latency';
   title: string;
@@ -136,6 +205,7 @@ export function Operations({ navigate }: { navigate: (next: string) => void }) {
     </Alert>}
     {section('Approval work', overview, 'Actionable approval work and a measured decision latency, not an NOC-style chart.')}
     {section('Exceptions to resolve', exceptions, 'No exception card retries an action or grants an approval.')}
+    {snapshot && <DecisionEmailSecurityPanel summary={snapshot.decision_email_security} />}
     {section('Request and delivery states', states, 'Each count represents distinct requests, never the number of delivery attempts.')}
     <Card title="Integration delivery health" description="Last callback is HTTP transport acceptance only, not target execution or receipt verification.">
       <div className="grant-table-scroll"><table className="grant-table">
