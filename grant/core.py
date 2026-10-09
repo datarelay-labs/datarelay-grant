@@ -1355,17 +1355,17 @@ class Core:
         event: str,
         *,
         recipient_filter: str | None = None,
-    ) -> None:
+    ) -> int:
+        """Queue an event and return its actual email outbox insert count."""
         from .approval_mail import eligible_recipients
 
         if event in ("requested", "reminder") and row["email_pin_enabled"]:
             from .decision_links import queue_choice_mail
 
-            queue_choice_mail(
+            return queue_choice_mail(
                 conn, row, self.settings, now, event,
                 recipient_filter=recipient_filter,
             )
-            return
         if event in ("requested", "reminder"):
             recipients = eligible_recipients(conn, row, now)
             if recipient_filter:
@@ -1387,7 +1387,7 @@ class Core:
                 conn, row["id"], "policy", "notification.recipient_unavailable",
                 {"event_type": event}, now,
             )
-            return
+            return 0
         template = json.loads(row["mail_template"])
         payload = render_notification(template, row, self.settings.origin, event=event)
         for recipient in recipients:
@@ -1400,6 +1400,7 @@ class Core:
                     self.settings.seal({"email": recipient["email"]}), now, now,
                 ),
             )
+        return len(recipients)
 
     def _mail(
         self, conn: sqlite3.Connection, row: sqlite3.Row, now: float, reminder: bool = False
@@ -2521,12 +2522,25 @@ class Core:
                     and row["next_reminder"] <= now
                     and row["reminder_count"] < row["max_reminders"]
                 ):
-                    self._mail_event(conn, row, now, "reminder")
+                    queued = self._mail_event(conn, row, now, "reminder")
+                    # Advance the next attempt even on a skipped round to
+                    # prevent tight-looping on an irrecoverable old issuance.
                     conn.execute(
-                        "UPDATE requests SET reminder_count=reminder_count+1,next_reminder=? WHERE id=?",
+                        "UPDATE requests SET next_reminder=? WHERE id=?",
                         (now + row["reminder_seconds"], row["id"]),
                     )
-                    audit(conn, row["id"], "policy", "request.reminded", now=now)
+                    if queued:
+                        # Count an actual queued round, not each recipient.
+                        conn.execute(
+                            "UPDATE requests SET reminder_count=reminder_count+1 WHERE id=?",
+                            (row["id"],),
+                        )
+                        audit(conn, row["id"], "policy", "request.reminded", now=now)
+                    else:
+                        audit(
+                            conn, row["id"], "policy", "request.reminder_skipped",
+                            {"mail_queued": False}, now,
+                        )
 
     def _project(self, conn: sqlite3.Connection, row: sqlite3.Row, detail: bool = True) -> dict:
         out = dict(row)

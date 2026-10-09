@@ -77,6 +77,16 @@ appropriate. Newly eligible recipients without prior generations
 retain their initial mail issuance path, and valid existing reminders
 reuse the same PIN and three decision links.
 
+The maintenance scheduler also distinguishes a reminder **queued**
+from a reminder **skipped**. Only a round that actually adds at least
+one outbound email increments `reminder_count` and emits
+`request.reminded`; a zero-mail round retains the budget and records
+`request.reminder_skipped`, with the next check deferred by the
+normal reminder interval. A partially available parallel group still
+records one queued round while the blocked recipient retains
+its own protected `decision.reminder_unavailable` audit evidence.
+No queued-mail count proves SMTP acceptance or actual inbox receipt.
+
 Disposable tests reproduce the previous dual-active/mint-on-expiry
 behavior before correction, then verify normal reuse, mailbox-change
 fail-closed and authorized admin reissue. No live mailbox receipt,

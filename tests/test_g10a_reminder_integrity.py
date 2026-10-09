@@ -83,6 +83,20 @@ def test_reminder_without_saved_mail_does_not_silently_issue_new_links(env):
             "SELECT COUNT(*) FROM audit WHERE request_id=? AND action='decision.issuance_created'",
             (request["id"],),
         ).fetchone()[0] == 1
+        stats = conn.execute(
+            "SELECT reminder_count,next_reminder FROM requests WHERE id=?",
+            (request["id"],),
+        ).fetchone()
+        assert stats["reminder_count"] == 0
+        assert stats["next_reminder"] > time.time()
+        assert conn.execute(
+            "SELECT COUNT(*) FROM audit WHERE request_id=? AND action='request.reminded'",
+            (request["id"],),
+        ).fetchone()[0] == 0
+        assert conn.execute(
+            "SELECT COUNT(*) FROM audit WHERE request_id=? AND action='request.reminder_skipped'",
+            (request["id"],),
+        ).fetchone()[0] == 1
     assert_reminder_blocked_audit(
         env, request["id"], "sealed_mail_material_missing",
     )
@@ -152,6 +166,20 @@ def test_expired_decision_links_are_not_silently_refreshed_by_reminder(env):
             "SELECT COUNT(*) FROM outbox WHERE request_id=? AND event_type='reminder'",
             (request["id"],),
         ).fetchone()[0] == 0
+        stats = conn.execute(
+            "SELECT reminder_count,next_reminder FROM requests WHERE id=?",
+            (request["id"],),
+        ).fetchone()
+        assert stats["reminder_count"] == 0
+        assert stats["next_reminder"] > time.time()
+        assert conn.execute(
+            "SELECT COUNT(*) FROM audit WHERE request_id=? AND action='request.reminded'",
+            (request["id"],),
+        ).fetchone()[0] == 0
+        assert conn.execute(
+            "SELECT COUNT(*) FROM audit WHERE request_id=? AND action='request.reminder_skipped'",
+            (request["id"],),
+        ).fetchone()[0] == 1
 
     assert_reminder_blocked_audit(
         env, request["id"], "prior_issuance_not_reusable",
@@ -206,6 +234,102 @@ def test_ordinary_reminder_reuses_original_links_and_pin(env):
             "SELECT COUNT(*) FROM decision_issuances WHERE request_id=?",
             (request["id"],),
         ).fetchone()[0] == 1
+        assert conn.execute(
+            "SELECT reminder_count FROM requests WHERE id=?",
+            (request["id"],),
+        ).fetchone()[0] == 1
+        assert conn.execute(
+            "SELECT COUNT(*) FROM audit WHERE request_id=? AND action='request.reminded'",
+            (request["id"],),
+        ).fetchone()[0] == 1
+        assert conn.execute(
+            "SELECT COUNT(*) FROM audit WHERE request_id=? AND action='request.reminder_skipped'",
+            (request["id"],),
+        ).fetchone()[0] == 0
     rendered = env.settings.unseal(queued[0]["payload"])
     assert rendered["_decision_tokens"] == original["_decision_tokens"]
     assert rendered["_decision_pin"] == original["_decision_pin"]
+
+
+def test_parallel_partial_recipient_failure_counts_only_a_queued_round(env):
+    from grant.models import ApproverGroup, Profile
+
+    group = env.core.create_approver_group(
+        env.admin,
+        ApproverGroup(
+            name="Partially unavailable reminder recipients",
+            member_ids=[
+                env.users["approver"]["id"], env.users["stranger"]["id"],
+            ],
+        ),
+    )
+    policy = env.core.create_profile(
+        env.admin,
+        Profile(
+            name="Partial G10A reminder budget",
+            integration_id=env.integration["id"],
+            approver_id=env.users["approver"]["id"],
+            approver_group_id=group["id"],
+            approval_mode="ALL",
+            action_kind="service.partial-reminders",
+        ),
+    )
+    env.core.transition_profile(env.admin, policy["id"], "TESTING")
+    active = env.core.transition_profile(env.admin, policy["id"], "ACTIVE")
+    created = env.human("requester").post(
+        "/api/v1/requests",
+        json=env.intake(
+            profile_id=active["id"],
+            action={
+                "kind": active["action_kind"],
+                "target": "partial-reminders",
+                "parameters": {},
+            },
+        ),
+    )
+    assert created.status_code == 202, created.text
+    request = created.json()
+    with env.db.transaction() as conn:
+        original = conn.execute(
+            """SELECT id,recipient_id,issuance_id FROM outbox
+               WHERE request_id=? AND event_type='requested'
+                 AND sealed_payload=1 ORDER BY recipient_id""",
+            (request["id"],),
+        ).fetchall()
+        assert len(original) == 2
+        conn.execute("DELETE FROM outbox WHERE id=?", (original[0]["id"],))
+        conn.execute(
+            "UPDATE requests SET next_reminder=0 WHERE id=?", (request["id"],),
+        )
+    env.core.maintenance()
+    with env.db.transaction(write=False) as conn:
+        reminders = conn.execute(
+            "SELECT issuance_id,recipient_id FROM outbox "
+            "WHERE request_id=? AND event_type='reminder'",
+            (request["id"],),
+        ).fetchall()
+        assert len(reminders) == 1
+        assert reminders[0]["issuance_id"] == original[1]["issuance_id"]
+        assert reminders[0]["recipient_id"] == original[1]["recipient_id"]
+        assert conn.execute(
+            "SELECT reminder_count FROM requests WHERE id=?",
+            (request["id"],),
+        ).fetchone()[0] == 1
+        assert conn.execute(
+            "SELECT COUNT(*) FROM audit WHERE request_id=? AND action='request.reminded'",
+            (request["id"],),
+        ).fetchone()[0] == 1
+        assert conn.execute(
+            "SELECT COUNT(*) FROM audit WHERE request_id=? "
+            "AND action='request.reminder_skipped'",
+            (request["id"],),
+        ).fetchone()[0] == 0
+        assert conn.execute(
+            "SELECT COUNT(*) FROM audit WHERE request_id=? "
+            "AND action='decision.reminder_unavailable'",
+            (request["id"],),
+        ).fetchone()[0] == 1
+        assert conn.execute(
+            "SELECT COUNT(*) FROM decision_issuances WHERE request_id=?",
+            (request["id"],),
+        ).fetchone()[0] == 2

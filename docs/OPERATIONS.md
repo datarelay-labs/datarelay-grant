@@ -341,6 +341,17 @@ active older-mailbox issuance and queues protected mail to the newly
 registered eligible mailbox. Do not treat an unrelated expired or
 missing-material issuance as a trusted mailbox change.
 
+If a scheduled reminder finds no eligible mail to queue, the scheduler
+records `request.reminder_skipped` rather than `request.reminded`.
+The bounded `reminder_count` is preserved, but the next check is
+deferred by the configured reminder interval (never a tight retry).
+When multiple approvers are eligible and at least one message queues,
+the round counts once regardless of recipient count; the missing
+recipient's protected `decision.reminder_unavailable` evidence remains
+separate. Neither a queued reminder nor its counter proves SMTP
+acceptance or mailbox receipt. Investigate persistent skips using
+the authorized audit chain and deliberate reissue procedure.
+
 A stale or revoked Grant login cookie in an otherwise valid mailbox
 recipient's browser must not prevent a default EMAIL_PIN/EMAIL_PIN_PLUS_OTP
 decision. Those mailbox-only policies ignore ambient account sessions and

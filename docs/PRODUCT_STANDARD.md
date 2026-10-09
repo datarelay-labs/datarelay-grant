@@ -567,6 +567,17 @@ new links/code; a long-running request may safely reissue
 without silently extending the deadline. Reissue actions and
 why/when/for whom are audited.
 
+**Reminder accounting:** `reminder_count` records a scheduled reminder
+round **only if at least one email was actually queued**; multiple
+approvers in the same round do not consume additional counts. A
+scheduled attempt that queues no message (for example when an active
+issuance has lost its sealed mail source or all issuances are expired)
+must not be logged as `request.reminded` or consume the reminder
+budget. Record a bounded `request.reminder_skipped` audit event and
+advance the next check by the existing reminder interval to prevent
+a hot retry loop. Queued mail is not proof of SMTP transport acceptance
+or actual recipient inbox receipt.
+
 **Recovery and qualification:** encrypted queued mail, one-use
 decision sessions, issued links, revoked links, prior Holds,
 actual actor/evidence and request execution state must survive

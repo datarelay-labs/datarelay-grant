@@ -95,10 +95,11 @@ def _message(
 def queue_choice_mail(
     conn: sqlite3.Connection, request: sqlite3.Row, settings: Settings,
     now: float, event: str, *, recipient_filter: str | None = None,
-) -> None:
-    """Issue or reuse a valid recipient generation under the request write lock."""
+) -> int:
+    """Issue/reuse recipient generations and return actual outbox inserts."""
     if request["email_pin_enabled"] != 1:
         raise ValueError("secure notification requires email PIN enabled")
+    queued = 0
     for recipient in eligible_recipients(conn, request, now):
         if recipient_filter and recipient["recipient_id"] != recipient_filter:
             continue
@@ -240,6 +241,8 @@ def queue_choice_mail(
              recipient["recipient_id"], recipient["assignment_id"],
              recipient["delegation_id"], issuance_id),
         )
+        queued += 1
+    return queued
 
 
 def _row_by_digest(conn: sqlite3.Connection, digest: str) -> sqlite3.Row | None:
