@@ -5,6 +5,25 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G10A-5 standalone email decision presentation component (2026-10-09)
+
+The integrated development branch includes an **unmounted** loginless decision
+presentation component and a pure client-side verification-stage guard. The
+component has no mount-time network effect; it accepts only a capability-bound
+adapter from a future authorized route, requires four-digit PIN verification,
+shows bounded server-returned details only afterward, distinguishes separately
+requested same-mailbox OTP from fresh account MFA and requires a second deliberate
+Confirm POST. Deny reasons remain policy-conditional and any invalid or
+unexpected verification-stage downgrade fails closed. This Web component never
+authorizes protected business execution.
+
+This component is **not** a working public decision-link route and does not claim
+real mail recipient/browser E2E. The existing blocked app routing/styles and
+browser/credential/platform actions are untouched; route + actual backend
+adapter wiring, security headers, direct two-user independent mailbox proof,
+G11 integrations and G12 release gates remain outstanding. Automated component
+and logic tests are supplementary evidence, not product acceptance.
+
 ## G10A / G0 integrated development candidate (2026-10-09)
 
 This integration branch combines the existing G10A v12 approval backend and
