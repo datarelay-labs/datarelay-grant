@@ -158,10 +158,10 @@ class Worker:
                     and row["event_type"] in ("requested", "reminder", "legacy")
                     and (
                         req["state"] not in ("AWAITING", "HELD")
-                        or (
-                            row["event_type"] == "reminder"
-                            and req["collaboration_state"] != "OPEN"
-                        )
+                        # A pre-G10A plaintext approval invitation has no
+                        # issuance guard; never mail an actionable request
+                        # while a question/change request blocks decisions.
+                        or req["collaboration_state"] != "OPEN"
                     )
                 )
                 if (

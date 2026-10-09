@@ -41,6 +41,24 @@ transaction remains the sole approval authority. This does not implement
 the separate loginless decision Web page, real mailbox receipt, direct
 two-user browser E2E, or release qualification.
 
+## Legacy approval email fail-closed delivery (2026-10-09)
+
+A retained pre-G10A approval request may still have a plaintext queued
+`requested` or `legacy` notification without a PIN-issuance reference.
+Unlike sealed G10A mail, these old entries are not covered by the scoped
+issuance-deliverability guard. The outbound worker now supersedes these
+approval invitations when collaboration is `INFO_REQUESTED` or
+`CHANGES_REQUESTED`, rather than emailing an action invitation while
+approval decisions are blocked. Normal `OPEN` pending invitation delivery,
+non-approval notifications, and the separate execution authorization
+boundary are unchanged.
+
+Disposable transport regressions reproduced all four blocked invitation
+cases before correction and verify both normal open-state delivery and
+suppression after correction; no actual customer mailbox or external
+transport was used. This is a development candidate, not direct-user E2E
+or release acceptance.
+
 ## G10A backend-only implementation lane (2026-10-09)
 
 In the isolated feat/grant-1.0-g10a-backend branch, G10A-0 now has
