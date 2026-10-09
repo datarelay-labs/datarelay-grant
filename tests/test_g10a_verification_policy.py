@@ -77,6 +77,120 @@ def final(env, link, context):
     )
 
 
+
+@pytest.mark.parametrize(
+    ("mode", "login_needed", "otp_needed"),
+    (
+        ("EMAIL_PIN", False, False),
+        ("EMAIL_PIN_PLUS_OTP", False, True),
+        ("EMAIL_PIN_PLUS_MFA", True, False),
+    ),
+)
+def test_decision_link_preflight_truthfully_describes_final_verification(
+    env, mode, login_needed, otp_needed,
+):
+    """Opening an email link is anonymous, but its final assurance may not be."""
+    policy = activate(env, Profile(
+        name="Read-only preflight: " + mode,
+        integration_id=env.integration["id"],
+        approver_id=env.users["approver"]["id"],
+        action_kind="service.preflight-" + mode.lower(),
+        verification_mode=mode,
+    ))
+    request = create(env, policy)
+    _, _, pin, link = mailbox(env, request["id"])
+    url = "/api/v1/decision-intents/" + link
+    with env.db.transaction(write=False) as conn:
+        before = {
+            table: conn.execute("SELECT COUNT(*) FROM " + table).fetchone()[0]
+            for table in ("audit", "outbox", "decision_confirmations", "request_decisions")
+        }
+    preflight = env.api.get(url)
+    assert preflight.status_code == 200, preflight.text
+    preflight_data = preflight.json()
+    assert preflight_data["verification_mode"] == mode
+    assert preflight_data["requires_login"] is login_needed
+    assert preflight_data["landing_requires_login"] is False
+    assert preflight_data["requires_additional_email_otp"] is otp_needed
+    assert preflight_data["pin_required"] is True
+    assert preflight_data["details_visible"] is False
+    assert preflight_data["execution_allowed"] is False
+    assert "protected-test" not in preflight.text
+    assert env.api.head(url).status_code == 204
+    with env.db.transaction(write=False) as conn:
+        after = {
+            table: conn.execute("SELECT COUNT(*) FROM " + table).fetchone()[0]
+            for table in before
+        }
+    assert after == before
+    verified = pin_verify(env, link, pin)
+    assert verified.status_code == 200, verified.text
+    verified_data = verified.json()
+    assert verified_data["verification_mode"] == mode
+    assert verified_data["requires_login"] is login_needed
+    assert verified_data["requires_additional_email_otp"] is otp_needed
+    assert verified_data["verified_person_id"] is None
+    assert verified_data["execution_allowed"] is False
+    if login_needed or otp_needed:
+        denied = final(env, link, verified_data["confirmation_token"])
+        assert denied.status_code == 403
+        with env.db.transaction(write=False) as conn:
+            assert conn.execute(
+                "SELECT COUNT(*) FROM request_decisions WHERE request_id=?",
+                (request["id"],),
+            ).fetchone()[0] == 0
+
+
+def test_decision_link_preflight_reflects_stricter_live_integration_minimum(env):
+    from grant.models import IntegrationVerificationPolicy
+
+    policy = activate(env, Profile(
+        name="Upgrade assurance before PIN",
+        integration_id=env.integration["id"],
+        approver_id=env.users["approver"]["id"],
+        action_kind="service.upgrade-assurance",
+        verification_mode="EMAIL_PIN",
+    ))
+    request = create(env, policy)
+    _, _, pin, link = mailbox(env, request["id"])
+    url = "/api/v1/decision-intents/" + link
+    baseline = env.api.get(url)
+    assert baseline.status_code == 200
+    assert baseline.json()["verification_mode"] == "EMAIL_PIN"
+    assert baseline.json()["requires_login"] is False
+    env.core.update_integration_verification_policy(
+        env.admin, env.integration["id"],
+        IntegrationVerificationPolicy(
+            decision_verification_minimum="EMAIL_PIN_PLUS_MFA",
+            reason="Approved higher assurance for all in-flight operations",
+        ),
+    )
+    with env.db.transaction(write=False) as conn:
+        # The request snapshot is still immutable; the trusted minimum can only tighten.
+        assert conn.execute(
+            "SELECT decision_verification_mode FROM requests WHERE id=?",
+            (request["id"],),
+        ).fetchone()[0] == "EMAIL_PIN"
+    current = env.api.get(url)
+    assert current.status_code == 200, current.text
+    assert current.json()["verification_mode"] == "EMAIL_PIN_PLUS_MFA"
+    assert current.json()["landing_requires_login"] is False
+    assert current.json()["requires_login"] is True
+    assert current.json()["requires_additional_email_otp"] is False
+    confirmed_pin = pin_verify(env, link, pin)
+    assert confirmed_pin.status_code == 200, confirmed_pin.text
+    assert confirmed_pin.json()["verification_mode"] == "EMAIL_PIN_PLUS_MFA"
+    assert confirmed_pin.json()["requires_login"] is True
+    assert confirmed_pin.json()["requires_additional_email_otp"] is False
+    denied = final(env, link, confirmed_pin.json()["confirmation_token"])
+    assert denied.status_code == 403
+    with env.db.transaction(write=False) as conn:
+        assert conn.execute(
+            "SELECT COUNT(*) FROM request_decisions WHERE request_id=?",
+            (request["id"],),
+        ).fetchone()[0] == 0
+
+
 def test_pending_extra_otp_keeps_original_decision_links_on_reminder(env):
     """A later OTP outbox row must not become the source of link/PIN reminders."""
     profile = activate(env, Profile(

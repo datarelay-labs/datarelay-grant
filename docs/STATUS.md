@@ -20,6 +20,27 @@ source and deterministic test evidence must be distinguished from the
 undeployed :18994 owner preview, direct-user browser/email evidence,
 actual DataRelay/Stellar business effects and owner release acceptance.
 
+## G10A truthful decision-link verification preflight (2026-10-09)
+
+The read-only, anonymous decision-intent GET and post-PIN response now report
+the **current effective** final-decision verification requirements using
+separate boolean metadata. `landing_requires_login=false` preserves the
+anonymous first step; `requires_login=true` only for a required fresh
+Grant session plus TOTP; `requires_additional_email_otp=true` only when
+the customer requires the separately requested same-mailbox code (not MFA).
+This corrects the earlier unconditional `requires_login=false` that could
+mislead a future decision portal even when server confirmation correctly
+enforced mandatory MFA. A security minimum tightened after request issuance
+is reflected without modifying the original request snapshot.
+
+Disposable API regressions check all three modes, GET/HEAD side-effect-free
+behavior and no private target disclosure before PIN, after-PIN consistency,
+a newly tightened integration minimum and denial of confirmation when an
+OTP/current MFA requirement is not satisfied. The backend's final
+transaction remains the sole approval authority. This does not implement
+the separate loginless decision Web page, real mailbox receipt, direct
+two-user browser E2E, or release qualification.
+
 ## G10A backend-only implementation lane (2026-10-09)
 
 In the isolated feat/grant-1.0-g10a-backend branch, G10A-0 now has

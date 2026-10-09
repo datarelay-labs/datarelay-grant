@@ -28,6 +28,15 @@ MAX_PIN_FAILURES = 5
 CONFIRM_SECONDS = 300
 
 
+def _verification_steps(effective_mode: str) -> dict[str, bool]:
+    """Keep anonymous landing separate from requirements for final decision."""
+    return {
+        "landing_requires_login": False,
+        "requires_login": effective_mode == "EMAIL_PIN_PLUS_MFA",
+        "requires_additional_email_otp": effective_mode == "EMAIL_PIN_PLUS_OTP",
+    }
+
+
 def _digest(settings: Settings, purpose: str, value: str) -> str:
     return hmac.new(
         settings.encryption_key.encode(), f"grant:{purpose}:{value}".encode(),
@@ -329,11 +338,13 @@ class DecisionLinks:
             _active(conn, self.settings, state, time.time())
             from .verification_policy import current_required
 
+            effective_mode = current_required(conn, state)
             return {
                 "outcome": state["outcome"],
-                "verification_mode": current_required(conn, state),
+                "verification_mode": effective_mode,
                 "pin_digits": 4,
-                "pin_required": True, "requires_login": False,
+                "pin_required": True,
+                **_verification_steps(effective_mode),
                 "confirmation_required": True,
                 "details_visible": False, "execution_allowed": False,
                 "assurance": "EMAIL_LINK_PIN",
@@ -407,6 +418,7 @@ class DecisionLinks:
             },
             "assurance": "EMAIL_LINK_PIN",
             "verification_mode": effective_mode,
+            **_verification_steps(effective_mode),
             "verified_person_id": None,
             "execution_allowed": False,
         }

@@ -495,6 +495,18 @@ administrator or grant:consume capabilities and cannot select
 a different decision/target. A customer-required OTP or MFA gate
 is evaluated before final decision commit.
 
+**Decision preflight API contract:** opening the scoped link always remains
+anonymous and read-only (`landing_requires_login=false`). The
+`requires_login` flag describes the requirements to **complete the final
+decision**, not to open the link: it is true if the current trusted
+verification minimum is `EMAIL_PIN_PLUS_MFA`; same-mailbox extra OTP is
+represented separately by `requires_additional_email_otp` and is not login
+or MFA. Both the anonymous intent GET and the successful PIN verification
+response report these flags using the current effective policy/minimum. A
+later administrative tightening can change the reported requirement;
+the server still rechecks it atomically at final confirmation. GET/HEAD
+must neither expose private request details nor issue/consume challenges.
+
 **Atomicity:** one protected decision transaction rechecks the
 current assignment epoch, exact action, selected outcome, live
 request status, deadline, appropriate verification and policy
