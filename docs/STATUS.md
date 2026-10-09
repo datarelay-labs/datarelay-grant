@@ -96,6 +96,28 @@ individual browser Full User E2E, external G11 effects, CI/review and release
 acceptance remain NOT verified. This addition does not modify authorization
 logic, Grant's shared Foundation shell, production or customer policy data.
 
+## G10A per-integration verification minimum administration (2026-10-09)
+
+The isolated G10A Grant integration-administration UI now consumes the
+backend-v12 administrator-only integration minimum security policy: the
+registered integration's currently reported EMAIL_PIN,
+EMAIL_PIN_PLUS_OTP or EMAIL_PIN_PLUS_MFA requirement, changed through an
+existing reason-audited PUT /integrations/{id}/decision-verification API.
+An explicit reason (5–1,000 chars, no credentials or secret tokens) is
+required, and lowering the current minimum cannot be submitted without
+an additional acknowledgement that NEW requests may use weaker security.
+Current integration minimum is never invented if an older backend omits
+the field or if the integration is disabled. No minimum change is sent
+when the requested setting is unchanged. Existing request snapshots remain
+backend-controlled; a code sent to the same email mailbox is NOT MFA.
+
+This is a Web UI development candidate with deterministic pure contract
+tests and server-rendered control checks only. The isolated synthetic dev
+preview is not mutated by the testing. Actual authenticated user browser
+flows, real email recipients, Foundation upstream integration, G11/G12
+product-owned external effect, 320/375 mobile and owner acceptance remain
+separate, incomplete gates.
+
 ## Implemented candidate
 
 - Pinned unpublished Foundation SDK and public imports with Foundation-backed auth,
