@@ -13,6 +13,7 @@ from email.utils import formataddr
 from urllib.parse import urlsplit
 
 import httpx
+from cryptography.fernet import InvalidToken
 
 from .auth import Principal, require_current_authority
 from .config import Settings
@@ -104,6 +105,43 @@ def send_email(settings: Settings, destination: dict, payload: str, event_id: st
         smtp.send_message(message)
 
 
+def _legacy_approval_recipient_current(conn, settings: Settings, row, now: float) -> bool:
+    """Revalidate pending pre-G10A approval mail before leasing transport.
+
+    Historic v8 outbox rows carry only a sealed destination, not an issuance
+    or recipient ID. Match that address against CURRENT eligible approval
+    seat/delegate mailboxes. Never disclose the old destination in audit.
+    """
+    from .approval_mail import eligible_recipients
+
+    request = conn.execute(
+        "SELECT * FROM requests WHERE id=?", (row["request_id"],),
+    ).fetchone()
+    if request is None or request["email_pin_enabled"]:
+        # A missing issuance reference in a G10A request is malformed;
+        # never downgrade modern sealed decision mail into the legacy path.
+        return False
+    try:
+        destination = settings.unseal(row["destination"])
+    except (InvalidToken, ValueError, TypeError, UnicodeError):
+        return False
+    if not isinstance(destination, dict) or not isinstance(destination.get("email"), str):
+        return False
+    email = destination["email"].strip().casefold()
+    if not email:
+        return False
+    return any(
+        candidate["email"].strip().casefold() == email
+        and (row["recipient_id"] is None
+             or row["recipient_id"] == candidate["recipient_id"])
+        and (row["approval_assignment_id"] is None
+             or row["approval_assignment_id"] == candidate["assignment_id"])
+        and (row["delegation_id"] is None
+             or row["delegation_id"] == candidate["delegation_id"])
+        for candidate in eligible_recipients(conn, request, now)
+    )
+
+
 class Worker:
     def __init__(self, db: Database, settings: Settings):
         self.db, self.settings = db, settings
@@ -164,9 +202,18 @@ class Worker:
                         or req["collaboration_state"] != "OPEN"
                     )
                 )
+                stale_legacy_recipient = (
+                    row["kind"] == "email"
+                    and row["event_type"] in ("requested", "reminder", "legacy")
+                    and not row["issuance_id"]
+                    and not stale_approval_email
+                    and not _legacy_approval_recipient_current(
+                        conn, self.settings, row, now,
+                    )
+                )
                 if (
                     not req["enabled"] or stale_outcome or stale_approval_email
-                    or stale_sealed_issuance or stale_otp
+                    or stale_sealed_issuance or stale_otp or stale_legacy_recipient
                 ):
                     conn.execute(
                         "UPDATE outbox SET state='SUPERSEDED',lease_token=NULL,last_error=NULL WHERE id=?",

@@ -455,8 +455,13 @@ email never proves the named recipient personally acted.
 
 Reassignment, delegation, escalation, account disablement and revocation
 recompute CURRENT eligible seat/actor, revoke unauthorized issued
-links, and independently notify new eligible recipients. New
-delegate mail must not reveal or reuse the original person's
+links, and independently notify new eligible recipients. Pre-G10A
+unsealed approval invitations queued before such changes must be
+revalidated against current eligible approvers/delegates and registered
+mailbox addresses at dispatch, including historical rows lacking
+recipient metadata; obsolete destinations must be superseded. An
+unbound G10A sealed decision email never qualifies as legacy mail.
+New delegate mail must not reveal or reuse the original person's
 response links or code. A historical policy snapshot never
 restores permission revoked by a later security event. Current 1.0 semantics **any denial is terminal**; if the
 customer wants configurable denial thresholds or global Hold veto,

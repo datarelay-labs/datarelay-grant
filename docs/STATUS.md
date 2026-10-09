@@ -49,9 +49,17 @@ Unlike sealed G10A mail, these old entries are not covered by the scoped
 issuance-deliverability guard. The outbound worker now supersedes these
 approval invitations when collaboration is `INFO_REQUESTED` or
 `CHANGES_REQUESTED`, rather than emailing an action invitation while
-approval decisions are blocked. Normal `OPEN` pending invitation delivery,
-non-approval notifications, and the separate execution authorization
-boundary are unchanged.
+approval decisions are blocked. The same legacy invitation path now
+revalidates the currently eligible seat/delegate and registered recipient
+mailbox immediately before transport leasing. A queued old invitation
+addressed to a disabled user, a removed approver, or a former email address
+is superseded rather than disclosed to its previous mailbox. Historic v8
+rows without recipient IDs are checked against the live eligible mailbox;
+present recipient/seat/delegation identifiers must also match. Modern
+G10A sealed mail with a missing issuance reference cannot fall back to
+this legacy check. Legitimate old invitations remain deliverable, while
+decision/result notices and the separate execution authorization boundary
+are unchanged.
 
 Disposable transport regressions reproduced all four blocked invitation
 cases before correction and verify both normal open-state delivery and

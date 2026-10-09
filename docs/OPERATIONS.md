@@ -270,7 +270,16 @@ resolved from the active source tree; remove a legacy hard-coded `web_root` only
 after verifying the new compiled assets. Run the same user scenarios on that build.
 Request information and change requests suspend decision-reminder scheduling.
 Queued reminder mail is superseded and the worker revalidates collaboration
-state before claiming a reminder. In-flight SMTP transport cannot be recalled.
+state before claiming a reminder. Pre-G10A queued approval invitations
+are additionally checked at lease time against the CURRENT eligible
+assignee/delegate and registered mailbox. A disabled/reassigned recipient,
+changed address or mismatching persisted recipient/seat metadata causes a
+SUPERSEDED delivery, not a send; old v8 rows without a stored recipient
+ID are matched conservatively by their encrypted destination mailbox.
+A modern sealed G10A approval email lacking an issuance binding must
+never be treated as legacy mail. No prior recipient addresses, bearer
+tokens or mail payloads should be included in audit/search exports.
+In-flight SMTP transport cannot be recalled.
 If a change-request deadline expires, the requester may create a new linked
 replacement without cancelling the now-expired original. Every replacement
 requires fresh action-bound approval; the original timeline remains immutable.
