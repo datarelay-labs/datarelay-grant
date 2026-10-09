@@ -42,6 +42,12 @@ The adapter validates URL-safe token shape, server outcome/assurance/verificatio
 flags, bounded post-PIN action information and strict non-execution evidence.
 It does not silently downgrade a stronger current verification mode, and never
 automatically retries an ambiguous email queue or final decision POST.
+The verified signed-in Grant user ID returned by fresh TOTP step-up must exactly
+match the final decision receipt's `verified_person_id`; email-PIN-only and
+same-inbox OTP final receipts must have a null person ID. An inconsistent or
+missing person ID fails closed rather than being presented as a successful
+named-human verification. This is additional client receipt integrity checking;
+the backend still owns authorization and identity proof.
 Client tests use mocked fetch responses; no SMTP, real authenticator, recipient
 account or external business effect was exercised.
 

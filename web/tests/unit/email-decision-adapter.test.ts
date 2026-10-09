@@ -63,7 +63,10 @@ const mfaVerified = {
 function recorded(outcome: BackendOutcome, assurance = 'EMAIL_LINK_PIN') {
   return {
     recorded: true, decision: outcome, state: outcome,
-    actor_assurance: assurance, mfa_verified: assurance === 'EMAIL_LINK_PIN_PLUS_MFA',
+    actor_assurance: assurance,
+    verified_person_id: assurance === 'EMAIL_LINK_PIN_PLUS_MFA'
+      ? 'eligible-recipient-user' : null,
+    mfa_verified: assurance === 'EMAIL_LINK_PIN_PLUS_MFA',
     execution_allowed: false,
   };
 }
@@ -314,6 +317,53 @@ describe('G10A-5 original backend API adapter (unmounted)', () => {
     await adapter.verifyPin('4444');
     await expect(adapter.confirm(context, {})).rejects.toThrow(ApiError);
     expect(calls).toHaveLength(3);
+  });
+
+  it('refuses a mismatched or omitted verified human in the final MFA receipt', async () => {
+    for (const person of ['different-recipient', null, undefined]) {
+      const calls = transport(
+        { body: preview('EMAIL_PIN_PLUS_MFA') },
+        { body: pinVerified('EMAIL_PIN_PLUS_MFA') },
+        { body: mfaVerified },
+        { body: {
+          ...recorded('APPROVED', 'EMAIL_LINK_PIN_PLUS_MFA'),
+          verified_person_id: person,
+        } },
+      );
+      const { adapter } = await loadEmailDecisionIntent(token);
+      await adapter.verifyPin('0123');
+      const verified = await adapter.verifyFreshMfa(context, '123456');
+      expect(verified.assurance).toBe('MFA_VERIFIED');
+      await expect(adapter.confirm(context, {})).rejects.toThrow(ApiError);
+      expect(calls).toHaveLength(4);
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('refuses named-human attribution on mailbox-only PIN and OTP receipts', async () => {
+    for (const mode of ['EMAIL_PIN', 'EMAIL_PIN_PLUS_OTP'] as const) {
+      const assurance = mode === 'EMAIL_PIN'
+        ? 'EMAIL_LINK_PIN' : 'EMAIL_LINK_PIN_PLUS_OTP';
+      const calls = transport(
+        { body: preview(mode) },
+        { body: pinVerified(mode) },
+        ...(mode === 'EMAIL_PIN_PLUS_OTP'
+          ? [{ body: otpQueued }, { body: otpVerified }] : []),
+        { body: {
+          ...recorded('APPROVED', assurance),
+          verified_person_id: 'unverified-named-user',
+        } },
+      );
+      const { adapter } = await loadEmailDecisionIntent(token);
+      await adapter.verifyPin('9876');
+      if (mode === 'EMAIL_PIN_PLUS_OTP') {
+        await adapter.requestOtp(context);
+        await adapter.verifyOtp(context, '123456');
+      }
+      await expect(adapter.confirm(context, {})).rejects.toThrow(ApiError);
+      expect(calls).toHaveLength(mode === 'EMAIL_PIN' ? 3 : 5);
+      vi.unstubAllGlobals();
+    }
   });
 
   it('never retries OTP request when the mail queue response is lost', async () => {

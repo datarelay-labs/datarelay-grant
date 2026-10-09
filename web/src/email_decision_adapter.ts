@@ -154,6 +154,8 @@ export async function loadEmailDecisionIntent(token: string): Promise<LoadedEmai
   let active: EmailDecisionProof | null = null;
   let otpRequested = false;
   let confirmationAttempted = false;
+  // Proof of the *specific* signed-in recipient, never inferred from mailbox possession.
+  let mfaVerifiedPersonId: string | null = null;
 
   const adapter: EmailDecisionAdapter = {
     async verifyPin(pin) {
@@ -216,6 +218,7 @@ export async function loadEmailDecisionIntent(token: string): Promise<LoadedEmai
           response.verified_person_id.length > 100) return invalid();
       const verified: EmailDecisionProof = { ...proof, assurance: 'MFA_VERIFIED' };
       if (stageAfterStepUp(proof, verified, preflight.choice) !== 'ready') return invalid();
+      mfaVerifiedPersonId = response.verified_person_id as string;
       active = verified;
       return verified;
     },
@@ -235,13 +238,21 @@ export async function loadEmailDecisionIntent(token: string): Promise<LoadedEmai
       ));
       noExecution(response);
       const expected = serverOutcomes[preflight.choice];
+      const requiresVerifiedPerson = proof.assurance === 'MFA_VERIFIED';
       if (response.recorded !== true || response.decision !== expected ||
           response.actor_assurance !== (
-            proof.assurance === 'MFA_VERIFIED' ? 'EMAIL_LINK_PIN_PLUS_MFA' :
+            requiresVerifiedPerson ? 'EMAIL_LINK_PIN_PLUS_MFA' :
             proof.assurance === 'OTP_VERIFIED' ? 'EMAIL_LINK_PIN_PLUS_OTP' : 'EMAIL_LINK_PIN'
           ) ||
-          response.mfa_verified !== (proof.assurance === 'MFA_VERIFIED')) return invalid();
+          response.mfa_verified !== requiresVerifiedPerson ||
+          (requiresVerifiedPerson && mfaVerifiedPersonId === null) ||
+          // The final server receipt must identify exactly the MFA-verified
+          // recipient; email PIN and same-inbox OTP prove NO named person.
+          response.verified_person_id !== (
+            requiresVerifiedPerson ? mfaVerifiedPersonId : null
+          )) return invalid();
       active = null;
+      mfaVerifiedPersonId = null;
       return { recorded: true, outcome: preflight.choice };
     },
   };
