@@ -13,6 +13,7 @@ import type {
   PolicyHistory,
   PolicyPreview,
   Profile,
+  PolicyLifecycle,
 } from './types';
 
 type Sample = {
@@ -91,11 +92,45 @@ export function PolicyEditorSection({ id, title, description, children }: {
   </section>;
 }
 
+type PolicyListFilter = {
+  search: string;
+  lifecycle: 'ALL' | PolicyLifecycle;
+};
+
+// Client-only discovery over the already role-scoped GET /profiles response.
+// Never widen the server permission boundary or infer hidden policy records.
+export function filterPolicyList(
+  rows: readonly Profile[],
+  integrations: readonly Pick<Integration, 'id' | 'name'>[],
+  approvers: readonly Pick<AccountProjection, 'id' | 'displayName'>[],
+  filter: PolicyListFilter,
+): Profile[] {
+  if (!(['ALL', 'DRAFT', 'TESTING', 'ACTIVE', 'DISABLED'] as string[])
+    .includes(filter.lifecycle) || filter.search.length > 128) {
+    return [];
+  }
+  const query = filter.search.trim().toLowerCase();
+  const integrationNames = new Map(integrations.map((item) => [item.id, item.name]));
+  const approverNames = new Map(approvers.map((item) => [item.id, item.displayName]));
+  return rows.filter((row) => {
+    if (filter.lifecycle !== 'ALL' && row.lifecycle !== filter.lifecycle) return false;
+    if (!query) return true;
+    return [
+      row.name,
+      row.action_kind,
+      integrationNames.get(row.integration_id) ?? row.integration_id,
+      approverNames.get(row.approver_id) ?? row.approver_id,
+    ].some((value) => value.toLowerCase().includes(query));
+  });
+}
+
 export function Profiles() {
   const [rows, setRows] = useState<Profile[]>([]);
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [users, setUsers] = useState<AccountProjection[]>([]);
   const [templates, setTemplates] = useState<NotificationTemplateSet[]>([]);
+  const [listSearch, setListSearch] = useState('');
+  const [listLifecycle, setListLifecycle] = useState<PolicyListFilter['lifecycle']>('ALL');
   const [view, setView] = useState<PolicyView>('list');
   const [editing, setEditing] = useState('');
   const [name, setName] = useState('');
@@ -307,6 +342,9 @@ export function Profiles() {
   const selected = rows.find((row) => row.id === editing);
 
   if (view === 'list') {
+    const visibleRows = filterPolicyList(rows, integrations, users, {
+      search: listSearch, lifecycle: listLifecycle,
+    });
     return (
       <div className="grant-stack">
         {task.feedback}
@@ -326,6 +364,29 @@ export function Profiles() {
           title="Policies"
           description="Scan policy status and scope first. Open a policy only when you need to configure or test it."
         >
+          <div className="grant-grid">
+            <TextField label="Search policies"
+              placeholder="Policy, action, integration or approver"
+              value={listSearch}
+              onChange={(event) => setListSearch(event.target.value.slice(0, 128))}
+            />
+            <Select label="Lifecycle" required={false} value={listLifecycle}
+              onChange={(value) => setListLifecycle(value as PolicyListFilter['lifecycle'])}>
+              <option value="ALL">All lifecycles</option>
+              <option value="DRAFT">Draft</option>
+              <option value="TESTING">Testing</option>
+              <option value="ACTIVE">Active</option>
+              <option value="DISABLED">Disabled</option>
+            </Select>
+          </div>
+          <div className="grant-row-actions">
+            <small aria-live="polite">Showing {visibleRows.length} of {rows.length} policies</small>
+            <Button variant="ghost"
+              disabled={!listSearch && listLifecycle === 'ALL'}
+              onClick={() => { setListSearch(''); setListLifecycle('ALL'); }}>
+              Clear filters
+            </Button>
+          </div>
           <div className="grant-table-scroll">
             <table className="grant-table grant-policy-table">
               <thead>
@@ -340,7 +401,7 @@ export function Profiles() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {visibleRows.map((row) => (
                   <tr key={row.id}>
                     <td>
                       <button
@@ -363,6 +424,7 @@ export function Profiles() {
                     </td>
                     <td>
                       <strong>{row.action_kind}</strong>
+                      <small>{integrations.find((item) => item.id === row.integration_id)?.name ?? row.integration_id}</small>
                       <small>
                         tenant {row.tenant_selector || '*'} · env {row.environment || '*'}
                       </small>
@@ -393,6 +455,9 @@ export function Profiles() {
             </table>
           </div>
           {!rows.length ? <p>No approval policies configured.</p> : null}
+          {rows.length > 0 && !visibleRows.length ? (
+            <p>No policies match the current search and lifecycle filters. Clear filters to see all visible policies.</p>
+          ) : null}
         </Card>
       </div>
     );

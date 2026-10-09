@@ -5,6 +5,20 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G0 search and lifecycle filter in approval policy list (2026-10-09)
+
+The task-first administrator Approval Policies table now provides a
+case-insensitive bounded live search over policy name, allowed action,
+displayed integration and approver, plus an explicit
+All/Draft/Testing/Active/Disabled lifecycle filter, current-visible-row
+counts, and safe Clear filters/empty-result controls. Search and filtering
+use **only the already returned role-scoped /profiles rows**; they do not
+add API access, mutate approval policy state or provide an alternate
+activation path. Opening, cloning, version editing, verification, isolated
+preview and existing lifecycle operations are preserved. Source-only
+implementation/evidence is tracked in Work Packet #81, not an owner
+preview deployment or independent two-human browser E2E.
+
 ## G0 task-oriented approval policy detail sections (2026-10-09)
 
 The existing Approval Policies list/detail workspace retains all policy fields,
