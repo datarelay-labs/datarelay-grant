@@ -6,6 +6,8 @@ export { RequestList } from './request_inbox';
 export type { Filters } from './request_inbox';
 import { RequestCollaboration } from './collaboration';
 import { RevisionComparison } from './revision_diff';
+import { RequestActionSummary } from './request_action_summary';
+import { RequestEvidence } from './request_evidence';
 import { Form, Select, State, TextArea, useTask, when } from './common';
 import type { Profile, RequestRow, Outcome, User } from './types';
 
@@ -107,12 +109,19 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  return <div className="grant-stack">{task.feedback}<div className="grant-actions"><Button variant="secondary" onClick={()=>navigate('/requests')}>Back to requests</Button><Button variant="secondary" disabled={task.busy} onClick={()=>void task.run(load)}>Refresh</Button></div>{row && <>
  <Card title={row.title} description={row.reason || 'No additional reason supplied.'}><div className="grant-statuses"><div>Decision<br/><State value={row.state}/></div><div>Delivery<br/><State value={row.delivery_state}/></div><div>Execution<br/><State value={row.execution_state}/></div></div>{row.viewer_delegated_for && <p>You are acting as the recorded substitute for an assigned approver. Both identities remain auditable.</p>}<dl className="grant-facts"><dt>External ID</dt><dd>{row.external_id}</dd><dt>Approval deadline</dt><dd>{when(row.deadline)}</dd><dt>Execution validity</dt><dd>{when(row.grant_until)}</dd><dt>Decision by / at</dt><dd>{row.decision_actor ?? 'Not decided'} / {when(row.decision_at)}</dd><dt>Revision</dt><dd>{row.revision}</dd><dt>Approval progress</dt><dd>{row.approval_progress?.approved_count ?? 0} of {row.approval_progress?.required_count ?? 1} approvals</dd><dt>Waiting on</dt><dd>{row.approval_progress?.waiting_on.replaceAll('_', ' ') ?? 'Approval processing'}{row.approval_progress?.group_name ? ' · ' + row.approval_progress.group_name : ''}{row.approval_progress?.waiting_approvers.length ? ': ' + row.approval_progress.waiting_approvers.map((person) => person.username).join(', ') : ''}</dd></dl></Card>
  {row.escalation && <Card title="Escalation status"><dl className="grant-facts"><dt>Escalation target</dt><dd>{row.escalation.target_group_id ? 'Approver group' : 'Approver'} · {row.escalation.target_members.length} member(s)</dd><dt>Escalation due</dt><dd>{when(row.escalation.due_at)}</dd><dt>Applied at</dt><dd>{when(row.escalation.fired_at)}</dd></dl><p>Escalation changes only who may decide; it never executes the requested action.</p></Card>}
- <Card title="Exact action to be approved">{row.predecessor_id&&<p>Replaces <Button variant="ghost" onClick={()=>navigate('/requests/'+row.predecessor_id)}>{row.predecessor_id}</Button></p>}<dl className="grant-facts"><dt>Operation</dt><dd>{row.action.kind}</dd><dt>Target</dt><dd>{row.action.target}</dd><dt>Action fingerprint</dt><dd className="grant-mono">{row.action_hash}</dd></dl><pre>{JSON.stringify(row.action.parameters,null,2)}</pre><details><summary>Original source reference</summary><pre>{JSON.stringify(row.source,null,2)}</pre></details><p>Action content cannot be edited. Cancel this request and submit a new linked request when the action changes.</p>{canReplace && <Button variant="secondary" onClick={()=>navigate('/requests/'+row.id+'/replace')}>Create replacement request</Button>}</Card>
+ <RequestActionSummary row={row} canReplace={Boolean(canReplace)} navigate={navigate} />
  {(canDecide || canCancel) && <Card title="Explicit decision"><TextArea label="Decision or cancellation reason" value={reason} onChange={setReason}/><div className="grant-actions">{canDecide && (['APPROVED','HELD','DENIED'] as Outcome[]).map(c => <Button key={c} variant={c==='DENIED'?'danger':'secondary'} disabled={task.busy} onClick={()=>setChoice(c)}>{c==='APPROVED'?'Approve':c==='HELD'?'Hold':'Deny'}</Button>)}{canCancel && <Button variant="danger" disabled={task.busy} onClick={()=>setChoice('CANCELLED')}>Cancel request</Button>}</div>{choice && <Alert tone="warning" title={'Confirm: ' + choice}><p>You are deciding revision {row.revision} for {row.action.target}. Approval does not itself execute the action.</p><Button disabled={task.busy} onClick={()=>void task.run(decide)}>Confirm {choice.toLowerCase()}</Button><Button variant="ghost" disabled={task.busy} onClick={()=>setChoice('')}>Go back</Button></Alert>}</Card>}
  {row.predecessor_id && <RevisionComparison requestId={row.id} />}
  <RequestCollaboration row={row} user={user} onReload={load} />
  {user.role === 'admin' && actionable && <RequestAdminControls row={row} onReload={load} />}
  {row.execution_result && <Card title="Reported execution result"><pre>{JSON.stringify(row.execution_result,null,2)}</pre><p>Reported by the connected system; not independently verified by Grant.</p></Card>}
- <Card title="Delivery history" description="HTTP acceptance is not execution success. Resend repeats only the notification.">{row.deliveries?.map(d=><div className="grant-delivery" key={d.id}><div><strong>{d.kind}</strong> · <State value={d.state}/><small>{d.attempts} attempts {d.last_error ? '· '+d.last_error : ''}</small></div>{user.role==='admin' && ['FAILED','PENDING'].includes(d.state) && <Button variant="secondary" disabled={task.busy} onClick={()=>void task.run(async()=>{await api('/deliveries/'+d.id+'/resend','POST');await load();})}>Resend {d.kind}</Button>}</div>)}</Card>
- <Card title="Request timeline">{row.timeline?.map(e=><div className="grant-timeline" key={e.id}><strong>{e.action}</strong><small>{when(e.at)} · {e.actor}</small><pre>{JSON.stringify(e.detail,null,2)}</pre></div>)}</Card></>}</div>;
+ <RequestEvidence
+   row={row}
+   isAdmin={user.role === 'admin'}
+   busy={task.busy}
+   onResend={(deliveryId) => { void task.run(async () => {
+     await api('/deliveries/' + deliveryId + '/resend', 'POST');
+     await load();
+   }); }}
+ /></>}</div>;
 }

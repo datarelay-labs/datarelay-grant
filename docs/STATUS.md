@@ -55,6 +55,25 @@ allowlisted operations presets continue to use the same server-side
 role-filtered query contract. This UX does not add new access or policy
 authority; independent actual-user browser/mobile E2E remains pending.
 
+## G0 request-detail progressive evidence UI (2026-10-09)
+
+Grant RequestDetail now puts the immutable operation, target, and all
+requested business parameters ahead of low-level technical evidence. A
+Foundation Card still explains that approving an action never executes
+it. Technical action fingerprint/raw parameter JSON and original source
+reference remain fully available but collapsed by default behind native
+accessible details. A linked prior request uses a meaningful action label
+rather than exposing a UUID as the primary control.
+
+All existing explicit approve/hold/deny/cancel confirmation and backend
+role checks are unchanged. Reassignment, linked replacement, collaboration,
+escalation, delivery resend and separate execution-result semantics remain
+available. Transport delivery attempt logs and audit-event JSON are now
+progressively disclosed; protected resends still invoke the original
+administrator-gated API only when the user explicitly chooses that action.
+This is only developer-source and deterministic component evidence:
+real direct-persona browser E2E and 320/375 user-safety gates are pending.
+
 ## Implemented candidate
 
 - Pinned unpublished Foundation SDK and public imports with Foundation-backed auth,
