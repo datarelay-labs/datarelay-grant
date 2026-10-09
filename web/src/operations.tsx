@@ -45,6 +45,8 @@ type OperationsSummary = {
   recovery_paused: boolean;
   counts: Counts;
   approval_latency_seconds: number | null;
+  approval_latency_median_seconds?: number | null;
+  approval_latency_sample_count?: number;
   integrations: IntegrationHealth[];
   decision_email_security?: DecisionEmailSecurity;
   semantics: Record<string, string>;
@@ -108,6 +110,35 @@ export function DecisionEmailSecurityPanel({ summary }: {
        These counters do not confirm receipt or execution and cannot authorize actions.</p>
   </Card>;
 }
+type ApprovalLatencyReadout = {
+  approval_latency_seconds?: number | null;
+  approval_latency_median_seconds?: number | null;
+  approval_latency_sample_count?: number;
+};
+function formattedMinutes(value: unknown): string | null {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+    ? (value / 60).toFixed(1) + ' min' : null;
+}
+export function approvalLatencyPresentation(summary: ApprovalLatencyReadout | null): {
+  primary: string;
+  detail: string;
+} {
+  if (!summary) return { primary: '—', detail: 'Mean and median from final decisions' };
+  const mean = formattedMinutes(summary.approval_latency_seconds);
+  if (mean === null) {
+    return summary.approval_latency_seconds === null && summary.approval_latency_sample_count === 0
+      ? { primary: 'No decisions', detail: 'No recorded final decisions' }
+      : { primary: 'Unavailable', detail: 'Mean unavailable for this server response' };
+  }
+  const median = formattedMinutes(summary.approval_latency_median_seconds);
+  const count = summary.approval_latency_sample_count;
+  const samples = typeof count === 'number' && Number.isSafeInteger(count) && count >= 0
+    ? ' · ' + count + ' final decisions' : '';
+  return {
+    primary: mean + ' avg',
+    detail: (median === null ? 'Median unavailable' : median + ' median') + samples,
+  };
+}
 type Metric = {
   key: keyof Counts | 'latency';
   title: string;
@@ -138,7 +169,7 @@ const overview: Metric[] = [
   { key: 'pending', title: 'Pending approvals', description: 'Awaiting a final human decision', queue: 'pending' },
   { key: 'overdue', title: 'Overdue', description: 'Expired approval deadlines or due escalations', queue: 'overdue' },
   { key: 'held', title: 'Held', description: 'Explicitly held decisions requiring review', queue: 'held' },
-  { key: 'latency', title: 'Approval latency', description: 'Average time to final human decision', queue: 'decided' },
+  { key: 'latency', title: 'Approval latency', description: 'Mean and median time to a final decision', queue: 'decided' },
 ];
 const exceptions: Metric[] = [
   { key: 'delivery_failed', title: 'Delivery failed', description: 'Requests with failed SMTP or HTTP callback', queue: 'delivery_failed' },
@@ -166,10 +197,7 @@ export function Operations({ navigate }: { navigate: (next: string) => void }) {
 
   function metricValue(item: Metric): string {
     if (!snapshot) return '—';
-    if (item.key === 'latency') {
-      return snapshot.approval_latency_seconds === null
-        ? 'No decisions' : (snapshot.approval_latency_seconds / 60).toFixed(1) + ' min';
-    }
+    if (item.key === 'latency') return approvalLatencyPresentation(snapshot).primary;
     return String(snapshot.counts[item.key]);
   }
   const section = (title: string, items: Metric[], description: string) =>
@@ -180,7 +208,8 @@ export function Operations({ navigate }: { navigate: (next: string) => void }) {
             onClick={() => navigate('/operations/queue/' + item.queue)}>
             <span>{item.title}</span>
             <strong>{metricValue(item)}</strong>
-            <small>{item.description}</small>
+            <small>{item.key === 'latency'
+              ? approvalLatencyPresentation(snapshot).detail : item.description}</small>
           </button>)}
         </div>
       </Card>

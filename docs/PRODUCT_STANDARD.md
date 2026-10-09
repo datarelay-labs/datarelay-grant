@@ -812,7 +812,7 @@ Required operational indicators:
 - pending approvals;
 - overdue approvals;
 - held requests;
-- average/median approval time;
+- average and median elapsed approval time with final-decision sample count;
 - denied/expired/cancelled counts;
 - delivery failures;
 - approved but not consumed;

@@ -64,6 +64,22 @@ def operations_summary(db: Database, actor: Principal) -> dict:
                 "email_failed", "webhook_failed", "delivery_failed",
             )
         }
+        # SQLite window ranking yields a true odd/even median, using the same
+        # final-decision timestamps as the existing mean and the same snapshot.
+        # The sorting/aggregation stays inside SQLite: no unbounded Python list.
+        median = conn.execute(
+            """SELECT AVG(elapsed_seconds) AS median_seconds,
+                      MAX(sample_count) AS sample_count
+               FROM (
+                 SELECT MAX(decision_at-created_at,0) AS elapsed_seconds,
+                        ROW_NUMBER() OVER (
+                          ORDER BY MAX(decision_at-created_at,0),id
+                        ) AS ordinal,
+                        COUNT(*) OVER () AS sample_count
+                   FROM requests WHERE decision_at IS NOT NULL
+               )
+               WHERE ordinal IN ((sample_count+1)/2,(sample_count+2)/2)"""
+        ).fetchone()
         integration_rows = conn.execute(
             "SELECT id,name,kind,enabled FROM integrations ORDER BY name,id"
         ).fetchall()
@@ -173,12 +189,21 @@ def operations_summary(db: Database, actor: Principal) -> dict:
             if aggregate["approval_latency_seconds"] is not None
             else None
         ),
+        "approval_latency_median_seconds": (
+            round(median["median_seconds"], 3)
+            if median["median_seconds"] is not None
+            else None
+        ),
+        "approval_latency_sample_count": int(median["sample_count"] or 0),
         "integrations": integrations,
         "semantics": {
             "counts": "Distinct requests, not delivery attempts.",
             "callback": "HTTP callback transport acceptance; not execution success or receipt verification.",
             "overdue": "Requests whose approval deadline expired or whose escalation is due.",
-            "latency": "Mean elapsed seconds from creation to final recorded decision.",
+            "latency": (
+                "Mean and median elapsed seconds from creation to final recorded "
+                "decision, clamped nonnegative; samples count final decisions."
+            ),
             "decision_email_security": (
                 "Mail/PIN/OTP lifecycle counters only; email transport acceptance "
                 "does not prove recipient receipt, a verified person or independent MFA."

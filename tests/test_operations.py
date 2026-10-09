@@ -267,3 +267,46 @@ def test_recovered_webhook_is_not_an_unresolved_integration_failure(env):
     assert queue.status_code == 200
     assert queue.json() == []
     assert summary.json()["counts"]["webhook_failed"] == 0
+
+
+def test_operational_latency_median_and_sample_count_reconcile_with_decisions(env):
+    admin = env.human("admin")
+    empty = admin.get("/api/v1/admin/operations").json()
+    assert empty["approval_latency_seconds"] is None
+    assert empty["approval_latency_median_seconds"] is None
+    assert empty["approval_latency_sample_count"] == 0
+
+    # Long-tail durations deliberately separate average from median.
+    durations = (60.0, 120.0, 3600.0, 240.0)
+    base = time.time() - 7200
+    for index, elapsed in enumerate(durations):
+        row = create(env, title=f"Decided latency {index}")
+        decision(env, row, "DENIED")
+        started_at = base + 600 * index
+        with env.db.transaction() as conn:
+            conn.execute(
+                "UPDATE requests SET created_at=?,decision_at=? WHERE id=?",
+                (started_at, started_at + elapsed, row["id"]),
+            )
+        summary = admin.get("/api/v1/admin/operations").json()
+        assert summary["approval_latency_sample_count"] == index + 1
+        if index == 2:
+            assert summary["approval_latency_seconds"] == 1260.0
+            assert summary["approval_latency_median_seconds"] == 120.0
+
+    # Even sample size: midpoint is the mean of the two middle observations.
+    final = admin.get("/api/v1/admin/operations").json()
+    assert final["approval_latency_seconds"] == 1005.0
+    assert final["approval_latency_median_seconds"] == 180.0
+    pending = create(env, title="Still pending")
+    held = create(env, title="Held; not final")
+    decision(env, held, "HELD")
+    final_again = admin.get("/api/v1/admin/operations").json()
+    assert final_again["approval_latency_sample_count"] == 4
+    assert final_again["approval_latency_median_seconds"] == 180.0
+    assert final_again["approval_latency_seconds"] == 1005.0
+    queue = admin.get("/api/v1/requests", params={"view": "ops_decided"})
+    assert queue.status_code == 200
+    assert len(queue.json()) == final_again["approval_latency_sample_count"]
+    assert pending["id"] not in [x["id"] for x in queue.json()]
+    assert env.human("requester").get("/api/v1/admin/operations").status_code == 403

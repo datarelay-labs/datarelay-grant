@@ -5,6 +5,19 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G7 final-decision latency median and sample count (2026-10-09)
+
+The administrator-only Operations approval-latency metric now reports both
+mean and median elapsed time (creation to final decision) with the exact
+count of decisions in that read snapshot. A SQLite window query computes
+odd/even medians without pulling every row into Python memory and clamps
+negative durations like the prior mean. Pending/held requests do not
+contribute; the existing `ops_decided` permission-checked source queue
+remains the metric link. Old APIs without median/sample fields show
+unavailable instead of inventing data; no operations or approval mutations
+are introduced. Scope/evidence: Work Packet #79, a development candidate
+only, not production, deployed owner preview or independent Full User E2E.
+
 ## G7 operator visibility for G10A email-decision lifecycle (2026-10-09)
 
 The Grant administrator Operations page now renders the *existing*
