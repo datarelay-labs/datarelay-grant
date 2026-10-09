@@ -72,14 +72,17 @@ def register_domain(app, actor, human, reader):
         from .decision_links import DecisionLinks
 
         require_decision_origin(request)
-        # Default loginless EMAIL_PIN/OTP flows do not require a product
-        # session. For fresh MFA only, the proof is bound to one authenticated
-        # Grant session and the final POST must present CSRF from that session.
-        principal = None
-        if request.cookies.get("grant_session") and request.headers.get("x-csrf-token"):
-            principal = human(request)
+        # The effective customer verification policy is resolved atomically
+        # inside confirm(), not from caller-controlled headers or cookies.
+        # An expired/unrelated Grant session must never block loginless PIN/OTP.
+        # Only mandatory MFA invokes current-session auth with CSRF enforcement.
+        resolve_actor = (
+            (lambda: human(request))
+            if request.cookies.get("grant_session") and request.headers.get("x-csrf-token")
+            else None
+        )
         return DecisionLinks(core.db, core.settings).confirm(
-            token, body.confirmation_token, body.reason, actor=principal,
+            token, body.confirmation_token, body.reason, resolve_actor=resolve_actor,
         )
 
     @app.post("/api/v1/decision-intents/{token}/otp/request", status_code=202)

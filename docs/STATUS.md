@@ -52,6 +52,16 @@ Customer OTP/MFA Web experience, real external mailbox receipts and
 complete operator/user/release gates remain outstanding. This branch
 is not released or accepted.
 
+The loginless decision confirmation backend additionally guards against
+ambient expired/revoked/unrelated Grant sessions: default EMAIL_PIN and
+EMAIL_PIN_PLUS_OTP approval posts inspect only their scoped confirmed
+mailbox capability and do not authenticate incidental browser cookies.
+Only EMAIL_PIN_PLUS_MFA resolves the current authenticated recipient
+session with a matching CSRF token and checks its fresh TOTP proof.
+Disposable API regressions cover both stale-cookie variants, active but
+unrelated user identity non-attribution, and MFA fail-closed behavior.
+This is not a real-mailbox or direct-browser user E2E PASS.
+
 G10A-4 backend evidence now projects immutable seat IDs and epochs,
 original versus delegated mailbox issuance generations, bounded OTP
 challenge states, and typed assurance/failure history through the

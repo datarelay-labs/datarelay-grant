@@ -323,6 +323,14 @@ a request. Suspicious activity should be investigated from the typed
 decision.pin_failed and decision.otp_failed audit events and the current
 integration/account authority before a reissue.
 
+A stale or revoked Grant login cookie in an otherwise valid mailbox
+recipient's browser must not prevent a default EMAIL_PIN/EMAIL_PIN_PLUS_OTP
+decision. Those mailbox-only policies ignore ambient account sessions and
+continue to attribute only the email issuance, not a verified person. If
+the effective policy is EMAIL_PIN_PLUS_MFA, the exact enabled recipient's
+currently authenticated session, CSRF and fresh TOTP proof are still
+required. Keep the two assurances visibly distinct during incidents.
+
 An extra six-digit OTP is requested only through the protected decision
 POST after the mailbox PIN and can prove continued access to that
 **same email mailbox only**. It is not independent MFA or proof of

@@ -13,6 +13,7 @@ import json
 import secrets
 import sqlite3
 import time
+from collections.abc import Callable
 from typing import Any
 
 from .approval_mail import eligible_recipients
@@ -412,6 +413,7 @@ class DecisionLinks:
     def confirm(
         self, token: str, context: str, reason: str,
         actor: Principal | None = None,
+        resolve_actor: Callable[[], Principal] | None = None,
     ) -> dict[str, Any]:
         from .core import Core
 
@@ -436,6 +438,12 @@ class DecisionLinks:
             effective = current_required(conn, request)
             verified_person_id = None
             if effective == "EMAIL_PIN_PLUS_MFA":
+                # Resolve and verify the product session only when the trusted,
+                # server-side effective policy requires actual independent MFA.
+                # A stale incidental cookie cannot defeat a loginless PIN/OTP
+                # capability or incorrectly attribute a mailbox-only action.
+                if actor is None and resolve_actor is not None:
+                    actor = resolve_actor()
                 if not actor or actor.kind != "human" or not actor.session_id:
                     raise GrantError("FRESH_IDENTITY_MFA_REQUIRED", 403)
                 require_current_authority(conn, actor)
