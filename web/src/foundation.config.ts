@@ -67,6 +67,13 @@ export const operationsAdapter: OperationsAdapter = {
   listAudit: () => api('/admin/audit'),
 };
 
+// Flat route records continue to power Grant's existing title/router lookup.
+ // The Foundation-owned ProductShell projects these shared section references
+ // into accessible two-level navigation without changing app.tsx.
+const WORK_SECTION = { id: 'my-work', label: 'My work', icon: 'activity', defaultExpanded: true } as const;
+const CONFIG_SECTION = { id: 'configuration', label: 'Configuration', icon: 'settings' } as const;
+const ADMIN_SECTION = { id: 'administration', label: 'Administration', icon: 'settings' } as const;
+
 export function productConfig(user: User) {
   const admin = user.role === 'admin';
   return defineProduct({
@@ -79,16 +86,17 @@ export function productConfig(user: User) {
     },
     navigation: [
       { id: 'home', label: 'Home', path: '/home', icon: 'home' },
-      { id: 'approvals', label: 'My approvals', path: '/approvals', icon: 'activity', group: 'Work' },
-      { id: 'requests', label: 'Requests', path: '/requests', icon: 'home', group: 'Work' },
-      { id: 'my-requests', label: 'My requests', path: '/my-requests', icon: 'activity', group: 'Work' },
-      { id: 'delegations', label: 'Delegations', path: '/delegations', icon: 'users', group: 'Work' },
+      { id: 'approvals', label: 'My approvals', path: '/approvals', icon: 'activity', group: 'Work', section: WORK_SECTION },
+      { id: 'requests', label: 'Requests', path: '/requests', icon: 'home', group: 'Work', section: WORK_SECTION },
+      { id: 'my-requests', label: 'My requests', path: '/my-requests', icon: 'activity', group: 'Work', section: WORK_SECTION },
+      { id: 'delegations', label: 'Delegations', path: '/delegations', icon: 'users', group: 'Work', section: WORK_SECTION },
       {
         id: 'profiles',
         label: 'Approval policies',
         path: '/profiles',
         icon: 'settings',
         group: 'Configuration',
+        section: CONFIG_SECTION,
         requiredCapability: 'grant.approval_policy.manage',
       },
       {
@@ -97,6 +105,7 @@ export function productConfig(user: User) {
         path: '/approvers',
         icon: 'settings',
         group: 'Configuration',
+        section: CONFIG_SECTION,
         requiredCapability: 'grant.approval_policy.manage',
       },
       {
@@ -105,6 +114,7 @@ export function productConfig(user: User) {
         path: '/notifications',
         icon: 'settings',
         group: 'Configuration',
+        section: CONFIG_SECTION,
         requiredCapability: 'grant.notifications.manage',
       },
       {
@@ -113,6 +123,7 @@ export function productConfig(user: User) {
         path: '/integrations',
         icon: 'settings',
         group: 'Configuration',
+        section: CONFIG_SECTION,
         requiredCapability: 'grant.integrations.manage',
       },
       {
@@ -121,6 +132,7 @@ export function productConfig(user: User) {
         path: '/operations',
         icon: 'activity',
         group: 'Administration',
+        section: ADMIN_SECTION,
         requiredCapability: 'health.read',
       },
       {
@@ -129,14 +141,16 @@ export function productConfig(user: User) {
         path: '/audit',
         icon: 'activity',
         group: 'Administration',
+        section: ADMIN_SECTION,
         requiredCapability: 'audit.read',
       },
       {
         id: 'system',
-        label: 'Administration',
+        label: 'System management',
         path: '/system',
         icon: 'settings',
         group: 'Administration',
+        section: ADMIN_SECTION,
         requiredCapability: 'health.read',
       },
     ],

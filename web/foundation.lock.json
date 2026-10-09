@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "0.1.0-pf5b.2",
+  "version": "0.1.0-pf8.3",
   "registry": {
     "scope": "@datarelay-labs",
     "url": "https://npm.pkg.github.com",
@@ -10,54 +10,54 @@
     {
       "name": "@datarelay-labs/tokens",
       "path": "tokens",
-      "sha256": "a6ccab3f57fb49d8ba2d751193408d709294c0bdd74546e6b94e8fd31ef41b5b"
+      "sha256": "36097b38c12876d813fd621a6499f588a8dbc7c25699358d8d5a7866fb5b6c8f"
     },
     {
       "name": "@datarelay-labs/icons",
       "path": "icons",
-      "sha256": "43c9e84a34abfd3008ffbab462d31d467bb76460b64fbe1448315d3e6173aad1"
+      "sha256": "7d811c1fbb26f9c268afba63be6418115cdcb10b106ef19eaed5a4e401562145"
     },
     {
       "name": "@datarelay-labs/ui",
       "path": "ui",
-      "sha256": "6d4b7448c632f853ca421dbde2c6ca6f3e279cf23c2a42c8e34779da6522f259"
+      "sha256": "3f10593b2359dd68b5fd7f0dfaf074fba0097ee9cf18dfaebecba1a468d24664"
     },
     {
       "name": "@datarelay-labs/product-shell",
       "path": "product-shell",
-      "sha256": "104aa2492805199de716c5cdcfeaeb34cbf7c70c6875abb180f2310b91291be3"
+      "sha256": "b88de1b4caf702ae5f24e4d308b63353d91c60e149b2b459200703e98523ac02"
     },
     {
       "name": "@datarelay-labs/auth-ui",
       "path": "auth-ui",
-      "sha256": "b9c430736c1720d9ad6b20882c1da2bb02d6f1e8c7ffcba4be0ce1f8f1b30e03"
+      "sha256": "88dda752e68549314d33c0a77f765a643e2ec42e87cb879927c0f33e954fa1e7"
     },
     {
       "name": "@datarelay-labs/system-contracts",
       "path": "system-contracts",
-      "sha256": "b67a9705962a7297d9decfc56bb6c129410513405088814312fc4bff96a25a19"
+      "sha256": "355737fc6c371002abebdcab1901e82ea8aaef3c93c56e307d8122b6b4e8961e"
     },
     {
       "name": "@datarelay-labs/system-admin-ui",
       "path": "system-admin-ui",
-      "sha256": "09522d352f274bad1d25e947ebb9a25b555738e9af2f3813e6faa695fbc62a75"
+      "sha256": "f965b1b1fe6fbb575fea2202125a088baa593e7e91c34a7ceaf3ea25812773a4"
     },
     {
       "name": "@datarelay-labs/testkit",
       "path": "testkit",
-      "sha256": "d076ab72d850c1f26d1587deeaa33204007d24e3e90f01db559d9f7c8c162a98"
+      "sha256": "36e6a0e43959eb427217551265eae0f0bbddf7d9cf8a05bdc29806c85fd3d4fa"
     },
     {
       "name": "@datarelay-labs/foundation",
       "path": "foundation",
-      "sha256": "d6b5fd3888bdb8d341ed4b873959135c4f31423894bb2453d19fd01d21fb33bc"
+      "sha256": "888d5c14ae3a299bbe4f0ce08aaa20fd89cf42543e73841e3a1800c2e9aaa72d"
     },
     {
       "name": "@datarelay-labs/foundation-cli",
       "path": "foundation-cli",
-      "sha256": "ab6ad985bc056705d03f8e2906eea63097ea98d6fe73e013f7e23a04bc72281a"
+      "sha256": "e33d2e671e2b787e869b83f26a232b3e03ad42209497e91b2ef5cd27ff405037"
     }
   ],
-  "commit": "90543a0f80251581a78f03fc70d69ff4bc0b7250",
-  "source_head": "90543a0f80251581a78f03fc70d69ff4bc0b7250"
+  "commit": "3314a0bfbc79cd09bc76b3203c8d37d98506fb67",
+  "source_head": "3314a0bfbc79cd09bc76b3203c8d37d98506fb67"
 }

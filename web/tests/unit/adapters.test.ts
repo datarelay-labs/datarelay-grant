@@ -57,7 +57,7 @@ describe('Foundation consumer contracts',()=>{
   expect(config.navigation.find(item=>item.path==='/approvals')?.group).toBe('Work');
   expect(config.navigation.find(item=>item.path==='/profiles')?.group).toBe('Configuration');
   expect(config.navigation.find(item=>item.path==='/notifications')?.group).toBe('Configuration');
-  expect(config.navigation.find(item=>item.path==='/system')?.label).toBe('Administration');
+  expect(config.navigation.find(item=>item.path==='/system')?.label).toBe('System management');
   expect(config.navigation.find(item=>item.path==='/security')).toBeUndefined();
   expect(config.navigation.find(item=>item.path==='/email-templates')).toBeUndefined();
   expect(config.capabilities['users.manage']).toBe('supported');
