@@ -77,6 +77,52 @@ def final(env, link, context):
     )
 
 
+def test_pending_extra_otp_keeps_original_decision_links_on_reminder(env):
+    """A later OTP outbox row must not become the source of link/PIN reminders."""
+    profile = activate(env, Profile(
+        name="OTP pending during decision reminder",
+        integration_id=env.integration["id"],
+        approver_id=env.users["approver"]["id"],
+        action_kind="service.otp-reminder",
+        verification_mode="EMAIL_PIN_PLUS_OTP",
+    ))
+    req = create(env, profile)
+    original, content, pin, link = mailbox(env, req["id"])
+    verified = pin_verify(env, link, pin)
+    assert verified.status_code == 200, verified.text
+    context = verified.json()["confirmation_token"]
+    assert otp_request(env, link, context).status_code == 202
+
+    # Exercise the normal reminder scheduler; the OTP message is newer than
+    # the approval email and shares its issuance_id.
+    with env.db.transaction() as conn:
+        conn.execute(
+            "UPDATE requests SET next_reminder=0 WHERE id=?", (req["id"],),
+        )
+    env.core.maintenance()
+
+    with env.db.transaction(write=False) as conn:
+        reminders = conn.execute(
+            "SELECT * FROM outbox WHERE request_id=? AND event_type='reminder'",
+            (req["id"],),
+        ).fetchall()
+        assert len(reminders) == 1
+        assert reminders[0]["issuance_id"] == original["issuance_id"]
+        assert conn.execute(
+            "SELECT COUNT(*) FROM decision_issuances WHERE request_id=?",
+            (req["id"],),
+        ).fetchone()[0] == 1
+        assert conn.execute(
+            "SELECT COUNT(*) FROM outbox WHERE request_id=? AND event_type='decision_otp'",
+            (req["id"],),
+        ).fetchone()[0] == 1
+    reminder_content = env.settings.unseal(reminders[0]["payload"])
+    assert reminder_content["_decision_tokens"] == content["_decision_tokens"]
+    assert reminder_content["_decision_pin"] == pin
+    assert "Approve:" in reminder_content["body"]
+    assert pin_verify(env, link, pin).status_code == 200
+
+
 def test_otp_policy_requires_deliberate_post_and_never_calls_it_mfa(env):
     profile = activate(env, Profile(
         name="OTP-required email approvals",

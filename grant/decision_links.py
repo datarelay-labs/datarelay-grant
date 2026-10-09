@@ -129,6 +129,7 @@ def queue_choice_mail(
             old = conn.execute(
                 """SELECT payload FROM outbox
                    WHERE issuance_id=? AND sealed_payload=1
+                     AND event_type IN ('requested','reminder')
                    ORDER BY created_at DESC,id DESC LIMIT 1""",
                 (previous["id"],),
             ).fetchone()
