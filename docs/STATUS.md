@@ -74,6 +74,28 @@ administrator-gated API only when the user explicitly chooses that action.
 This is only developer-source and deterministic component evidence:
 real direct-persona browser E2E and 320/375 user-safety gates are pending.
 
+## G10A versioned policy administration candidate (2026-10-09)
+
+A separate Grant Web UI worktree now exposes the existing backend-v12
+versioned approval-policy fields: a per-policy mandatory Deny reason
+(default optional), an installation-inherited / email PIN / same-mailbox
+OTP / fresh Grant TOTP verification setting, and an optional per-policy
+bounded email decision link TTL. New and cloned drafts initialize
+from server defaults, while current policy versions round-trip their
+exact chosen values instead of silently clearing stronger security.
+The policy list labels chosen (not necessarily effective) verification.
+If a connected backend omits any required versioned field, the policy
+editor fails closed with an explicit diagnostic rather than downgrading
+an existing policy.
+
+The backend remains authoritative about action/integration security floors,
+request-time verification snapshots, deadline caps, membership and decision
+identity. A second code sent to the SAME mailbox is never independent MFA
+or named-person proof. Loginless email decision Web UI, real mailbox receipt,
+individual browser Full User E2E, external G11 effects, CI/review and release
+acceptance remain NOT verified. This addition does not modify authorization
+logic, Grant's shared Foundation shell, production or customer policy data.
+
 ## Implemented candidate
 
 - Pinned unpublished Foundation SDK and public imports with Foundation-backed auth,

@@ -17,7 +17,11 @@ export type RequestRow = {
  overdue?: boolean; escalation?: { target_user_id: string | null; target_group_id: string | null; target_members: string[]; due_at: number; fired_at: number | null } | null;
  deliveries?: Delivery[]; timeline?: { id: string; at: number; actor: string; action: string; detail: unknown }[];
 };
-export type Integration = { id: string; name: string; kind: 'datarelay' | 'stellar'; tenant: string; enabled: boolean; callback_origin: string };
+export type Integration = {
+ id: string; name: string; kind: 'datarelay' | 'stellar'; tenant: string;
+ enabled: boolean; callback_origin: string;
+ decision_verification_minimum?: 'EMAIL_PIN' | 'EMAIL_PIN_PLUS_OTP' | 'EMAIL_PIN_PLUS_MFA';
+};
 export type EmailTemplate = { id: string; name: string; subject_template: string; body_template: string; reminder_subject_template: string; reminder_body_template: string; enabled: boolean };
 export type PolicyLifecycle = 'DRAFT' | 'TESTING' | 'ACTIVE' | 'DISABLED';
 export type Profile = {
@@ -26,6 +30,9 @@ export type Profile = {
  notification_template_set_id?: string | null; email_template_name?: string | null;
  deadline_seconds: number; reminder_seconds: number; max_reminders: number; grant_seconds: number;
  tenant_selector: string; environment: string; severity: string; risk_level: string;
+ denial_reason_required?: boolean;
+ verification_mode?: 'INHERIT' | 'EMAIL_PIN' | 'EMAIL_PIN_PLUS_OTP' | 'EMAIL_PIN_PLUS_MFA';
+ decision_link_ttl_seconds?: number | null;
  lifecycle: PolicyLifecycle; enabled: boolean; active_version?: number | null; active_version_id?: string | null;
  created_at?: number; updated_at?: number; activated_at?: number | null; disabled_at?: number | null;
 };

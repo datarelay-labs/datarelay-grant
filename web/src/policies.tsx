@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { Alert, Button, Card, TextField, type AccountProjection } from '@datarelay-labs/foundation';
 import { api } from './api';
 import { Form, Select, TextArea, useTask, when } from './common';
+import {
+  DecisionSecurityFields, policyDecisionSecuritySummary,
+  readDecisionSecurity, serializeDecisionSecurity,
+} from './policy_decision_security';
 import type {
   ApproverGroup,
   Integration,
@@ -61,6 +65,7 @@ export function Profiles() {
   const [environment, setEnvironment] = useState('');
   const [severity, setSeverity] = useState('');
   const [risk, setRisk] = useState('');
+  const [decisionSecurity, setDecisionSecurity] = useState(readDecisionSecurity);
   const [history, setHistory] = useState<PolicyHistory | null>(null);
   const [preview, setPreview] = useState<PolicyPreview | null>(null);
   const [sample, setSample] = useState<Sample>(initialSample);
@@ -104,6 +109,7 @@ export function Profiles() {
     setEnvironment('');
     setSeverity('');
     setRisk('');
+    setDecisionSecurity(readDecisionSecurity());
     setHistory(null);
     setPreview(null);
     setSample(initialSample);
@@ -127,6 +133,7 @@ export function Profiles() {
     setEnvironment(row.environment);
     setSeverity(row.severity);
     setRisk(row.risk_level);
+    setDecisionSecurity(readDecisionSecurity(row));
     setSample((current) => ({
       ...current,
       integration_id: row.integration_id,
@@ -167,6 +174,7 @@ export function Profiles() {
       environment,
       severity,
       risk_level: risk,
+      ...serializeDecisionSecurity(decisionSecurity),
     };
     const saved = await api<Profile>(
       editing ? '/profiles/' + editing : '/profiles',
@@ -293,6 +301,7 @@ export function Profiles() {
                         {row.name}
                       </button>
                       <small>v{row.version}</small>
+                      <small>{policyDecisionSecuritySummary(row)}</small>
                     </td>
                     <td>
                       <span className="grant-lifecycle" data-state={row.lifecycle}>
@@ -425,7 +434,19 @@ export function Profiles() {
           title={editing ? 'Policy details' : 'Create approval policy'}
           description="General, matching, approval, timing, execution grant and notifications are one bounded version."
         >
-          <Form busy={task.busy} onSubmit={() => void task.run(save)} label={editing ? 'Save draft' : 'Create draft'}>
+          {!decisionSecurity.contractAvailable ? (
+            <Alert tone="critical" title="Versioned verification policy unavailable">
+              This backend has not supplied the current Deny-reason, verification mode
+              and link-validity fields. Editing is disabled rather than silently
+              weakening an existing approval policy.
+            </Alert>
+          ) : null}
+          {decisionSecurity.contractAvailable ? (
+          <Form
+            busy={task.busy}
+            onSubmit={() => void task.run(save)}
+            label={editing ? 'Save draft' : 'Create draft'}
+          >
             <section className="grant-editor-section" aria-labelledby="policy-general">
               <div>
                 <h3 id="policy-general">General & Applies To</h3>
@@ -505,6 +526,12 @@ export function Profiles() {
               </div>
             </section>
 
+            <DecisionSecurityFields
+              draft={decisionSecurity}
+              update={setDecisionSecurity}
+              integration={integrations.find((item) => item.id === integration)}
+            />
+
             <section className="grant-editor-section" aria-labelledby="policy-timing">
               <div>
                 <h3 id="policy-timing">Timing & Execution Grant</h3>
@@ -518,6 +545,7 @@ export function Profiles() {
               </div>
             </section>
           </Form>
+          ) : null}
         </Card>
       ) : null}
 
