@@ -814,6 +814,15 @@ The policy editor is organized as:
    isolated test request.
 8. **History** — versions, changes and activation events.
 
+Live policy activation and disabling an active policy require a separate,
+explicit administrator confirmation in the policy detail. The first action
+only stages a review with the exact policy identity, draft version and active
+version; it does not submit a lifecycle API mutation. Confirmation first
+refetches the current policy and refuses changed identity, version, state or
+active lineage before sending the existing authorized transition POST. Cancel
+and back are nonmutating, and current server-side lifecycle/RBAC checks remain
+the authority. Existing requests retain their original policy snapshots.
+
 ## 14. Operational dashboard
 
 Grant includes a small operational dashboard, not a BI product.

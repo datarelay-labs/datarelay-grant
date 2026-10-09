@@ -5,6 +5,21 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G1 explicit confirmation for live approval-policy lifecycle (2026-10-09)
+
+On the integrated Grant approval policy detail, Activate and Disable active
+now stage a read-only confirmation review containing the exact policy and
+version, existing-request snapshot protection and distinct Cancel/Confirm
+actions. The first button never submits a lifecycle POST. On explicit
+confirmation, the browser refetches the current policy and rejects stale
+identity, version, lifecycle or active-version lineage before using the
+unchanged server-authorized transition route. This is an extra operator
+confirmation boundary, not a substitute for server-side authorization and
+not an atomic version transaction between refresh and POST. Test/Save/Clone,
+Deny-reason/MFA settings, policy history and isolated preview stay unchanged.
+Work Packet #84 records source-only regression evidence; no live preview,
+independent user-browser acceptance or production activation is claimed.
+
 ## G2 paginated administrator notification delivery health (2026-10-09)
 
 Grant's administrator Delivery Health now offers safe, separately applied

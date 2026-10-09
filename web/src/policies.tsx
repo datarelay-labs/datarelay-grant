@@ -124,6 +124,60 @@ export function filterPolicyList(
   });
 }
 
+export type PolicyTransitionIntent = {
+  policyId: string;
+  action: 'activate' | 'disable';
+  versionId: string;
+  version: number;
+  activeVersion: number | null;
+};
+
+// Snapshot of the specific reviewed policy and active lineage. The final
+// server read is still required before an existing lifecycle POST.
+export function canConfirmPolicyTransition(
+  intent: PolicyTransitionIntent | null,
+  policy: Profile | null | undefined,
+): boolean {
+  if (!intent || !policy ||
+      policy.id !== intent.policyId ||
+      policy.version_id !== intent.versionId ||
+      policy.version !== intent.version ||
+      (policy.active_version ?? null) !== intent.activeVersion) return false;
+  return intent.action === 'activate'
+    ? policy.lifecycle === 'TESTING'
+    : intent.action === 'disable' && intent.activeVersion !== null;
+}
+
+export function PolicyLifecycleConfirmation({ intent, policy, busy, onCancel, onConfirm }: {
+  intent: PolicyTransitionIntent | null;
+  policy: Profile | null | undefined;
+  busy: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  if (!intent) return null;
+  const canConfirm = canConfirmPolicyTransition(intent, policy);
+  const activating = intent.action === 'activate';
+  return <Alert tone="warning"
+    title={activating ? 'Confirm policy activation' : 'Confirm active policy disable'}>
+    <p><strong>{policy?.name ?? intent.policyId}</strong></p>
+    <p>{activating
+      ? 'Activate reviewed policy v' + intent.version +
+        ' for new matching requests. The change applies only to future matches; existing requests retain their original policy snapshot.'
+      : 'Disable currently active policy v' + intent.activeVersion +
+        ' for future requests. The change applies only to future matches; existing requests retain their original policy snapshot.'}</p>
+    {!canConfirm ? <p role="alert">
+      Policy changed since review. Cancel and reopen the current policy before taking action.
+    </p> : null}
+    <div className="grant-actions">
+      <Button variant="secondary" disabled={busy} onClick={onCancel}>Cancel</Button>
+      <Button disabled={busy || !canConfirm} onClick={onConfirm}>
+        {activating ? 'Confirm activation' : 'Confirm disable'}
+      </Button>
+    </div>
+  </Alert>;
+}
+
 export function Profiles() {
   const [rows, setRows] = useState<Profile[]>([]);
   const [integrations, setIntegrations] = useState<Integration[]>([]);
@@ -133,6 +187,7 @@ export function Profiles() {
   const [listLifecycle, setListLifecycle] = useState<PolicyListFilter['lifecycle']>('ALL');
   const [view, setView] = useState<PolicyView>('list');
   const [editing, setEditing] = useState('');
+  const [pendingTransition, setPendingTransition] = useState<PolicyTransitionIntent | null>(null);
   const [name, setName] = useState('');
   const [integration, setIntegration] = useState('');
   const [approver, setApprover] = useState('');
@@ -177,6 +232,7 @@ export function Profiles() {
   }, []);
 
   function resetEditor() {
+    setPendingTransition(null);
     setEditing('');
     setName('');
     setIntegration('');
@@ -201,6 +257,7 @@ export function Profiles() {
   }
 
   function edit(row: Profile) {
+    setPendingTransition(null);
     setEditing(row.id);
     setName(row.name);
     setIntegration(row.integration_id);
@@ -266,6 +323,7 @@ export function Profiles() {
       editing ? 'PUT' : 'POST',
       body,
     );
+    setPendingTransition(null);
     setEditing(saved.id);
     setSample((current) => ({
       ...current,
@@ -296,6 +354,34 @@ export function Profiles() {
           ? 'Policy activated. Existing requests retain their original version snapshot.'
           : 'Active policy version disabled.',
     );
+  }
+
+  function stageLiveTransition(actionName: 'activate' | 'disable') {
+    const current = rows.find((row) => row.id === editing);
+    if (!current) return;
+    const intent: PolicyTransitionIntent = {
+      policyId: current.id,
+      action: actionName,
+      versionId: current.version_id,
+      version: current.version,
+      activeVersion: current.active_version ?? null,
+    };
+    if (canConfirmPolicyTransition(intent, current)) setPendingTransition(intent);
+  }
+
+  async function confirmLiveTransition() {
+    const staged = pendingTransition;
+    if (!staged) return;
+    // Refetch CURRENT authority, identity, version and active lineage after
+    // review, never rely solely on a browser-cached policy.
+    const freshPolicies = await load();
+    const latest = freshPolicies.find((row) => row.id === staged.policyId);
+    if (!canConfirmPolicyTransition(staged, latest)) {
+      setPendingTransition(null);
+      throw new Error('POLICY_CHANGED_REVIEW_REQUIRED');
+    }
+    await transition(staged.policyId, staged.action);
+    setPendingTransition(null);
   }
 
   async function clone(id: string) {
@@ -468,7 +554,10 @@ export function Profiles() {
       {task.feedback}
       <section className="grant-detail-header" aria-label="Policy workspace">
         <div>
-          <Button variant="ghost" onClick={() => setView('list')}>
+          <Button variant="ghost" onClick={() => {
+            setPendingTransition(null);
+            setView('list');
+          }}>
             ← Back to policies
           </Button>
           <p className="grant-eyebrow">Approval policy</p>
@@ -493,7 +582,7 @@ export function Profiles() {
             {selected?.lifecycle === 'TESTING' ? (
               <Button
                 disabled={task.busy}
-                onClick={() => void task.run(() => transition(editing, 'activate'))}
+                onClick={() => stageLiveTransition('activate')}
               >
                 Activate policy
               </Button>
@@ -502,7 +591,7 @@ export function Profiles() {
               <Button
                 variant="secondary"
                 disabled={task.busy}
-                onClick={() => void task.run(() => transition(editing, 'disable'))}
+                onClick={() => stageLiveTransition('disable')}
               >
                 Disable active
               </Button>
@@ -517,6 +606,14 @@ export function Profiles() {
           </div>
         ) : null}
       </section>
+
+      <PolicyLifecycleConfirmation
+        intent={pendingTransition}
+        policy={selected}
+        busy={task.busy}
+        onCancel={() => setPendingTransition(null)}
+        onConfirm={() => void task.run(confirmLiveTransition)}
+      />
 
       <nav className="grant-tabs" aria-label="Policy sections">
         <button
