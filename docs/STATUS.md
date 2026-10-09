@@ -1,6 +1,6 @@
 # Grant 1.0 implementation status
 
-Updated: 2026-10-08. G12 quality preflight: Issue #54; G11 external readiness: Issue #52 / Draft PR #53; G10: Issue #50 / PR #51; G9: Issue #48 / PR #49; G8: Issue #46 / PR #47; G7: Issue #44 / PR #45; G5/G6: Issue #42 / PR #43; G3/G4: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
+Updated: 2026-10-09. G12 quality preflight: Issue #54; G11 external readiness: Issue #52 / Draft PR #53; G10: Issue #50 / PR #51; G9: Issue #48 / PR #49; G8: Issue #46 / PR #47; G7: Issue #44 / PR #45; G5/G6: Issue #42 / PR #43; G3/G4: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
 Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
@@ -73,6 +73,25 @@ progressively disclosed; protected resends still invoke the original
 administrator-gated API only when the user explicitly chooses that action.
 This is only developer-source and deterministic component evidence:
 real direct-persona browser E2E and 320/375 user-safety gates are pending.
+
+## G0 Notification editor preview integrity (2026-10-09)
+
+In the isolated Grant Notifications worktree, saved template-set content is now
+explicitly distinguished from unsaved editor fields. An operator cannot run
+server-side Preview or Send test to me while subject, body, name or enablement
+changes remain unsaved; the page requires Save first so the result matches
+the persisted notification template. Editing a template or sample input clears
+the former rendered preview, including invalidating an in-flight preview
+response. Creating and editing sets retains the original server contract,
+safe-variable validation, administrator permissions and request-time snapshots.
+
+Delivery Health provides a direct link to the existing role-authorized
+request detail page instead of presenting a raw UUID as the primary action.
+No message, policy, credential, demo data, SMTP transport or external system
+was changed during this developer-source task. Evidence is limited to
+deterministic unit/SSR checks plus local TypeScript/production build and
+static verification; independent browser personas, real mailbox receipt,
+platform-blocked mobile gates and G12 release acceptance remain outstanding.
 
 ## G10A versioned policy administration candidate (2026-10-09)
 

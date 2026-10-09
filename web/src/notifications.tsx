@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Button,
@@ -7,6 +7,10 @@ import {
 } from '@datarelay-labs/foundation';
 import { api } from './api';
 import { Form, Select, TextArea, useTask, when } from './common';
+import {
+  hasUnsavedTemplateChanges, NotificationPreviewActions,
+  NotificationRequestLink, templateDraftSignature,
+} from './notification_preview';
 import type {
   NotificationBranding,
   NotificationDelivery,
@@ -105,6 +109,8 @@ export function Notifications() {
   });
   const [view, setView] = useState<NotificationView>('templates');
   const [templateView, setTemplateView] = useState<TemplateView>('list');
+  const [savedSignature, setSavedSignature] = useState<string | null>(null);
+  const previewGeneration = useRef(0);
   const [brandName, setBrandName] = useState('DataRelay Grant');
   const [senderName, setSenderName] = useState('DataRelay Grant');
   const [editing, setEditing] = useState('');
@@ -120,6 +126,14 @@ export function Notifications() {
   const [decisionState, setDecisionState] = useState('AWAITING');
   const [executionState, setExecutionState] = useState('NOT_STARTED');
   const task = useTask();
+  const draftDirty = hasUnsavedTemplateChanges(savedSignature, {
+    name, enabled, templates: draftTemplates,
+  });
+
+  function invalidatePreview() {
+    previewGeneration.current += 1;
+    setPreview(null);
+  }
 
   const load = async () => {
     const [templateSets, deliveryHealth, safeVariables, currentBranding] =
@@ -143,11 +157,12 @@ export function Notifications() {
 
   function resetEditor() {
     setEditing('');
+    setSavedSignature(null);
     setName('');
     setEnabled(true);
     setEvent('requested');
     setDraftTemplates(copyDefaults());
-    setPreview(null);
+    invalidatePreview();
   }
 
   function startCreate() {
@@ -157,11 +172,12 @@ export function Notifications() {
 
   function edit(row: NotificationTemplateSet) {
     setEditing(row.id);
+    setSavedSignature(templateDraftSignature(row));
     setName(row.name);
     setEnabled(row.enabled);
     setDraftTemplates(structuredClone(row.templates));
     setEvent('requested');
-    setPreview(null);
+    invalidatePreview();
     setTemplateView('editor');
   }
 
@@ -170,6 +186,7 @@ export function Notifications() {
       ...draftTemplates,
       [event]: { ...draftTemplates[event], [field]: value },
     });
+    invalidatePreview();
   }
 
   async function save() {
@@ -185,6 +202,11 @@ export function Notifications() {
     );
     const wasEditing = Boolean(editing);
     setEditing(saved.id);
+    setName(saved.name);
+    setEnabled(saved.enabled);
+    setDraftTemplates(structuredClone(saved.templates));
+    setSavedSignature(templateDraftSignature(saved));
+    invalidatePreview();
     await load();
     task.setNotice(
       wasEditing
@@ -208,18 +230,18 @@ export function Notifications() {
   }
 
   async function runPreview() {
-    if (!editing) return;
-    setPreview(
-      await api<PreviewResult>(
-        '/notification-template-sets/' + editing + '/preview',
-        'POST',
-        { event, sample: sample() },
-      ),
+    if (!editing || draftDirty) return;
+    const generation = previewGeneration.current;
+    const rendered = await api<PreviewResult>(
+      '/notification-template-sets/' + editing + '/preview',
+      'POST',
+      { event, sample: sample() },
     );
+    if (previewGeneration.current === generation) setPreview(rendered);
   }
 
   async function sendTest() {
-    if (!editing) return;
+    if (!editing || draftDirty) return;
     const result = await api<{
       transport_accepted: boolean;
       receipt_confirmed: boolean;
@@ -244,6 +266,7 @@ export function Notifications() {
       sender_display_name: senderName,
     });
     setBranding(updated);
+    invalidatePreview();
     task.setNotice('Notification branding updated for future request snapshots.');
   }
 
@@ -374,7 +397,10 @@ export function Notifications() {
                 required
                 maxLength={100}
                 value={name}
-                onChange={(change) => setName(change.target.value)}
+                onChange={(change) => {
+                  setName(change.target.value);
+                  invalidatePreview();
+                }}
               />
 
               <div className="grant-event-editor">
@@ -388,7 +414,7 @@ export function Notifications() {
                         aria-current={event === item ? 'page' : undefined}
                         onClick={() => {
                           setEvent(item);
-                          setPreview(null);
+                          invalidatePreview();
                         }}
                       >
                         {eventLabel(item)}
@@ -416,7 +442,10 @@ export function Notifications() {
                   <input
                     type="checkbox"
                     checked={enabled}
-                    onChange={(change) => setEnabled(change.target.checked)}
+                    onChange={(change) => {
+                      setEnabled(change.target.checked);
+                      invalidatePreview();
+                    }}
                   />
                   Template set enabled
                 </label>
@@ -442,46 +471,51 @@ export function Notifications() {
                 <TextField
                   label="Sample request title"
                   value={sampleTitle}
-                  onChange={(change) => setSampleTitle(change.target.value)}
+                  onChange={(change) => {
+                    setSampleTitle(change.target.value);
+                    invalidatePreview();
+                  }}
                 />
                 <TextField
                   label="Sample target"
                   value={sampleTarget}
-                  onChange={(change) => setSampleTarget(change.target.value)}
+                  onChange={(change) => {
+                    setSampleTarget(change.target.value);
+                    invalidatePreview();
+                  }}
                 />
                 <TextField
                   label="Sample decision state"
                   value={decisionState}
-                  onChange={(change) => setDecisionState(change.target.value)}
+                  onChange={(change) => {
+                    setDecisionState(change.target.value);
+                    invalidatePreview();
+                  }}
                 />
                 <TextField
                   label="Sample execution state"
                   value={executionState}
-                  onChange={(change) => setExecutionState(change.target.value)}
+                  onChange={(change) => {
+                    setExecutionState(change.target.value);
+                    invalidatePreview();
+                  }}
                 />
               </div>
               <TextArea
                 label="Sample reason"
                 value={sampleReason}
-                onChange={setSampleReason}
+                onChange={(value) => {
+                  setSampleReason(value);
+                  invalidatePreview();
+                }}
               />
-              <div className="grant-actions">
-                <Button
-                  variant="secondary"
-                  disabled={task.busy}
-                  onClick={() => void task.run(runPreview)}
-                >
-                  Preview rendered message
-                </Button>
-                <Button
-                  variant="secondary"
-                  disabled={task.busy}
-                  onClick={() => void task.run(sendTest)}
-                >
-                  Send test to me
-                </Button>
-
-              </div>
+              <NotificationPreviewActions
+                saved={Boolean(editing)}
+                dirty={draftDirty}
+                busy={task.busy}
+                onPreview={() => void task.run(runPreview)}
+                onTestSend={() => void task.run(sendTest)}
+              />
               {preview ? (
                 <Alert tone="warning" title={preview.rendered.subject}>
                   <pre className="grant-mono">{preview.rendered.body}</pre>
@@ -533,7 +567,7 @@ export function Notifications() {
                       </small>
                     </td>
                     <td>{item.attempts}</td>
-                    <td><code>{item.request_id}</code></td>
+                    <td><NotificationRequestLink requestId={item.request_id} /></td>
                     <td>{item.last_error ?? '—'}</td>
                     <td>{when(item.created_at)}</td>
                     <td>
