@@ -5,6 +5,34 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G9 safe configuration import readiness (2026-10-09)
+
+The existing schema-v1 **secret-free metadata** export and administrator-only
+`POST /api/v1/admin/configuration/preview` remain strictly **nonmutating**.
+They cannot import, apply, activate or overwrite an approval policy or
+notification template. Source event types alone are not a portable message
+body; source policies lack local approver mapping; integrations lack the
+callback destination and scoped credential material required for operation.
+Therefore no automatic executable restore can be responsibly inferred from
+the metadata manifest.
+
+The preview now returns a deterministic `readiness` summary and
+`requirements` by integration/policy/template with the administrator's
+explicit manual preparation needed for each entry. It highlights existing
+identity/name conflicts, rejected duplicate source names, missing local
+integration or approver/group/notification mappings, absent event content,
+and mandatory explicit reapproval of source ACTIVE policies. The Integrations
+screen renders the preparation plan grouped by domain, while preserving
+`can_apply=false` and no Import/Apply controls. All source names are
+rendered as escaped text, not HTML.
+
+This is a **usable planning and migration review feature**, not completion
+of Product Standard §18 full configuration import/apply. A separately
+accepted versioned format with approved local identity mapping, secret
+redaction, authorization and controlled policy activation remains required
+before actual import can be implemented. Targeted tests and exact-HEAD
+qualification are recorded in the current Work Packet.
+
 ## G0 integrated Foundation Administration task navigation (2026-10-09)
 
 The current integrated Grant candidate preserves the **shared** DataRelay

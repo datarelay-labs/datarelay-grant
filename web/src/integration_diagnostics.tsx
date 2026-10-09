@@ -29,12 +29,23 @@ type Diagnostics = {
   credential_history: AuditEvent[];
   connection_tests: ConnectionEvent[];
 };
-type DryRunPreview = {
+export type DryRunPreview = {
   schema_version: number;
   preview_only: true;
   can_apply: false;
   summary: { integrations: number; policies: number; templates: number };
   conflicts: { kind: string; name: string; reason: string }[];
+  readiness: {
+    automatic_apply_available: false;
+    manual_review_only: true;
+    required_actions: number;
+  };
+  requirements: {
+    kind: 'integration' | 'policy' | 'template';
+    name: string;
+    reason: string;
+    operator_action: string;
+  }[];
   warnings: string[];
 };
 type ConfigurationManifest = {
@@ -47,6 +58,48 @@ type ConfigurationManifest = {
   templates: { id: string; name: string; enabled: boolean; event_types: string[] }[];
   warning: string;
 };
+
+/** Safe rendering of server-owned, read-only schema-v1 migration planning. */
+export function ConfigurationImportReadiness({ preview }: { preview: DryRunPreview }) {
+  const kinds = ['integration', 'policy', 'template'] as const;
+  return (
+    <div className="grant-stack" data-testid="grant-configuration-readiness">
+      <Alert tone="warning" title="Manual preparation required — no changes applied">
+        <p>Integrations: {preview.summary.integrations};
+          policies: {preview.summary.policies};
+          templates: {preview.summary.templates}.</p>
+        <p>{preview.conflicts.length} existing identities or unresolved mappings.</p>
+        <p>{preview.readiness.required_actions} administrator preparation tasks.</p>
+        <p>This is a secret-free planning manifest, not a restorable configuration.
+          No credentials, recipients or notification message bodies were exported.
+          Automatic import and activation are unavailable.</p>
+      </Alert>
+      <Card title="Required administrator actions"
+        description="Resolve these in the destination installation before creating and activating any new policies.">
+        {kinds.map((kind) => {
+          const rows = preview.requirements.filter((row) => row.kind === kind);
+          return rows.length ? (
+            <section key={kind} aria-label={kind + ' preparation'}>
+              <h4>{kind === 'integration' ? 'Integrations' :
+                kind === 'policy' ? 'Approval policies' : 'Notification templates'}</h4>
+              <ul>
+                {rows.map((row, index) => (
+                  <li key={row.reason + ':' + row.name + ':' + index}>
+                    <strong>{row.name}</strong>
+                    <p>{row.operator_action}</p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null;
+        })}
+        {!preview.requirements.length ? (
+          <p>No portable records were supplied. Nothing can be applied from this preview.</p>
+        ) : null}
+      </Card>
+    </div>
+  );
+}
 
 export function IntegrationDiagnostics({ integrations }: { integrations: Integration[] }) {
   const task = useTask();
@@ -65,6 +118,7 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
   }
 
   async function loadManifest() {
+    setConflictPreview(null);
     setManifest(await api<ConfigurationManifest>('/integrations/configuration-export'));
   }
 
@@ -161,15 +215,7 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
       <div className="grant-actions">
         <Button disabled={task.busy} onClick={() => void task.run(dryRunImport)}>Preview import conflicts</Button>
       </div>
-      {conflictPreview && <Alert tone="warning" title="Dry-run only — no changes applied">
-        <p>Integrations: {conflictPreview.summary.integrations};
-          policies: {conflictPreview.summary.policies};
-          templates: {conflictPreview.summary.templates}.</p>
-        <p>{conflictPreview.conflicts.length} existing names or unresolved references require review.</p>
-        <ul>{conflictPreview.conflicts.map((issue, i) =>
-          <li key={i}>{issue.kind}: {issue.name} — {issue.reason}</li>)}</ul>
-        <p>No permissions, credentials, approval policy or notification content can be imported from this preview.</p>
-      </Alert>}
+      {conflictPreview ? <ConfigurationImportReadiness preview={conflictPreview} /> : null}
     </Card>
   </div>;
 }

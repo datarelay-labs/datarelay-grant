@@ -110,6 +110,27 @@ test('Grant Foundation Administration shortcuts and selected task focus work on 
  }finally{await context.close();}
 });
 
+// Synthetic fixture and one existing administrator session only. This is UI
+// regression evidence, NOT independently authenticated full User E2E.
+test('G9 configuration preview shows manual migration tasks without an Apply action',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ try{
+  await login(page,'admin');
+  await page.goto('/integrations');
+  await page.getByRole('button',{name:'Preview safe export',exact:true}).click();
+  await expect(page.getByText('No automatic import or execution',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Preview import conflicts',exact:true}).click();
+  const readiness=page.getByTestId('grant-configuration-readiness');
+  await expect(readiness).toBeVisible();
+  await expect(readiness.getByText('Required administrator actions',{exact:true})).toBeVisible();
+  await expect(readiness.getByText('Automatic import and activation are unavailable.',{exact:false})).toBeVisible();
+  await expect(readiness.getByRole('heading',{name:'Approval policies',exact:true})).toBeVisible();
+  await expect(readiness.getByText('Select authorized local approvers',{exact:false}).first()).toBeVisible();
+  await expect(page.getByRole('button',{name:'Apply configuration'})).toHaveCount(0);
+ }finally{await context.close();}
+});
+
 test('requester cancels and creates a newly approved replacement through the UI',async({browser,request})=>{
  const f=fixture();const context=await browser.newContext();const page=await context.newPage();
  await login(page,'requester');await page.getByRole('button',{name:'New request',exact:true}).click();

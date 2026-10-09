@@ -89,14 +89,25 @@ def preview_configuration(db: Database, actor: Principal, payload: object) -> di
     ]
     policies = [_record(row, POLICY_FIELDS) for row in payload["policies"]]
     templates = [_record(row, TEMPLATE_FIELDS) for row in payload["templates"]]
-    if len({row["id"] for row in integrations}) != len(integrations):
-        _invalid()
-    if len({row["profile_id"] for row in policies}) != len(policies):
-        _invalid()
-    if len({row["id"] for row in templates}) != len(templates):
-        _invalid()
+    # Metadata from other installations is not a deployable source of truth.
+    # Duplicate source names are ambiguous even when their IDs are distinct;
+    # never infer which configuration a policy or notification refers to.
+    for records, key in (
+        (integrations, "id"), (policies, "profile_id"), (templates, "id"),
+    ):
+        if len({row[key] for row in records}) != len(records):
+            _invalid()
+        if len({row["name"].casefold() for row in records}) != len(records):
+            _invalid()
 
-    conflicts = []
+    conflicts: list[dict[str, str]] = []
+    requirements: list[dict[str, str]] = []
+
+    def require(kind: str, name: str, reason: str, action: str) -> None:
+        requirements.append({
+            "kind": kind, "name": name,
+            "reason": reason, "operator_action": action,
+        })
     with db.transaction(write=False) as conn:
         require_current_authority(conn, actor)
         for kind, table, id_key, records in (
@@ -114,22 +125,81 @@ def preview_configuration(db: Database, actor: Principal, payload: object) -> di
                         "kind": kind, "name": row["name"],
                         "reason": "existing_identity_or_name",
                     })
+                    require(
+                        kind, row["name"], "existing_identity_or_name",
+                        "Review the destination record and choose an explicit "
+                        "identity mapping or rename before any future import.",
+                    )
         # Unmapped identities would require a deliberately reviewed operator
         # mapping and cannot be assigned automatically.
         known = {
             item["id"] for item in conn.execute("SELECT id FROM integrations")
         }
         expected = {item["id"] for item in integrations}
+        for integration in integrations:
+            require(
+                "integration", integration["name"],
+                "connection_and_credential_setup_required",
+                "Register or review the integration destination, callback "
+                "configuration and scoped credentials with an administrator; "
+                "this metadata file contains none of those private settings.",
+            )
         for policy in policies:
+            require(
+                "policy", policy["name"], "approver_mapping_required",
+                "Select authorized local approvers and verify the approval "
+                "plan before saving a new policy draft.",
+            )
+            if policy["approver_group_id"]:
+                require(
+                    "policy", policy["name"], "approver_group_mapping_required",
+                    "Select an existing local approver group and verify "
+                    "membership; source group IDs cannot be reused.",
+                )
             if policy["integration_id"] not in known | expected:
                 conflicts.append({
                     "kind": "policy", "name": policy["name"],
                     "reason": "integration_mapping_required",
                 })
+                require(
+                    "policy", policy["name"], "integration_mapping_required",
+                    "Map this policy to an existing permitted local integration "
+                    "before configuring a policy draft.",
+                )
+            elif policy["integration_id"] not in known:
+                require(
+                    "policy", policy["name"], "integration_configuration_required",
+                    "Complete the referenced integration's destination and "
+                    "credentials before an imported policy can be configured.",
+                )
+            if policy["email_template_id"] is not None:
+                require(
+                    "policy", policy["name"], "notification_template_mapping_required",
+                    "Map the notification template to a local complete event "
+                    "template set with reviewed message content.",
+                )
+            if policy["lifecycle"] == "ACTIVE":
+                require(
+                    "policy", policy["name"], "active_policy_requires_explicit_reapproval",
+                    "Create a non-active policy draft, test its approvers "
+                    "and rules, then require explicit administrator activation.",
+                )
+        for template in templates:
+            require(
+                "template", template["name"], "notification_content_required",
+                "Provide and review every notification event body and allowed "
+                "variables; the exported manifest contains event names only.",
+            )
     return {
         "schema_version": 1,
         "preview_only": True,
         "can_apply": False,
+        "readiness": {
+            "automatic_apply_available": False,
+            "manual_review_only": True,
+            "required_actions": len(requirements),
+        },
+        "requirements": requirements,
         "summary": {
             "integrations": len(integrations),
             "policies": len(policies),
