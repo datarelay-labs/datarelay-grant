@@ -2,7 +2,7 @@
 
 from typing import Literal
 
-from fastapi import Query, Request
+from fastapi import Query, Request, Response
 
 from .integration_diagnostics import configuration_manifest, diagnostics
 from .models import (
@@ -10,12 +10,19 @@ from .models import (
     Cancel,
     Consume,
     Decision,
+    DecisionReissue,
     Delegation,
     EmailTemplate,
     EmailTemplateUpdate,
     Escalation,
     Intake,
     Integration,
+    IntegrationVerificationPolicy,
+    IntentConfirmation,
+    IntentMfaVerification,
+    IntentOtpRequest,
+    IntentOtpVerification,
+    IntentPin,
     NotificationBrandingUpdate,
     NotificationPreview,
     NotificationTemplateSet,
@@ -33,6 +40,85 @@ from .models import (
 
 def register_domain(app, actor, human, reader):
     core, auth, worker = app.state.core, app.state.auth, app.state.worker
+
+    # Scoped mailbox capabilities are deliberately separate from actor/session
+    # auth, account APIs, and the external grant consume/result boundary.
+    def require_decision_origin(request: Request) -> None:
+        if request.headers.get("origin") != app.state.settings.origin:
+            from .errors import GrantError
+            raise GrantError("DECISION_ORIGIN_REQUIRED", 403)
+
+    @app.get("/api/v1/decision-intents/{token}")
+    def preview_decision_link(token: str):
+        from .decision_links import DecisionLinks
+        return DecisionLinks(core.db, core.settings).preview(token)
+
+    @app.head("/api/v1/decision-intents/{token}")
+    def head_decision_link(token: str):
+        from .decision_links import DecisionLinks
+        DecisionLinks(core.db, core.settings).preview(token)
+        return Response(status_code=204)
+
+    @app.post("/api/v1/decision-intents/{token}/verify")
+    def verify_decision_pin(token: str, body: IntentPin, request: Request):
+        from .decision_links import DecisionLinks
+        require_decision_origin(request)
+        return DecisionLinks(core.db, core.settings).verify(
+            token, body.pin, request.client.host if request.client else "unknown",
+        )
+
+    @app.post("/api/v1/decision-intents/{token}/confirm")
+    def confirm_decision_pin(token: str, body: IntentConfirmation, request: Request):
+        from .decision_links import DecisionLinks
+
+        require_decision_origin(request)
+        # The effective customer verification policy is resolved atomically
+        # inside confirm(), not from caller-controlled headers or cookies.
+        # An expired/unrelated Grant session must never block loginless PIN/OTP.
+        # Only mandatory MFA invokes current-session auth with CSRF enforcement.
+        resolve_actor = (
+            (lambda: human(request))
+            if request.cookies.get("grant_session") and request.headers.get("x-csrf-token")
+            else None
+        )
+        return DecisionLinks(core.db, core.settings).confirm(
+            token, body.confirmation_token, body.reason, resolve_actor=resolve_actor,
+        )
+
+    @app.post("/api/v1/decision-intents/{token}/otp/request", status_code=202)
+    def issue_decision_otp(token: str, body: IntentOtpRequest, request: Request):
+        from .decision_otp import DecisionOtp
+
+        require_decision_origin(request)
+        return DecisionOtp(core.db, core.settings).request(
+            token, body.confirmation_token,
+            request.client.host if request.client else "unknown",
+        )
+
+    @app.post("/api/v1/decision-intents/{token}/otp/verify")
+    def verify_decision_otp(token: str, body: IntentOtpVerification, request: Request):
+        from .decision_otp import DecisionOtp
+
+        require_decision_origin(request)
+        return DecisionOtp(core.db, core.settings).verify(
+            token, body.confirmation_token, body.otp,
+            request.client.host if request.client else "unknown",
+        )
+
+    @app.post("/api/v1/decision-intents/{token}/mfa/verify")
+    def verify_decision_fresh_mfa(
+        token: str, body: IntentMfaVerification, request: Request,
+    ):
+        from .decision_mfa import DecisionMfa
+
+        require_decision_origin(request)
+        return DecisionMfa(core.db, core.settings).verify(
+            human(request), token, body.confirmation_token, body.code,
+        )
+
+    @app.post("/api/v1/admin/requests/{ident}/decision-links/reissue")
+    def admin_reissue_decision_links(ident: str, body: DecisionReissue, request: Request):
+        return core.reissue_decision_mail(human(request), ident, body)
 
     @app.get("/api/v1/delegations")
     def delegations(request: Request):
@@ -253,6 +339,12 @@ def register_domain(app, actor, human, reader):
     @app.post("/api/v1/integrations", status_code=201)
     def add_integration(body: Integration, request: Request):
         return core.create_integration(actor(request), body)
+
+    @app.put("/api/v1/integrations/{ident}/decision-verification")
+    def update_integration_decision_verification(
+        ident: str, body: IntegrationVerificationPolicy, request: Request,
+    ):
+        return core.update_integration_verification_policy(actor(request), ident, body)
 
     @app.post("/api/v1/integrations/tokens", status_code=201)
     def add_token(body: Token, request: Request):

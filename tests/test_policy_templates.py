@@ -63,7 +63,7 @@ def test_admin_manages_policy_and_mail_template_with_request_snapshot(env):
     first_row = first.json()
 
     with env.db.transaction(write=False) as conn:
-        mail = json.loads(
+        mail = env.settings.unseal(
             conn.execute(
                 "SELECT payload FROM outbox WHERE request_id=? AND kind='email' ORDER BY created_at LIMIT 1",
                 (first_row["id"],),
@@ -90,7 +90,7 @@ def test_admin_manages_policy_and_mail_template_with_request_snapshot(env):
     Core(env.db, env.settings).maintenance()
     with env.db.transaction(write=False) as conn:
         reminders = [
-            json.loads(row[0])
+            env.settings.unseal(row[0])
             for row in conn.execute(
                 "SELECT payload FROM outbox WHERE request_id=? AND kind='email' ORDER BY created_at",
                 (first_row["id"],),
@@ -110,13 +110,14 @@ def test_admin_manages_policy_and_mail_template_with_request_snapshot(env):
     )
     assert second.status_code == 202, second.text
     with env.db.transaction(write=False) as conn:
-        new_mail = json.loads(
+        new_mail = env.settings.unseal(
             conn.execute(
                 "SELECT payload FROM outbox WHERE request_id=? AND kind='email' ORDER BY created_at LIMIT 1",
                 (second.json()["id"],),
             ).fetchone()[0]
         )
-    assert new_mail["body"] == "UPDATED Restart test service for test-service"
+    assert new_mail["body"].startswith("UPDATED Restart test service for test-service")
+    assert "Four-digit confirmation PIN:" in new_mail["body"]
 
 
 def test_policy_update_affects_only_new_requests_and_template_disable_is_safe(env):
@@ -201,7 +202,7 @@ def test_schema_v1_migrates_to_v8_and_backfills_policy_and_notification_state(en
 
     migrated = Database(path)
     with migrated.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 8
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
         assert "email_template_id" in {
             row[1] for row in conn.execute("PRAGMA table_info(profiles)")
         }

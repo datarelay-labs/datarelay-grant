@@ -317,7 +317,7 @@ System-level notification branding owns product name, sender display name, logo 
 basic visual identity. Policy-specific content can override text, not security-owned
 layout or authority controls.
 
-### 10.5 Email decision links (owner-accepted G10A; not implemented)
+### 10.5 Email decision links (owner-accepted G10A; backend-only candidate)
 
 The requested/reminder email for each currently eligible assigned approver
 contains four separate actions: **Approve**, **Hold**, **Deny** and
@@ -580,10 +580,18 @@ business default decision remains in §§10.5–10.9; implementation
 must still verify migration, rate limits, permissions, identity
 assurance and the complete user gates.
 
-**Implementation planning:** G10A-0..5 are P0 and remain unimplemented
-until source, database migration, deterministic tests, direct
-multi-recipient mail/browser E2E and owner release gates prove
-otherwise. Cross-project Foundation still owns shared Auth UI; the
+**Implementation planning:** G10A-0, backend-only G10A-1/2, and the
+policy-version/extra-email-OTP portion of G10A-3 are implemented in an
+unreleased branch with isolated deterministic tests. Backend-only
+EMAIL_PIN_PLUS_MFA can verify an enrolled Grant account through its current
+authenticated session and a NEW one-use, rate-limited TOTP proof bound to
+that particular email intent and confirmation context. Missing TOTP,
+stale/revoked sessions, unsupported external IdPs and proof replays fail
+closed. This local-account verification is not legal proof of a person's
+identity and is not a verified customer SSO integration. No decision Web UI,
+live external mailbox receipt or direct Full User E2E has passed. Complete
+G10A-3..5 external and user gates remain pending.
+Cross-project Foundation still owns shared Auth UI; the
 no-login Grant decision screen is a Grant-domain scoped surface,
 not a fork of the shared user sign-in UI. The bounded design rationale
 and residual impersonation risk are captured in
