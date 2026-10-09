@@ -19,8 +19,8 @@ authorizes protected business execution.
 
 This component is **not** a working public decision-link route and does not claim
 real mail recipient/browser E2E. The existing blocked app routing/styles and
-browser/credential/platform actions are untouched; route + actual backend
-adapter wiring, security headers, direct two-user independent mailbox proof,
+browser/credential/platform actions are untouched; public URL route mounting,
+runtime security verification and direct two-user independent mailbox proof,
 G11 integrations and G12 release gates remain outstanding. Automated component
 and logic tests are supplementary evidence, not product acceptance.
 
@@ -32,6 +32,24 @@ policy mode, protected request summary/action and Deny-reason requirement.
 The server must still independently authorize and atomically validate each
 request; this Web defense-in-depth does **not** establish real recipient or
 browser E2E acceptance.
+
+A separate **unmounted, live-contract-compatible Web API adapter** translates
+existing schema-v12 Grant `decision-intents/{token}` results into the presentation
+contract. It performs only a read-only GET before user action; PIN verify,
+same-mailbox OTP request/verify, fresh signed-in recipient TOTP verify and
+explicit confirm use the backend's existing same-origin JSON POST endpoints.
+The adapter validates URL-safe token shape, server outcome/assurance/verification
+flags, bounded post-PIN action information and strict non-execution evidence.
+It does not silently downgrade a stronger current verification mode, and never
+automatically retries an ambiguous email queue or final decision POST.
+Client tests use mocked fetch responses; no SMTP, real authenticator, recipient
+account or external business effect was exercised.
+
+**The adapter is not mounted in the running Web app**, so this does not create
+a working public decision URL. Earlier platform blocks on app routing/styles,
+direct two-user browser credential entry and new Grant PR creation remain
+binding. Independent two-mailbox Full User E2E, runtime integration/CI and
+G11/G12 acceptance are unverified.
 
 ## G10A / G0 integrated development candidate (2026-10-09)
 

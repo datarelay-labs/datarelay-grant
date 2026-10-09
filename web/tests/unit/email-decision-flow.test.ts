@@ -43,7 +43,7 @@ describe('G10A loginless capability confirmation safety', () => {
     for (const patch of [
       { context: '' }, { context: 'short' }, { summary: undefined },
       { summary: { subject: '' } }, { summary: { subject: 'x'.repeat(301) } },
-      { summary: { subject: 'OK', action: 'x'.repeat(501) } },
+      { summary: { subject: 'OK', action: 'x'.repeat(611) } },
       { denialReasonRequired: undefined },
       { assurance: 'OTP_VERIFIED' }, { mode: 'UNKNOWN_MODE' },
     ]) {

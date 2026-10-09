@@ -45,7 +45,7 @@ export function stageForProof(
       !proof.summary || typeof proof.summary.subject !== 'string' ||
       !proof.summary.subject.trim() || proof.summary.subject.length > 300 ||
       (proof.summary.action !== undefined &&
-        (typeof proof.summary.action !== 'string' || proof.summary.action.length > 500))) {
+        (typeof proof.summary.action !== 'string' || proof.summary.action.length > 610))) {
     return 'invalid';
   }
   if (proof.mode === 'EMAIL_PIN') {
