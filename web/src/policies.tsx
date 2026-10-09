@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Alert, Button, Card, TextField, type AccountProjection } from '@datarelay-labs/foundation';
 import { api } from './api';
 import { Form, Select, TextArea, useTask, when } from './common';
@@ -40,6 +40,56 @@ const initialSample: Sample = {
   severity: '',
   risk_level: '',
 };
+
+const policyEditorSections = [
+  { id: 'policy-general', title: 'General' },
+  { id: 'policy-applies-to', title: 'Applies To' },
+  { id: 'policy-approval', title: 'Approval' },
+  { id: 'policy-email-decisions', title: 'Verification' },
+  { id: 'policy-timing', title: 'Timing' },
+  { id: 'policy-execution-grant', title: 'Execution Grant' },
+  { id: 'policy-notifications', title: 'Notifications' },
+] as const;
+
+type PolicyEditorSectionId = (typeof policyEditorSections)[number]['id'];
+
+// Native non-submit controls keep the edit form stable and jump to its own
+// accessible headings. The existing verification section remains owned by
+// DecisionSecurityFields; it is not reimplemented in this view.
+export function PolicyEditorJumpLinks() {
+  return <nav className="grant-tabs" aria-label="Policy editor sections">
+    {policyEditorSections.map((item) => <button
+      key={item.id}
+      type="button"
+      data-jump-to={item.id}
+      onClick={() => {
+        const target = document.getElementById(item.id);
+        if (!target) return;
+        target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+        target.scrollIntoView({ block: 'start' });
+      }}
+    >{item.title}</button>)}
+  </nav>;
+}
+
+export function PolicyEditorSection({ id, title, description, children }: {
+  id: PolicyEditorSectionId;
+  title: string;
+  description: string;
+  children?: ReactNode;
+}) {
+  if (!policyEditorSections.some((item) => item.id === id && item.title === title)) {
+    throw new Error('POLICY_EDITOR_SECTION_UNRECOGNIZED');
+  }
+  return <section className="grant-editor-section" aria-labelledby={id}>
+    <div>
+      <h3 id={id} tabIndex={-1}>{title}</h3>
+      <p>{description}</p>
+    </div>
+    {children}
+  </section>;
+}
 
 export function Profiles() {
   const [rows, setRows] = useState<Profile[]>([]);
@@ -447,17 +497,19 @@ export function Profiles() {
             onSubmit={() => void task.run(save)}
             label={editing ? 'Save draft' : 'Create draft'}
           >
-            <section className="grant-editor-section" aria-labelledby="policy-general">
-              <div>
-                <h3 id="policy-general">General & Applies To</h3>
-                <p>Define the policy identity and deterministic matching scope.</p>
-              </div>
+            <PolicyEditorJumpLinks />
+            <PolicyEditorSection id="policy-general" title="General"
+              description="Name and identify this versioned approval policy.">
               <TextField
                 label="Policy name"
                 required
                 value={name}
                 onChange={(event) => setName(event.target.value)}
               />
+            </PolicyEditorSection>
+
+            <PolicyEditorSection id="policy-applies-to" title="Applies To"
+              description="Restrict which integration, actions and request attributes this policy matches.">
               <div className="grant-grid">
                 <Select label="Integration" value={integration} onChange={setIntegration}>
                   <option value="">Select integration</option>
@@ -483,13 +535,10 @@ export function Profiles() {
                 <TextField label="Severity selector" value={severity} onChange={(event) => setSeverity(event.target.value)} placeholder="Blank = any" />
                 <TextField label="Risk selector" value={risk} onChange={(event) => setRisk(event.target.value)} placeholder="Blank = any" />
               </div>
-            </section>
+            </PolicyEditorSection>
 
-            <section className="grant-editor-section" aria-labelledby="policy-approval">
-              <div>
-                <h3 id="policy-approval">Approval & Notifications</h3>
-                <p>Choose the current approver and notification template set.</p>
-              </div>
+            <PolicyEditorSection id="policy-approval" title="Approval"
+              description="Choose explicit approvers, groups and the required voting threshold.">
               <div className="grant-grid">
                 <Select label="Assigned approver" value={approver} onChange={setApprover}>
                   <option value="">Select an enabled user</option>
@@ -515,16 +564,8 @@ export function Profiles() {
                 {approvalMode === 'N_OF_M' ? (
                   <TextField label="Approvals required" type="number" min="1" value={approvalsRequired} onChange={(event) => setApprovalsRequired(event.target.value)} />
                 ) : null}
-                <Select label="Notification template set" value={template} onChange={setTemplate} required={false}>
-                  <option value="">Built-in default</option>
-                  {templates.filter((item) => item.enabled || item.id === template).map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}{item.enabled ? '' : ' (disabled)'}
-                    </option>
-                  ))}
-                </Select>
               </div>
-            </section>
+            </PolicyEditorSection>
 
             <DecisionSecurityFields
               draft={decisionSecurity}
@@ -532,18 +573,31 @@ export function Profiles() {
               integration={integrations.find((item) => item.id === integration)}
             />
 
-            <section className="grant-editor-section" aria-labelledby="policy-timing">
-              <div>
-                <h3 id="policy-timing">Timing & Execution Grant</h3>
-                <p>Bound the decision window, reminders and exact-action execution validity.</p>
-              </div>
+            <PolicyEditorSection id="policy-timing" title="Timing"
+              description="Set the approval deadline and bounded reminder cadence.">
               <div className="grant-grid">
                 <TextField label="Response deadline (seconds)" type="number" min={60} max={604800} required value={deadline} onChange={(event) => setDeadline(event.target.value)} />
                 <TextField label="Reminder interval (seconds)" type="number" min={60} max={86400} required value={reminder} onChange={(event) => setReminder(event.target.value)} />
                 <TextField label="Maximum reminders" type="number" min={0} max={20} required value={count} onChange={(event) => setCount(event.target.value)} />
-                <TextField label="Execution validity (seconds)" type="number" min={30} max={86400} required value={validity} onChange={(event) => setValidity(event.target.value)} />
               </div>
-            </section>
+            </PolicyEditorSection>
+
+            <PolicyEditorSection id="policy-execution-grant" title="Execution Grant"
+              description="Limit the time an approved exact-action grant can be consumed.">
+              <TextField label="Execution validity (seconds)" type="number" min={30} max={86400} required value={validity} onChange={(event) => setValidity(event.target.value)} />
+            </PolicyEditorSection>
+
+            <PolicyEditorSection id="policy-notifications" title="Notifications"
+              description="Select the message template set for future requests.">
+              <Select label="Notification template set" value={template} onChange={setTemplate} required={false}>
+                <option value="">Built-in default</option>
+                {templates.filter((item) => item.enabled || item.id === template).map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}{item.enabled ? '' : ' (disabled)'}
+                  </option>
+                ))}
+              </Select>
+            </PolicyEditorSection>
           </Form>
           ) : null}
         </Card>

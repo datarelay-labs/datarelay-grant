@@ -5,6 +5,19 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G0 task-oriented approval policy detail sections (2026-10-09)
+
+The existing Approval Policies list/detail workspace retains all policy fields,
+version and security contract validation, draft save, explicit Test/Activate,
+Disable, Clone, isolated preview and change history. The long details form is
+now organized into the seven canonical focused sections: General, Applies To,
+Approval, Decision Verification, Timing, Execution Grant and Notifications.
+A keyboard-operable, explicitly non-submit section navigator focuses the
+matching in-page heading instead of duplicating routes or Foundation controls.
+No schema/API, permission, policy activation, MFA or execution behavior changes.
+This is source-only G0 UX convergence tracked by Work Packet #80, **not**
+deployed owner preview or independent two-human E2E.
+
 ## G7 final-decision latency median and sample count (2026-10-09)
 
 The administrator-only Operations approval-latency metric now reports both
