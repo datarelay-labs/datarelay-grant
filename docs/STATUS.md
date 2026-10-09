@@ -42,6 +42,19 @@ role-aware server-rendered markup unit regressions. It has **not**
 independently passed ChatGPT-driven real-user browser E2E, the platform-blocked
 320px/375px mobile screenshot gate, or Grant 1.0 release acceptance.
 
+## G0 queue-density refinement (2026-10-09)
+
+My approvals, All requests and My submitted requests now expose the four
+common search/view/decision/information filters at the top and keep every
+existing specialized policy, action, date, notification/execution and
+administrator-only identity/group/integration filter inside native keyboard-
+operable Advanced filters disclosure. Nonempty advanced presets open it
+automatically; a count remains visible when values are set, and clearing
+filters restores the concise default. The exact G12 overdue deep link and
+allowlisted operations presets continue to use the same server-side
+role-filtered query contract. This UX does not add new access or policy
+authority; independent actual-user browser/mobile E2E remains pending.
+
 ## Implemented candidate
 
 - Pinned unpublished Foundation SDK and public imports with Foundation-backed auth,

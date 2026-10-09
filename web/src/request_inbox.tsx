@@ -29,6 +29,16 @@ const initialFilters = (mode: InboxMode): Filters => ({
   approver_id: '', group_id: '', integration_id: '', action_kind: '',
   created_after: '', created_before: '', delivery_state: '', execution_state: '',
 });
+const advancedFields = [
+  'policy_id', 'action_kind', 'created_after', 'created_before',
+  'delivery_state', 'execution_state', 'requester_id',
+  'approver_id', 'group_id', 'integration_id',
+] as const satisfies readonly (keyof Filters)[];
+
+export function countAdvancedFilters(filters: Filters): number {
+  return advancedFields.filter((key) => filters[key].trim().length > 0).length;
+}
+
 const viewOptions: { value: string; label: string }[] = [
   { value: 'all', label: 'All visible requests' },
   { value: 'needs', label: 'Needs my decision' },
@@ -88,7 +98,8 @@ export function RequestList({
     // The App router already resolves pathname independently of search params.
     // Only this allowlisted deep link may override the approval queue's default.
     if (
-      mode === 'approvals' && window.location.pathname === '/approvals' &&
+      mode === 'approvals' && typeof window !== 'undefined' &&
+      window.location.pathname === '/approvals' &&
       new URLSearchParams(window.location.search).get('view') === 'overdue'
     ) {
       defaults.view = 'overdue';
@@ -97,6 +108,9 @@ export function RequestList({
   };
   const [draft, setDraft] = useState<Filters>(initial);
   const [applied, setApplied] = useState<Filters>(initial);
+  const [advancedOpen, setAdvancedOpen] = useState(
+    () => countAdvancedFilters(initial()) > 0,
+  );
   const [offset, setOffset] = useState(0);
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -139,7 +153,8 @@ export function RequestList({
     setApplied({ ...draft });
   }
   function reset() {
-    if (mode === 'approvals' && window.location.pathname === '/approvals' &&
+    if (mode === 'approvals' && typeof window !== 'undefined' &&
+      window.location.pathname === '/approvals' &&
         new URLSearchParams(window.location.search).get('view') === 'overdue') {
       window.history.replaceState(window.history.state, '', '/approvals');
     }
@@ -147,6 +162,7 @@ export function RequestList({
     setDraft(defaults);
     setOffset(0);
     setApplied(defaults);
+    setAdvancedOpen(countAdvancedFilters(defaults) > 0);
   }
   const viewChoices = mode === 'requester'
     ? viewOptions.filter((item) => item.value === 'requester')
@@ -180,42 +196,48 @@ export function RequestList({
           <option value="INFO_REQUESTED">Waiting for information</option>
           <option value="CHANGES_REQUESTED">Changes required</option>
         </Select>
-        <Select label="Approval policy" value={draft.policy_id} onChange={(value) => edit('policy_id', value)} required={false}>
-          <option value="">Any policy</option>
-          {profiles.map((entry) => <option value={entry.id} key={entry.id}>{entry.name}</option>)}
-        </Select>
-        <TextField label="Action type" value={draft.action_kind} maxLength={100} onChange={(e) => edit('action_kind', e.target.value)} />
-        <TextField label="Created from" type="date" value={draft.created_after} onChange={(e) => edit('created_after', e.target.value)} />
-        <TextField label="Created through" type="date" value={draft.created_before} onChange={(e) => edit('created_before', e.target.value)} />
-        <Select label="Callback delivery" value={draft.delivery_state} onChange={(value) => edit('delivery_state', value)} required={false}>
-          <option value="">Any delivery status</option>
-          {['NOT_SCHEDULED', 'PENDING', 'DELIVERED', 'FAILED'].map((value) =>
-            <option value={value} key={value}>{value.replaceAll('_', ' ')}</option>)}
-        </Select>
-        <Select label="Execution status" value={draft.execution_state} onChange={(value) => edit('execution_state', value)} required={false}>
-          <option value="">Any execution status</option>
-          {['NOT_STARTED', 'COMMITTED', 'RUNNING', 'UNKNOWN', 'REPORTED_SUCCEEDED', 'REPORTED_FAILED'].map((value) =>
-            <option value={value} key={value}>{value.replaceAll('_', ' ')}</option>)}
-        </Select>
-        {admin && <>
-          <Select label="Requester" value={draft.requester_id} onChange={(value) => edit('requester_id', value)} required={false}>
-            <option value="">Any requester</option>
-            {accounts.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
-          </Select>
-          <Select label="Approver" value={draft.approver_id} onChange={(value) => edit('approver_id', value)} required={false}>
-            <option value="">Any approver</option>
-            {accounts.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
-          </Select>
-          <Select label="Approver group" value={draft.group_id} onChange={(value) => edit('group_id', value)} required={false}>
-            <option value="">Any group</option>
-            {groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
-          </Select>
-          <Select label="Integration" value={draft.integration_id} onChange={(value) => edit('integration_id', value)} required={false}>
-            <option value="">Any integration</option>
-            {integrations.map((integration) => <option key={integration.id} value={integration.id}>{integration.name}</option>)}
-          </Select>
-        </>}
       </div>
+      <details open={advancedOpen} onToggle={(event) => setAdvancedOpen(event.currentTarget.open)}>
+        <summary>Advanced filters{countAdvancedFilters(draft) > 0
+          ? ' · ' + countAdvancedFilters(draft) + ' set' : ''}</summary>
+        <div className="grant-grid">
+            <Select label="Approval policy" value={draft.policy_id} onChange={(value) => edit('policy_id', value)} required={false}>
+              <option value="">Any policy</option>
+              {profiles.map((entry) => <option value={entry.id} key={entry.id}>{entry.name}</option>)}
+            </Select>
+            <TextField label="Action type" value={draft.action_kind} maxLength={100} onChange={(e) => edit('action_kind', e.target.value)} />
+            <TextField label="Created from" type="date" value={draft.created_after} onChange={(e) => edit('created_after', e.target.value)} />
+            <TextField label="Created through" type="date" value={draft.created_before} onChange={(e) => edit('created_before', e.target.value)} />
+            <Select label="Callback delivery" value={draft.delivery_state} onChange={(value) => edit('delivery_state', value)} required={false}>
+              <option value="">Any delivery status</option>
+              {['NOT_SCHEDULED', 'PENDING', 'DELIVERED', 'FAILED'].map((value) =>
+                <option value={value} key={value}>{value.replaceAll('_', ' ')}</option>)}
+            </Select>
+            <Select label="Execution status" value={draft.execution_state} onChange={(value) => edit('execution_state', value)} required={false}>
+              <option value="">Any execution status</option>
+              {['NOT_STARTED', 'COMMITTED', 'RUNNING', 'UNKNOWN', 'REPORTED_SUCCEEDED', 'REPORTED_FAILED'].map((value) =>
+                <option value={value} key={value}>{value.replaceAll('_', ' ')}</option>)}
+            </Select>
+            {admin && <>
+              <Select label="Requester" value={draft.requester_id} onChange={(value) => edit('requester_id', value)} required={false}>
+                <option value="">Any requester</option>
+                {accounts.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
+              </Select>
+              <Select label="Approver" value={draft.approver_id} onChange={(value) => edit('approver_id', value)} required={false}>
+                <option value="">Any approver</option>
+                {accounts.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
+              </Select>
+              <Select label="Approver group" value={draft.group_id} onChange={(value) => edit('group_id', value)} required={false}>
+                <option value="">Any group</option>
+                {groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
+              </Select>
+              <Select label="Integration" value={draft.integration_id} onChange={(value) => edit('integration_id', value)} required={false}>
+                <option value="">Any integration</option>
+                {integrations.map((integration) => <option key={integration.id} value={integration.id}>{integration.name}</option>)}
+              </Select>
+            </>}
+        </div>
+      </details>
       <div className="grant-actions">
         <Button disabled={task.busy} onClick={apply}>Apply filters</Button>
         <Button variant="secondary" disabled={task.busy} onClick={reset}>Clear filters</Button>
