@@ -359,3 +359,132 @@ def test_policy_import_does_not_autorun_existing_active_source(env):
         assert conn.execute(
             "SELECT lifecycle FROM profile_versions WHERE profile_id=?", (imported_id,)
         ).fetchone()["lifecycle"] == "DRAFT"
+
+
+def test_v2_import_survives_disposable_backup_restore_without_activation_or_delivery(
+    env, tmp_path
+):
+    """Real v2 API import -> new-path SQLite restore -> fresh admin reads.
+
+    The fixture is an isolated synthetic database. This proves Grant's local
+    state and denial-of-activation contracts, not customer installation recovery
+    or external send/consume acceptance.
+    """
+    from dataclasses import replace
+
+    from fastapi.testclient import TestClient
+
+    from grant.app import create_app
+    from grant.db import Database
+
+    admin, package, mapping = sample(env, with_template=True)
+    source_template = package["templates"][0]
+    event_bodies = {}
+    for event_name, content in source_template["templates"].items():
+        content["subject"] = "Restored subject for " + event_name
+        content["body"] = "Restored full event body for " + event_name
+        event_bodies[event_name] = dict(content)
+    assert len(event_bodies) == 9
+    package["policies"][0]["config"]["email_template_id"] = source_template["id"]
+
+    reviewed = preview(admin, package, mapping)
+    assert reviewed.status_code == 200, reviewed.text
+    assert reviewed.json()["can_import_drafts"] is True
+    digest = reviewed.json()["preview_digest"]
+    receipt = imported(admin, package, mapping, digest)
+    assert receipt.status_code == 201, receipt.text
+    imported_policy = receipt.json()["policy_ids"][0]
+    imported_template = receipt.json()["template_ids"][0]
+
+    with env.db.transaction(write=False) as conn:
+        baseline = {
+            table: conn.execute("SELECT COUNT(*) FROM " + table).fetchone()[0]
+            for table in ("integrations", "users", "api_tokens", "approver_groups",
+                          "profiles", "profile_versions", "email_templates",
+                          "requests", "outbox")
+        }
+        assert conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] > 0
+        audit_row = conn.execute(
+            "SELECT actor,detail FROM audit WHERE action='configuration.v2_drafts_imported'"
+        ).fetchone()
+        assert audit_row is not None
+        assert digest in audit_row["detail"]
+        assert conn.execute(
+            "SELECT enabled FROM profiles WHERE id=?", (imported_policy,)
+        ).fetchone()["enabled"] == 0
+
+    backup = tmp_path / "imported-v2-backup.sqlite"
+    recovered_path = tmp_path / "imported-v2-new-restored.sqlite"
+    env.db.backup(backup)
+    assert backup.exists()
+    Database.restore(backup, recovered_path)
+    assert backup.exists() and recovered_path.exists()
+
+    db = Database(recovered_path)
+    with db.transaction(write=False) as conn:
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
+        assert conn.execute("SELECT value FROM runtime WHERE key='paused'").fetchone()[0] == "1"
+        assert conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] == 0
+        assert {
+            table: conn.execute("SELECT COUNT(*) FROM " + table).fetchone()[0]
+            for table in baseline
+        } == baseline
+        stored = conn.execute(
+            "SELECT id,enabled FROM profiles WHERE id=?", (imported_policy,)
+        ).fetchone()
+        version = conn.execute(
+            """SELECT lifecycle,version,integration_id,approver_id,email_template_id
+               FROM profile_versions WHERE profile_id=?""",
+            (imported_policy,),
+        ).fetchone()
+        assert stored["enabled"] == 0
+        assert version["lifecycle"] == "DRAFT"
+        assert version["version"] == 1
+        assert version["integration_id"] == env.integration["id"]
+        assert version["approver_id"] == env.users["approver"]["id"]
+        assert version["email_template_id"] == imported_template
+        assert conn.execute(
+            "SELECT actor,detail FROM audit WHERE action='configuration.v2_drafts_imported'"
+        ).fetchone() == audit_row
+        assert conn.execute("SELECT COUNT(*) FROM requests").fetchone()[0] == 0
+        assert conn.execute("SELECT COUNT(*) FROM outbox").fetchone()[0] == 0
+
+    # The pre-backup browser cookie is not a valid session in the new installation.
+    restored_app = create_app(replace(env.settings, database=recovered_path))
+    with TestClient(restored_app) as client:
+        client.cookies.update(admin.cookies)
+        assert client.get("/api/v1/admin/configuration/export-v2").status_code in (401, 403)
+        login = client.post("/api/v1/auth/login", json={
+            "username": "admin", "password": env.password,
+        })
+        assert login.status_code == 200, login.text
+        client.headers["x-csrf-token"] = login.json()["csrf"]
+
+        profiles = client.get("/api/v1/profiles")
+        assert profiles.status_code == 200, profiles.text
+        imported_view = next(
+            profile for profile in profiles.json() if profile["id"] == imported_policy
+        )
+        assert imported_view["lifecycle"] == "DRAFT"
+        assert imported_view["enabled"] is False
+
+        templates = client.get("/api/v1/notification-template-sets")
+        assert templates.status_code == 200, templates.text
+        template_view = next(
+            item for item in templates.json() if item["id"] == imported_template
+        )
+        assert template_view["templates"] == event_bodies
+
+        # An operator must separately acknowledge reconciliation after restore.
+        # This acknowledgement in a disposable zero-request fixture is NOT
+        # evidence of reconciled real external product effects.
+        assert restored_app.state.core.resume_after_restore(acknowledged=True)["paused"] is False
+        activate = client.post("/api/v1/profiles/" + imported_policy + "/activate")
+        assert activate.status_code == 409
+        assert client.get("/api/v1/profiles").status_code == 200
+
+    with db.transaction(write=False) as conn:
+        assert conn.execute(
+            "SELECT enabled FROM profiles WHERE id=?", (imported_policy,)
+        ).fetchone()["enabled"] == 0
+        assert conn.execute("SELECT COUNT(*) FROM outbox").fetchone()[0] == 0

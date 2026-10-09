@@ -5,6 +5,27 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G9 v2 reviewed Draft import recovery rehearsal (2026-10-09)
+
+Work Packet #82 adds an isolated executable regression for real Grant
+admin API v2 export → explicit existing-local mapping/preview →
+`IMPORT_DRAFTS_ONLY` → SQLite backup to a new private test path →
+restore to another new path → fresh administrator login and API reads.
+It verifies imported local integration/approver mapping, disabled version-1
+DRAFT policy, all **nine exact message subjects and bodies**, durable
+administrative audit, preserved original installation records, restore
+PAUSED state, revoked old sessions and no automatic request/outbox or
+policy activation even after explicit synthetic no-effect reconciliation.
+This is local recovery and correctness evidence for new v2 state, not
+customer backup acceptance, real delivery, release qualification or proof
+of independently reconciled external business effects.
+
+The operations runbook now differentiates original non-importable
+schema-v1 metadata preview, the actual development-only v2 reviewed
+Draft import, and full private SQLite disaster-recovery restore. A v2
+bundle intentionally lacks credentials, destinations and historical
+authorization state and can never serve as an installation backup.
+
 ## G0 search and lifecycle filter in approval policy list (2026-10-09)
 
 The task-first administrator Approval Policies table now provides a

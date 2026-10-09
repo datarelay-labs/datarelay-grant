@@ -115,9 +115,16 @@ GET /api/v1/integrations/configuration-export returns a bounded planning
 manifest of integration identity, policy version selectors/timing and template
 metadata. It intentionally omits registered callback destinations, encrypted
 headers, authenticators, raw message bodies and connection-specific keys.
-The manifest is NOT importable as a runnable configuration or a backup.
-Production Import requires separate design of validation, mapping, rollback
-and privilege boundaries before being made available.
+The schema-v1 metadata manifest is NOT importable as runnable configuration
+and is not an installation backup. Grant's separately versioned
+`GET /api/v1/admin/configuration/export-v2` development candidate includes
+complete nine-event notification subject/body content and policy configuration
+but never integrations' callback destinations, API credentials, SMTP keys,
+passwords, MFA recovery values or installation encryption keys. Exported
+message content can contain administrator-sensitive operational text; review,
+store and transfer it only under approved administrative controls.
+v2 Import is a **development-only, reviewed Draft import**, not a production
+migration/recovery mechanism and not Grant 1.0 release acceptance.
 
 A connection test is an explicitly requested diagnostic event; accepted or
 failed transport is auditable without logging a raw destination or exception
@@ -141,19 +148,49 @@ and action fingerprint, human decisions, comments metadata, notification
 delivery attempts, execution commitment and reported result; a reported
 execution result is not Grant's independent verification of external work.
 
-Configuration import preview POST /api/v1/admin/configuration/preview accepts
-only the strict secret-free schema-v1 planning manifest produced by the
-read-only integration export. It computes name/identity/mapping conflicts
-WITHOUT writing any policy, template, integration or credential record.
-There is deliberately no Apply/Activate control. Production import requires
-verified account, group, callback, policy-version and template-content
-mapping, operator-approved policy activation, migration/rollback rehearsal
-and release authorization. Do not use the preview as an installation restore.
+The original `POST /api/v1/admin/configuration/preview` accepts only the
+strict **schema-v1** planning manifest and does not offer Import/Apply.
+The separately versioned **v2** administrative workflow is:
 
-Backup/restore and schema-v8 migration checks must retain historical audit,
-versioned policies, request action fingerprints, approver groups, delegations,
-comments and credential status. Isolated database copies are not evidence
-that external execution effects were reconciled.
+1. Export the complete v2 bundle in an authorized administrator session.
+   Review policy actions, versioned decision-verification requirements and
+   the full subject/body of all nine message events as sensitive content.
+2. At the destination, independently create/authorize local integrations,
+   approvers and groups first. No exported ID creates a local credential,
+   callback, user or group. In the Integrations page map each source
+   integration/approver/group to an **existing enabled** local identity.
+3. Call `POST /api/v1/admin/configuration/preview-v2` or use the same
+   page's mapping review. Verify the returned conflicts and bound
+   review digest; this read-only preview makes **no persistent changes**.
+4. As an authorized administrator explicitly confirm `IMPORT_DRAFTS_ONLY`
+   with the **unchanged** reviewed digest for
+   `POST /api/v1/admin/configuration/import-v2`. The whole batch either
+   creates new non-active version-1 **DRAFT** policies and complete template
+   sets, or rolls back; it never replaces an existing policy or template.
+5. Independently test the imported Draft with the normal policy lifecycle
+   and activate it only after separate local administrator authorization.
+   No imported artifact automatically activates, sends mail, authorizes
+   protected execution or inherits external integration destinations.
+
+These are available **source development capabilities**, not owner-approved
+production migration or external two-human acceptance. Import/preview is
+NOT a disaster-recovery restore: it intentionally excludes credentials,
+current requests, execution state and full installation identity. Never
+restore a customer installation from a v2 configuration bundle.
+
+Backup/restore and schema-v12 upgrade checks must retain historical audit,
+versioned policies, imported Drafts and full message templates, request
+action fingerprints, approver groups, delegations, comments and credential
+status. Isolated database copies are not evidence that external execution
+effects were reconciled. A disposable development regression exercises actual
+v2 import, protected SQLite backup, restore to a NEW path, invalidation of
+the old browser session, read-only Draft/template verification and direct
+Draft-activation rejection after a synthetic zero-effect reconciliation:
+
+```sh
+uv run --frozen pytest -q tests/test_configuration_v2_import.py -k disposable_backup_restore
+```
+
 
 ## Security controls and repeatable browser qualification
 
@@ -198,6 +235,11 @@ uv run --frozen grant --config /absolute/private-state/grant.json restore \
 Back up the installation key separately using an approved secret store. The database
 contains personal data, authorization state and token digests and must be protected.
 Restore accepts a NEW destination only. Do not overwrite or delete the original.
+A database backup is different from version-2 policy/template portability: it
+preserves complete private installation state, including credentials, and
+requires its matching protected installation key. An imported v2 Draft and its
+template content persist across database backup/restore but remain disabled;
+restore must not auto-activate policies or enqueue a message.
 Point a separate protected config at the new database, retain its matching key,
 and inspect it while outgoing delivery/execution commitments remain PAUSED. Sessions
 are removed. Reconcile effects and revoked credentials since the backup; revoke any
