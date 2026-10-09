@@ -124,14 +124,39 @@ def queue_choice_mail(
         email_digest = _digest(
             settings, "recipient-email", recipient["email"].strip().lower(),
         )
-        if previous and not hmac.compare_digest(
+        mailbox_changed = previous is not None and not hmac.compare_digest(
             previous["recipient_email_digest"], email_digest,
-        ):
+        )
+        if mailbox_changed:
+            # Existing contract: a trusted recipient mailbox update revokes
+            # the previous link and permits a new issuance to that mailbox.
             conn.execute(
                 "UPDATE decision_issuances SET state='REVOKED' WHERE id=?",
                 (previous["id"],),
             )
             previous = None
+        # Never let a routine reminder silently become an administrative
+        # reissue when an earlier recipient generation has expired or was
+        # revoked. A newly eligible recipient with no issuance may still get
+        # their first one; an explicit admin reissue uses event='requested'.
+        if event == "reminder" and previous is None and not mailbox_changed:
+            prior = conn.execute(
+                """SELECT id FROM decision_issuances
+                   WHERE approval_assignment_id=? AND recipient_id=?
+                     AND assignment_epoch=?
+                   ORDER BY generation DESC LIMIT 1""",
+                (recipient["assignment_id"], recipient["recipient_id"],
+                 recipient["assignment_epoch"]),
+            ).fetchone()
+            if prior:
+                audit(conn, request["id"], "policy", "decision.reminder_unavailable", {
+                    "issuance_id": prior["id"],
+                    "approval_assignment_id": recipient["assignment_id"],
+                    "recipient_id": recipient["recipient_id"],
+                    "reason": "prior_issuance_not_reusable",
+                    "mail_queued": False,
+                }, now)
+                continue
         encrypted = None
         if previous:
             # A reminder reuses exactly the same protected token/PIN generation.
@@ -142,12 +167,23 @@ def queue_choice_mail(
                    ORDER BY created_at DESC,id DESC LIMIT 1""",
                 (previous["id"],),
             ).fetchone()
-            if old:
-                material = settings.unseal(old["payload"])
-                encrypted = settings.seal(_message(
-                    settings, request, event,
-                    material["_decision_pin"], material["_decision_tokens"],
-                ))
+            if old is None:
+                # Outbox retention may remove the only recoverable PIN/token
+                # material. Never mint a second still-active issuance merely
+                # because the protected mail body cannot be reconstructed.
+                audit(conn, request["id"], "policy", "decision.reminder_unavailable", {
+                    "issuance_id": previous["id"],
+                    "approval_assignment_id": recipient["assignment_id"],
+                    "recipient_id": recipient["recipient_id"],
+                    "reason": "sealed_mail_material_missing",
+                    "mail_queued": False,
+                }, now)
+                continue
+            material = settings.unseal(old["payload"])
+            encrypted = settings.seal(_message(
+                settings, request, event,
+                material["_decision_pin"], material["_decision_tokens"],
+            ))
         if encrypted is None:
             prior_generation = conn.execute(
                 "SELECT COALESCE(MAX(generation),0) FROM decision_issuances "

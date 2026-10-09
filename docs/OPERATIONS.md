@@ -323,6 +323,24 @@ a request. Suspicious activity should be investigated from the typed
 decision.pin_failed and decision.otp_failed audit events and the current
 integration/account authority before a reissue.
 
+If a G10A reminder cannot reuse an existing issuance because its
+original encrypted email material was archived or missing, or because
+the prior issuance is expired or previously revoked, the scheduler fails
+closed and records a protected
+`decision.reminder_unavailable` event containing the issuance ID and
+internal diagnostic reason (never the PIN or URLs). The administrator
+audit-search projection returns safe identifiers, not raw reason text.
+Do not regenerate missing bearer links,
+alter the request database or interpret a skipped reminder as a
+successful mailbox delivery. Inspect the authorized request and the
+recipient's current mailbox, then use the deliberate admin Reissue
+endpoint above where appropriate. A new recipient with no previous
+generation can still receive its first eligible issuance. The existing
+current-account email-change path remains separate: it revokes an
+active older-mailbox issuance and queues protected mail to the newly
+registered eligible mailbox. Do not treat an unrelated expired or
+missing-material issuance as a trusted mailbox change.
+
 A stale or revoked Grant login cookie in an otherwise valid mailbox
 recipient's browser must not prevent a default EMAIL_PIN/EMAIL_PIN_PLUS_OTP
 decision. Those mailbox-only policies ignore ambient account sessions and

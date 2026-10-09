@@ -551,7 +551,17 @@ The **out-of-box default maximum link lifespan is seven days**.
 Actual expiry is the *earlier* of request approval deadline and
 issued-at plus the configured TTL. TTL does NOT extend the
 approval request's business deadline. A standard reminder
-reuses still-valid issued links. An explicit authorized
+reuses still-valid issued links. If the encrypted original
+mail material is missing, it must fail closed and must not
+create a second active link/PIN issuance. If an existing issuance
+has expired or previously been revoked, a routine reminder must
+not create a replacement issuance; only an explicitly authorized
+administrator may reissue. A currently active recipient issuance
+whose registered email address changes is an existing exception:
+the old mailbox link is revoked and fresh protected mail is issued
+only to that recipient's new eligible registered address. A new
+eligible seat or recipient with no prior generation may still
+receive their first issuance. An explicit authorized
 reissue revokes a previous issuance generation and creates
 new links/code; a long-running request may safely reissue
 without silently extending the deadline. Reissue actions and

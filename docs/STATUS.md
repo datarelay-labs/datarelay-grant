@@ -59,6 +59,30 @@ suppression after correction; no actual customer mailbox or external
 transport was used. This is a development candidate, not direct-user E2E
 or release acceptance.
 
+## G10A reminder issuance integrity after material loss (2026-10-09)
+
+The scheduled G10A reminder path now reuses only the original active,
+recoverable encrypted recipient PIN/link issuance. An absent saved
+message body cannot silently create a second concurrently active
+generation. A previously expired or revoked issuance cannot
+be rotated by a routine reminder. The existing trusted recipient
+email-change path is preserved: it revokes the old active link and
+queues a fresh protected message to the new registered mailbox.
+The scheduler records `decision.reminder_unavailable` in the protected
+audit without bearer URLs, PINs or raw mail body. Administrator audit
+search retains bounded issuance identifiers; arbitrary raw reason text is
+not surfaced in the sanitized audit projection. An authorized
+administrator must review the request and explicitly reissue where
+appropriate. Newly eligible recipients without prior generations
+retain their initial mail issuance path, and valid existing reminders
+reuse the same PIN and three decision links.
+
+Disposable tests reproduce the previous dual-active/mint-on-expiry
+behavior before correction, then verify normal reuse, mailbox-change
+fail-closed and authorized admin reissue. No live mailbox receipt,
+direct browser Full User E2E, external consumer effect or release
+acceptance is established by these tests.
+
 ## G10A backend-only implementation lane (2026-10-09)
 
 In the isolated feat/grant-1.0-g10a-backend branch, G10A-0 now has
