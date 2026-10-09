@@ -24,6 +24,7 @@ from .models import (
     IntentOtpVerification,
     IntentPin,
     NotificationBrandingUpdate,
+    NotificationEvent,
     NotificationPreview,
     NotificationTemplateSet,
     NotificationTemplateSetUpdate,
@@ -313,8 +314,18 @@ def register_domain(app, actor, human, reader):
         return core.notification_variables(actor(request))
 
     @app.get("/api/v1/notification-deliveries")
-    def notification_deliveries(request: Request):
-        return core.notification_deliveries(actor(request))
+    def notification_deliveries(
+        request: Request,
+        state: Literal["PENDING", "SENDING", "FAILED", "DELIVERED", "SUPERSEDED"] | None = None,
+        event_type: NotificationEvent | None = None,
+        request_id: str | None = Query(default=None, min_length=1, max_length=100),
+        limit: int = Query(default=200, ge=1, le=200),
+        offset: int = Query(default=0, ge=0, le=100000),
+    ):
+        return core.notification_deliveries(
+            actor(request), state=state, event_type=event_type,
+            request_id=request_id, limit=limit, offset=offset,
+        )
 
     @app.get("/api/v1/notification-branding")
     def notification_branding(request: Request):

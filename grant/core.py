@@ -566,14 +566,49 @@ class Core:
             "event_id": event_id,
         }
 
-    def notification_deliveries(self, actor: Principal) -> dict:
+    def notification_deliveries(
+        self, actor: Principal, *,
+        state: str | None = None,
+        event_type: str | None = None,
+        request_id: str | None = None,
+        limit: int = 200,
+        offset: int = 0,
+    ) -> dict:
         actor.require_admin()
+        allowed_states = {"PENDING", "SENDING", "FAILED", "DELIVERED", "SUPERSEDED"}
+        allowed_events = {
+            "requested", "reminder", "approved", "denied", "expired",
+            "cancelled", "execution_succeeded", "execution_failed", "execution_unknown",
+        }
+        if (
+            state is not None and state not in allowed_states
+            or event_type is not None and event_type not in allowed_events
+            or request_id is not None and (not 1 <= len(request_id) <= 100)
+            or not 1 <= limit <= 200
+            or not 0 <= offset <= 100000
+        ):
+            raise GrantError("INVALID_DELIVERY_HEALTH_FILTER", 422)
+
+        clauses = ["kind='email'"]
+        values: list[str] = []
+        for field, value in (
+            ("state", state), ("event_type", event_type), ("request_id", request_id),
+        ):
+            if value is not None:
+                clauses.append(field + "=?")
+                values.append(value)
+        where = " AND ".join(clauses)
         with self.db.transaction(write=False) as conn:
+            require_current_authority(conn, actor)
+            total = conn.execute(
+                "SELECT COUNT(*) FROM outbox WHERE " + where, values
+            ).fetchone()[0]
             rows = conn.execute(
                 """SELECT id,request_id,event_type,state,attempts,last_error,
                           available_at,delivered_at,created_at
-                   FROM outbox WHERE kind='email'
-                   ORDER BY created_at DESC,id DESC LIMIT 200"""
+                   FROM outbox WHERE """
+                + where + " ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?",
+                (*values, limit, offset),
             ).fetchall()
         return {
             "deliveries": [
@@ -583,7 +618,11 @@ class Core:
                     "receipt_confirmed": False,
                 }
                 for row in rows
-            ]
+            ],
+            "total": int(total),
+            "limit": limit,
+            "offset": offset,
+            "has_more": offset + len(rows) < total,
         }
 
     def _insert_profile_version(

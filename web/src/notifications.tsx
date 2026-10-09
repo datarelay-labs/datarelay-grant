@@ -98,9 +98,164 @@ function eventLabel(value: NotificationEvent): string {
     .replace(/(^|\s)\S/g, (character) => character.toUpperCase());
 }
 
+type DeliveryState = 'ALL' | 'PENDING' | 'SENDING' | 'FAILED' | 'DELIVERED' | 'SUPERSEDED';
+type DeliveryFilter = {
+  state: DeliveryState;
+  event: 'ALL' | NotificationEvent;
+  requestId: string;
+};
+type DeliveryHistoryPage = {
+  deliveries: NotificationDelivery[];
+  total: number;
+  offset: number;
+  limit: number;
+  has_more: boolean;
+};
+const defaultDeliveryFilters: DeliveryFilter = { state: 'ALL', event: 'ALL', requestId: '' };
+const DELIVERY_PAGE_LIMIT = 50;
+const deliveryStates: DeliveryState[] = ['ALL', 'PENDING', 'SENDING', 'FAILED', 'DELIVERED', 'SUPERSEDED'];
+
+// Filters are deliberately bounded and only narrow the current administrator
+// route. Querying health never issues a delivery resend or execution grant.
+export function notificationDeliveryQuery(filters: DeliveryFilter, offset: number): string {
+  const requestId = filters.requestId.trim();
+  if (!deliveryStates.includes(filters.state) ||
+      (filters.event !== 'ALL' && !events.includes(filters.event)) ||
+      filters.requestId.length > 100 ||
+      !Number.isSafeInteger(offset) || offset < 0 || offset > 100000) {
+    throw new Error('INVALID_DELIVERY_HEALTH_FILTER');
+  }
+  const query = new URLSearchParams({
+    limit: String(DELIVERY_PAGE_LIMIT), offset: String(offset),
+  });
+  if (filters.state !== 'ALL') query.set('state', filters.state);
+  if (filters.event !== 'ALL') query.set('event_type', filters.event);
+  if (requestId) query.set('request_id', requestId);
+  return '/notification-deliveries?' + query.toString();
+}
+
+export function deliveryPageLabel(page: Pick<DeliveryHistoryPage,
+  'deliveries' | 'total' | 'limit' | 'offset' | 'has_more'> | null): string {
+  if (!page ||
+      !Number.isSafeInteger(page.total) || page.total < 0 ||
+      !Number.isSafeInteger(page.offset) || page.offset < 0) {
+    return 'Delivery page unavailable';
+  }
+  if (page.total === 0) return 'No matching email delivery events';
+  if (!page.deliveries.length) return 'No deliveries on this page of ' + page.total + ' matching events';
+  return String(page.offset + 1) + '–' + String(page.offset + page.deliveries.length) +
+    ' of ' + page.total + ' matching deliveries';
+}
+
+export function NotificationDeliveryHealth() {
+  const [draft, setDraft] = useState<DeliveryFilter>(defaultDeliveryFilters);
+  const [applied, setApplied] = useState<DeliveryFilter>(defaultDeliveryFilters);
+  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState<DeliveryHistoryPage | null>(null);
+  const task = useTask();
+
+  async function loadPage() {
+    const next = await api<DeliveryHistoryPage>(notificationDeliveryQuery(applied, offset));
+    setPage(next);
+  }
+  useEffect(() => { void task.run(loadPage); }, [applied, offset]);
+
+  function apply() {
+    setOffset(0);
+    setPage(null);
+    setApplied({ ...draft });
+  }
+  function clear() {
+    setDraft({ ...defaultDeliveryFilters });
+    setPage(null);
+    setOffset(0);
+    setApplied({ ...defaultDeliveryFilters });
+  }
+  async function scheduleResend(id: string) {
+    // Only explicit administrator button activation reaches this write.
+    await api('/deliveries/' + id + '/resend', 'POST');
+    await loadPage();
+    task.setNotice('Notification resend scheduled. This cannot replay a protected action.');
+  }
+  return <div className="grant-stack">
+    {task.feedback}
+    <Card title="Delivery Health"
+      description="Search stored email delivery events. Resend is a separate explicit notification-only operation; transport acceptance never proves inbox receipt."
+      actions={<Button variant="secondary" disabled={task.busy}
+        onClick={() => void task.run(loadPage)}>Refresh</Button>}>
+      <section className="grant-stack" aria-label="Filter delivery health">
+        <div className="grant-grid">
+          <Select label="Delivery state" required={false} value={draft.state}
+            onChange={(state) => setDraft({ ...draft, state: state as DeliveryState })}>
+            {deliveryStates.map((state) => <option value={state} key={state}>
+              {state === 'ALL' ? 'All states' : state}
+            </option>)}
+          </Select>
+          <Select label="Notification event" required={false} value={draft.event}
+            onChange={(event) => setDraft({
+              ...draft, event: event as DeliveryFilter['event'],
+            })}>
+            <option value="ALL">All events</option>
+            {events.map((event) => <option key={event} value={event}>
+              {eventLabel(event)}
+            </option>)}
+          </Select>
+          <TextField label="Exact request ID" required={false} value={draft.requestId}
+            placeholder="Optional request ID"
+            onChange={(event) => setDraft({
+              ...draft, requestId: event.target.value.slice(0, 100),
+            })} />
+        </div>
+        <div className="grant-actions">
+          <Button disabled={task.busy} onClick={apply}>Apply filters</Button>
+          <Button variant="ghost" disabled={task.busy} onClick={clear}>Clear filters</Button>
+        </div>
+      </section>
+      <p aria-live="polite">{deliveryPageLabel(page)}</p>
+      <p>Receipt is not independently confirmed by this delivery ledger.</p>
+      <div className="grant-table-scroll">
+        <table className="grant-table">
+          <thead><tr>
+            <th>Event</th><th>State</th><th>Attempts</th><th>Request</th>
+            <th>Last error</th><th>Created</th><th aria-label="Actions" />
+          </tr></thead>
+          <tbody>{page?.deliveries.map((item) => <tr key={item.id}>
+            <td>{eventLabel(item.event_type as NotificationEvent)}</td>
+            <td>{item.state}<small>
+              transport {String(item.transport_accepted)} · receipt {String(item.receipt_confirmed)}
+            </small></td>
+            <td>{item.attempts}</td>
+            <td><NotificationRequestLink requestId={item.request_id} /></td>
+            <td>{item.last_error ?? '—'}</td>
+            <td>{when(item.created_at)}</td>
+            <td>{item.state === 'FAILED' ? <Button variant="secondary"
+              disabled={task.busy}
+              onClick={() => void task.run(() => scheduleResend(item.id))}>
+              Schedule resend
+            </Button> : null}</td>
+          </tr>)}</tbody>
+        </table>
+      </div>
+      <div className="grant-actions">
+        <Button variant="secondary" disabled={task.busy || offset <= 0}
+          onClick={() => { setPage(null); setOffset(Math.max(0, offset - DELIVERY_PAGE_LIMIT)); }}>
+          Previous page
+        </Button>
+        <Button variant="secondary"
+          disabled={task.busy || !page?.has_more || offset + DELIVERY_PAGE_LIMIT > 100000}
+          onClick={() => { setPage(null); setOffset(offset + DELIVERY_PAGE_LIMIT); }}>
+          Next page
+        </Button>
+      </div>
+      {page?.has_more && offset + DELIVERY_PAGE_LIMIT > 100000 ? (
+        <p>Use a narrower filter to review records beyond the bounded paging window.</p>
+      ) : null}
+    </Card>
+  </div>;
+}
+
 export function Notifications() {
   const [sets, setSets] = useState<NotificationTemplateSet[]>([]);
-  const [deliveries, setDeliveries] = useState<NotificationDelivery[]>([]);
   const [variables, setVariables] = useState<string[]>([]);
   const [branding, setBranding] = useState<NotificationBranding>({
     brand_name: 'DataRelay Grant',
@@ -136,15 +291,13 @@ export function Notifications() {
   }
 
   const load = async () => {
-    const [templateSets, deliveryHealth, safeVariables, currentBranding] =
+    const [templateSets, safeVariables, currentBranding] =
       await Promise.all([
         api<NotificationTemplateSet[]>('/notification-template-sets'),
-        api<{ deliveries: NotificationDelivery[] }>('/notification-deliveries'),
         api<{ variables: string[] }>('/notification-variables'),
         api<NotificationBranding>('/notification-branding'),
       ]);
     setSets(templateSets);
-    setDeliveries(deliveryHealth.deliveries);
     setVariables(safeVariables.variables);
     setBranding(currentBranding);
     setBrandName(currentBranding.brand_name);
@@ -268,12 +421,6 @@ export function Notifications() {
     setBranding(updated);
     invalidatePreview();
     task.setNotice('Notification branding updated for future request snapshots.');
-  }
-
-  async function resend(id: string) {
-    await api('/deliveries/' + id + '/resend', 'POST');
-    await load();
-    task.setNotice('Notification resend scheduled. This cannot replay an action.');
   }
 
   return (
@@ -532,63 +679,7 @@ export function Notifications() {
         </>
       ) : null}
 
-      {view === 'delivery' ? (
-        <Card
-          title="Delivery Health"
-          description="Failures and retries are notification state only. Resending a notification never replays an approved action."
-          actions={
-            <Button variant="secondary" disabled={task.busy} onClick={() => void task.run(load)}>
-              Refresh
-            </Button>
-          }
-        >
-          <div className="grant-table-scroll">
-            <table className="grant-table">
-              <thead>
-                <tr>
-                  <th>Event</th>
-                  <th>State</th>
-                  <th>Attempts</th>
-                  <th>Request</th>
-                  <th>Last error</th>
-                  <th>Created</th>
-                  <th aria-label="Actions" />
-                </tr>
-              </thead>
-              <tbody>
-                {deliveries.slice(0, 100).map((item) => (
-                  <tr key={item.id}>
-                    <td>{eventLabel(item.event_type as NotificationEvent)}</td>
-                    <td>
-                      {item.state}
-                      <small>
-                        transport {String(item.transport_accepted)} · receipt{' '}
-                        {String(item.receipt_confirmed)}
-                      </small>
-                    </td>
-                    <td>{item.attempts}</td>
-                    <td><NotificationRequestLink requestId={item.request_id} /></td>
-                    <td>{item.last_error ?? '—'}</td>
-                    <td>{when(item.created_at)}</td>
-                    <td>
-                      {item.state === 'FAILED' ? (
-                        <Button
-                          variant="secondary"
-                          disabled={task.busy}
-                          onClick={() => void task.run(() => resend(item.id))}
-                        >
-                          Schedule resend
-                        </Button>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {!deliveries.length ? <p>No email delivery events recorded yet.</p> : null}
-        </Card>
-      ) : null}
+      {view === 'delivery' ? <NotificationDeliveryHealth /> : null}
 
       {view === 'branding' ? (
         <Card

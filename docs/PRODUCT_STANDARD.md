@@ -311,6 +311,17 @@ Administrators can:
 - send a test message to themselves/designated test destination;
 - see transport acceptance separately from actual inbox receipt.
 
+The administrator-only Delivery Health queue supports bounded event-type,
+outbox-state and exact request-ID filters, plus stable newest-first pagination
+with authoritative matching totals. History beyond the default response limit
+must remain discoverable instead of being silently truncated by the Web UI.
+Every page revalidates current administrator authority. A delivery row exposes
+only delivery/status metadata, never payloads, recipient destinations or
+decision credentials. A `DELIVERED` state records transport acceptance,
+**not verified inbox receipt**, and filtering/refreshing never triggers
+resending or protected execution. Resend remains an explicit separately
+authorized administrator action on eligible failed email notifications.
+
 ### 10.4 Branding
 
 System-level notification branding owns product name, sender display name, logo and

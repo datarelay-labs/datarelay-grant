@@ -5,6 +5,23 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G2 paginated administrator notification delivery health (2026-10-09)
+
+Grant's administrator Delivery Health now offers safe, separately applied
+state/event/exact request-ID filters and backend source pagination so earlier
+failed notifications are no longer hidden by the old default 200-row API /
+100-row UI display cap. The GET endpoint preserves its original default
+200 most-recent email rows and `deliveries` shape for existing clients while
+adding validated bounded limit/offset filters, authoritative `total` and
+`has_more`. The matching counts and pages are computed within one read
+transaction with fresh administrator authority checks. The Web uses 50-row
+pages, refresh, clear and explicit previous/next controls. No payload,
+recipient destination or challenge is returned, and search never schedules
+an email or executes an approval. Existing `Schedule resend` remains a
+separate explicit button guarded by existing API policy. Regression evidence
+and exact commit belong to Work Packet #83; this is source-level functionality,
+not real-recipient E2E, a new deployed owner preview or external integration.
+
 ## G9 v2 reviewed Draft import recovery rehearsal (2026-10-09)
 
 Work Packet #82 adds an isolated executable regression for real Grant
