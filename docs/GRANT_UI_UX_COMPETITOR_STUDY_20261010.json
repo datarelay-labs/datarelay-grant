@@ -1,0 +1,314 @@
+{
+  "schema_version": 1,
+  "study_id": "grant-p0-ux0-six-vendor-screen-study",
+  "targets": [
+    {
+      "id": "teleport",
+      "product": "Teleport Identity Governance",
+      "surface": "documentation",
+      "url": "https://goteleport.com/docs/identity-governance/access-requests/role-requests/",
+      "provenance": {
+        "version": "18.x",
+        "edition": "Enterprise",
+        "role": "Reviewer Requester",
+        "checked_at": "2026-10-10"
+      }
+    },
+    {
+      "id": "jira",
+      "product": "Jira Service Management Cloud",
+      "surface": "documentation",
+      "url": "https://support.atlassian.com/jira-service-management-cloud/docs/set-up-approvals/",
+      "provenance": {
+        "version": "Cloud",
+        "edition": "Company-managed",
+        "role": "Approver Space admin",
+        "checked_at": "2026-10-10"
+      }
+    },
+    {
+      "id": "entra",
+      "product": "Microsoft Entra My Access",
+      "surface": "documentation",
+      "url": "https://learn.microsoft.com/en-us/entra/id-governance/my-access-portal-overview",
+      "provenance": {
+        "version": "Cloud",
+        "edition": "ID Governance",
+        "role": "Requester Approver",
+        "checked_at": "2026-10-10"
+      }
+    },
+    {
+      "id": "servicenow",
+      "product": "ServiceNow Employee Center",
+      "surface": "documentation",
+      "url": "https://www.servicenow.com/docs/r/employee-service-management/employee-experience-foundation/employee-center-to-dos-page-configuration.html",
+      "provenance": {
+        "version": "UNKNOWN",
+        "edition": "Employee Center",
+        "role": "Employee Approver",
+        "checked_at": "2026-10-10"
+      }
+    },
+    {
+      "id": "keycloak",
+      "product": "Keycloak Admin Console",
+      "surface": "documentation",
+      "url": "https://www.keycloak.org/docs/latest/server_admin/",
+      "provenance": {
+        "version": "latest-UNPINNED",
+        "edition": "Open-source",
+        "role": "Admin",
+        "checked_at": "2026-10-10"
+      }
+    },
+    {
+      "id": "strongdm",
+      "product": "StrongDM Access and Approval Workflows",
+      "surface": "documentation",
+      "url": "https://docs.strongdm.com/admin/access/approval-workflows",
+      "provenance": {
+        "version": "UNKNOWN",
+        "edition": "Enterprise",
+        "role": "Admin Approver",
+        "checked_at": "2026-10-10"
+      }
+    }
+  ],
+  "findings": [
+    {
+      "id": "review-task-queue",
+      "feature": "Assigned pending approvals in dedicated role-aware review queue",
+      "area": "Grant",
+      "priority": "P0",
+      "evidence": [
+        {
+          "target_id": "teleport",
+          "verdict": "documented",
+          "url": "https://goteleport.com/docs/identity-governance/access-requests/role-requests/"
+        },
+        {
+          "target_id": "entra",
+          "verdict": "documented",
+          "url": "https://learn.microsoft.com/en-us/entra/id-governance/my-access-portal-overview"
+        },
+        {
+          "target_id": "servicenow",
+          "verdict": "documented",
+          "url": "https://www.servicenow.com/docs/r/employee-service-management/employee-experience-foundation/employee-center-to-dos-page-configuration.html"
+        }
+      ],
+      "recommendation": "Preserve existing Grant My approvals queue and server scope; fix real overdue/current decision contradiction before cosmetic work."
+    },
+    {
+      "id": "review-action-context",
+      "feature": "Focused request detail and one-click entry to explicit approve or deny",
+      "area": "Grant",
+      "priority": "P1",
+      "evidence": [
+        {
+          "target_id": "jira",
+          "verdict": "documented",
+          "url": "https://support.atlassian.com/jira-service-management-cloud/docs/approve-or-decline-a-request-from-the-new-issue-view/"
+        },
+        {
+          "target_id": "entra",
+          "verdict": "documented",
+          "url": "https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-request-approve"
+        }
+      ],
+      "recommendation": "Keep reviewer-seat votes and immutable action first; never treat submitted approval as product execution."
+    },
+    {
+      "id": "review-expiry",
+      "feature": "Approver queue distinguishes pending decision and expired prior approval",
+      "area": "Grant",
+      "priority": "P0",
+      "evidence": [
+        {
+          "target_id": "entra",
+          "verdict": "documented",
+          "url": "https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-request-approve"
+        },
+        {
+          "target_id": "teleport",
+          "verdict": "documented",
+          "url": "https://goteleport.com/docs/identity-governance/access-requests/role-requests/"
+        }
+      ],
+      "recommendation": "Prior synthetic Grant API found already-approved execution-grant expiry falsely in approver overdue list; require backend/Home parity before new UI."
+    },
+    {
+      "id": "email-approval-options",
+      "feature": "Email notification can link to request or offer approval actions",
+      "area": "Grant",
+      "priority": "P0",
+      "evidence": [
+        {
+          "target_id": "jira",
+          "verdict": "documented",
+          "url": "https://support.atlassian.com/jira-service-management-cloud/docs/manage-settings-for-approval-by-email/"
+        },
+        {
+          "target_id": "entra",
+          "verdict": "documented",
+          "url": "https://learn.microsoft.com/en-us/entra/id-governance/entitlement-management-request-approve"
+        }
+      ],
+      "recommendation": "Mount Grant secure anonymous read-only PIN landing; vendor email mechanisms are NOT evidence of equivalent PIN or MFA."
+    },
+    {
+      "id": "email-pin-mfa-parity",
+      "feature": "Loginless 4-digit PIN optional OTP fresh Grant TOTP and final POST",
+      "area": "Grant",
+      "priority": "P0",
+      "evidence": [
+        {
+          "target_id": "jira",
+          "verdict": "not_verified"
+        },
+        {
+          "target_id": "servicenow",
+          "verdict": "not_verified"
+        }
+      ],
+      "recommendation": "Grant specific security product requirement; existing backend/standalone portal present but actual public route missing. Do not infer competitor verification controls."
+    },
+    {
+      "id": "admin-navigation",
+      "feature": "Role-appropriate administration navigation and bounded task panels",
+      "area": "Foundation",
+      "priority": "P0",
+      "evidence": [
+        {
+          "target_id": "keycloak",
+          "verdict": "documented",
+          "url": "https://www.keycloak.org/docs/latest/server_admin/"
+        },
+        {
+          "target_id": "strongdm",
+          "verdict": "documented",
+          "url": "https://docs.strongdm.com/admin"
+        }
+      ],
+      "recommendation": "Resolve two member capability contradictions in shared Foundation/Grant Administration; preserve configured admin ownership and no fake SMTP editor."
+    },
+    {
+      "id": "mobile-centered-auth",
+      "feature": "Centered responsive auth and 320px/375px first-viewport navigation",
+      "area": "Foundation",
+      "priority": "P0",
+      "evidence": [
+        {
+          "target_id": "keycloak",
+          "verdict": "not_verified"
+        },
+        {
+          "target_id": "servicenow",
+          "verdict": "not_verified"
+        }
+      ],
+      "recommendation": "Owner screenshots and prior Grant source research show concern; vendor docs do not prove mobile parity. Need permitted direct browser visual/a11y E2E."
+    },
+    {
+      "id": "policy-review-steps",
+      "feature": "Approval policies expose actors groups threshold and review steps",
+      "area": "Grant",
+      "priority": "P0",
+      "evidence": [
+        {
+          "target_id": "jira",
+          "verdict": "documented",
+          "url": "https://support.atlassian.com/jira-service-management-cloud/docs/set-up-approvals/"
+        },
+        {
+          "target_id": "strongdm",
+          "verdict": "documented",
+          "url": "https://docs.strongdm.com/admin/access/approval-workflows"
+        },
+        {
+          "target_id": "teleport",
+          "verdict": "documented",
+          "url": "https://goteleport.com/docs/identity-governance/access-requests/role-requests/"
+        }
+      ],
+      "recommendation": "Grant already supports SINGLE/ANY_ONE/ALL/N_OF_M/SEQUENTIAL; protect stale multi-admin editor save and explicit review lifecycle."
+    },
+    {
+      "id": "notification-policy",
+      "feature": "Administrative email approval notifications and policy-bound template choices",
+      "area": "Grant",
+      "priority": "P0",
+      "evidence": [
+        {
+          "target_id": "jira",
+          "verdict": "documented",
+          "url": "https://support.atlassian.com/jira-service-management-cloud/docs/manage-settings-for-approval-by-email/"
+        },
+        {
+          "target_id": "strongdm",
+          "verdict": "documented",
+          "url": "https://docs.strongdm.com/admin/access/access-workflows"
+        }
+      ],
+      "recommendation": "Compare saved templates/approval policies as separate modules; fix two-admin lost update, never copy chat bot flow or make unapproved real SMTP send."
+    },
+    {
+      "id": "task-details-activity",
+      "feature": "Request detail places decision context and activity history side by side or in separate panels",
+      "area": "Grant",
+      "priority": "P1",
+      "evidence": [
+        {
+          "target_id": "servicenow",
+          "verdict": "documented",
+          "url": "https://www.servicenow.com/docs/r/xanadu/employee-service-management/employee-experience-foundation/ec-to-dos-use.html"
+        },
+        {
+          "target_id": "strongdm",
+          "verdict": "documented",
+          "url": "https://docs.strongdm.com/admin/access/access-workflows"
+        }
+      ],
+      "recommendation": "Progressively display Request Action, decision seats, delivery/effect and audit. Existing Grant RequestEvidence is source present, user screen acceptance not proven."
+    },
+    {
+      "id": "request-status-history",
+      "feature": "Clear separation of requester history and approver pending work",
+      "area": "Grant",
+      "priority": "P1",
+      "evidence": [
+        {
+          "target_id": "entra",
+          "verdict": "documented",
+          "url": "https://learn.microsoft.com/en-us/entra/id-governance/my-access-portal-overview"
+        },
+        {
+          "target_id": "servicenow",
+          "verdict": "documented",
+          "url": "https://www.servicenow.com/docs/r/employee-service-management/employee-experience-foundation/employee-center-to-dos-page-configuration.html"
+        }
+      ],
+      "recommendation": "Keep My requests and My approvals separate; label Grant reported execution not independently verified."
+    },
+    {
+      "id": "external-iam-catalog",
+      "feature": "Enterprise access catalogs roles and automatic approval/escalation product scope",
+      "area": "Grant",
+      "priority": "defer",
+      "evidence": [
+        {
+          "target_id": "strongdm",
+          "verdict": "documented",
+          "url": "https://docs.strongdm.com/admin/access/approval-workflows"
+        },
+        {
+          "target_id": "entra",
+          "verdict": "documented",
+          "url": "https://learn.microsoft.com/en-us/entra/id-governance/my-access-portal-overview"
+        }
+      ],
+      "recommendation": "Do NOT add IAM catalog, auto approval, RMM, generic workflow engine or silent execution to Grant 1.0."
+    }
+  ]
+}

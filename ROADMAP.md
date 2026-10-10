@@ -20,7 +20,7 @@ P0-UX-0** below.
 
 ## P0-UX-0 — OWNER FIRST: competitor UI/UX gap analysis before further screen development
 
-**STATE=PLANNED / PRIORITY=P0-UX-FIRST / Owner WP #67 (existing packet, revision 6).**
+**STATE=RESEARCH_SOURCE_COMPLETE / NEXT_SCREEN_P0=WAITING_BLOCKER / PRIORITY=P0-UX-FIRST / Owner WP #67 (existing packet, revision 7).**
 This is the **highest-priority prerequisite for NEW discretionary M2–M4 UI/UX
 implementation**, not a ninth product milestone and not a reason to stop
 independent security/reliability P0 fixes or the M6/M7/M8 qualification gates.
@@ -89,11 +89,8 @@ than a new exhaustive survey or full proprietary code reverse engineering.
    checks, then exact-installed-HEAD direct Full User E2E under M7; none of
    these gates may be inferred from research or source tests.
 
-**UX-0 research acceptance:** evidence-backed comparison across the five
-screen families; explicit disposition for the six first-pass vendors;
-ranked, nonduplicative top 3–5 implementable changes with Foundation/Grant
-owner and tests; unsupported/blocked and deferred findings documented.
-Only then resume **discretionary screen redesign**. Safety-blocked
+**UX-0 research acceptance COMPLETED at integrated baseline `5fe81068e2669fe6c5369064009a3e1f6035f2ea`:** evidence-backed `docs/GRANT_UI_UX_GAP_MATRIX.md` compares the five screen families / six first-pass vendors, backed by validated `docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json` (12 findings, existing PF-CI research CLI `COMPETITIVE_MATRIX_PASS`, 0 actually operated competitor screens). It ranks five nonduplicative implementation/verification actions with Foundation vs Grant owners and native/Web/direct-user tests; unknown and out-of-scope items remain explicitly labeled. **This completes competitive source/document research, NOT product UI implementation.**
+The next discretionary screen work follows the ranked, independently authorized M2–M4 P0 actions; existing platform-denied source paths and actual human/Control/Stellar/CI gates remain unresolved. Safety-blocked
 `web/src/app.tsx`, Administration/styles/mobile/real browser, broad
 `grant/core.py`, G12 builder and previously denied platform effects remain
 blocked independently, regardless of vendor/REA tool. E2E, CI and release
