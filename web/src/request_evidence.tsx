@@ -13,8 +13,37 @@ export function RequestEvidence({
   busy: boolean;
   onResend: (deliveryId: string) => void;
 }) {
+  // The server already role-scopes this projection. Current votes represent
+  // assigned approval seats, not independently verified human identities.
+  // A later decision may supersede a Hold; the timeline retains the history.
+  const votes = row.decisions ?? [];
+  const seats = row.approval_plan?.members ?? [row.approver_id];
+  const approved = row.approval_progress?.approved_count
+    ?? votes.filter((vote) => vote.decision === 'APPROVED').length;
+  const required = row.approval_progress?.required_count
+    ?? row.approval_plan?.required ?? 1;
   return (
     <>
+      <Card title="Reviewer decisions" description="Current seat votes, not a complete chronological history. Email PIN alone is not proof of the person. A vote is not itself authorization to execute. See Request timeline for prior changes.">
+        <p><strong>{approved} of {required} approved</strong> · {row.approval_plan?.mode ?? 'Single approver'}</p>
+        {votes.length ? (
+          <ul>
+            {votes.map((vote) => {
+              const index = seats.indexOf(vote.actor_id);
+              return <li key={vote.actor_id}>
+                <strong>{index >= 0 ? 'Approval seat ' + (index + 1) : 'Recorded reviewer vote'}</strong>
+                {' · '}<State value={vote.decision} />
+                <small>{when(vote.decided_at)}</small>
+                <p>{vote.reason || 'No decision reason recorded.'}</p>
+                <details>
+                  <summary>Recorded approval seat reference</summary>
+                  <code>{vote.actor_id}</code>
+                </details>
+              </li>;
+            })}
+          </ul>
+        ) : <p>No reviewer decisions recorded.</p>}
+      </Card>
       <Card title="Delivery history" description="Transport acceptance does not prove external execution. Resend repeats only the notification.">
         <details>
           <summary>Delivery attempts · {row.deliveries?.length ?? 0}</summary>

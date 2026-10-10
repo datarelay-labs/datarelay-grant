@@ -73,20 +73,40 @@ function encodeParameter(value: string | number): string {
   return encodeURIComponent(String(value)).replace(/[!'()*~]/g, (character) =>
     '%' + character.charCodeAt(0).toString(16).toUpperCase());
 }
-function queryFor(filters: Filters, offset: number): string {
+/** Server request timestamps are UTC seconds. An HTML date has no timezone. */
+function utcCalendarStart(value: string): number {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error('INVALID_REQUEST_DATE');
+  }
+  const at = Date.parse(value + 'T00:00:00.000Z');
+  if (!Number.isFinite(at) || at < 0 ||
+      new Date(at).toISOString().slice(0, 10) !== value) {
+    throw new Error('INVALID_REQUEST_DATE');
+  }
+  return at / 1000;
+}
+
+export function queryFor(filters: Filters, offset: number): string {
+  if (!Number.isSafeInteger(offset) || offset < 0 || offset > 100000) {
+    throw new Error('INVALID_REQUEST_PAGE');
+  }
+  const from = filters.created_after ? utcCalendarStart(filters.created_after) : null;
+  // GET /requests uses created_at <= created_before. The final microsecond
+  // of the selected UTC date belongs to that date; midnight of the next one
+  // does not. Do not lose approvals recorded during the final second.
+  const through = filters.created_before
+    ? utcCalendarStart(filters.created_before) + 86400 - 0.000001 : null;
+  if (from !== null && through !== null && from > through) {
+    throw new Error('INVALID_REQUEST_DATE_RANGE');
+  }
   const params: Record<string, string | number> = { limit: 50, offset };
   for (const [key, value] of Object.entries(filters)) {
-    if (!value) continue;
-    if (key === 'created_after') {
-      params.created_after = Math.floor(new Date(value + 'T00:00:00').getTime() / 1000);
-    } else if (key === 'created_before') {
-      params.created_before = Math.floor(new Date(value + 'T23:59:59').getTime() / 1000);
-    } else {
-      params[key] = value;
-    }
+    if (!value || key === 'created_after' || key === 'created_before') continue;
+    params[key] = value;
   }
+  if (from !== null) params.created_after = from;
+  if (through !== null) params.created_before = through;
   return '/requests?' + Object.entries(params)
-    .filter(([, value]) => Number.isFinite(typeof value === 'number' ? value : 0))
     .map(([key, value]) => key + '=' + encodeParameter(value)).join('&');
 }
 
@@ -149,6 +169,12 @@ export function RequestList({
   }, [admin]);
 
   function apply() {
+    try {
+      queryFor(draft, 0);
+    } catch {
+      task.setNotice('Enter a valid UTC date range. The start date must not follow the end date.');
+      return;
+    }
     setOffset(0);
     setApplied({ ...draft });
   }
@@ -208,6 +234,7 @@ export function RequestList({
             <TextField label="Action type" value={draft.action_kind} maxLength={100} onChange={(e) => edit('action_kind', e.target.value)} />
             <TextField label="Created from" type="date" value={draft.created_after} onChange={(e) => edit('created_after', e.target.value)} />
             <TextField label="Created through" type="date" value={draft.created_before} onChange={(e) => edit('created_before', e.target.value)} />
+            <p>Created dates use UTC calendar days, including the whole selected end date.</p>
             <Select label="Callback delivery" value={draft.delivery_state} onChange={(value) => edit('delivery_state', value)} required={false}>
               <option value="">Any delivery status</option>
               {['NOT_SCHEDULED', 'PENDING', 'DELIVERED', 'FAILED'].map((value) =>

@@ -1,803 +1,163 @@
-# DataRelay Grant — 1.0 Product Roadmap
-
-Accepted: 2026-10-07
-Owner accepted G10A-0..5 roadmap and safe per-answer email UX: 2026-10-08
-Repository: `datarelay-labs/datarelay-grant`
-Canonical product rules: `docs/PRODUCT_STANDARD.md`
-Status: pre-release development candidate
-
-## Product outcome
-
-Grant 1.0 is not an MVP approval demo. It is a usable approval-control product for
-small teams, operators, MSP/MSSP workflows and connected systems that need a human
-decision before a bounded action may execute.
-
-The 1.0 exit bar is:
-
-> A team can configure approval policies, route real requests to the right people,
-> collaborate and escalate when needed, safely activate policies, receive and manage
-> notifications, understand pending/failed work, authorize exact actions, and audit
-> the complete path through execution result.
-
-Generic workflow automation remains out of scope.
-
-## Current implementation baseline
-
-The current development candidate already provides:
-
-- Product Foundation shell/auth/account/session/health/audit adapters;
-- immutable requested action and fingerprint;
-- explicit approve/hold/deny;
-- request deadlines, reminders, cancellation and linked replacement;
-- versioned approval policies with Draft -> Testing -> Active -> Disabled lifecycle,
-  bounded deterministic matching, clone/history and shared runtime/preview resolution;
-- event-oriented notification template sets with safe variables, preview/test send,
-  delivery health, branding and sender display name;
-- request-time policy-version and complete notification snapshot behavior;
-- scoped integration identities and credentials;
-- durable SMTP/HTTP outbox and signed outcome callbacks;
-- action-bound consume/replay protocol and result reporting;
-- backup/restore and conservative recovery;
-- real browser user journeys and live Gmail delivery evidence;
-- generic DataRelay/Stellar integration contracts.
-
-Email approvals in this baseline use a **single request-detail link**, not
-three patent-style decision links; emailed PIN/OTP verification is not present.
-This baseline is not the 1.0 completion bar.
-
-## 1.0 workstreams
-
-### G0 — Product Foundation convergence and task-oriented UX
-
-Priority: **P0 — precedes additional product-surface expansion**
-
-Grant must consume the pinned DataRelay Product Foundation as the common application
-platform rather than independently recreating login, shell, account/session or System
-Administration interaction patterns.
-
-Deliver:
-
-- consume the exact reviewed Foundation package set through the consumer SDK and typed
-  product adapters; no copied/forked Foundation source in Grant;
-- Foundation Auth UI for DataRelay-family sign-in/MFA/session presentation, with the
-  same centered product composition used by the mature Control reference while Grant
-  keeps its own cookie/session authority;
-- Foundation Product Shell baseline: semantic tokens, 260px/57px responsive sidebar,
-  grouped navigation, product identity, user/session footer, focus/mobile behavior;
-- task-oriented primary information architecture:
-  - **Home**
-  - **Work** — My approvals, Requests
-  - **Configuration** — Approval policies, Notifications, Integrations
-  - **Administration** — Administration
-  - Account & Security lives with the signed-in user instead of consuming primary
-    navigation space;
-- Home is an action center, not an NOC/BI dashboard: work needing a human decision,
-  overdue/exception work, and recent requests take priority over charts;
-- Request surfaces use queue/table patterns for scanning, filtering and action;
-- Approval Policies use list -> policy detail with bounded lifecycle/preview/history
-  sections rather than one permanently expanded settings form;
-- Notifications use Template Sets / Delivery Health / Branding with template detail and
-  event-focused editing instead of one long settings canvas;
-- common System Administration uses Foundation capability projections, adapters and
-  AdminTaskCatalog/shared status/account/audit components; unsupported operations remain
-  explicitly unavailable;
-- shared styling uses Foundation semantic tokens and icons; Grant CSS is limited to
-  domain layout and product-specific composition.
-
-Exit evidence:
-
-- no Grant-owned duplicate login/sidebar/common System Administration implementation;
-- Foundation adapter/capability conformance remains PASS;
-- desktop/mobile browser evidence covers login, shell collapse/navigation, account
-  security and Administration task entry;
-- product browser regression remains clean after shared-surface replacement;
-- docs/UX_INFORMATION_ARCHITECTURE.md and docs/PRODUCT_STANDARD.md agree with the
-  implemented navigation and shared-UX boundary.
-
-### G1 — Policy lifecycle and safe administration
-
-Priority: **P0**
-
-Deliver:
-
-- lifecycle `DRAFT -> TESTING -> ACTIVE -> DISABLED`;
-- versioned policy edits;
-- clone policy;
-- policy change history;
-- no live effect from save alone;
-- bounded conditions: integration, action, tenant, environment, severity, risk;
-- deterministic matching order/conflict handling;
-- policy preview using sample request;
-- preview resolved policy, approvers, timing, notification and execution-grant
-  parameters;
-- isolated test request;
-- explicit Activate action with audit.
-
-Exit evidence:
-
-- active policy cannot be mutated in place;
-- preview matches runtime policy resolution;
-- test mode never authorizes real execution;
-- conflicts and no-match behavior are deterministic;
-- browser administration and API tests pass.
-
-### G2 — Notification center
-
-Priority: **P0**
-
-Replace standalone mail-template CRUD with a coherent Notifications area.
-
-Deliver:
-
-- notification template sets;
-- events: requested, reminder, approved, denied, expired, cancelled, execution
-  succeeded, execution failed/unknown;
-- safe-variable registry;
-- sample-data preview;
-- rendered message preview;
-- Send test to me / designated test recipient;
-- actual delivery state vs inbox receipt distinction;
-- system-owned layout/branding;
-- sender display name;
-- delivery-health view;
-- retry/resend visibility;
-- global defaults plus policy-level template selection;
-- existing-request notification snapshot preservation.
-
-Exit evidence:
-
-- unsafe variables rejected;
-- template edits do not rewrite in-flight request semantics;
-- live Gmail request/reminder/result messages verified;
-- notification preview matches delivered content.
-
-### G3 — Approver groups and multi-approval
-
-Priority: **P0**
-
-Deliver:
-
-- approver groups;
-- group membership administration;
-- approval modes:
-  - Single
-  - Any one of group
-  - All
-  - N-of-M
-  - Sequential steps
-- step-level decision state;
-- optional/required decision reason;
-- self-approval prevention;
-- deterministic concurrency handling;
-- policy preview of the full approval plan.
-
-Exit evidence:
-
-- race-safe thresholds;
-- duplicate decisions do not double-count;
-- group membership changes do not rewrite already-created request snapshots;
-- two-step and quorum browser scenarios pass.
-
-### G4 — Delegation, reassignment and escalation
-
-Priority: **P0**
-
-Deliver:
-
-- time-bounded delegation;
-- substitute approver;
-- administrator reassignment;
-- reminder schedule;
-- escalation timer;
-- escalation target user/group;
-- overdue state;
-- audit of original and acting approver identity.
-
-Exit evidence:
-
-- delegation expiration enforced;
-- reassignment preserves history;
-- escalation cannot create duplicate authorization;
-- overdue/escalated inbox behavior verified.
-
-### G5 — Request collaboration and revision
-
-Priority: **P0**
-
-Deliver:
-
-- requester and approver comments;
-- request-more-information / request-changes;
-- linked resubmission;
-- revision history;
-- material-field diff;
-- prior authorization invalidation after material change;
-- request context/evidence references using bounded safe fields.
-
-Exit evidence:
-
-- comments cannot mutate the action;
-- changed action always requires fresh authorization;
-- requester/approver browser collaboration flow passes.
-
-### G6 — Approval Inbox and requester workspace
-
-Priority: **P0**
-
-Deliver approver views:
-
-- Needs my decision
-- Overdue
-- Held
-- Delegated to me
-- Recently decided
-
-Deliver requester views:
-
-- My requests;
-- current approval stage;
-- waiting approver/group;
-- deadline/escalation;
-- comments;
-- notification status;
-- execution status/result;
-- revision history.
-
-Add filters/search for state, policy, requester, approver/group, integration, action,
-date, delivery and execution state.
-
-Exit evidence:
-
-- role-scoped search/filtering;
-- no cross-user data leakage;
-- pagination and empty/large-list behavior verified.
-
-Development candidate: G6 server-side role-filtered Inbox and My requests UI,
-request approval-progress projection, and bounded paging tested. Final exact-head
-CI/browser qualification and release reconciliation remain required (Work Packet #42).
-
-### G7 — Operational dashboard and exception handling
-
-Priority: **P0**
-
-Deliver a small operations dashboard:
-
-- pending;
-- overdue;
-- held;
-- approval latency;
-- denied/expired/cancelled;
-- delivery failures;
-- approved but not consumed;
-- execution UNKNOWN;
-- execution failures;
-- integration health and last successful callback.
-
-Every card links to filtered source requests.
-
-Add exception queues for:
-
-- delivery failed;
-- approval expired;
-- execution grant unused;
-- execution unknown;
-- execution failed.
-
-Exit evidence:
-
-- metrics derive from authoritative records;
-- dashboard values reconcile with request lists;
-- restart/restore does not create false operational state.
-
-Development candidate: G7 read-only operator counts, integration transport
-observations and role-checked exception queues implemented in Work Packet #44.
-G0-G7 combined development worktree passed 187 Python/API, 12 frontend and
-15 real-browser scenarios; exact committed-head CI, external integration and
-release/owner acceptance remain separately required.
-
-### G8 — Integration management
-
-Priority: **P0**
-
-Deliver:
-
-- clearer producer vs executor/reporting credentials;
-- integration health;
-- last request/callback success and failure;
-- credential creation/revocation history;
-- connection-test history;
-- configuration import/export without secrets;
-- policy/template portability;
-- supported DataRelay adapter examples;
-- Stellar request/return mapping guidance.
-
-Actual 1.0 integrations:
-
-1. one real DataRelay product-owned action;
-2. Stellar Cyber outgoing request and actual receiving path.
-
-Exit evidence:
-
-- real DataRelay approve/deny/expire/duplicate execution behavior;
-- actual Stellar approved/denied correlated events;
-- no fixture promoted to external evidence.
-
-Development candidate: Work Packet #46 implements read-only integration
-diagnostics, credential-role presets, bounded audit/connection-test history,
-and a non-executable safe configuration metadata export. Full validated import,
-real DataRelay/Stellar integration, external E2E and release acceptance remain
-uncompleted gates. No test fixture is promoted to external PASS.
-
-### G9 — Audit, export and operations
-
-Priority: **P0**
-
-Deliver:
-
-- searchable audit timeline;
-- policy/version/activation events;
-- group/delegation/reassignment events;
-- notification attempts;
-- execution commitment/result chain;
-- bounded CSV/JSON audit export;
-- versioned policy/template configuration export/import;
-- backup/restore coverage for all new state;
-- schema migration/rollback runbook.
-
-Exit evidence:
-
-- end-to-end request-to-result chain reconstructable;
-- export contains no raw credentials;
-- upgrade and restore retain policy/request semantics.
-
-Development candidate: Work Packet #48 implements bounded admin audit search,
-typed redacted CSV/JSON evidence export, request-to-result chain inspection,
-backup/restore verification and nonmutating policy/template conflict preview.
-Configuration import/apply, operator identity mapping, release and external
-consumer/Stellar acceptance remain separately gated; preview is not import.
-
-### G10 — Security and product hardening
-
-Priority: **P0**
-
-Maintain and extend:
-
-- MFA/session lifecycle;
-- current-authority validation;
-- scoped API credentials;
-- CSRF/rate/payload controls;
-- destination allowlisting/TLS;
-- safe notification variables;
-- action fingerprinting;
-- approval-plan snapshot integrity;
-- concurrency/race tests;
-- audit attribution;
-- secret redaction.
-
-Add focused security testing for multi-approval, delegation, policy activation/import
-and notification preview.
-
-Development candidate: Work Packet #50 extends current-authority read/role
-verification, concurrent grant decisions, audit-export anomalous value and CSV
-formula handling, CSRF/Origin and safe import-preview misuse testing. This is
-source hardening, not proof of external consumer authorization; exact HEAD
-CI, browser, G11 and release qualification remain independent.
-
-### G10A — Patent-aligned email decisions with default four-digit code
-
-Priority: **P0 before G12 final 1.0 acceptance**
-Status: **OWNER-ACCEPTED (2026-10-08); G10A-0–4 BACKEND CANDIDATE IMPLEMENTED; G10A-5 USER ACCEPTANCE NOT QUALIFIED.**
-Canonical requirements: `docs/PRODUCT_STANDARD.md` §§10.5–10.9.
-Trust-boundary rationale: `docs/ADR_EMAIL_PIN_DECISION.md`.
-Supporting vendor survey: `docs/APPROVAL_COMPETITIVE_REVIEW.md`.
-Dependencies: G2 templates/outbox, G3 approval plans, G4 delegation and
-G10 security. Approval control remains separate from the external execution
-consumer and its outcome callback.
-
-#### Accepted default email decision journey
-
-1. Grant sends a **separate email to each eligible approver**, containing
-   unique, unguessable **Approve / Hold / Deny** response-intent links (and
-   a neutral View Details link) plus one random **4-digit confirmation
-   number in the SAME approval email**, bound to that request, approver
-   assignment and issuance generation.
-2. The approver opens a chosen link. The GET/HEAD, including Safe Links
-   scanners and link previews, **only shows a generic read-only decision
-   landing and code input**. It neither sends new OTPs nor mutates
-   approval/execution state or discloses restricted request details.
-3. The approver enters the four-digit number. A protected PIN-validation
-   POST binds the link and code and grants only a short-lived,
-   action/assignee/outcome-scoped confirmation context; then the page
-   displays enough immutable request details for an informed decision.
-4. If that customer policy requires it, the same decision also requires
-   a **separately requested OTP** or **fresh MFA/identity step-up**.
-   OTP delivered to the same mailbox is *not MFA*. The default mode
-   **does not require Grant login**.
-5. The approver deliberately presses **Confirm Approve / Hold / Deny**.
-   A separately protected final POST revalidates the current assignment,
-   selected outcome, action, deadline, PIN context and optional higher
-   assurance, commits one human-intent event and records assurance.
-   Final approval never directly executes a connected system operation.
-
-No-login email PIN confirms possession/control of the **recipient mailbox
-and email contents**, **NOT the specific named person's identity**:
-a forwarded or compromised email discloses both code and URLs.
-When no independent identity step-up occurred, audit records identify
-the *assigned recipient* and verification method `EMAIL_LINK_PIN`
-but must NOT claim that a particular person was authenticated. Verified
-person/delegate identities are recorded separately only when actually
-established. Customer policy can select OTP/MFA to improve assurance.
-
-Each response link is independently unique for
-`request × seat/approver × active step × chosen outcome × immutable action
-fingerprint × assignment epoch × issuance generation`. A normal vote
-increases mutable state revision without invalidating a different
-still-eligible reviewer's link. Terminal decision consumes its link and
-revokes its sibling choices, with each seat counting at most once.
-`HELD` is provisional and may later become Approved/Denied within
-the original business deadline.
-
-**Parallel hold:** for ANY_ONE / ALL / N_OF_M, Hold affects **only that
-approver's seat**; other eligible approvers continue, and a satisfied
-threshold may authorize despite a held seat (ALL still requires all).
-**Sequential hold:** the current step's Hold **blocks all downstream
-steps**, which are neither activated nor mailed until the current
-step explicitly approves. A Deny is terminal under existing 1.0 rules.
-**Deny reason is optional by default, or required if the active
-snapshotted approval policy sets `denial_reason_required=true`.**
-Reject missing/blank required reasons server-side before consuming an
-intent or committing a vote.
-
-**Non-exclusive delegation (accepted):** during a currently valid,
-non-revoked delegation, both the original assignee and their named
-delegate receive **independent per-recipient emails, links and
-four-digit PINs**, can reach the same represented seat, and may
-choose Hold/Approve/Deny. A Hold is provisional and either party
-may later resolve it. The first valid **terminal** approval or
-denial commits atomically for that seat; it revokes both parties'
-remaining decision links and counts as **one** seat vote only.
-A losing concurrent response, revoked/expired delegate link, or
-duplicate click creates no additional decision or effect.
-Delegation expiry removes the delegate's authority without
-removing the original assignee's rights. Audit precisely which
-original/delegate mailbox capability was used and whether any
-person's identity was independently established; EMAIL_PIN alone
-is only mailbox possession, not verified personal identity.
-
-**Link expiration:** each customer chooses a default and may override
-per approval policy. Out-of-box **maximum validity is seven days** per
-issuance; actual expiry = min(request approval deadline, issued-at +
-customer-configured TTL). Shorter/longer customer-configured durations
-are supported within server-defined safe bounds. Reminder reuse is
-allowed while still valid; a deliberate reissue rotates links/code
-and invalidates superseded generation without extending the request
-deadline. TTL snapshots preserve in-flight behavior.
-
-**Customer policy modes (P0):**
-
-| Mode | Decision proof | Customer control |
-| --- | --- | --- |
-| `EMAIL_PIN` **default** | Per-answer link + same-email four-digit code + explicit confirmation; no login | Normal use |
-| `EMAIL_PIN_PLUS_OTP` optional | Base proof plus separately requested short-lived OTP; same-email OTP is still not MFA | Per customer/policy |
-| `EMAIL_PIN_PLUS_MFA` optional | Base proof plus fresh independently authenticated MFA/SSO step-up | Per customer/policy and trusted risk/action classification |
-
-4-digit code security relies on a high-entropy opaque link plus
-keyed protected PIN storage, rate limiting and maximum failed attempts,
-scoped one-use verification state, anti-CSRF/Origin checks, safe
-reissue/lockout recovery and monitoring. Never claim 4-digit
-in-email PIN alone prevents a stolen/forwarded-mail attacker.
-No untrusted requester-provided severity/risk label may lower
-an administrator-defined required verification tier.
-
-#### G10A implementation sequence — six bounded P0 deliverables
-
-| Phase | Delivery | Evidence/exit |
-| --- | --- | --- |
-| **G10A-0 — Versioned approval seats** | Durable assignment/step identity and epoch independent of mutable state revision, v8→v9-or-later migration with old-request compatibility, seat-local Hold vs sequential-step blocking; versioned `denial_reason_required` flag (default false); original/delegate rights map to one seat | ALL/ANY_ONE/N_OF_M unaffected by other votes, SEQUENTIAL Hold prevents next stage, reason required/optional API validation, original-vs-delegate first terminal wins, rollback/restore valid |
-| **G10A-1 — Recipient mail fanout** | Each eligible approver independently receives HTML + text with 3 unique answer links and **their own 4-digit code**. When delegation is active, mail original and delegate independently for the same seat. Sequence stage activation and reassignment handled, original one-link fallback retained | Separate recipient-specific codes/links for both parties, no duplicate seats, no CC/shared URL or inactive-step mail, no PIN/link leak in queues/previews; real SMTP receipt measured |
-| **G10A-2 — PIN-scoped decision API/UI** | 256-bit opaque intents and protected binding/digests, GET/HEAD no state mutation, no-login PIN POST, bounded decision context, final explicit protected POST, policy-enforced Deny reason, first-terminal-wins per represented seat and atomic original/delegate sibling revocation | Scanner GET cannot decide; missing required Deny reason rejected, optional Deny reason allowed, no login for EMAIL_PIN, duplicate/competing original-delegate decisions, replays, expiry and forwarded email tested |
-| **G10A-3 — Customer verification policy** | Tenant/installation defaults and policy override for EMAIL_PIN/EMAIL_PIN_PLUS_OTP/EMAIL_PIN_PLUS_MFA; trusted risk selector, requested OTP + fresh identity step-up and secret redaction | Customer can select code-only vs OTP/MFA; Same-email OTP not mislabelled MFA; missing mandatory MFA fails closed; old policy snapshot not silently downgraded |
-| **G10A-4 — Audit + operator lifecycle** | Persist original seat, original/delegate issued mailbox capability, independently proven person (if any), decision/reason/Hold history, PIN/OTP assurance, revoke/issuance, delivery and protected queue, backup/recovery | Audit separately shows original assignment, email link recipient and verified identity if established; `EMAIL_LINK_PIN` alone never claims person verified, no raw token/code; restore and retries cannot double count or resurrect links |
-| **G10A-5 — Actual Full User E2E** | Update repository-local user scenarios and surface reconciliation for unique per-person mail/PIN and optional OTP/MFA; directly test parallel/sequential Hold, optional/required Deny reasons, active delegation original/delegate independent links, first terminal race and revocation, audit assurance, execution separation | New frozen exact HEAD, independent direct two-person email/browser PASS, no double-count after competing delegate vote; exact backend readback, deterministic+full qualification and independent G11/G12 external and owner acceptance gates |
-
-**Historical backend gaps (addressed in the G10A-0–4 development candidate):**
-The pre-G10A baseline mailed only a representative approver, keyed decisions
-to the mutable request revision, and lacked per-recipient answer intents,
-encrypted decision mail, a four-digit PIN and a durable seat ledger. Current
-candidate backend adds the protected assignment/issuance/verification protocol
-and keeps ordinary authenticated R1 `/requests/{id}` access available for
-existing requests. This is source plus deterministic test coverage **only**:
-real independent mailbox receipt, complete loginless decision Web UI, direct
-two-person browser E2E, external G11 effects and G12 release acceptance are
-still outstanding.
-
-**Owner choices closed (2026-10-09):** Deny-reason requirement is a
-versioned per-policy optional/required switch, default optional.
-Original OR valid delegate may decide, via separate links/codes for
-one seat; first terminal result wins, no duplicate vote, while a
-provisional Hold can be resolved by either party. No remaining G10A
-business-default decision is pending. Risk-based OTP/MFA and link TTL
-remain **customer-configurable policies**. Engineering verification
-still required for fresh MFA API, protected mail/crypto lifecycle,
-delegation expiry/races and migration/rollback.
-If safety/tool restrictions block E2E-contract changes, document
-that gap honestly and do not claim G10A-5 or G12 PASS.
-
-### G11 — DataRelay and Stellar external acceptance
-
-Priority: **P0**
-
-DataRelay:
-
-- choose one representative existing product action;
-- source system creates approval request;
-- no fresh grant => operation blocked;
-- valid grant => existing path executes;
-- duplicate consume cannot cause duplicate business effect;
-- actual result returned and reconciled.
-
-Stellar Cyber:
-
-- deployed version recorded;
-- Universal Webhook Responder request configured;
-- stable source/tenant identity;
-- actual supported receiver configured;
-- approved/denied/held/expired outcomes correlated;
-- feedback loop excluded.
-
-G11 readiness evidence (Work Packet #52): an online development Control
-instance and an existing failed-delivery replay endpoint were inspected
-read-only. Grant contract guard and correlation checks are locally tested.
-No source-side Grant guard, actual protected replay/destination readback or
-Stellar installed receiver has yet passed external acceptance. M3/M4 are
-WAITING_INTEGRATION; this is not the G11 completion gate.
-
-### G12 — 1.0 quality closure and release
-
-Priority: **P0**
-
-Required final sequence:
-
-G10A is the **P0 planned 1.0 product gate** before final G12 closure. Its
-implementation and acceptance must be reflected in final same-head Surface
-Reconciliation and direct Full User E2E rather than inferred from the
-patent or earlier browser fixtures. Do not silently drop G10A or mark 1.0
-released without separate explicit owner scope/acceptance decision.
-
-1. complete Surface Reconciliation;
-2. remediate all actionable findings;
-3. complete Full User E2E on the same candidate;
-4. verify real DataRelay and Stellar evidence;
-5. verify email notification lifecycle;
-6. verify install/upgrade/backup/restore;
-7. freeze candidate;
-8. exact-head CI and Foundation checks;
-9. candidate artifact/hash/provenance required by release contract;
-10. owner acceptance;
-11. separate release/tag/publication authorization;
-12. post-release smoke if published.
-
-No earlier local fixture or different-HEAD result substitutes for final same-candidate
-evidence.
-
-## 1.0 UX and information architecture direction
-
-The accepted 1.0 application structure is task-oriented rather than monitor-oriented.
-The canonical requirements are in `docs/PRODUCT_STANDARD.md`; the implementation/design
-guide and competitive rationale are in `docs/UX_INFORMATION_ARCHITECTURE.md`.
-
-Primary navigation converges to:
-
-~~~text
-Home
-
-Work
-├── My approvals
-└── Requests
-
-Configuration
-├── Approval policies
-├── Notifications
-├── Integrations
-└── Approvers          # when G3/G4 capability exists
-
-Administration
-└── Administration
-
-Signed-in user
-└── Account & Security
-~~~
-
-Home is an action center, not an NOC/BI dashboard. Requests and approvals are work
-queues. Policy and notification administration use list/detail and progressive
-disclosure rather than permanently expanded settings walls. Login and shared shell
-composition follow the DataRelay Product Foundation and the mature DataRelay Control
-family reference without copying Control product internals.
-
-## 1.0 usability requirements
-
-Grant 1.0 must be usable without reading API documentation for ordinary admin/request/
-approval work.
-
-Required UX qualities:
-
-- clear empty states;
-- safe defaults;
-- human-readable time units;
-- explicit destructive/activation confirmation;
-- preview before activation/import;
-- concise state explanations;
-- no raw UUID dependence for normal work;
-- mobile approval usability;
-- visible distinction between decision, delivery and execution;
-- deep links from alerts/dashboard to the exact request/problem.
-
-## Post-1.0 candidates
-
-Prioritize from actual use rather than speculative breadth:
-
-- Slack and Microsoft Teams approval/notification channels;
-- email-to-request creation with verified inbound sender and idempotent parsing;
-- authenticated inbound email-reply approvals (only with real sender proof; no free-form inference);
-- external guest/no-account approvals with narrow declared trust policy;
-- Outlook authenticated Actionable Messages/adaptive cards with verified Microsoft user token and web fallback;
-- reviewer-role based differentiated denial thresholds beyond 1.0 any-denial finality;
-- richer policy condition operators;
-- reusable policy bundles/customer packs;
-- optional SSO/enterprise identity federation;
-- additional DataRelay product adapters;
-- supported Stellar execution-resumption/result adapters;
-- configurable branding themes;
-- API-managed group sync;
-- policy analytics and approval bottleneck reporting;
-- AI-assisted policy explanation and request summarization with no approval authority.
-
-### Messaging approvals — post-1.0 research candidate (NOT ACCEPTED)
-
-User example: a SOC/MSSP case is delivered to Telegram/WhatsApp with
-Approve / Deny / Deferred buttons, comments and an outcome
-acknowledgement. Competitive documentation confirms **n8n** provides
-Telegram in-chat approval and WhatsApp approval/wait-for-response,
-**Workato** and **Microsoft Teams** provide enterprise chat approval,
-and **KakaoWork** supports mobile business approval. Details, platform
-limits and source confidence:
-`docs/MESSAGING_APPROVAL_CHANNEL_RESEARCH.md` (2026-10-09).
-
-**Customer onboarding feasibility is the hard go/no-go gate:**
-The owner identified BotFather creation, bot token handling,
-manual Telegram-group administration, Meta business/phone verification,
-webhook configuration and WhatsApp template work as a fatal
-barrier for nontechnical customers. Pilot cannot proceed as a
-general-use product without a **zero-copied-credentials guided
-enrollment** path; a technical/BYOC integration alone is not enough.
-
-- **Telegram Managed Bots contract feasibility (2026-10-09):
-  CONDITIONAL TECHNICAL GO, NOT LIVE E2E PASS.** First-party
-  Bot API 9.6 has `request_managed_bot`, `managed_bot`
-  update and `getManagedBotToken`; a Telegram customer
-  can confirm creation of their own bot without BotFather,
-  chat IDs, webhook URL or token copy. On authorized
-  `dev-atlas`, Telegram HTTPS was reachable and **12/12
-  no-credential protocol/onboarding mock tests passed**.
-  These do not prove a real Telegram bot was created.
-- **Preferred on-prem pilot architecture:** a Grant-operated
-  *one-time manager bot* (provider BotFather bootstrap required)
-  plus an authorized minimal token-provisioning service, a
-  customer-created managed *child bot*, private per-recipient
-  `Start` enrollment, and customer installation's direct
-  **outbound `getUpdates` long polling**. No routine Telegram
-  group or public customer webhook is required. A permanently
-  shared message-routing bot is a different SaaS architecture
-  and is not assumed or approved.
-- **Hard security/custody gate:** the manager bot can still
-  fetch and **rotate** customer child bot tokens. Passing a
-  copy to the customer does NOT necessarily remove Grant
-  provider control; permanent manager unbinding has not
-  been verified. Need explicit provider authority, secret
-  handling/revocation and regulated-customer consent.
-  Native `restricted` Managed Bot access limits extra
-  users to 10; larger groups require tested Grant-enforced
-  enrollment, not a false Telegram-side native allowlist.
-  Provider central provisioning and client Telegram account
-  creation are unavoidable trusted steps, although customer
-  API/token/group configuration can be eliminated.
-- **WhatsApp recommendation:** use Meta Embedded Signup or a licensed
-  BSP's `Connect with Facebook` flow for a customer-authorized
-  business/phone number, without raw keys/webhook setup exposed.
-  Customer consent, business/phone proof and template review remain.
-  Meta Business Tools MCP was announced in Sep 2026 for agent-
-  assisted setup/testing; do NOT mistake it for automatic production
-  consent or generally available no-touch onboarding.
-  WhatsApp Groups API exists but specialist Meta-doc reviews
-  report **OBA required, 8 participants, invite-only, and no
-  interactive buttons inside group messages**; therefore make
-  the initial WhatsApp approval model individual 1:1, not group.
-- **Release acceptance proposal:** two nontechnical pilot admins
-  independently connect real recipients without API token, ID or
-  webhook entry; user Start/Meta permissions are the only necessary
-  external interactive authorization; send a request, receive
-  an explicit confirmation, revoke, and verify no duplicate
-  vote/execution. If this cannot be demonstrated, defer channel
-  launch or label it **advanced-setup only**.
-
-See `docs/MESSAGING_APPROVAL_CHANNEL_RESEARCH.md` for sourced
-competitive comparison, official Telegram managed-bot/deep-link
-interfaces and WhatsApp eligibility caveats. This remains a
-**research candidate**, not a new G10A/G12 gate or authorization
-to operate a central messenger SaaS relay.
-
-**Candidate channel sequence, pending owner scope and customer demand:**
-
-| Milestone | Outcome | Gating evidence |
-| --- | --- | --- |
-| **M0: Demand validation (post-1.0)** | Interview 5–10 SOC/MSSP/enterprise prospects about current approval channel, on-call urgency, trusted identity, cross-border restrictions and willingness to pilot/pay. | Two or more committed design partners for chosen channel. Product popularity alone is not proof of paid demand. |
-| **M1: Channel-independent decision adapter (1.1 candidate)** | Notification/intent/ack contract for messenger callbacks, current assignment+step+recipient binding, authenticated provider identity enrollment, policy-based verification, complete audit and fallback to email. | Wrong actor/group, replay, policy step, delegation, cross-channel duplicate vote and external execution-separation tests. |
-| **M2: Telegram SOC/MSSP pilot (1.1 candidate)** | One-time provider manager bootstrap and user-owned managed child bot created via Telegram consent, securely delivered to an isolated customer installation; child bot receives outbound polling and routes private Approve/Hold/Deny with explicit confirmation and status acknowledgment. | **Actual** newbot confirmation/update, manager `getManagedBotToken`, token handoff, `getMe`, outbound `getUpdates`, two approvers+delegate without manual token/chat ID/webhook, denial/cancel/revocation, manager-custody approval, poll update replay/race, email fallback and no direct execution. |
-| **M3: WhatsApp Business pilot (1.1/1.2 conditional)** | Interactive/templated WhatsApp requests, three answer buttons, result acknowledgement, opt-in, approved templates/24h-window and message-price management, phone-to-assignee enrollment. | An overseas/partner customer pilot, Meta Business permissions, per-market cost/consent check, verified webhook and real phone E2E. |
-| **M4: Enterprise and Korea (1.2+ conditional)** | Evaluate Slack, Microsoft Teams, KakaoWork/KakaoTalk-specific adapters based on actual customer organizations and supported identity/approval UI. | One genuine design partner and platform approval/integration contract per additional channel; no indiscriminate connector expansion. |
-
-**No direct execution via a chat button:** all messenger actions
-reuse Grant's authoritative per-seat state machine (one represented
-seat = one terminal vote across ALL delivery channels) and the
-external action-bound consume/result protocol. Received chat
-callbacks are **decision intent** only, not automatically an
-independently verified human or a privileged business execution.
-Sensitive requests default to private/direct messages; group
-messages require redaction and explicit eligible-user restriction.
-The accepted 1.0 no-login email-link + four-digit code policy
-remains unchanged and available as fallback. Customer policy
-selects additional OTP/MFA for important operations.
-
-**Remaining proof:** user-owned Telegram account and a real
-provider manager bot enabled in BotFather are necessary to
-complete the actual Managed Bot creation/token exchange.
-Official API reachability and 12 mocked contract tests alone
-cannot establish product usability or exclusive token custody.
-If central provider token control is unacceptable, this
-architecture is a **NO-GO** for security-sensitive deployments
-until a proven unlink/owner-controlled custody model is found.
-
-**Decision status:** research candidate only; M0–M4 are NOT
-G10A or G12 release blockers, not committed 1.1 delivery promises,
-and no customer demand size, Telegram/WhatsApp API integration,
-source change, real messenger E2E or channel release is asserted.
-Decide go/no-go after customer interviews and the 1.0 gates.
-
-## Explicit non-goals
-
-Grant 1.0 does not include:
-
-- generic workflow canvas;
-- arbitrary scripts or remote code execution;
-- SOAR playbook authoring;
-- arbitrary JSON transformation language;
-- IAM account/role provisioning;
-- ticket/case-management replacement;
-- custom database/query engine;
-- billing/subscription/multi-tenant SaaS control plane;
-- autonomous AI approval.
-
-## Delivery discipline
-
-Implementation should progress in coherent user-visible slices, not one massive rewrite.
-
-Recommended sequence:
-
-`G0 convergence + G1/G2 closure -> G3/G4 -> G5/G6 -> G7/G8 -> G9/G10 -> G10A -> G11 -> G12`
-
-Current approval/execution integrity and existing tests are preserved throughout.
-External integration waits must not block independent product work.
-
-## Status authority
-
-- Product requirements: `docs/PRODUCT_STANDARD.md`
-- Product roadmap and sequencing: this file and tracking Issue #37
-- Comparative research: `docs/APPROVAL_COMPETITIVE_REVIEW.md` (reference only)
-- Actual implementation/evidence: `docs/STATUS.md` and current Issue #54 G12 QA Work Packet; predecessor packets are not present implementation authority
-- External-integration waiting evidence: GitHub Work Packets #33 and #52
-- UX/IA design guide: `docs/UX_INFORMATION_ARCHITECTURE.md`
-- Architecture/security details: `docs/ARCHITECTURE.md`
-- User quality gates: `docs/SURFACE_RECONCILIATION.md`, `docs/FULL_USER_E2E.md`
-- Engineering process: repository `AGENTS.md` and adopted Engineering System
-
-Roadmap items are not implemented capability until code and required evidence exist.
+# DataRelay Grant 1.0 — unified execution roadmap
+
+**Owner replacement decision:** 2026-10-10. **One current roadmap, eight major
+execution bundles.** This file supersedes all former sequencing prose in
+ROADMAP.md and the former body of [coordination Issue #37](https://github.com/datarelay-labs/datarelay-grant/issues/37).
+Old requirements/decisions are preserved through prior Git commits and existing
+issue/PR discussions, NOT maintained as a second competing active roadmap.
+Existing Work Packets/PRs are retained and reused, not deleted or multiplied.
+
+**Product authority:** docs/PRODUCT_STANDARD.md.
+**Current factual implementation:** docs/STATUS.md, exact source/tests and
+the latest authorized Work Packet. **External evidence contracts:**
+docs/USER_SCENARIOS.md, docs/SURFACE_RECONCILIATION.md,
+docs/FULL_USER_E2E.md, docs/INTEGRATION.md, docs/OPERATIONS.md.
+**Competitive evidence:** docs/COMPETITIVE_GCI_GRANT_20261010.md (Jira /
+Teleport official documents classified separately from observed UI).
+
+## Product outcome and hard invariants
+
+Grant is a reusable **human-approval control layer**, not a workflow canvas,
+ITSM clone, SOAR, arbitrary executor, tenant-wide IAM product or billing SaaS.
+A business user requests an exact bounded action, an authorized reviewer
+explicitly approves/holds/denies under current policy, and only the ORIGINAL
+integrated product may separately consume a valid action-bound execution grant,
+apply at most one durable effect and independently report/reconcile its result.
+No request creation, email GET/HEAD, link preview, delivery receipt or approval
+alone may execute anything. One approval seat counts once. Replayed intents,
+expired links, removed recipients, stale policy revisions and revoked credentials
+fail closed. In-email 4-digit PIN proves mailbox possession, **not named-person
+identity**; a same-mailbox extra OTP is not independent MFA.
+
+Default G10A behavior: no Grant login needed for ordinary EMAIL_PIN; per
+request/recipient/decision opaque high-entropy answer URL + 4-digit code in
+same email + bounded PIN POST + separately explicit final confirmation POST.
+Optional policy-specific OTP and fresh TOTP/MFA require their full current
+server-side proof. Existing original/delegate seat competition, Hold,
+Deny-reason and seven-day-or-less bounded link TTL remain authoritative.
+
+## Frozen observed baseline (for the roadmap reset)
+
+| Evidence item | As verified on 2026-10-10 |
+| --- | --- |
+| Implementation repo | datarelay-labs/datarelay-grant |
+| Current integration branch | feat/grant-g10a-g0-integrated-candidate |
+| Last pre-reset HEAD | 9333b8f164c90d304c018358a09bf0479ad54407 |
+| Working host | dev-atlas |
+| Working directories | **24 registered Grant Git worktrees**; all 24 had **0 tracked, staged and untracked changes** at inventory time |
+| Foundation | 10 exact pinned local `0.1.0-pf8.4` packages, source 8726549f80f85b79d94e91a87324d2523e27ddbb; no extra package reimplementation |
+| Local component/regression baseline | API **419/419 PASS**, Web **156/156 PASS**, TypeScript/build/static PASS on prior exact HEAD |
+| GitHub integrated-head CI | No associated PR-triggered Actions runs. **NOT CI PASS** |
+| Older unmerged stack | PR #34, #39, #41, #43, #45, #47, #49, #51; Draft PR #53, #55, #56, #59, separately preserved |
+| Owner preview, live external system | Different or unavailable installed HEAD, **NOT user/external acceptance** |
+
+The 24-tree inventory showed no remaining uncommitted source backlog. A
+separately committed/pushed but unmerged branch or Draft PR is still integration
+work, **not** uncommitted content. Do not reset, clean, cherry-pick blindly,
+force-push, close or merge another owner's branch/packet. Earlier worktree
+dirty-file warnings are historical; always inspect current evidence again.
+
+## Only active executable program — eight coherent major bundles
+
+Relative size is for planning/scheduling, **not elapsed-time or staffing promise**.
+Finish the next runnable P0 subset, test on one candidate, record the evidence,
+then immediately move to another safe item. Never run previously completed
+source tests solely to re-report green history.
+
+| Bundle / rough size | Primary original roadmap & Foundation / CI mapping | Existing verified implementation (preserve) | Remaining completion work / gate |
+| --- | --- | --- | --- |
+| **M1 · P0 / L — baseline reconciliation + approval workbench truthfulness** | G0, G5/G6, G9; G-CI-1; WPs **#67, #75, #42, #48, #81** | G0 task-oriented Home/Queues, backend user-scoped request filters, G3–G6 plans and delegation, audit timeline; all 24 trees inventoried; official-vendor source comparison | **First runnable batch now:** replace the single canonical roadmap/Issue #37, classify Jira/Teleport official claims and actual Grant source, fix UTC request-created date/filter drift and surface CURRENT reviewer-seat votes distinctly from chronological audit; focused Web/static. No new approval group/workflow engine. Actual same-HEAD user QA remains separate M7. |
+| **M2 · P0 / XL — shared Foundation Login/Sidebar/Administration** | G0, B2, G-CI-2 role/first-run surface; WPs **#57, #60, #67, #75** | Foundation pf8.4 ten packs, shared AuthLayout/ProductShell/AdministrationHub, nested task navigation, Account & Security | **2 proven member ADMIN_CAPABILITY_CONTRADICTION** findings (core.users, grant.smtp.test); complete Control-reference centered login/no white border, keyboard & truthful 9-task/4-group Admin, Grant Mail extension and mobile 320/375 visual parity. Earlier Grant app/styles/Administration source, screenshot, PR and credential/browser **platform-denied** actions remain blocked. No workaround. |
+| **M3 · P0 / XL — policy + groups + notification operations** | G1–G4, G2, B4, G-CI-2; WPs **#38, #40, #64, #65, #66, #77, #80, #83–#86** | Versioned Draft→Testing→Active→Disabled, clone/history, single/any/all/quorum/sequential, original/delegate/hold, template sets/preview/branding, filtered delivery queues, recovery-paused direct-send safety | Fix **actual** two-admin lost-update/race for Deny/MFA/integration verification floor, stale template editors, safe registered recipient selection and real SMTP/health guidance where authorized; no fake SMTP credential editor or unapproved live test sends. Prior broad Phase1 write safety refusal still binding. |
+| **M4 · P0 / XL — authenticated identity and G10A real email decisions** | G10/G10A, B3, G-CI-3; WPs **#50, #58, #67, #70–#73, #78, #90** | Account session/TOTP/recovery, signed scoped email answer intents, 4-digit PIN, optional OTP/fresh TOTP, expiry/replay/audit/seat safeguards, unmounted portal+HTTP adapter | Mount allowed no-login decision Web route (not prior blocked app.tsx by workaround); verify current-policy anti-downgrade, current recipient/delegate and named-identity attribution; REAL two-mailbox receipt/PIN/MFA explicit decision. No new credential/role boundary without approval. |
+| **M5 · P0/P1 / L — operations, audit and protected recovery** | G7–G9, B4/B5; WPs **#44, #46, #48, #76–#83, #97, #99** | Exceptions, diagnostics, bounded redacted audit export, v2 draft-only config import, private SQLite backup/PAUSED restore, v8→v12 real-old-schema migration regression, unpublished candidate hashes, four direct diagnostic-send pause guards | Approve/qualify actual disposable installation backup→restore→rollback, offline origin/signature/provenance checks and native operational guidance. No customer DB, secret migration, unsanctioned restore, irreversible mutation or fake signed/GA artifact. |
+| **M6 · P0 / XL — real DataRelay Control and Stellar receiver** | G8/G11, B6, G-CI-4; WPs **#52, #74, #90–#94, #98**; separate Control **#422/PR #420** | Grant pure integration/route/destination/tenant/case/alert/revision guards; isolated Control loopback prototype only | Owner-authorized non-bypassable Guard at Control's **existing** replay send boundary; durable Control effect count exactly 1, independent native ledger/destination readback; actual deployed Stellar version, authorized tenant/case/alert receiver and callback readback, feedback-loop exclusion. No Grant-helper-only M3/M4 PASS. |
+| **M7 · P0 / XL — independently operated real Full User E2E** | G0–G12 user acceptance, B2/B3/B4/B6, G-CI-4; WP **#54**, with product WPs above | Prior synthetic Playwright desktop 28/28 and fixture tests; no direct-user acceptance | Read full contracts **before** acting as separate real Admin, Requester, Approver (+ unrelated person); first complete Surface Reconciliation → fix all findings → NEW two-person browser/inbox PIN/OTP/MFA request/hold/deny/reissue/recovery/real-result passes **on one installed HEAD**, twice as required. Cannot substitute scripts, fake credentials, mail echo or previous HEAD. Preserve prior real-password/mobile/platform stops. |
+| **M8 · P0 / L — frozen source qualification and authorized release** | G12, B6 machine/release, G-CI-5 scope control; WP **#54**, existing PR chain/review | G12 unpublished package verifier, tests and exact local hashes | Only AFTER M1–M7 gates: freeze HEAD, actual required CI/PR reviews, Foundation Actions private Contents:read owner permission, native machine provenance/hash/SBOM/public smoke as the release contract requires, separate owner acceptance, then independent release/tag/publication authorization. No automatic merge, tag or deploy. |
+
+### Priority & dependency rule
+
+M1 is the **first runnable group** on the already integrated candidate.
+After M1 implementation, continue M2/M3/M4 P0 that is independently permitted;
+M5 may proceed in parallel on independently protected worktrees. M6/M7 require
+real owner-authorized external accounts and product effects. M8 is LAST.
+Where a group is blocked, record the exact denied tool/target/error in its
+existing packet, keep other independently runnable groups moving, and never
+relabel a protected write under another packet, tool, branch or host.
+Vendor-inspired **G-CI-2 P1 polish waits for P0**; optional **G-CI-5 P2 REA**
+never delays Grant 1.0 or circumvents earlier browser collector safety stops.
+
+## Canonical backlog crosswalk — all pre-reset themes accounted for
+
+| Former workstream / product baseline | New owner bundle |
+| --- | --- |
+| G0: Foundation Auth, Sidebar, task Home, Admin; G-CI-1–2 | M1 for safe workbench & evidence; M2 for shared UI/mobile/roles |
+| G1: policy lifecycle, versions and concurrency | M3 |
+| G2: notification templates, preview, SMTP/delivery | M3 plus recovery M5 |
+| G3: approval groups/multi-seat/quorum | M3; identity guard M4 |
+| G4: delegation, reassignment, escalation | M3; E2E M7 |
+| G5: comments, changes requested, replacement | M1 existing, actual-user test M7 |
+| G6: approver inbox and requester workspace | M1, user tests M7 |
+| G7: real operations dashboard | M5 |
+| G8: integration admin and real connected systems | M5 for diagnostics, M6 for execution |
+| G9: audit, export, v2 Draft portability and recovery | M1 visible history, M5 native operations |
+| G10: MFA, session, authority and security | M4 |
+| G10A: no-login PIN/OTP/MFA/decision and exact action | M4, real user gate M7 |
+| G11: DataRelay source execution + Stellar receiver | M6 |
+| G12: full two-user E2E, CI/freeze/release | M7 + M8 |
+| PF-B2/B3/B4/B5/B6 | M2/M4/M3+M5/M5/M6+M7+M8 respectively |
+| G-CI-1/2/3/4/5 | M1 evidence; P1 M2/M3 polish; M4 invariants; M6/M7 tests; optional post-1.0 research |
+
+### Existing Work Packets / PRs are not deleted
+
+- **Current canonical implementation** #67 (M1), #75 (G0), #83 (B4/B5)
+  and verified source WPs #95–#99; #99 has historical issue-header
+  status drift despite source commit/test completion. Do not repeat completed
+  source or a previously blocked exact GitHub update to "fix" that marker.
+- **Policy, Inbox and operations lineage** #38, #40, #42, #44, #46, #48,
+  #50, #57, #58, #60–#86. Their old branch HEADs are evidence, not newer
+  current-product capability. Retain stacked PR #34, #39, #41, #43, #45,
+  #47, #49, #51 and Draft PR #53, #55, #56, #59 until ordinary independent
+  review/owner merger scope. NO blind old-stack main merge.
+- **G11/G12 waiting** #52 (Control/Stellar real effect), #54 (direct
+  user/release), #90–#94 and #98 (pure guards only), Control #422/PR #420
+  isolated test pilot only; never treat them as GA approval.
+- New feature work must use an appropriate existing scoped packet and
+  immutable preflight; **no duplicate AI Work Packet** is authorized merely
+  by this roadmap rewrite.
+
+## Reproducible gates and external owner actions
+
+**Source level (S)** — proper Work Packet/context, minimal approved changes,
+RED→GREEN unit, native affected official API/Web/Static, normal Git commit
+and non-force push, exact HEAD and CI/review readback. Track P0 bugs here.
+
+**True user level (U)** — installed same candidate, actual browser and two
+distinct authorized human/mailbox personas, complete G0–G12 scenarios read in
+full, direct operated interactions, remediation and fresh two-pass confirmation.
+
+**External level (E)** — one real safe Control product effect with independently
+observed destination/no duplicate; deployed Stellar receiver tenant/case alert
+readback; actual inbox receipt (SMTP accepted alone is insufficient).
+
+**Release level (R)** — U + E complete, frozen HEAD, required exact-head CI,
+hash/provenance/SBOM per actual release contract, owner acceptance then separate
+publication authority. Only this may be called 1.0 release-ready.
+
+Owner/operator inputs needed for U/E/R: approve a disposable environment with
+two separately accessible real mailboxes, authorized Requester/Approver/Admin
+accounts, a nonproduction Control native send destination, the installed
+Stellar receiver contract/version if available, narrow private Foundation
+GitHub Actions read credential by the owner and owner-run release acceptance.
+No ChatGPT assumption of credentials or real system permissions; no
+platform-denied action by an alternate tool.
+
+## Exit tracking convention
+
+Use exactly one line per macro on roadmap #37 with
+`STATE=IMPLEMENTING|WAITING_BLOCKER|SOURCE_COMPLETE|USER_E2E_PASS|ACCEPTED`,
+last exact SHA, owned Work Packet, evidence paths, and meaningful external
+blockers. **SOURCE_COMPLETE never means Full User E2E or GA.**
+Report in Korean using: 로드맵 / 이번 작업 / 블로커 / 사용자 조치 /
+다음 작업. Do not stop after a bounded source packet while another safe
+authorized P0 next action exists.

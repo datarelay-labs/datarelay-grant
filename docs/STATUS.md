@@ -5,6 +5,29 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## Unified eight-bundle roadmap and G-CI first approval-workbench corrections (2026-10-10)
+
+The former duplicate G0–G12/PF-B2–B6/G-CI scheduling has been replaced by
+one eight-bundle ROADMAP.md and Grant coordination Issue #37. All 24
+registered dev-atlas Grant worktrees had zero tracked, staged or untracked
+changes during the owner-directed preflight. Prior actual B2 pf8.4 packs,
+G10A decision security and G11 source guards are retained rather than
+rebuilt. Jira Service Management company-managed and Teleport Enterprise
+18.x comparisons in docs/COMPETITIVE_GCI_GRANT_20261010.md are DOCUMENTED
+first-party requirements, not personally observed competitor UI.
+
+The first scoped current Grant workbench update makes the server's inclusive
+created-before filter cover the entire selected UTC calendar end date,
+regardless of the reviewer browser timezone; invalid or reversed calendar
+dates now fail closed before applying a misleading request query.
+The existing role-scoped request detail also shows current approval
+seat votes and recorded reasons separately from the chronological audit.
+An email-PIN seat vote does not verify the named human, and neither a
+decision nor a notification constitutes independent product execution.
+Source test receipts and exact GitHub HEAD are recorded by existing Work
+Packet #67; direct-user Browser E2E, the two Foundation Administration member
+contradictions, real mail/Control/Stellar effects and release are OPEN.
+
 ## Foundation B2 pinned PF8.4 source adoption in current integration (2026-10-10)
 
 The current integrated G10A/G0 development candidate now consumes the ten

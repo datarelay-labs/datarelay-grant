@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { countAdvancedFilters, RequestList } from '../../src/request_inbox';
+import { countAdvancedFilters, queryFor, RequestList } from '../../src/request_inbox';
 import type { Filters } from '../../src/request_inbox';
 import type { User } from '../../src/types';
 
@@ -81,5 +81,37 @@ describe('Grant request queue progressive disclosure', () => {
       created_after: '2026-10-01', policy_id: 'profile',
       integration_id: 'connector', action_kind: 'incident.restart',
     })).toBe(4);
+  });
+});
+
+
+describe('Grant server-scoped request date filters use UTC calendar days', () => {
+  it('preserves UTC day boundaries even for a reviewer in Asia/Seoul', () => {
+    const previous = process.env.TZ;
+    process.env.TZ = 'Asia/Seoul';
+    try {
+      const result = new URL(queryFor({
+        ...emptyFilters(), created_after: '2026-10-01', created_before: '2026-10-01',
+      }, 0), 'http://testserver');
+      const params = result.searchParams;
+      expect(Number(params.get('created_after'))).toBe(Date.UTC(2026, 9, 1) / 1000);
+      expect(Number(params.get('created_before'))).toBe(
+        Date.UTC(2026, 9, 2) / 1000 - 0.000001,
+      );
+      expect(params.get('limit')).toBe('50');
+    } finally {
+      if (previous === undefined) delete process.env.TZ;
+      else process.env.TZ = previous;
+    }
+  });
+
+  it('does not silently drop invalid calendar days or inverted dates', () => {
+    expect(() => queryFor({
+      ...emptyFilters(), created_after: '2026-02-30',
+    }, 0)).toThrow('INVALID_REQUEST_DATE');
+    expect(() => queryFor({
+      ...emptyFilters(), created_after: '2026-10-03', created_before: '2026-10-01',
+    }, 0)).toThrow('INVALID_REQUEST_DATE_RANGE');
+    expect(() => queryFor(emptyFilters(), -50)).toThrow('INVALID_REQUEST_PAGE');
   });
 });

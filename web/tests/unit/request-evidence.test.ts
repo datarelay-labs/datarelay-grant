@@ -81,3 +81,40 @@ describe('Grant progressive evidence and resend boundary', () => {
     expect(html).not.toContain('Resend webhook</button>');
   });
 });
+
+
+describe('G-CI reviewer history is visible but never self-asserts identity or execution', () => {
+  it('shows the existing server-authorized current seat votes without inventing a person', () => {
+    const item = request({
+      state: 'HELD',
+      approval_plan: { mode: 'ALL', group_id: 'test-group', members: ['seat-a', 'seat-b'], required: 2 },
+      approval_progress: {
+        mode: 'ALL', approved_count: 1, required_count: 2, total_members: 2,
+        waiting_approver_ids: ['seat-a'], waiting_approvers: [{ id: 'seat-a', username: 'First reviewer' }],
+        group_name: 'Operations reviewers', waiting_on: 'APPROVERS',
+      },
+      decisions: [
+        { actor_id: 'seat-a', decision: 'HELD', reason: 'Need details', decided_at: 105 },
+        { actor_id: 'seat-b', decision: 'APPROVED', reason: 'Reviewed', decided_at: 107 },
+      ],
+    });
+    const html = markup(item, false);
+    expect(html).toContain('Reviewer decisions');
+    expect(html).toContain('1 of 2 approved');
+    expect(html).toContain('Approval seat 1');
+    expect(html).toContain('Approval seat 2');
+    expect(html).toContain('Need details');
+    expect(html).toContain('Reviewed');
+    expect(html).toContain('Current seat votes');
+    expect(html).toContain('not proof of the person');
+    expect(html).toContain('Request timeline');
+    expect(html).not.toContain('Resend email');
+  });
+
+  it('does not turn an empty vote record into a decision or successful execution', () => {
+    const html = markup(request({ decisions: [], state: 'AWAITING' }), false);
+    expect(html).toContain('No reviewer decisions recorded');
+    expect(html).toContain('not itself authorization to execute');
+    expect(html).not.toContain('Execution succeeded');
+  });
+});
