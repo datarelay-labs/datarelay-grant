@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
+import tempfile
 import time
 import uuid
 from collections.abc import Iterator
@@ -13,6 +15,32 @@ from pathlib import Path
 
 from .config import private_file
 from .mail_templates import DEFAULT_EVENT_TEMPLATES, DEFAULT_MAIL_TEMPLATE
+
+
+@contextmanager
+def _private_sqlite_output(destination: Path) -> Iterator[Path]:
+    """Stage complete recovery data at mode 0600, then publish without overwrite.
+
+    tempfile.mkstemp creates a private inode BEFORE any SQLite writes, even under
+    an operator umask such as 0022. A hard link in the same directory publishes
+    only a complete database and fails if an existing path (including a dangling
+    symlink) appears before publication. An error never leaves a partial final
+    destination or staging file.
+    """
+    destination.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    fd, filename = tempfile.mkstemp(
+        prefix=".grant-private-", suffix=".sqlite", dir=destination.parent
+    )
+    os.close(fd)
+    staged = Path(filename)
+    try:
+        yield staged
+        with staged.open("rb") as completed:
+            os.fsync(completed.fileno())
+        os.link(staged, destination)
+    finally:
+        staged.unlink(missing_ok=True)
+
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
@@ -694,24 +722,28 @@ class Database:
             conn.close()
 
     def backup(self, destination: Path) -> None:
-        if destination.exists() or destination.resolve() == self.path.resolve():
+        if destination.exists() or destination.is_symlink() or destination.resolve() == self.path.resolve():
             raise ValueError("Backup destination must be a new file")
-        destination.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        with closing(self.connect()) as source, closing(sqlite3.connect(destination)) as target:
+        with (
+            _private_sqlite_output(destination) as staged,
+            closing(self.connect()) as source,
+            closing(sqlite3.connect(staged)) as target,
+        ):
             source.backup(target)
-        private_file(destination)
 
     @staticmethod
     def restore(source: Path, destination: Path) -> None:
-        if destination.exists() or not source.is_file():
+        if destination.exists() or destination.is_symlink() or not source.is_file():
             raise ValueError("Restore requires an existing backup and a NEW destination")
-        destination.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
             if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12):
                 raise ValueError("Backup schema mismatch")
-            with closing(sqlite3.connect(destination)) as new:
+            with (
+                _private_sqlite_output(destination) as staged,
+                closing(sqlite3.connect(staged)) as new,
+            ):
                 old.backup(new)
                 new.execute("UPDATE runtime SET value='1' WHERE key='paused'")
                 new.execute("DELETE FROM sessions")
@@ -719,7 +751,6 @@ class Database:
                     "UPDATE outbox SET state='PENDING',lease_token=NULL,lease_until=NULL WHERE state='SENDING'"
                 )
                 new.commit()
-        private_file(destination)
 
 
 def audit(

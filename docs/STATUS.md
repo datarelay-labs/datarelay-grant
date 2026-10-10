@@ -5,6 +5,21 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## M5 private backup/restore publication hardening (2026-10-10)
+
+The existing SQLite backup/restore path had verified source defects: with a
+common 0022 umask, initial destination SQLite connections exposed a temporary
+0644 output before the late 0600 chmod, a dangling output symlink could be
+followed, and copy-time failures could leave an incomplete target. The M5
+source correction instead stages into an initially 0600 temporary file and
+publishes via a same-directory no-overwrite hard link after successful
+copy/fsync; failure removes only its own private staging file. A competing
+creator cannot replace its existing output path. The existing recovered
+PAUSED runtime and revoked sessions remain unchanged. These are disposable
+local regression results, not authorized customer restore, independent
+human E2E, signed upgrade evidence, actual external execution or GA.
+Work Packet #82 owns the exact tests and source qualification.
+
 ## Unified eight-bundle roadmap and G-CI first approval-workbench corrections (2026-10-10)
 
 The former duplicate G0–G12/PF-B2–B6/G-CI scheduling has been replaced by

@@ -242,6 +242,14 @@ uv run --frozen grant --config /absolute/private-state/grant.json restore \
 
 Back up the installation key separately using an approved secret store. The database
 contains personal data, authorization state and token digests and must be protected.
+Grant writes backup and restored SQLite data to a private 0600 temporary file
+in the selected output directory first. Only after a complete SQLite copy and
+fsync does it atomically publish a new output name without overwriting any
+existing file or symlink. A failed copy removes its temporary file without
+publishing a partial output. Choose a trusted private directory under operator
+control, ensure filesystem space and approved secure retention, and protect
+the installation key separately; these files are **not** automatically signed,
+encrypted as complete archives, off-site backed up or release-authorized.
 Restore accepts a NEW destination only. Do not overwrite or delete the original.
 A database backup is different from version-2 policy/template portability: it
 preserves complete private installation state, including credentials, and
