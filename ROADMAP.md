@@ -1,6 +1,7 @@
 # DataRelay Grant — 1.0 Product Roadmap
 
 Accepted: 2026-10-07
+Owner accepted G10A-0..5 roadmap and safe per-answer email UX: 2026-10-08
 Repository: `datarelay-labs/datarelay-grant`
 Canonical product rules: `docs/PRODUCT_STANDARD.md`
 Status: pre-release development candidate
@@ -40,6 +41,8 @@ The current development candidate already provides:
 - real browser user journeys and live Gmail delivery evidence;
 - generic DataRelay/Stellar integration contracts.
 
+Email approvals in this baseline use a **single request-detail link**, not
+three patent-style decision links; emailed PIN/OTP verification is not present.
 This baseline is not the 1.0 completion bar.
 
 ## 1.0 workstreams
@@ -380,6 +383,145 @@ formula handling, CSRF/Origin and safe import-preview misuse testing. This is
 source hardening, not proof of external consumer authorization; exact HEAD
 CI, browser, G11 and release qualification remain independent.
 
+### G10A — Patent-aligned email decisions with default four-digit code
+
+Priority: **P0 before G12 final 1.0 acceptance**  
+Status: **OWNER-ACCEPTED (2026-10-08); NOT IMPLEMENTED / NOT QUALIFIED.**  
+Canonical requirements: `docs/PRODUCT_STANDARD.md` §§10.5–10.9.  
+Trust-boundary rationale: `docs/ADR_EMAIL_PIN_DECISION.md`.  
+Supporting vendor survey: `docs/APPROVAL_COMPETITIVE_REVIEW.md`.  
+Dependencies: G2 templates/outbox, G3 approval plans, G4 delegation and
+G10 security. Approval control remains separate from the external execution
+consumer and its outcome callback.
+
+#### Accepted default email decision journey
+
+1. Grant sends a **separate email to each eligible approver**, containing
+   unique, unguessable **Approve / Hold / Deny** response-intent links (and
+   a neutral View Details link) plus one random **4-digit confirmation
+   number in the SAME approval email**, bound to that request, approver
+   assignment and issuance generation.
+2. The approver opens a chosen link. The GET/HEAD, including Safe Links
+   scanners and link previews, **only shows a generic read-only decision
+   landing and code input**. It neither sends new OTPs nor mutates
+   approval/execution state or discloses restricted request details.
+3. The approver enters the four-digit number. A protected PIN-validation
+   POST binds the link and code and grants only a short-lived,
+   action/assignee/outcome-scoped confirmation context; then the page
+   displays enough immutable request details for an informed decision.
+4. If that customer policy requires it, the same decision also requires
+   a **separately requested OTP** or **fresh MFA/identity step-up**.
+   OTP delivered to the same mailbox is *not MFA*. The default mode
+   **does not require Grant login**.
+5. The approver deliberately presses **Confirm Approve / Hold / Deny**.
+   A separately protected final POST revalidates the current assignment,
+   selected outcome, action, deadline, PIN context and optional higher
+   assurance, commits one human-intent event and records assurance.
+   Final approval never directly executes a connected system operation.
+
+No-login email PIN confirms possession/control of the **recipient mailbox
+and email contents**, **NOT the specific named person's identity**:
+a forwarded or compromised email discloses both code and URLs.
+When no independent identity step-up occurred, audit records identify
+the *assigned recipient* and verification method `EMAIL_LINK_PIN`
+but must NOT claim that a particular person was authenticated. Verified
+person/delegate identities are recorded separately only when actually
+established. Customer policy can select OTP/MFA to improve assurance.
+
+Each response link is independently unique for
+`request × seat/approver × active step × chosen outcome × immutable action
+fingerprint × assignment epoch × issuance generation`. A normal vote
+increases mutable state revision without invalidating a different
+still-eligible reviewer's link. Terminal decision consumes its link and
+revokes its sibling choices, with each seat counting at most once.
+`HELD` is provisional and may later become Approved/Denied within
+the original business deadline.
+
+**Parallel hold:** for ANY_ONE / ALL / N_OF_M, Hold affects **only that
+approver's seat**; other eligible approvers continue, and a satisfied
+threshold may authorize despite a held seat (ALL still requires all).
+**Sequential hold:** the current step's Hold **blocks all downstream
+steps**, which are neither activated nor mailed until the current
+step explicitly approves. A Deny is terminal under existing 1.0 rules.
+**Deny reason is optional by default, or required if the active
+snapshotted approval policy sets `denial_reason_required=true`.**
+Reject missing/blank required reasons server-side before consuming an
+intent or committing a vote.
+
+**Non-exclusive delegation (accepted):** during a currently valid,
+non-revoked delegation, both the original assignee and their named
+delegate receive **independent per-recipient emails, links and
+four-digit PINs**, can reach the same represented seat, and may
+choose Hold/Approve/Deny. A Hold is provisional and either party
+may later resolve it. The first valid **terminal** approval or
+denial commits atomically for that seat; it revokes both parties'
+remaining decision links and counts as **one** seat vote only.
+A losing concurrent response, revoked/expired delegate link, or
+duplicate click creates no additional decision or effect.
+Delegation expiry removes the delegate's authority without
+removing the original assignee's rights. Audit precisely which
+original/delegate mailbox capability was used and whether any
+person's identity was independently established; EMAIL_PIN alone
+is only mailbox possession, not verified personal identity.
+
+**Link expiration:** each customer chooses a default and may override
+per approval policy. Out-of-box **maximum validity is seven days** per
+issuance; actual expiry = min(request approval deadline, issued-at +
+customer-configured TTL). Shorter/longer customer-configured durations
+are supported within server-defined safe bounds. Reminder reuse is
+allowed while still valid; a deliberate reissue rotates links/code
+and invalidates superseded generation without extending the request
+deadline. TTL snapshots preserve in-flight behavior.
+
+**Customer policy modes (P0):**
+
+| Mode | Decision proof | Customer control |
+| --- | --- | --- |
+| `EMAIL_PIN` **default** | Per-answer link + same-email four-digit code + explicit confirmation; no login | Normal use |
+| `EMAIL_PIN_PLUS_OTP` optional | Base proof plus separately requested short-lived OTP; same-email OTP is still not MFA | Per customer/policy |
+| `EMAIL_PIN_PLUS_MFA` optional | Base proof plus fresh independently authenticated MFA/SSO step-up | Per customer/policy and trusted risk/action classification |
+
+4-digit code security relies on a high-entropy opaque link plus
+keyed protected PIN storage, rate limiting and maximum failed attempts,
+scoped one-use verification state, anti-CSRF/Origin checks, safe
+reissue/lockout recovery and monitoring. Never claim 4-digit
+in-email PIN alone prevents a stolen/forwarded-mail attacker.
+No untrusted requester-provided severity/risk label may lower
+an administrator-defined required verification tier.
+
+#### G10A implementation sequence — six bounded P0 deliverables
+
+| Phase | Delivery | Evidence/exit |
+| --- | --- | --- |
+| **G10A-0 — Versioned approval seats** | Durable assignment/step identity and epoch independent of mutable state revision, v8→v9-or-later migration with old-request compatibility, seat-local Hold vs sequential-step blocking; versioned `denial_reason_required` flag (default false); original/delegate rights map to one seat | ALL/ANY_ONE/N_OF_M unaffected by other votes, SEQUENTIAL Hold prevents next stage, reason required/optional API validation, original-vs-delegate first terminal wins, rollback/restore valid |
+| **G10A-1 — Recipient mail fanout** | Each eligible approver independently receives HTML + text with 3 unique answer links and **their own 4-digit code**. When delegation is active, mail original and delegate independently for the same seat. Sequence stage activation and reassignment handled, original one-link fallback retained | Separate recipient-specific codes/links for both parties, no duplicate seats, no CC/shared URL or inactive-step mail, no PIN/link leak in queues/previews; real SMTP receipt measured |
+| **G10A-2 — PIN-scoped decision API/UI** | 256-bit opaque intents and protected binding/digests, GET/HEAD no state mutation, no-login PIN POST, bounded decision context, final explicit protected POST, policy-enforced Deny reason, first-terminal-wins per represented seat and atomic original/delegate sibling revocation | Scanner GET cannot decide; missing required Deny reason rejected, optional Deny reason allowed, no login for EMAIL_PIN, duplicate/competing original-delegate decisions, replays, expiry and forwarded email tested |
+| **G10A-3 — Customer verification policy** | Tenant/installation defaults and policy override for EMAIL_PIN/EMAIL_PIN_PLUS_OTP/EMAIL_PIN_PLUS_MFA; trusted risk selector, requested OTP + fresh identity step-up and secret redaction | Customer can select code-only vs OTP/MFA; Same-email OTP not mislabelled MFA; missing mandatory MFA fails closed; old policy snapshot not silently downgraded |
+| **G10A-4 — Audit + operator lifecycle** | Persist original seat, original/delegate issued mailbox capability, independently proven person (if any), decision/reason/Hold history, PIN/OTP assurance, revoke/issuance, delivery and protected queue, backup/recovery | Audit separately shows original assignment, email link recipient and verified identity if established; `EMAIL_LINK_PIN` alone never claims person verified, no raw token/code; restore and retries cannot double count or resurrect links |
+| **G10A-5 — Actual Full User E2E** | Update repository-local user scenarios and surface reconciliation for unique per-person mail/PIN and optional OTP/MFA; directly test parallel/sequential Hold, optional/required Deny reasons, active delegation original/delegate independent links, first terminal race and revocation, audit assurance, execution separation | New frozen exact HEAD, independent direct two-person email/browser PASS, no double-count after competing delegate vote; exact backend readback, deterministic+full qualification and independent G11/G12 external and owner acceptance gates |
+
+**Required implementation corrections found in current source:**
+`_mail_event` sends to one representative `approver_id` despite group
+plans; `decide` mutates global revision after each vote; current
+`get` calls expiry mutation from GET; only neutral `request_url`
+is rendered; `outbox.payload` holds plaintext data; schema v8
+has no per-answer intent/PIN/seat-ledger structure. Preserve
+existing G0–G10 behavior and fail closed during additive migration.
+Existing R1 `/requests/{id}` login flow remains available for old
+requests and normal authenticated users.
+
+**Owner choices closed (2026-10-09):** Deny-reason requirement is a
+versioned per-policy optional/required switch, default optional.
+Original OR valid delegate may decide, via separate links/codes for
+one seat; first terminal result wins, no duplicate vote, while a
+provisional Hold can be resolved by either party. No remaining G10A
+business-default decision is pending. Risk-based OTP/MFA and link TTL
+remain **customer-configurable policies**. Engineering verification
+still required for fresh MFA API, protected mail/crypto lifecycle,
+delegation expiry/races and migration/rollback.
+If safety/tool restrictions block E2E-contract changes, document
+that gap honestly and do not claim G10A-5 or G12 PASS.
+
 ### G11 — DataRelay and Stellar external acceptance
 
 Priority: **P0**
@@ -414,6 +556,12 @@ WAITING_INTEGRATION; this is not the G11 completion gate.
 Priority: **P0**
 
 Required final sequence:
+
+G10A is the **P0 planned 1.0 product gate** before final G12 closure. Its
+implementation and acceptance must be reflected in final same-head Surface
+Reconciliation and direct Full User E2E rather than inferred from the
+patent or earlier browser fixtures. Do not silently drop G10A or mark 1.0
+released without separate explicit owner scope/acceptance decision.
 
 1. complete Surface Reconciliation;
 2. remediate all actionable findings;
@@ -488,6 +636,11 @@ Required UX qualities:
 Prioritize from actual use rather than speculative breadth:
 
 - Slack and Microsoft Teams approval/notification channels;
+- email-to-request creation with verified inbound sender and idempotent parsing;
+- authenticated inbound email-reply approvals (only with real sender proof; no free-form inference);
+- external guest/no-account approvals with narrow declared trust policy;
+- Outlook authenticated Actionable Messages/adaptive cards with verified Microsoft user token and web fallback;
+- reviewer-role based differentiated denial thresholds beyond 1.0 any-denial finality;
 - richer policy condition operators;
 - reusable policy bundles/customer packs;
 - optional SSO/enterprise identity federation;
@@ -497,6 +650,117 @@ Prioritize from actual use rather than speculative breadth:
 - API-managed group sync;
 - policy analytics and approval bottleneck reporting;
 - AI-assisted policy explanation and request summarization with no approval authority.
+
+### Messaging approvals — post-1.0 research candidate (NOT ACCEPTED)
+
+User example: a SOC/MSSP case is delivered to Telegram/WhatsApp with
+Approve / Deny / Deferred buttons, comments and an outcome
+acknowledgement. Competitive documentation confirms **n8n** provides
+Telegram in-chat approval and WhatsApp approval/wait-for-response,
+**Workato** and **Microsoft Teams** provide enterprise chat approval,
+and **KakaoWork** supports mobile business approval. Details, platform
+limits and source confidence:
+`docs/MESSAGING_APPROVAL_CHANNEL_RESEARCH.md` (2026-10-09).
+
+**Customer onboarding feasibility is the hard go/no-go gate:**
+The owner identified BotFather creation, bot token handling,
+manual Telegram-group administration, Meta business/phone verification,
+webhook configuration and WhatsApp template work as a fatal
+barrier for nontechnical customers. Pilot cannot proceed as a
+general-use product without a **zero-copied-credentials guided
+enrollment** path; a technical/BYOC integration alone is not enough.
+
+- **Telegram Managed Bots contract feasibility (2026-10-09):
+  CONDITIONAL TECHNICAL GO, NOT LIVE E2E PASS.** First-party
+  Bot API 9.6 has `request_managed_bot`, `managed_bot`
+  update and `getManagedBotToken`; a Telegram customer
+  can confirm creation of their own bot without BotFather,
+  chat IDs, webhook URL or token copy. On authorized
+  `dev-atlas`, Telegram HTTPS was reachable and **12/12
+  no-credential protocol/onboarding mock tests passed**.
+  These do not prove a real Telegram bot was created.
+- **Preferred on-prem pilot architecture:** a Grant-operated
+  *one-time manager bot* (provider BotFather bootstrap required)
+  plus an authorized minimal token-provisioning service, a
+  customer-created managed *child bot*, private per-recipient
+  `Start` enrollment, and customer installation's direct
+  **outbound `getUpdates` long polling**. No routine Telegram
+  group or public customer webhook is required. A permanently
+  shared message-routing bot is a different SaaS architecture
+  and is not assumed or approved.
+- **Hard security/custody gate:** the manager bot can still
+  fetch and **rotate** customer child bot tokens. Passing a
+  copy to the customer does NOT necessarily remove Grant
+  provider control; permanent manager unbinding has not
+  been verified. Need explicit provider authority, secret
+  handling/revocation and regulated-customer consent.
+  Native `restricted` Managed Bot access limits extra
+  users to 10; larger groups require tested Grant-enforced
+  enrollment, not a false Telegram-side native allowlist.
+  Provider central provisioning and client Telegram account
+  creation are unavoidable trusted steps, although customer
+  API/token/group configuration can be eliminated.
+- **WhatsApp recommendation:** use Meta Embedded Signup or a licensed
+  BSP's `Connect with Facebook` flow for a customer-authorized
+  business/phone number, without raw keys/webhook setup exposed.
+  Customer consent, business/phone proof and template review remain.
+  Meta Business Tools MCP was announced in Sep 2026 for agent-
+  assisted setup/testing; do NOT mistake it for automatic production
+  consent or generally available no-touch onboarding.
+  WhatsApp Groups API exists but specialist Meta-doc reviews
+  report **OBA required, 8 participants, invite-only, and no
+  interactive buttons inside group messages**; therefore make
+  the initial WhatsApp approval model individual 1:1, not group.
+- **Release acceptance proposal:** two nontechnical pilot admins
+  independently connect real recipients without API token, ID or
+  webhook entry; user Start/Meta permissions are the only necessary
+  external interactive authorization; send a request, receive
+  an explicit confirmation, revoke, and verify no duplicate
+  vote/execution. If this cannot be demonstrated, defer channel
+  launch or label it **advanced-setup only**.
+
+See `docs/MESSAGING_APPROVAL_CHANNEL_RESEARCH.md` for sourced
+competitive comparison, official Telegram managed-bot/deep-link
+interfaces and WhatsApp eligibility caveats. This remains a
+**research candidate**, not a new G10A/G12 gate or authorization
+to operate a central messenger SaaS relay.
+
+**Candidate channel sequence, pending owner scope and customer demand:**
+
+| Milestone | Outcome | Gating evidence |
+| --- | --- | --- |
+| **M0: Demand validation (post-1.0)** | Interview 5–10 SOC/MSSP/enterprise prospects about current approval channel, on-call urgency, trusted identity, cross-border restrictions and willingness to pilot/pay. | Two or more committed design partners for chosen channel. Product popularity alone is not proof of paid demand. |
+| **M1: Channel-independent decision adapter (1.1 candidate)** | Notification/intent/ack contract for messenger callbacks, current assignment+step+recipient binding, authenticated provider identity enrollment, policy-based verification, complete audit and fallback to email. | Wrong actor/group, replay, policy step, delegation, cross-channel duplicate vote and external execution-separation tests. |
+| **M2: Telegram SOC/MSSP pilot (1.1 candidate)** | One-time provider manager bootstrap and user-owned managed child bot created via Telegram consent, securely delivered to an isolated customer installation; child bot receives outbound polling and routes private Approve/Hold/Deny with explicit confirmation and status acknowledgment. | **Actual** newbot confirmation/update, manager `getManagedBotToken`, token handoff, `getMe`, outbound `getUpdates`, two approvers+delegate without manual token/chat ID/webhook, denial/cancel/revocation, manager-custody approval, poll update replay/race, email fallback and no direct execution. |
+| **M3: WhatsApp Business pilot (1.1/1.2 conditional)** | Interactive/templated WhatsApp requests, three answer buttons, result acknowledgement, opt-in, approved templates/24h-window and message-price management, phone-to-assignee enrollment. | An overseas/partner customer pilot, Meta Business permissions, per-market cost/consent check, verified webhook and real phone E2E. |
+| **M4: Enterprise and Korea (1.2+ conditional)** | Evaluate Slack, Microsoft Teams, KakaoWork/KakaoTalk-specific adapters based on actual customer organizations and supported identity/approval UI. | One genuine design partner and platform approval/integration contract per additional channel; no indiscriminate connector expansion. |
+
+**No direct execution via a chat button:** all messenger actions
+reuse Grant's authoritative per-seat state machine (one represented
+seat = one terminal vote across ALL delivery channels) and the
+external action-bound consume/result protocol. Received chat
+callbacks are **decision intent** only, not automatically an
+independently verified human or a privileged business execution.
+Sensitive requests default to private/direct messages; group
+messages require redaction and explicit eligible-user restriction.
+The accepted 1.0 no-login email-link + four-digit code policy
+remains unchanged and available as fallback. Customer policy
+selects additional OTP/MFA for important operations.
+
+**Remaining proof:** user-owned Telegram account and a real
+provider manager bot enabled in BotFather are necessary to
+complete the actual Managed Bot creation/token exchange.
+Official API reachability and 12 mocked contract tests alone
+cannot establish product usability or exclusive token custody.
+If central provider token control is unacceptable, this
+architecture is a **NO-GO** for security-sensitive deployments
+until a proven unlink/owner-controlled custody model is found.
+
+**Decision status:** research candidate only; M0–M4 are NOT
+G10A or G12 release blockers, not committed 1.1 delivery promises,
+and no customer demand size, Telegram/WhatsApp API integration,
+source change, real messenger E2E or channel release is asserted.
+Decide go/no-go after customer interviews and the 1.0 gates.
 
 ## Explicit non-goals
 
@@ -518,7 +782,7 @@ Implementation should progress in coherent user-visible slices, not one massive 
 
 Recommended sequence:
 
-`G0 convergence + G1/G2 closure -> G3/G4 -> G5/G6 -> G7/G8 -> G9/G10 -> G11 -> G12`
+`G0 convergence + G1/G2 closure -> G3/G4 -> G5/G6 -> G7/G8 -> G9/G10 -> G10A -> G11 -> G12`
 
 Current approval/execution integrity and existing tests are preserved throughout.
 External integration waits must not block independent product work.
@@ -526,9 +790,10 @@ External integration waits must not block independent product work.
 ## Status authority
 
 - Product requirements: `docs/PRODUCT_STANDARD.md`
-- Product roadmap and sequencing: this file
-- Actual implementation/evidence: `docs/STATUS.md` and current GitHub Work Packet #42 (G5/G6); predecessor #40 (G3/G4), #38 (G0-G2)
-- External-integration waiting evidence: GitHub Work Packet #33
+- Product roadmap and sequencing: this file and tracking Issue #37
+- Comparative research: `docs/APPROVAL_COMPETITIVE_REVIEW.md` (reference only)
+- Actual implementation/evidence: `docs/STATUS.md` and current Issue #54 G12 QA Work Packet; predecessor packets are not present implementation authority
+- External-integration waiting evidence: GitHub Work Packets #33 and #52
 - UX/IA design guide: `docs/UX_INFORMATION_ARCHITECTURE.md`
 - Architecture/security details: `docs/ARCHITECTURE.md`
 - User quality gates: `docs/SURFACE_RECONCILIATION.md`, `docs/FULL_USER_E2E.md`
