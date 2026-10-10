@@ -75,6 +75,14 @@ def check_product_claim(
             or type(request.get("integration_id")) is not str
             or request.get("integration_id") != expected_integration_id
             or request.get("state") != "APPROVED"
+            # The original scoped GET is taken BEFORE the first consume.
+            # Any previous execution identity, commit or reported result
+            # contradicts a claimed fresh first product effect; fail closed.
+            or request.get("execution_state") != "NOT_STARTED"
+            or "execution_id" not in request
+            or request["execution_id"] is not None
+            or "committed_at" not in request
+            or request["committed_at"] is not None
             or request.get("action_hash") != action_hash
             or fingerprint(Action.model_validate(request["action"]).model_dump())
             != action_hash

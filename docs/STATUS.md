@@ -5,6 +5,23 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G11 pure consumer pre-consume snapshot validation (2026-10-10)
+
+A current Grant request readback made **before** a new execution commitment
+must show `execution_state=NOT_STARTED`, no bound execution ID and no
+committed timestamp. Previously the unmounted G11
+`check_product_claim` helper accepted a synthetically fresh commit claim
+with a current request already marked COMMITTED, UNKNOWN, RUNNING,
+REPORTED_SUCCEEDED or REPORTED_FAILED (or missing the source execution
+identity altogether), yielding a positive ledger-only disposition.
+The source now rejects those contradictory pre-consume snapshots and still
+distinguishes legitimate first consumption from a replay requiring
+reconciliation. Deterministic isolated fixture tests and an actual disposable
+Grant request/consume API state transition verify the distinction. The
+helper does **not** perform an external Control effect, verify a Stellar
+receiver, supply a product ledger, authenticate two real humans, or satisfy
+the external acceptance/release gates.
+
 ## G9/M4 typed fresh Grant MFA assurance audit projection (2026-10-10)
 
 Existing G10A fresh per-decision Grant TOTP source correctly persists

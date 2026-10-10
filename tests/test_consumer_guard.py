@@ -26,6 +26,8 @@ HASH = fingerprint(ACTION.model_dump())
 REQUEST = {
     "id": RID, "state": "APPROVED", "integration_id": TRUSTED_GRANT_INTEGRATION_ID,
     "action": ACTION.model_dump(), "action_hash": HASH,
+    # Exact current Core.get() projection before product calls consume().
+    "execution_state": "NOT_STARTED", "execution_id": None, "committed_at": None,
 }
 CLAIM = {
     "request_id": RID, "execution_id": "product-control-replay-42",
@@ -408,3 +410,93 @@ def test_control_readback_requires_product_owned_route_and_destination_binding()
         with pytest.raises(ConsumerGuardError, match="CONTROL_REPLAY_EVIDENCE_INVALID"):
             check(received, expected_route=expected_route,
                   expected_destination=expected_destination)
+
+
+@pytest.mark.parametrize("state", [
+    "COMMITTED", "RUNNING", "UNKNOWN", "REPORTED_SUCCEEDED", "REPORTED_FAILED",
+])
+def test_preconsume_snapshot_cannot_claim_a_previously_executed_request(state):
+    """The existing Grant projection contradicts a fresh first-use claim."""
+    with pytest.raises(ConsumerGuardError, match="PRODUCT_GRANT_BINDING_INVALID"):
+        decide(request={
+            **REQUEST,
+            "execution_state": state,
+            "execution_id": "prior-product-effect",
+            "committed_at": 1700000000.0,
+        })
+
+
+@pytest.mark.parametrize("changes", [
+    {"execution_state": None},
+    {"execution_state": ""},
+    {"execution_id": "unrelated-earlier-commit"},
+    {"committed_at": 1700000000.0},
+])
+def test_preconsume_snapshot_rejects_partial_or_conflicting_execution_identity(changes):
+    with pytest.raises(ConsumerGuardError, match="PRODUCT_GRANT_BINDING_INVALID"):
+        decide(request={**REQUEST, **changes})
+
+
+@pytest.mark.parametrize("missing", ["execution_state", "execution_id", "committed_at"])
+def test_preconsume_snapshot_requires_explicit_current_execution_fields(missing):
+    incomplete = {key: value for key, value in REQUEST.items() if key != missing}
+    with pytest.raises(ConsumerGuardError, match="PRODUCT_GRANT_BINDING_INVALID"):
+        decide(request=incomplete)
+
+
+def test_actual_grant_request_projection_only_accepts_preconsume_snapshot(env):
+    """Use real scoped Grant API states, not invented JSON-only fixture fields."""
+    created = env.api.post("/api/v1/requests", json=env.intake())
+    assert created.status_code == 202, created.text
+    row = created.json()
+    approved = env.human("approver").post(
+        f"/api/v1/requests/{row['id']}/decision",
+        json={"decision": "APPROVED", "expected_revision": row["revision"]},
+    )
+    assert approved.status_code == 200, approved.text
+    before_response = env.api.get(f"/api/v1/requests/{row['id']}")
+    assert before_response.status_code == 200, before_response.text
+    before = before_response.json()
+    assert before["state"] == "APPROVED"
+    assert before["execution_state"] == "NOT_STARTED"
+    assert before["execution_id"] is None and before["committed_at"] is None
+
+    action = Action.model_validate(before["action"])
+    execution = str(uuid.uuid4())
+    operation = "isolated-test-operation-" + row["id"]
+    local = ProductReservation(
+        operation_key=operation, execution_id=execution,
+        state="RESERVED", effect_count=0, durable=True,
+    )
+    consumed = env.api.post(
+        f"/api/v1/requests/{row['id']}/consume",
+        json={"execution_id": execution, "action_hash": row["action_hash"]},
+    )
+    assert consumed.status_code == 200, consumed.text
+    claim = consumed.json()
+    assert claim["committed"] is True and claim["replay"] is False
+    arguments = {
+        "claim": claim, "operation_key": operation, "execution_id": execution,
+        "expected_action": action, "expected_integration_id": env.integration["id"],
+        "reservation": local,
+    }
+    assert check_product_claim(request=before, **arguments).kind == "PRODUCT_LEDGER_ONCE_ONLY"
+
+    after_response = env.api.get(f"/api/v1/requests/{row['id']}")
+    assert after_response.status_code == 200, after_response.text
+    after = after_response.json()
+    assert after["execution_state"] == "COMMITTED"
+    assert after["execution_id"] == execution
+    assert after["committed_at"] is not None
+    with pytest.raises(ConsumerGuardError, match="PRODUCT_GRANT_BINDING_INVALID"):
+        check_product_claim(request=after, **arguments)
+
+    replay = env.api.post(
+        f"/api/v1/requests/{row['id']}/consume",
+        json={"execution_id": execution, "action_hash": row["action_hash"]},
+    )
+    assert replay.status_code == 200 and replay.json()["replay"] is True
+    # A legitimate repeated consume never permits a second product effect.
+    assert check_product_claim(request=before, claim=replay.json(),
+                               **{k: v for k, v in arguments.items() if k != "claim"}
+                               ).kind == "RECONCILE_NO_SEND"

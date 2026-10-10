@@ -4,6 +4,22 @@ Observed 2026-10-08 by read-only inspection. This document is an acceptance
 readiness ledger, not an external integration PASS. Authority: Grant 1.0
 Product Standard, Roadmap G11, Integration Contract, Full User E2E.
 
+## 2026-10-10 pre-consume Grant execution-state binding (Work Packet #98 rev2)
+
+The original product-scoped Grant `GET /requests/{id}` snapshot is taken
+**before** the first `consume` attempt. A positive **pure** claim disposition
+must therefore observe all three current-source fields:
+`execution_state=NOT_STARTED`, `execution_id=null`, and
+`committed_at=null`. A missing field, prior committed/UNKNOWN/reported
+execution, or mismatched execution identity is contradictory to a fresh
+first-use grant and must fail closed. This comparison cannot prove that
+the post-consume effect was durably applied, and it does **not** replace
+the consumer's product-owned atomic reservation and independent readback.
+The Grant service's actual consume endpoint, reviewer authority and replay
+semantics are unchanged. A real Grant API fixture tests the original
+pre-consume snapshot, fresh consume and post-consume rejection; it creates
+no external Control or Stellar effects.
+
 ## 2026-10-10 current integrated pure G11 evidence checks (Work Packet #98)
 
 The current G10A integrated candidate now includes the reviewed G11 pure,
