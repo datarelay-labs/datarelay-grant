@@ -7,6 +7,9 @@ export type RequestRow = {
  id: string; external_id: string; integration_id: string; profile_id: string; profile_version_id?: string | null; policy_version?: number | null;
  requester_id: string | null; approver_id: string; viewer_assigned?: boolean; viewer_can_decide?: boolean; viewer_delegated_for?: string | null; approval_plan?: { mode: string; group_id?: string; members: string[]; required: number }; decisions?: { actor_id: string; decision: string; reason: string; decided_at: number }[]; title: string; reason: string;
  action: Action; action_hash: string; source: Record<string, unknown>; state: string;
+ collaboration_state: 'OPEN' | 'INFO_REQUESTED' | 'CHANGES_REQUESTED';
+ approval_progress?: { mode: string; approved_count: number; required_count: number; total_members: number; waiting_approver_ids: string[]; waiting_approvers: { id: string; username: string }[]; group_name: string | null; waiting_on: 'APPROVERS' | 'REQUESTER_INFO' | 'REQUESTER_REVISION' | 'EXECUTOR' | 'EXECUTION_RESULT' | 'CLOSED' };
+ comments?: { id: string; author_id: string; kind: 'COMMENT' | 'QUESTION' | 'REQUEST_INFO' | 'REQUEST_CHANGES' | 'INFO_RESPONSE'; body: string; created_at: number }[];
  decision: Outcome | null; decision_actor: string | null; decision_at: number | null;
  revision: number; created_at: number; deadline: number; grant_until: number | null;
  predecessor_id: string | null; execution_id: string | null; execution_state: string;

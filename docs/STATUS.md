@@ -1,6 +1,6 @@
 # Grant 1.0 implementation status
 
-Updated: 2026-10-08. G3/G4 development lane: Issue #40 / PR #41; G0/G1/G2 predecessor: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
+Updated: 2026-10-08. G5/G6 implementation lane: Issue #42; G3/G4 predecessor: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
 Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
@@ -53,6 +53,21 @@ capability remains whatever is present and tested at the committed candidate HEA
   delegated work queue/administrator browser controls. G4 candidate escalation
   scheduling requires the reviewed request revision, advances it on successful
   updates, and refuses stale scheduling without overwriting the target.
+- G5 development candidate: auditable requester/approver comments and questions,
+  explicit information requests that block approval until requester response,
+  change requests that require cancellation and fresh linked resubmission,
+  role-checked material-field comparison across revisions and preservation of
+  original immutable action/fingerprint. Migration v7 to v8 is additive and re-entry
+  tested. G5 browser collaboration and replacement-diff journeys are exercised;
+  this is not a release claim.
+- G6 development candidate: role-scoped server-filtered approval inbox views
+  (needs, held, overdue, delegated, recently decided and escalated), dedicated My
+  requests workspace, administrator-selectable policy/requester/approver/group and
+  integration filters, action/date/delivery/execution search and stable pagination.
+  A request's approval progress and waiting party derive from the authoritative
+  decision ledger, approval-plan snapshot and collaboration state. Large-list API
+  pagination and actual browser requester/approver journeys are covered by tests;
+  final exact-head qualification is still outstanding.
 - Immutable action, explicit approve/hold/deny, expiry, bounded reminders,
   cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.
@@ -69,22 +84,29 @@ capability remains whatever is present and tested at the committed candidate HEA
 
 ## Observed development evidence
 
-G1/G2 predecessor PR #39 review hardening addresses five findings:
-browser-created requests include policy tenant/environment/severity/risk selectors,
-test emails are restricted to the administrator until a safe-recipient registry,
-the latest draft survives active-version disable, overdue includes EXPIRED requests,
-and SMTP failures are counted separately from webhook delivery. This predecessor
-development candidate passed 139 Python/API, 12 frontend and seven Chromium
-journeys. Exact predecessor validation evidence belongs in Work Packet #38.
+G0/G1/G2 PR #39 review hardening passed 139 Python/API, 12 frontend,
+seven Chromium journeys at exact predecessor source HEAD 75fb144. All five
+latest actionable reviews were resolved: browser policy selectors, recipient-
+restricted test email, latest Draft retention, overdue/EXPIRED counting, and
+SMTP error visibility. Engineering System and API/Static GitHub CI passed;
+private Foundation Web read credential remains a separate approval gate.
 
-G3/G4 plus inherited G1/G2 review fixes pass 160 Python/API, 12 frontend,
-static/typecheck/production build and 10 actual Chromium journeys together on
-the resolved non-force merge worktree. Authoritative committed exact-HEAD CI
-evidence belongs in Work Packet #40.
+G3/G4 + G1/G2 non-force merged PR #41 candidate passed 160 Python/API,
+12 frontend and 10 actual browser journeys at exact source HEAD b6a434c.
+G5/G6 plus merged G0-G4 predecessor fixes passed 175 Python/API, 12 frontend,
+static/typecheck/production build and 13 actual Chromium journeys on earlier
+merged source. Five new PR #43 review issues were subsequently fixed:
+expired change-request linked resubmission, comparison visibility for a
+replacement approver, suppression of pending/reminder delivery during blocked
+collaboration, transactionally durable deadline expiry on stale comment
+submission, and terminal execution progress marking. Focused request and
+inbox regressions cover these five cases. Combined source has now passed
+180 Python/API cases, 12 frontend unit checks, static/typecheck/production
+build and 13 Chromium journeys (actual browser). Exact committed-head CI,
+release provenance and owner acceptance remain in Work Packet #42.
 
-The browser administration journey exercises Notification preview/test-send
-and Policy Draft -> Testing -> isolated test -> Activate -> runtime preview
--> history.
+Browser test sessions use disposable accounts and actual loopback SMTP/HTTP.
+These are not real DataRelay/Stellar integration or production evidence.
 
 Browser cases include two independently signed-in requester/approver passes,
 mobile shared administration, cancellation/replacement, account creation,

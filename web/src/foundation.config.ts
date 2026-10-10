@@ -81,6 +81,7 @@ export function productConfig(user: User) {
       { id: 'home', label: 'Home', path: '/home', icon: 'home' },
       { id: 'approvals', label: 'My approvals', path: '/approvals', icon: 'activity', group: 'Work' },
       { id: 'requests', label: 'Requests', path: '/requests', icon: 'home', group: 'Work' },
+      { id: 'my-requests', label: 'My requests', path: '/my-requests', icon: 'activity', group: 'Work' },
       { id: 'delegations', label: 'Delegations', path: '/delegations', icon: 'users', group: 'Work' },
       {
         id: 'profiles',

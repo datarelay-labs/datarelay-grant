@@ -190,8 +190,8 @@ export function App() {
   let page;
   if (path === '/home') {
     page = <Home user={user} navigate={navigate} />;
-  } else if (path === '/requests' || path === '/approvals') {
-    page = <RequestList key={path} user={user} mine={path === '/approvals'} navigate={navigate} />;
+  } else if (path === '/requests' || path === '/approvals' || path === '/my-requests') {
+    page = <RequestList key={path} user={user} mode={path === '/approvals' ? 'approvals' : path === '/my-requests' ? 'requester' : 'all'} navigate={navigate} />;
   } else if (path === '/requests/new') {
     page = <NewRequest navigate={navigate} />;
   } else if (/^\/requests\/[a-f0-9-]{36}\/replace$/.test(path)) {

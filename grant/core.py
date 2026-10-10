@@ -43,6 +43,7 @@ from .models import (
     Profile,
     ProfileUpdate,
     Reassign,
+    RequestComment,
     Result,
 )
 from .policy import (
@@ -1483,9 +1484,17 @@ class Core:
                 previous = self._load(conn, body.predecessor_id, actor)
                 if (
                     previous["integration_id"] != integration_id
-                    or previous["state"] != "CANCELLED"
+                    or not (
+                        previous["state"] == "CANCELLED"
+                        or (
+                            previous["state"] == "EXPIRED"
+                            and previous["collaboration_state"] == "CHANGES_REQUESTED"
+                        )
+                    )
                 ):
-                    raise GrantError("PREDECESSOR_MUST_BE_CANCELLED", 409)
+                    raise GrantError("PREDECESSOR_NOT_REPLACEABLE", 409)
+                if previous["requester_id"] != requester:
+                    raise GrantError("PREDECESSOR_OWNER_MISMATCH", 403)
 
             values = {
                 "id": ident,
@@ -1544,7 +1553,12 @@ class Core:
         members = plan.get("members", [row["approver_id"]])
         represented = cls._delegated_from(conn, actor.id, members, now)
         assigned = bool(represented) and actor.id != row["requester_id"]
-        can_decide = assigned and row["state"] in ("AWAITING", "HELD") and row["deadline"] > now
+        can_decide = (
+            assigned
+            and row["state"] in ("AWAITING", "HELD")
+            and row["deadline"] > now
+            and row["collaboration_state"] == "OPEN"
+        )
         if can_decide:
             decisions = {
                 decision["actor_id"]: decision["decision"]
@@ -1578,35 +1592,316 @@ class Core:
                 **self._viewer_assignment(conn, current, actor, now),
             }
 
-    def list_requests(self, actor: Principal, limit: int = 100, offset: int = 0) -> list[dict]:
+    def compare_replacement(self, actor: Principal, ident: str) -> dict:
+        with self.db.transaction(write=False) as conn:
+            latest = self._load(conn, ident, actor)
+            if not latest["predecessor_id"]:
+                raise GrantError("REVISION_COMPARISON_NOT_AVAILABLE", 409)
+            # A new approver has authority over the replacement even if the
+            # prior request was assigned to a different approval group.
+            # Cross-request access is permitted only by verified lineage.
+            previous = self._load(conn, latest["predecessor_id"])
+            if (
+                previous["integration_id"] != latest["integration_id"]
+                or previous["requester_id"] != latest["requester_id"]
+            ):
+                raise GrantError("REVISION_LINEAGE_INVALID", 409)
+
+            old_action = json.loads(previous["action"])
+            new_action = json.loads(latest["action"])
+            candidates = {
+                "title": (previous["title"], latest["title"]),
+                "reason": (previous["reason"], latest["reason"]),
+                "action.kind": (old_action["kind"], new_action["kind"]),
+                "action.target": (old_action["target"], new_action["target"]),
+                "action.parameters": (
+                    old_action["parameters"], new_action["parameters"],
+                ),
+                "source": (json.loads(previous["source"]), json.loads(latest["source"])),
+            }
+            changes = {
+                field: {"before": old, "after": new}
+                for field, (old, new) in candidates.items()
+                if old != new
+            }
+            return {
+                "request_id": latest["id"],
+                "predecessor_id": previous["id"],
+                "predecessor_state": previous["state"],
+                "action_changed": previous["action_hash"] != latest["action_hash"],
+                "fresh_approval_required": True,
+                "changes": changes,
+            }
+
+    def add_request_comment(
+        self, actor: Principal, ident: str, body: RequestComment
+    ) -> dict:
+        if actor.kind != "human":
+            raise GrantError("HUMAN_REQUIRED", 403)
+        now = time.time()
+        expired = False
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            row = self._load(conn, ident, actor)
+            if row["revision"] != body.expected_revision:
+                raise GrantError("STALE_OR_FINAL_REQUEST", 409)
+            if self._paused(conn):
+                raise GrantError("RECOVERY_PAUSED", 409)
+            progress = row["collaboration_state"]
+            if body.kind in ("REQUEST_INFO", "REQUEST_CHANGES", "INFO_RESPONSE"):
+                if row["state"] not in ("AWAITING", "HELD") or row["execution_id"]:
+                    raise GrantError("COLLABORATION_NOT_ALLOWED", 409)
+                expired = self._expire(conn, row, now)
+                if not expired:
+                    if body.kind == "INFO_RESPONSE":
+                        if actor.id != row["requester_id"]:
+                            raise GrantError("REQUESTER_REQUIRED", 403)
+                        if progress != "INFO_REQUESTED":
+                            raise GrantError("COLLABORATION_RESPONSE_NOT_PENDING", 409)
+                        progress = "OPEN"
+                    else:
+                        if actor.id == row["requester_id"] or not self._viewer_assignment(
+                            conn, row, actor, now
+                        )["viewer_can_decide"]:
+                            raise GrantError("ASSIGNED_APPROVER_REQUIRED", 403)
+                        if progress == "CHANGES_REQUESTED":
+                            raise GrantError("REPLACEMENT_REQUIRED", 409)
+                        if body.kind == "REQUEST_INFO" and not row["requester_id"]:
+                            raise GrantError("REQUESTER_UNAVAILABLE", 409)
+                        progress = (
+                            "INFO_REQUESTED"
+                            if body.kind == "REQUEST_INFO"
+                            else "CHANGES_REQUESTED"
+                        )
+            if not expired:
+                if not body.body.strip():
+                    raise GrantError("COMMENT_EMPTY", 422)
+                count = conn.execute(
+                    "SELECT count(*) FROM request_comments WHERE request_id=?", (ident,)
+                ).fetchone()[0]
+                if count >= 200:
+                    raise GrantError("COMMENT_LIMIT_REACHED", 409)
+                comment_id = uid()
+                conn.execute(
+                    """INSERT INTO request_comments(id,request_id,author_id,kind,body,created_at)
+                       VALUES(?,?,?,?,?,?)""",
+                    (comment_id, ident, actor.id, body.kind, body.body, now),
+                )
+                conn.execute(
+                    "UPDATE requests SET collaboration_state=?,revision=revision+1 WHERE id=?",
+                    (progress, ident),
+                )
+                if body.kind in ("REQUEST_INFO", "REQUEST_CHANGES"):
+                    # Queued approval reminders would mislead approvers when
+                    # they currently cannot decide. Already-in-flight SMTP is
+                    # not retractable; the transport revalidates before leasing.
+                    conn.execute(
+                        """UPDATE outbox SET state='SUPERSEDED',lease_token=NULL,
+                              lease_until=NULL,last_error=NULL
+                           WHERE request_id=? AND kind='email'
+                             AND event_type='reminder' AND state IN ('PENDING','FAILED')""",
+                        (ident,),
+                    )
+                elif body.kind == "INFO_RESPONSE":
+                    # Restart the reminder schedule after a requester response.
+                    conn.execute(
+                        "UPDATE requests SET next_reminder=? WHERE id=?",
+                        (now + row["reminder_seconds"], ident),
+                    )
+                audit(
+                    conn, ident, actor.id, "request.collaboration",
+                    {
+                        "comment_id": comment_id,
+                        "kind": body.kind,
+                        "collaboration_state": progress,
+                    },
+                    now,
+                )
+                result = self._project(conn, self._load(conn, ident))
+        if expired:
+            # _expire wrote audit, outbox and terminal state in the committed
+            # transaction. Raising inside it would roll all of that back.
+            raise GrantError("REQUEST_EXPIRED", 409)
+        return result
+
+    def list_requests(
+        self,
+        actor: Principal,
+        limit: int = 100,
+        offset: int = 0,
+        *,
+        view: str = "all",
+        search: str = "",
+        state: str | None = None,
+        collaboration_state: str | None = None,
+        policy_id: str | None = None,
+        requester_id: str | None = None,
+        approver_id: str | None = None,
+        group_id: str | None = None,
+        integration_id: str | None = None,
+        action_kind: str | None = None,
+        created_after: float | None = None,
+        created_before: float | None = None,
+        delivery_state: str | None = None,
+        execution_state: str | None = None,
+    ) -> list[dict]:
+        """Stream role-visible rows and page *after* all server-side filters."""
+        allowed_views = {
+            "all", "needs", "overdue", "held", "delegated",
+            "recent", "requester", "escalated",
+        }
+        if (
+            view not in allowed_views
+            or (state is not None and state not in {
+                "AWAITING", "HELD", "APPROVED", "DENIED", "EXPIRED", "CANCELLED"
+            })
+            or (
+                collaboration_state is not None
+                and collaboration_state not in {
+                    "OPEN", "INFO_REQUESTED", "CHANGES_REQUESTED"
+                }
+            )
+            or limit < 1 or limit > 100 or offset < 0
+        ):
+            raise GrantError("REQUEST_FILTER_INVALID", 422)
+        if actor.kind == "integration" and view != "all":
+            raise GrantError("HUMAN_REQUIRED", 403)
+        if actor.kind not in ("human", "integration"):
+            raise GrantError("AUTHENTICATION_REQUIRED", 401)
+
         self.maintenance()
-        query, args = "SELECT * FROM requests", []
+        now = time.time()
+        clauses: list[str] = []
+        args: list[Any] = []
+
         if actor.kind == "integration":
-            query += " WHERE integration_id=?"
+            clauses.append("requests.integration_id=?")
             args.append(actor.integration_id)
         elif actor.role != "admin":
-            now = time.time()
-            query += """ WHERE requester_id=? OR approver_id=? OR approval_plan LIKE ?
-                OR EXISTS (
-                    SELECT 1 FROM delegations d
-                    WHERE d.substitute_id=? AND d.revoked_at IS NULL
-                      AND d.starts_at<=? AND d.ends_at>?
-                      AND (
-                        d.delegator_id=requests.approver_id
-                        OR requests.approval_plan LIKE '%"' || d.delegator_id || '"%'
-                      )
-                )"""
-            args += [actor.id, actor.id, f'%"{actor.id}"%', actor.id, now, now]
-        query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+            clauses.append(
+                """(requests.requester_id=? OR requests.approver_id=?
+                    OR requests.approval_plan LIKE ?
+                    OR EXISTS (
+                        SELECT 1 FROM delegations d
+                        WHERE d.substitute_id=?
+                          AND d.revoked_at IS NULL
+                          AND d.starts_at<=? AND d.ends_at>?
+                          AND (
+                            d.delegator_id=requests.approver_id
+                            OR requests.approval_plan LIKE '%"' || d.delegator_id || '"%'
+                          )
+                    ))"""
+            )
+            args.extend([
+                actor.id, actor.id, f'%"{actor.id}"%', actor.id, now, now,
+            ])
+
+        for value, column in (
+            (state, "requests.state"),
+            (collaboration_state, "requests.collaboration_state"),
+            (policy_id, "requests.profile_id"),
+            (requester_id, "requests.requester_id"),
+            (integration_id, "requests.integration_id"),
+            (execution_state, "requests.execution_state"),
+        ):
+            if value is not None:
+                clauses.append(f"{column}=?")
+                args.append(value)
+        if action_kind is not None:
+            clauses.append("json_extract(requests.action,'$.kind')=?")
+            args.append(action_kind)
+        if approver_id is not None:
+            clauses.append(
+                """(requests.approver_id=? OR EXISTS (
+                    SELECT 1 FROM json_each(requests.approval_plan,'$.members')
+                    WHERE value=?
+                ))"""
+            )
+            args.extend([approver_id, approver_id])
+        if group_id is not None:
+            clauses.append("json_extract(requests.approval_plan,'$.group_id')=?")
+            args.append(group_id)
+        if created_after is not None:
+            clauses.append("requests.created_at>=?")
+            args.append(created_after)
+        if created_before is not None:
+            clauses.append("requests.created_at<=?")
+            args.append(created_before)
+        if search:
+            # A search term is literal text; percent/underscore must not
+            # silently become arbitrary SQL LIKE wildcards.
+            term = search.lower().replace("!", "!!").replace("%", "!%").replace("_", "!_")
+            clauses.append(
+                """(LOWER(requests.title) LIKE ? ESCAPE '!'
+                    OR LOWER(requests.external_id) LIKE ? ESCAPE '!')"""
+            )
+            args.extend([f"%{term}%", f"%{term}%"])
+
+        query = "SELECT requests.* FROM requests"
+        if clauses:
+            query += " WHERE " + " AND ".join(clauses)
+        query += " ORDER BY requests.created_at DESC, requests.id DESC LIMIT ? OFFSET ?"
+
+        def included(row: dict) -> bool:
+            if delivery_state is not None and row["delivery_state"] != delivery_state:
+                return False
+            assigned = row["viewer_assigned"]
+            if view == "needs":
+                return bool(row["viewer_can_decide"])
+            if view == "held":
+                return bool(assigned and row["state"] == "HELD")
+            if view == "delegated":
+                return bool(row["viewer_delegated_for"])
+            if view == "requester":
+                return actor.kind == "human" and row["requester_id"] == actor.id
+            if view == "recent":
+                represented = row["viewer_delegated_for"] or actor.id
+                return bool(
+                    assigned and any(
+                        item["actor_id"] == represented
+                        and item["decision"] in ("APPROVED", "DENIED")
+                        for item in row["decisions"]
+                    )
+                )
+            if view == "overdue":
+                return bool(row["overdue"] or row["state"] == "EXPIRED")
+            if view == "escalated":
+                return bool(row["escalation"] and row["escalation"]["fired_at"] is not None)
+            return True
+
+        result: list[dict] = []
+        matched = 0
+        cursor = 0
+        chunk = max(100, min(200, limit * 2))
         with self.db.transaction(write=False) as conn:
-            now = time.time()
-            return [
-                {
-                    **self._project(conn, row, detail=False),
-                    **self._viewer_assignment(conn, row, actor, now),
-                }
-                for row in conn.execute(query, (*args, limit, offset)).fetchall()
-            ]
+            # Streaming bounded fetches keep page results correct even when
+            # viewer/delegation/outbox filters are computed after SQL predicates.
+            while len(result) < limit:
+                page = conn.execute(query, (*args, chunk, cursor)).fetchall()
+                if not page:
+                    break
+                cursor += len(page)
+                for source in page:
+                    try:
+                        self._visible(conn, source, actor)
+                    except GrantError as exc:
+                        if exc.code == "REQUEST_NOT_FOUND":
+                            continue
+                        raise
+                    item = {
+                        **self._project(conn, source, detail=False),
+                        **self._viewer_assignment(conn, source, actor, now),
+                    }
+                    if not included(item):
+                        continue
+                    if matched >= offset:
+                        result.append(item)
+                        if len(result) == limit:
+                            break
+                    matched += 1
+                if len(page) < chunk:
+                    break
+        return result
 
     def decide(self, actor: Principal, ident: str, body: Decision) -> dict:
         if actor.kind != "human":
@@ -1617,6 +1912,8 @@ class Core:
             require_current_authority(conn, actor)
             row = self._load(conn, ident, actor)
             now = time.time()
+            if row["collaboration_state"] != "OPEN":
+                raise GrantError("COLLABORATION_RESPONSE_REQUIRED", 409)
             plan = json.loads(row["approval_plan"] or "{}") or {
                 "mode": "SINGLE", "members": [row["approver_id"]], "required": 1
             }
@@ -1926,6 +2223,7 @@ class Core:
                     continue
                 if (
                     row["state"] in ("AWAITING", "HELD")
+                    and row["collaboration_state"] == "OPEN"
                     and row["next_reminder"] <= now
                     and row["reminder_count"] < row["max_reminders"]
                 ):
@@ -1956,6 +2254,65 @@ class Core:
             version = version_row["version"] if version_row else None
         out["policy_version"] = version
         out["decisions"] = [dict(r) for r in conn.execute("SELECT actor_id,decision,reason,decided_at FROM request_decisions WHERE request_id=? ORDER BY decided_at,actor_id", (row["id"],)).fetchall()]
+        plan = out["approval_plan"] or {
+            "mode": "SINGLE", "members": [row["approver_id"]], "required": 1,
+        }
+        votes = {vote["actor_id"]: vote["decision"] for vote in out["decisions"]}
+        members = plan.get("members", [row["approver_id"]])
+        approved_count = sum(votes.get(member) == "APPROVED" for member in members)
+        undecided_members = [
+            member for member in members
+            if votes.get(member) not in ("APPROVED", "DENIED")
+        ]
+        waiting_members = (
+            undecided_members[:1]
+            if plan.get("mode") == "SEQUENTIAL"
+            else undecided_members
+        )
+        waiting_on = "CLOSED"
+        if row["state"] in ("AWAITING", "HELD"):
+            waiting_on = {
+                "OPEN": "APPROVERS",
+                "INFO_REQUESTED": "REQUESTER_INFO",
+                "CHANGES_REQUESTED": "REQUESTER_REVISION",
+            }[row["collaboration_state"]]
+        elif row["state"] == "APPROVED":
+            if row["execution_state"] == "NOT_STARTED":
+                waiting_on = "EXECUTOR"
+            elif row["execution_state"] in ("REPORTED_SUCCEEDED", "REPORTED_FAILED"):
+                waiting_on = "CLOSED"
+            else:
+                waiting_on = "EXECUTION_RESULT"
+        visible_waiting = waiting_members if waiting_on == "APPROVERS" else []
+        names = {}
+        if visible_waiting:
+            placeholders = ",".join("?" for _ in visible_waiting)
+            names = {
+                person["id"]: person["username"]
+                for person in conn.execute(
+                    f"SELECT id,username FROM users WHERE id IN ({placeholders})",
+                    visible_waiting,
+                ).fetchall()
+            }
+        group_name = None
+        if plan.get("group_id"):
+            group = conn.execute(
+                "SELECT name FROM approver_groups WHERE id=?", (plan["group_id"],)
+            ).fetchone()
+            group_name = group["name"] if group else None
+        out["approval_progress"] = {
+            "mode": plan.get("mode", "SINGLE"),
+            "approved_count": approved_count,
+            "required_count": int(plan.get("required") or 1),
+            "total_members": len(members),
+            "waiting_approver_ids": visible_waiting,
+            "waiting_approvers": [
+                {"id": member, "username": names.get(member, "Unavailable approver")}
+                for member in visible_waiting
+            ],
+            "group_name": group_name,
+            "waiting_on": waiting_on,
+        }
         escalation = conn.execute(
             """SELECT target_user_id,target_group_id,target_members,due_at,fired_at
                FROM escalations WHERE request_id=?""",
@@ -1990,6 +2347,14 @@ class Core:
             d["kind"] == "email" and d["state"] == "FAILED" for d in deliveries
         )
         if detail:
+            out["comments"] = [
+                dict(comment)
+                for comment in conn.execute(
+                    """SELECT id,author_id,kind,body,created_at FROM request_comments
+                       WHERE request_id=? ORDER BY created_at,id""",
+                    (row["id"],),
+                ).fetchall()
+            ]
             out["deliveries"] = deliveries
             out["timeline"] = [
                 {**dict(r), "detail": json.loads(r["detail"])}

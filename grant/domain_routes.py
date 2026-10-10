@@ -1,5 +1,7 @@
 """Small request, profile and integration HTTP surface."""
 
+from typing import Literal
+
 from fastapi import Query, Request
 
 from .models import (
@@ -23,6 +25,7 @@ from .models import (
     Profile,
     ProfileUpdate,
     Reassign,
+    RequestComment,
     Result,
     Token,
 )
@@ -49,9 +52,45 @@ def register_domain(app, actor, human, reader):
 
     @app.get("/api/v1/requests")
     def requests(
-        request: Request, limit: int = Query(100, ge=1, le=100), offset: int = Query(0, ge=0)
+        request: Request,
+        limit: int = Query(100, ge=1, le=100),
+        offset: int = Query(0, ge=0),
+        view: Literal[
+            "all", "needs", "overdue", "held", "delegated", "recent", "requester", "escalated"
+        ] = "all",
+        search: str = Query("", max_length=100),
+        state: str | None = Query(None, max_length=24),
+        collaboration_state: str | None = Query(None, max_length=32),
+        policy_id: str | None = Query(None, max_length=100),
+        requester_id: str | None = Query(None, max_length=100),
+        approver_id: str | None = Query(None, max_length=100),
+        group_id: str | None = Query(None, max_length=100),
+        integration_id: str | None = Query(None, max_length=100),
+        action_kind: str | None = Query(None, max_length=100),
+        created_after: float | None = Query(None, ge=0),
+        created_before: float | None = Query(None, ge=0),
+        delivery_state: str | None = Query(None, max_length=32),
+        execution_state: str | None = Query(None, max_length=32),
     ):
-        return core.list_requests(reader(request), limit, offset)
+        return core.list_requests(
+            reader(request),
+            limit,
+            offset,
+            view=view,
+            search=search,
+            state=state,
+            collaboration_state=collaboration_state,
+            policy_id=policy_id,
+            requester_id=requester_id,
+            approver_id=approver_id,
+            group_id=group_id,
+            integration_id=integration_id,
+            action_kind=action_kind,
+            created_after=created_after,
+            created_before=created_before,
+            delivery_state=delivery_state,
+            execution_state=execution_state,
+        )
 
     @app.post("/api/v1/requests", status_code=202)
     def create_request(body: Intake, request: Request):
@@ -60,6 +99,14 @@ def register_domain(app, actor, human, reader):
     @app.get("/api/v1/requests/{ident}")
     def get_request(ident: str, request: Request):
         return core.get(reader(request), ident)
+
+    @app.get("/api/v1/requests/{ident}/comparison")
+    def request_comparison(ident: str, request: Request):
+        return core.compare_replacement(reader(request), ident)
+
+    @app.post("/api/v1/requests/{ident}/comments", status_code=201)
+    def comment(ident: str, body: RequestComment, request: Request):
+        return core.add_request_comment(human(request), ident, body)
 
     @app.post("/api/v1/requests/{ident}/decision")
     def decision(ident: str, body: Decision, request: Request):

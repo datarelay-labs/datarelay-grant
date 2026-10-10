@@ -130,15 +130,25 @@ Stop the old loopback process, take a new backup, run `check` and the candidate
 against an isolated copy before pointing a service at it. The default web path is
 resolved from the active source tree; remove a legacy hard-coded `web_root` only
 after verifying the new compiled assets. Run the same user scenarios on that build.
-Schema v3 adds versioned policy lifecycle/selectors, event-oriented notification
-template sets/branding snapshots, request policy-version references and event-typed
-delivery state on top of the schema-v2 approval/mail snapshot baseline. Opening a
-schema-v1 or schema-v2 database with this candidate migrates it forward to v3 in place;
-take a backup first for any non-disposable installation. Pre-v3 binaries reject schema
-v3 and therefore are not a valid code-only rollback target. Do not downgrade/stamp the
-database. If a schema rollback is ever required, use the protected pre-upgrade backup
-through the reconciliation procedure above. Real upgrade/rollback requires the
-operator's deployment approval.
+Request information and change requests suspend decision-reminder scheduling.
+Queued reminder mail is superseded and the worker revalidates collaboration
+state before claiming a reminder. In-flight SMTP transport cannot be recalled.
+If a change-request deadline expires, the requester may create a new linked
+replacement without cancelling the now-expired original. Every replacement
+requires fresh action-bound approval; the original timeline remains immutable.
+
+Current development schema v8 contains versioned policy lifecycle/selectors,
+notification/event snapshots, per-approver decision ledgers, time-bounded delegation,
+group/user escalation, append-only request collaboration comments, and the separate
+OPEN / INFO_REQUESTED / CHANGES_REQUESTED collaboration state. Supported older
+schema versions (v1-v7) migrate forward on opening a database; the v7-to-v8 step is
+safe to re-enter when the collaboration column already exists. Back up before any
+non-disposable upgrade and test upgrade against an isolated copy. Older binaries
+must reject schema v8 rather than quietly reinterpret policy, collaboration or
+authorization data; a code-only downgrade or manual PRAGMA user_version change is
+not a supported rollback. Recover from the protected pre-upgrade backup with the
+separate-installation reconciliation procedure above. The migration does not publish
+a release or authorize a production upgrade; that requires separate owner approval.
 
 ## Browser checks
 

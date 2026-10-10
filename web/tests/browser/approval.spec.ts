@@ -96,6 +96,9 @@ test('requester cancels and creates a newly approved replacement through the UI'
  expect(row.predecessor_id).toBe(oldId);expect(row.state).toBe('AWAITING');expect(row.action.target).toBe('new-test-target');
  expect((await request.post('/api/v1/requests/'+newId+'/consume',{headers,data:{execution_id:crypto.randomUUID(),action_hash:row.action_hash}})).status()).toBe(409);
  await expect(page.getByRole('button',{name:oldId,exact:true})).toBeVisible();
+ await expect(page.getByText('Replacement revision comparison',{exact:true})).toBeVisible();
+ await expect(page.getByText('Changed action.target',{exact:true})).toBeVisible();
+ await expect(page.getByText('Previous authorization cannot be reused.',{exact:false})).toBeVisible();
  await context.close();
 });
 
@@ -272,6 +275,137 @@ test('G4 delegated substitute finds and approves request through My approvals',a
  expect(result.execution_state).toBe('NOT_STARTED');
  expect(result.decisions[0].actor_id).toBe(row.approver_id);
  await ownerContext.close();await substituteContext.close();
+});
+
+test('G5 two-user request for information pauses approval until response',async({browser,request})=>{
+ const f=fixture();
+ const requester=await browser.newContext(),approver=await browser.newContext();
+ const rp=await requester.newPage(),ap=await approver.newPage();
+ await login(rp,'requester');await login(ap,'approver');
+ await rp.getByRole('button',{name:'New request',exact:true}).click();
+ await rp.getByLabel('Approval profile',{exact:true}).selectOption(f.profile_id);
+ await rp.getByLabel('Request title',{exact:true}).fill('G5 collaboration browser request');
+ await rp.getByLabel('Target',{exact:true}).fill('isolated-target-for-info');
+ await rp.getByRole('button',{name:'Submit request',exact:true}).click();
+ await expect(rp.getByText('Exact action to be approved',{exact:true})).toBeVisible();
+ const id=rp.url().split('/').pop()!;
+ const headers={authorization:'Bearer '+f.token};
+ const original=await(await request.get('/api/v1/requests/'+id,{headers})).json();
+
+ await ap.goto('/requests/'+id);
+ await expect(ap.getByRole('button',{name:'Approve',exact:true})).toBeVisible();
+ await ap.getByLabel('Message purpose',{exact:true}).selectOption('REQUEST_INFO');
+ await ap.getByLabel('Message (up to 2000 characters; no credentials)',{exact:true}).fill('Can you confirm the change reference?');
+ await ap.getByRole('button',{name:'Confirm message',exact:true}).click();
+ await expect(ap.getByText('Waiting for requester information',{exact:true})).toBeVisible();
+ await expect(ap.getByRole('button',{name:'Approve',exact:true})).toHaveCount(0);
+ let current=await(await request.get('/api/v1/requests/'+id,{headers})).json();
+ expect(current.action_hash).toBe(original.action_hash);
+ expect(current.collaboration_state).toBe('INFO_REQUESTED');
+ expect(current.execution_state).toBe('NOT_STARTED');
+
+ await rp.getByRole('button',{name:'Refresh',exact:true}).click();
+ await expect(rp.getByText('Waiting for requester information',{exact:true})).toBeVisible();
+ await rp.getByLabel('Message purpose',{exact:true}).selectOption('INFO_RESPONSE');
+ await rp.getByLabel('Message (up to 2000 characters; no credentials)',{exact:true}).fill('Change reference: CRQ-1001');
+ await rp.getByRole('button',{name:'Confirm message',exact:true}).click();
+ await expect(rp.getByText('Provide requested information',{exact:true})).toBeVisible();
+ await ap.getByRole('button',{name:'Refresh',exact:true}).click();
+ await expect(ap.getByRole('button',{name:'Approve',exact:true})).toBeVisible();
+ await ap.getByRole('button',{name:'Approve',exact:true}).click();
+ await ap.getByRole('button',{name:'Confirm approved',exact:true}).click();
+ await expect(ap.getByText('Recorded. Delivery and execution are tracked separately.')).toBeVisible();
+ current=await(await request.get('/api/v1/requests/'+id,{headers})).json();
+ expect(current.state).toBe('APPROVED');
+ expect(current.action_hash).toBe(original.action_hash);
+ expect(current.execution_state).toBe('NOT_STARTED');
+ expect(current.comments.map((m:any)=>m.kind)).toEqual(['REQUEST_INFO','INFO_RESPONSE']);
+ await requester.close();await approver.close();
+});
+
+test('G6 requester inbox server search, pagination and role scoping',async({browser})=>{
+  const f=fixture();
+  const context=await browser.newContext();
+  const page=await context.newPage();
+  await login(page,'requester');
+  const session=await(await context.request.get('/api/v1/auth/session')).json();
+  const csrf=session.csrf;
+  expect(typeof csrf).toBe('string');
+  const uniqueBatch='G6-'+crypto.randomUUID().slice(0,8);
+  for(let i=0;i<57;i++){
+    const created=await context.request.post('/api/v1/requests',{
+      headers:{'x-csrf-token':csrf},
+      data:{
+        external_id:crypto.randomUUID(),profile_id:f.profile_id,
+        title:uniqueBatch+' '+(i%26===0?'Needle-':'Bulk-')+i,
+        action:{kind:'test.operation',target:'bulk-isolated-target',parameters:{}},
+      },
+    });
+    expect(created.status()).toBe(202);
+  }
+
+  await page.goto('/my-requests');
+  await expect(page.getByRole('heading',{name:'My requests',exact:true})).toBeVisible();
+  await page.getByLabel('Search requests',{exact:true}).fill(uniqueBatch);
+  await page.getByRole('button',{name:'Apply filters',exact:true}).click();
+  await expect(page.getByText('Page 1 · 50 loaded',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Next page',exact:true}).click();
+  await expect(page.getByText('Page 2 · 7 loaded',{exact:true})).toBeVisible();
+  await page.getByLabel('Search requests',{exact:true}).fill(uniqueBatch+' Needle');
+  await page.getByRole('button',{name:'Apply filters',exact:true}).click();
+  for(const index of [0,26,52]){
+    await expect(page.getByRole('button',{name:uniqueBatch+' Needle-'+index,exact:true})).toBeVisible();
+  }
+  await expect(page.getByText('Page 1 · 3 loaded',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:uniqueBatch+' Bulk-56',exact:true})).toHaveCount(0);
+  await context.close();
+});
+
+test('G6 approver inbox needs/held/recent views reflect decisions',async({browser,request})=>{
+ const f=fixture();const headers={authorization:'Bearer '+f.token};
+ const senderContext=await browser.newContext();
+ const senderPage=await senderContext.newPage();
+ await login(senderPage,'requester');
+ const senderSession=await(await senderContext.request.get('/api/v1/auth/session')).json();
+ async function create(title:string){
+   const created=await senderContext.request.post('/api/v1/requests',{
+     headers:{'x-csrf-token':senderSession.csrf},
+     data:{
+       external_id:crypto.randomUUID(),profile_id:f.profile_id,title,
+       action:{kind:'test.operation',target:'inbox-target',parameters:{}},
+     },
+   });
+   expect(created.status()).toBe(202);return await created.json();
+ }
+ const hold=await create('G6 hold work');
+ const ask=await create('G6 ask work');
+ const context=await browser.newContext(),page=await context.newPage();
+ await login(page,'approver');await page.goto('/approvals');
+ await expect(page.getByRole('button',{name:'G6 hold work',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'G6 hold work',exact:true}).click();
+ await page.getByRole('button',{name:'Hold',exact:true}).click();
+ await page.getByRole('button',{name:'Confirm held',exact:true}).click();
+ await page.goto('/approvals');
+ await page.getByLabel('Work view',{exact:true}).selectOption('held');
+ await page.getByRole('button',{name:'Apply filters',exact:true}).click();
+ await expect(page.getByRole('button',{name:'G6 hold work',exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'G6 ask work',exact:true})).toHaveCount(0);
+ await page.goto('/requests/'+ask.id);
+ await page.getByLabel('Message purpose',{exact:true}).selectOption('REQUEST_INFO');
+ await page.getByLabel('Message (up to 2000 characters; no credentials)',{exact:true}).fill('What is the ticket?');
+ await page.getByRole('button',{name:'Confirm message',exact:true}).click();
+ await page.goto('/approvals');
+ await expect(page.getByRole('button',{name:'G6 ask work',exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'G6 hold work',exact:true}).click();
+ await page.getByRole('button',{name:'Approve',exact:true}).click();
+ await page.getByRole('button',{name:'Confirm approved',exact:true}).click();
+ await page.goto('/approvals');
+ await page.getByLabel('Work view',{exact:true}).selectOption('recent');
+ await page.getByRole('button',{name:'Apply filters',exact:true}).click();
+ await expect(page.getByRole('button',{name:'G6 hold work',exact:true})).toBeVisible();
+ const latest=await(await request.get('/api/v1/requests/'+hold.id,{headers})).json();
+ expect(latest.state).toBe('APPROVED');
+ await context.close();await senderContext.close();
 });
 
 test('G1 browser policy selectors create a matching request and keep latest draft on disable',async({browser,request})=>{
