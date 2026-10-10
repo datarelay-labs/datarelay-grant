@@ -117,9 +117,10 @@ def test_control_replay_readback_is_evidence_not_acceptance():
     info = {
         "log_id": 42, "dry_run": False, "outcome": "delivered",
         "event_count": 2, "replay_run_id": str(uuid.uuid4()),
+        "route_id": 7, "destination_id": 9,
     }
     evidence = validate_control_replay_readback(
-        delivery_log_id=42, response=info,
+        delivery_log_id=42, expected_route_id=7, expected_destination_id=9, response=info,
         checkpoint_before={"offset": 100}, checkpoint_after={"offset": 100},
     )
     assert evidence["checkpoint_unchanged"]
@@ -139,10 +140,11 @@ def test_control_replay_readback_rejects_dry_run_wrong_target_or_fake_identity(b
     info = {
         "log_id": 42, "dry_run": False, "outcome": "delivered",
         "event_count": 1, "replay_run_id": str(uuid.uuid4()),
+        "route_id": 7, "destination_id": 9,
     }
     with pytest.raises(ConsumerGuardError):
         validate_control_replay_readback(
-            delivery_log_id=42, response={**info, **bad},
+            delivery_log_id=42, expected_route_id=7, expected_destination_id=9, response={**info, **bad},
             checkpoint_before={}, checkpoint_after={},
         )
 
@@ -150,10 +152,11 @@ def test_control_replay_readback_rejects_dry_run_wrong_target_or_fake_identity(b
 def test_control_replay_checkpoint_mismatch_rejected():
     with pytest.raises(ConsumerGuardError):
         validate_control_replay_readback(
-            delivery_log_id=42,
+            delivery_log_id=42, expected_route_id=7, expected_destination_id=9,
             response={
                 "log_id": 42, "dry_run": False, "outcome": "delivered",
                 "event_count": 1, "replay_run_id": str(uuid.uuid4()),
+                "route_id": 7, "destination_id": 9,
             },
             checkpoint_before={"offset": 1}, checkpoint_after={"offset": 2},
         )
@@ -358,3 +361,50 @@ def test_stellar_source_identity_control_characters_fail_closed(unsafe):
             receiver_observation=readback,
             feedback_excluded=True,
         )
+
+
+def test_control_readback_requires_product_owned_route_and_destination_binding():
+    # Product-owned exact IDs must match the actual Control ReplayExecutionResult.
+    run_id = str(uuid.uuid4())
+    received = {
+        "log_id": 42, "dry_run": False, "outcome": "delivered",
+        "event_count": 1, "replay_run_id": run_id,
+        "route_id": 7, "destination_id": 9,
+    }
+
+    def check(actual, *, expected_route=7, expected_destination=9):
+        return validate_control_replay_readback(
+            delivery_log_id=42,
+            expected_route_id=expected_route,
+            expected_destination_id=expected_destination,
+            response=actual,
+            checkpoint_before={}, checkpoint_after={},  # legitimate Control empty checkpoint
+        )
+
+    valid = check(received)
+    assert valid["route_id"] == 7
+    assert valid["destination_id"] == 9
+    assert valid["independently_verified"] is False
+    assert valid["acceptance_state"] == "PRODUCT_READBACK_NEEDS_INDEPENDENT_CONFIRMATION"
+
+    for field, incorrect in (
+        ("route_id", 1), ("route_id", 0), ("route_id", "7"),
+        ("route_id", True), ("route_id", 7.0), ("route_id", None),
+        ("destination_id", 1), ("destination_id", 0),
+        ("destination_id", "9"), ("destination_id", True),
+        ("destination_id", 9.0), ("destination_id", None),
+    ):
+        with pytest.raises(ConsumerGuardError, match="CONTROL_REPLAY_EVIDENCE_INVALID"):
+            check({**received, field: incorrect})
+    for missing in ("route_id", "destination_id"):
+        with pytest.raises(ConsumerGuardError, match="CONTROL_REPLAY_EVIDENCE_INVALID"):
+            check({k: v for k, v in received.items() if k != missing})
+
+    for expected_route, expected_destination in (
+        (999, 9), (7, 999), (True, 9), (7, False),
+        (0, 9), (7, 0), (7.0, 9), (7, 9.0),
+        ("7", 9), (7, "9"), (None, 9), (7, None),
+    ):
+        with pytest.raises(ConsumerGuardError, match="CONTROL_REPLAY_EVIDENCE_INVALID"):
+            check(received, expected_route=expected_route,
+                  expected_destination=expected_destination)

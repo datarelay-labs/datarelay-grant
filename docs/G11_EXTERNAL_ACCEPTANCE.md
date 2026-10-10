@@ -66,7 +66,12 @@ ledger or turns a local test into independently observed acceptance.
   scope, stable request/external ID, policy snapshot, bound action fingerprint.
 - Source-side attempts refused before approval and under hold, denial, expiry.
 - One fresh product-side delivery effect with its product durable execution ID,
-  replay_run_id, destination observation and checkpoint readback.
+  replay_run_id, destination observation and checkpoint readback. The pure
+  Control replay evidence validator requires product-trusted positive route_id
+  and destination_id and strictly binds these to the returned replay result;
+  absent, changed or type-coerced route/destination evidence fails closed. Real
+  Control may legitimately have an empty source checkpoint when no row exists.
+  Matching evidence is still only a candidate, never M3 acceptance.
 - A repeated claim and crash/uncertainty recovery with NO duplicate effect.
 - Product-authored result plus Grant request/decision/consume/result correlation
   on one frozen candidate, independently observed outside the Grant fixture.

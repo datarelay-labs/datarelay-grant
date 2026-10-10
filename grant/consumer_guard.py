@@ -119,6 +119,8 @@ def check_product_claim(
 def validate_control_replay_readback(
     *,
     delivery_log_id: int,
+    expected_route_id: int,
+    expected_destination_id: int,
     response: dict,
     checkpoint_before: dict,
     checkpoint_after: dict,
@@ -127,13 +129,24 @@ def validate_control_replay_readback(
 
     Returns a bounded *candidate evidence record*, not independent acceptance.
     Only the consuming product's actual operation/audit and destination delivery
-    observations can satisfy M3. No network calls or product state mutation.
+    observations can satisfy M3. Expected route/destination MUST be taken from
+    independently trusted product operation bindings, not the response itself.
+    An empty checkpoint is valid where the product has no checkpoint row.
+    No network calls or product state mutation.
     """
     if (
-        type(delivery_log_id) is not int
+        type(expected_route_id) is not int
+        or expected_route_id <= 0
+        or type(expected_destination_id) is not int
+        or expected_destination_id <= 0
+        or type(delivery_log_id) is not int
         or delivery_log_id <= 0
         or not isinstance(response, dict)
         or response.get("log_id") != delivery_log_id
+        or type(response.get("route_id")) is not int
+        or response.get("route_id") != expected_route_id
+        or type(response.get("destination_id")) is not int
+        or response.get("destination_id") != expected_destination_id
         or response.get("dry_run") is not False
         or response.get("outcome") not in ("delivered", "failed")
         or not isinstance(checkpoint_before, dict)
@@ -153,6 +166,8 @@ def validate_control_replay_readback(
         "product": "datarelay-control",
         "operation": "delivery-log-replay",
         "delivery_log_id": delivery_log_id,
+        "route_id": expected_route_id,
+        "destination_id": expected_destination_id,
         "replay_run_id": run_id,
         "event_count": response["event_count"],
         "outcome": response["outcome"],
