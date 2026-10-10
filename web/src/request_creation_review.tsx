@@ -132,6 +132,72 @@ export async function submitReviewedRequestCreation<T>(
   return await createOnce(reviewed.payload);
 }
 
+/** Compare the security- and task-relevant policy facts in fixed field order.
+ * A read-only client check reduces accidental stale human review, but the
+ * server still owns policy resolution and atomic authorization at POST.
+ */
+function policyReviewKey(row: Profile): string {
+  return JSON.stringify([
+    row.id, row.version_id, row.version, row.active_version ?? null,
+    row.active_version_id ?? null, row.name, row.lifecycle, row.enabled,
+    row.integration_id, row.action_kind, row.approver_id, row.approval_mode,
+    row.approver_group_id, row.approvals_required, row.tenant ?? null,
+    row.tenant_selector, row.environment, row.severity, row.risk_level,
+    row.denial_reason_required ?? null, row.verification_mode ?? null,
+    row.decision_link_ttl_seconds ?? null, row.email_template_id,
+    row.notification_template_set_id ?? null,
+    row.deadline_seconds, row.reminder_seconds, row.max_reminders, row.grant_seconds,
+  ]);
+}
+
+/** Only compare the stable predecessor facts used by replacement validation.
+ * Do not treat incidental audit history/presentation changes as authorization.
+ */
+function predecessorReviewKey(row: RequestRow): string {
+  return JSON.stringify([
+    row.id, row.revision, row.state, row.collaboration_state,
+    row.requester_id, row.integration_id, row.profile_id,
+    row.action_hash, row.source,
+  ]);
+}
+
+/** Finish a reviewed request only after a new role-scoped, read-only GET.
+ * The GET is mandatory for human confirmation freshness; it is NOT an
+ * atomic server CAS and never substitutes for server-side validation.
+ *
+ * No request creation occurs on any failed/changed GET. A successful GET
+ * is followed by exactly ONE normal creation POST using frozen payload.
+ * An ambiguous POST is propagated, never retried.
+ */
+export async function submitReviewedRequestCreationWithFreshRead<T>(
+  reviewed: RequestCreationReview | null,
+  draft: NewRequestDraft,
+  readCurrent: () => Promise<{
+    policy: Profile | null | undefined;
+    predecessor: RequestRow | null | undefined;
+  }>,
+  createOnce: (payload: RequestCreationPayload) => Promise<T>,
+): Promise<T> {
+  if (!reviewed || !isCurrentRequestCreationReview(reviewed, draft)) {
+    throw new Error('REQUEST_REVIEW_CHANGED');
+  }
+  const current = await readCurrent();
+  if (!draft.profile || !current.policy || !current.policy.enabled
+    || current.policy.lifecycle !== 'ACTIVE'
+    || policyReviewKey(current.policy) !== policyReviewKey(draft.profile)) {
+    throw new Error('PROFILE_CHANGED_REVIEW_REQUIRED');
+  }
+  if (draft.predecessorId && (
+    !draft.predecessor || !current.predecessor
+    || predecessorReviewKey(current.predecessor)
+      !== predecessorReviewKey(draft.predecessor)
+    || current.predecessor.id !== draft.predecessorId
+  )) {
+    throw new Error('PREDECESSOR_CHANGED_REVIEW_REQUIRED');
+  }
+  return await submitReviewedRequestCreation(reviewed, draft, createOnce);
+}
+
 /** No POST or navigation happens here; caller retains the one-submit guard. */
 export function RequestCreationConfirmation({
   reviewed, draft, busy, onConfirm, onBack,

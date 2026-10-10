@@ -5,6 +5,7 @@ import {
   prepareRequestCreationReview,
   isCurrentRequestCreationReview,
   submitReviewedRequestCreation,
+  submitReviewedRequestCreationWithFreshRead,
   RequestCreationConfirmation,
   type NewRequestDraft,
 } from '../../src/request_creation_review';
@@ -185,6 +186,142 @@ describe('Grant New Request explicit task-first review before creating an immuta
       async () => { writes++; throw new Error('POST_RESULT_UNKNOWN'); },
     )).rejects.toThrow('POST_RESULT_UNKNOWN');
     expect(writes).toBe(1);
+  });
+
+  it('checks current policy before ONE immutable create POST and uses the reviewed payload', async () => {
+    const input = draft();
+    const frozen = prepareRequestCreationReview(input);
+    const calls: string[] = [];
+    const result = { id: 'server-created' };
+    const committed = await submitReviewedRequestCreationWithFreshRead(
+      frozen, input,
+      async () => {
+        calls.push('GET current policy');
+        // Property insertion order and unrelated metadata cannot change identity.
+        return { policy: { ...active }, predecessor: null };
+      },
+      async (payload) => {
+        calls.push('POST reviewed request');
+        expect(payload).toEqual(frozen.payload);
+        return result;
+      },
+    );
+    expect(calls).toEqual(['GET current policy', 'POST reviewed request']);
+    expect(committed).toBe(result);
+  });
+
+  it('blocks policy version, active lineage, kind, approver, verification and source drift', async () => {
+    const input = draft();
+    const frozen = prepareRequestCreationReview(input);
+    let writes = 0;
+    const changes: Partial<Profile>[] = [
+      { version: 8 }, { version_id: 'policy-v8' },
+      { enabled: false }, { lifecycle: 'DISABLED' },
+      { integration_id: 'other-integration' }, { action_kind: 'service.restart' },
+      { approver_id: 'new-reviewer' }, { approval_mode: 'ALL' },
+      { approver_group_id: 'new-group' }, { approvals_required: 3 },
+      { tenant: 'tenant-other' }, { tenant_selector: 'other-tenant' },
+      { environment: 'staging' }, { severity: 'critical' },
+      { risk_level: 'high' }, { denial_reason_required: true },
+      { verification_mode: 'EMAIL_PIN_PLUS_MFA' },
+      { active_version: 8 }, { active_version_id: 'active-v8' },
+      { email_template_id: 'other-template' },
+      { deadline_seconds: 7200 }, { grant_seconds: 2400 },
+    ];
+    for (const change of changes) {
+      await expect(submitReviewedRequestCreationWithFreshRead(
+        frozen, input,
+        async () => ({ policy: { ...active, ...change }, predecessor: null }),
+        async () => { writes++; return { id: 'never-created' }; },
+      )).rejects.toThrow('PROFILE_CHANGED_REVIEW_REQUIRED');
+    }
+    expect(writes).toBe(0);
+  });
+
+  it('rejects deleted or unavailable policy and a failed role-visible profile GET', async () => {
+    const input = draft();
+    const frozen = prepareRequestCreationReview(input);
+    let writes = 0;
+    await expect(submitReviewedRequestCreationWithFreshRead(
+      frozen, input, async () => ({ policy: null, predecessor: null }),
+      async () => { writes++; return { id: 'unexpected' }; },
+    )).rejects.toThrow('PROFILE_CHANGED_REVIEW_REQUIRED');
+    await expect(submitReviewedRequestCreationWithFreshRead(
+      frozen, input, async () => { throw new Error('GET_FAILED'); },
+      async () => { writes++; return { id: 'unexpected' }; },
+    )).rejects.toThrow('GET_FAILED');
+    expect(writes).toBe(0);
+  });
+
+  it('rechecks linked predecessor before creating a fresh approval', async () => {
+    const input = draft({ predecessorId: 'previous-request', predecessor: previous() });
+    const frozen = prepareRequestCreationReview(input);
+    const calls: string[] = [];
+    const result = await submitReviewedRequestCreationWithFreshRead(
+      frozen, input,
+      async () => {
+        calls.push('GET policy and prior request');
+        return { policy: active, predecessor: previous() };
+      },
+      async (payload) => {
+        calls.push('POST create');
+        expect(payload.predecessor_id).toBe('previous-request');
+        expect(payload.action.target).toBe('isolated-test');
+        return { id: 'replacement-request' };
+      },
+    );
+    expect(result.id).toBe('replacement-request');
+    expect(calls).toEqual(['GET policy and prior request', 'POST create']);
+  });
+
+  it('refuses a stale, canceled-drifted, cross-source or wrong prior request with zero POSTs', async () => {
+    const input = draft({ predecessorId: 'previous-request', predecessor: previous() });
+    const reviewed = prepareRequestCreationReview(input);
+    let writes = 0;
+    const changes: Partial<RequestRow>[] = [
+      { id: 'another' }, { revision: 3 }, { state: 'APPROVED' },
+      { collaboration_state: 'CHANGES_REQUESTED' }, { requester_id: 'other' },
+      { integration_id: 'other-integration' },
+      { profile_id: 'other-profile' }, { action_hash: 'different-action' },
+      { source: { tenant_id: 'other' } },
+    ];
+    for (const change of changes) {
+      await expect(submitReviewedRequestCreationWithFreshRead(
+        reviewed, input,
+        async () => ({ policy: active, predecessor: previous(change) }),
+        async () => { writes++; return { id: 'unexpected' }; },
+      )).rejects.toThrow('PREDECESSOR_CHANGED_REVIEW_REQUIRED');
+    }
+    await expect(submitReviewedRequestCreationWithFreshRead(
+      reviewed, input, async () => ({ policy: active, predecessor: null }),
+      async () => { writes++; return { id: 'unexpected' }; },
+    )).rejects.toThrow('PREDECESSOR_CHANGED_REVIEW_REQUIRED');
+    expect(writes).toBe(0);
+  });
+
+  it('does no GET or POST when the reviewed local draft has changed already', async () => {
+    const input = draft();
+    const reviewed = prepareRequestCreationReview(input);
+    const calls: string[] = [];
+    await expect(submitReviewedRequestCreationWithFreshRead(
+      reviewed, draft({ reason: 'another reason' }),
+      async () => { calls.push('GET'); return { policy: active, predecessor: null }; },
+      async () => { calls.push('POST'); return { id: 'should-not-exist' }; },
+    )).rejects.toThrow('REQUEST_REVIEW_CHANGED');
+    expect(calls).toEqual([]);
+  });
+
+  it('never retries POST if server creation outcome is ambiguous after fresh read', async () => {
+    const input = draft();
+    let reads = 0;
+    let posts = 0;
+    await expect(submitReviewedRequestCreationWithFreshRead(
+      prepareRequestCreationReview(input), input,
+      async () => { reads++; return { policy: active, predecessor: null }; },
+      async () => { posts++; throw new Error('POST_RESULT_UNKNOWN'); },
+    )).rejects.toThrow('POST_RESULT_UNKNOWN');
+    expect(reads).toBe(1);
+    expect(posts).toBe(1);
   });
 
   it('keeps untrusted request fields escaped and hides stale confirmation', () => {

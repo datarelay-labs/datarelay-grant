@@ -20,9 +20,39 @@ research is already completed and becomes reusable evidence, not a new research
 queue.
 
 
+## Six delivery bundles — executable order and acceptance gates (owner 2026-10-11)
+
+**Authority / precedence:** real product UI is still first; completed
+competitor Gap Matrix, licensed Keycloak REA and five-screen designs are reused.
+The six **B1–B6 are the only large delivery units**, not a replacement for
+the technical requirements and existing Work Packets in M1–M8 below. Reuse
+existing WPs and PRs. A source-only PASS is not installed user acceptance.
+
+| Bundle (execution order) | Outcome / retained detailed M1–M8 scope | Existing WP and bounded exit evidence | Observed state / next action |
+| --- | --- | --- | --- |
+| **B1 — Approval Workspace (FIRST)** | Requester New request → read-only review → one server create; approver Inbox task/action/deadline → explicit Hold/Approve/Deny/Cancel; current assigned seats, delivery vs reported effect, comment/linked replacement, truthful deadline. **M1 + M5 approval UI** | **#67** and existing M1 packets; exact mounted-source RED→GREEN + official Web/Static, then two independent authorized people and desktop/keyboard/mobile scenario same installed HEAD in B6 | **IN PROGRESS, SOURCE PARTIAL:** Requester New request Review→Confirm and RequestDetail/reviewer confirmation/evidence shipped, Web 230/230 at source checkpoint. **First next safe task:** do a fresh read of the selected policy and predecessor before the one request-create POST; reject stale reviewed policy/predecessor without automated retry. **BLOCKED:** Inbox exact prior denied source and M1 backend overdue truth, so B1 cannot be declared finished |
+| **B2 — Email approval (no-login human decision)** | Issued link actually lands on PIN entry, optional OTP/fresh TOTP, selected human action and separate final confirmation, expiry/replay/auditable recipient attribution. **M4** | **#67/#70–#73/#78**; exact issued-link GET non-mutating and two unrelated real mailboxes/personas twice, policy verification-floor checks | **WAITING EXACT SAFETY GATE:** portal/adapter exists but actual issued URL/API landing is not mounted; earlier app.tsx route mutation blocked; no alternative-route workaround |
+| **B3 — Shared Identity & Administration** | Foundation shared Login/Sidebar/Administration parity with Control, grouped navigation, member/admin capability truth, desktop + 320/375 first viewport, accessible keyboard. **M2** | **#57/#75/#67**, shared Foundation B2; role-true task actions and two-account same-version interactive review | **WAITING EXACT SAFETY GATE:** previous app/Admin/styles/mobile/browser edits blocked; shared Foundation remains owner, not Grant-specific CSS duplication |
+| **B4 — Policies, approver groups & Notifications** | Policy lifecycle, groups, safe edit/conflict/CAS, full template sets, preview, branding and delivery worklist/send confirmation. **M3** | **#38/#64–#66/#80/#67**; two independent admin sessions must demonstrate atomic 409 stale-save without losing Deny/MFA/template changes, native non-sending previews, authorized test delivery only | **SOURCE PARTIAL:** policy Clone→Draft and Draft→Testing confirmation and failed-delivery resend review done; **P0 BLOCKED:** server policy/template CAS. Rev29 separate test-email-preview task was scoped but **not started** and is deferred here, with no real SMTP sent |
+| **B5 — Evidence, recovery & native external effects** | Bounded/redacted audit, exception diagnostics, private backup/restore/migrations/provenance, native DataRelay Control exactly-once and separately verified Stellar callback, not synthetic grant-only effects. **M5 + M6** | **#48/#97/#99/#52/#74/#90–#94**; verified native durable effect/readback, disposable recovery, owner-approved external destinations | **PARTIAL / EXTERNAL WAITING:** existing source and isolated checks are not actual native Control/Stellar or restore acceptance; preserve G12 intentionally RED candidate integrity test |
+| **B6 — Real user qualification and authorized release** | On one frozen installed HEAD, two complete independently operated real-browser+two-mailbox passes, keyboard/mobile, CI/PR/provenance/public smoke, owner signoff only after B1–B5. **M7 + M8** | **#54** and existing release WPs; same HEAD two-person E2E PASS → freeze → native required CI/hash/provenance/smoke → explicit owner acceptance | **WAITING DEPENDENCIES:** no same-HEAD real-user/mailbox/browser, Control/Stellar effect, PR CI or release authority confirmed; do not infer PASS from source tests |
+
+**Execution rule:** Start B1 NOW, implement its independently safe work,
+and do not claim B1 complete until the approved Inbox/backend UI and actual
+user gate pass. A previously denied exact file/effect stays denied—do not
+reroute to another path/tool/host. Continue safe, independently authorized
+source tasks within the current bundle; when no runnable work remains,
+record B1 WAITING with exact blocker and advance only to a separately
+authorized independent bundle. **Owner's latest order supersedes the
+unstarted rev29 test-mail task; it remains B4 backlog, not a completed feature.**
+M1–M8 below remain the source-of-truth technical work/acceptance crosswalk
+under these six delivery units.
+
+---
+
 ## P0-UI-1 — OWNER FIRST: implement competitor-informed Grant UI (2026-10-11)
 
-**STATE=IMPLEMENTATION_FIRST / PRIORITY=TOP_P0_UI_PRODUCT_DELIVERY / EXISTING_WP=#67 rev28.**
+**STATE=IMPLEMENTATION_FIRST / PRIORITY=TOP_P0_UI_PRODUCT_DELIVERY / EXISTING_WP=#67 rev30.**
 **Owner decision:** the competitor documentation and licensed Keycloak REA
 analysis have been completed; further survey or optional reverse engineering
 must NOT displace real user-facing Grant UI implementation. Reuse the existing
@@ -138,7 +168,7 @@ and user gates precede M8 release authority. No duplicate Work Packets or PRs.
 
 ## P0-UX-0 — completed competitor research, reused for P0-UI-1
 
-**STATE=REA_STATIC_SOURCE_COMPLETE + INBOX_SAFE_UI_SOURCE_COMPLETE / NEXT_SCREEN_P0=P0-UI-1 / PRIORITY=RESEARCH_ALREADY_COMPLETE / Owner WP #67 (existing packet; UI implementation revision 28).**
+**STATE=REA_STATIC_SOURCE_COMPLETE + INBOX_SAFE_UI_SOURCE_COMPLETE / NEXT_SCREEN_P0=P0-UI-1 / PRIORITY=RESEARCH_ALREADY_COMPLETE / Owner WP #67 (existing packet; UI implementation revision 30).**
 This prerequisite is **satisfied by the documented six-vendor screen Gap Matrix,
 Keycloak licensed static REA and five-screen blueprint**; further UI delivery
 is tracked under P0-UI-1 above. It remains separate from independent safety,

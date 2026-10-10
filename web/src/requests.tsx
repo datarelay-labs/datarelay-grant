@@ -11,7 +11,7 @@ import { RequestEvidence, approvalProgressLabel, approvalWaitingLabel } from './
 import { RequestStageSummary } from './request_stage_summary';
 import { RequestExecutionReport } from './request_execution_report';
 import { recordDecisionThenRead } from './request_decision_receipt';
-import { prepareRequestCreationReview, isCurrentRequestCreationReview, submitReviewedRequestCreation, RequestCreationConfirmation, type NewRequestDraft, type RequestCreationReview } from './request_creation_review';
+import { prepareRequestCreationReview, isCurrentRequestCreationReview, submitReviewedRequestCreationWithFreshRead, RequestCreationConfirmation, type NewRequestDraft, type RequestCreationReview } from './request_creation_review';
 import { RequestDecisionConfirmation, prepareRequestDecisionReview, isCurrentRequestDecisionReview, type RequestDecisionReview, type RequestDecisionChoice } from './request_decision_review';
 import { Form, Select, State, TextArea, useTask, when } from './common';
 import type { Profile, RequestRow, Outcome, User } from './types';
@@ -88,8 +88,22 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
   // inspect the existing request before reviewing again; no automatic retry.
   const reviewedNow=reviewed;
   setReviewed(null);
-  const row=await submitReviewedRequestCreation(
+  const row=await submitReviewedRequestCreationWithFreshRead(
    reviewedNow,draft,
+   async()=>{
+    const currentProfiles=await api<Profile[]>('/profiles');
+    // Replacement eligibility is also role-scoped and may change after
+    // the requester originally reviewed the predecessor.
+    const currentPredecessor=draft.predecessorId
+     ? await api<RequestRow>('/requests/'+encodeURIComponent(draft.predecessorId))
+     : null;
+    setProfiles(currentProfiles);
+    if(currentPredecessor) setPredecessor(currentPredecessor);
+    return {
+     policy:currentProfiles.find(p=>p.id===reviewedNow.payload.profile_id),
+     predecessor:currentPredecessor,
+    };
+   },
    (payload)=>api<RequestRow>('/requests','POST',payload),
   );
   navigate('/requests/'+encodeURIComponent(row.id));
