@@ -145,6 +145,44 @@ def test_fresh_totp_requires_current_assignee_login_and_new_code(env):
     )
     assert audit_chain.status_code == 200, audit_chain.text
     payload = audit_chain.json()
+    recorded = next(
+        event for event in payload["events"]
+        if event["action"] == "request.decision_recorded"
+    )
+    assert recorded["details"]["actor_assurance"] == "EMAIL_LINK_PIN_PLUS_MFA"
+    assert recorded["details"]["verified_person_id"] == env.users["approver"]["id"]
+    assert recorded["details"]["mailbox_recipient_id"] == env.users["approver"]["id"]
+
+    # This is the real Grant authorization/audit route, not a fabricated
+    # passing audit dict. CSV/JSON exports must retain typed fresh Grant MFA
+    # assurance without exposing the emailed PIN, raw link or TOTP seed.
+    admin = env.human("admin")
+    exported = admin.get("/api/v1/admin/audit/export", params={
+        "request_id": request["id"], "format": "json",
+    })
+    assert exported.status_code == 200, exported.text
+    exported_event = next(
+        event for event in exported.json()["events"]
+        if event["action"] == "request.decision_recorded"
+    )
+    assert exported_event["details"]["actor_assurance"] == "EMAIL_LINK_PIN_PLUS_MFA"
+    assert exported_event["details"]["verified_person_id"] == env.users["approver"]["id"]
+    assert all(value not in exported.text for value in (pin, link, context, secret))
+    searched = admin.get("/api/v1/admin/audit/search", params={
+        "request_id": request["id"],
+    })
+    assert searched.status_code == 200, searched.text
+    assert any(
+        item["action"] == "request.decision_recorded"
+        and item["details"].get("actor_assurance") == "EMAIL_LINK_PIN_PLUS_MFA"
+        for item in searched.json()["items"]
+    )
+    csv_exported = admin.get("/api/v1/admin/audit/export", params={
+        "request_id": request["id"], "format": "csv",
+    })
+    assert csv_exported.status_code == 200, csv_exported.text
+    assert "EMAIL_LINK_PIN_PLUS_MFA" in csv_exported.text
+    assert all(value not in csv_exported.text for value in (link, context, secret))
     assert payload["identity_evidence_limit"] == "GRANT_ACCOUNT_FRESH_TOTP_VERIFIED"
     assert len(payload["fresh_identity_proofs"]) == 1
     proof = payload["fresh_identity_proofs"][0]

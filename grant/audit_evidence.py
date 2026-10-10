@@ -27,6 +27,7 @@ SAFE_ENUMS: dict[str, set[str]] = {
     },
     "actor_assurance": {
         "AUTHENTICATED", "EMAIL_LINK_PIN", "EMAIL_LINK_PIN_PLUS_OTP",
+        "EMAIL_LINK_PIN_PLUS_MFA",
     },
     "verification_mode": {
         "EMAIL_PIN", "EMAIL_PIN_PLUS_OTP", "EMAIL_PIN_PLUS_MFA",

@@ -264,3 +264,28 @@ def test_backup_preserves_group_delegation_comment_policy_and_identity_history(e
         assert conn.execute(
             "SELECT count(*) FROM audit WHERE request_id=?", (row["id"],)
         ).fetchone()[0] >= 2
+
+
+def test_audit_typed_fresh_grant_mfa_assurance_is_exact_and_secret_safe():
+    from grant.audit_evidence import sanitized_detail
+
+    evidence = sanitized_detail({
+        "actor_assurance": "EMAIL_LINK_PIN_PLUS_MFA",
+        "verified_person_id": "local-grant-user",
+        "mailbox_recipient_id": "recipient-seat",
+        "raw_totp": "DO_NOT_EXPORT",
+        "verification_code": "654321",
+        "mfa_session_id": "DO_NOT_EXPORT_SESSION",
+        "reason": "private free text",
+    })
+    assert evidence == {
+        "actor_assurance": "EMAIL_LINK_PIN_PLUS_MFA",
+        "verified_person_id": "local-grant-user",
+        "mailbox_recipient_id": "recipient-seat",
+    }
+    assert "actor_assurance" not in sanitized_detail({
+        "actor_assurance": "EMAIL_LINK_PIN_PLUS_MFA_UNKNOWN",
+    })
+    assert "actor_assurance" not in sanitized_detail({
+        "actor_assurance": "=HYPERLINK('sensitive')",
+    })

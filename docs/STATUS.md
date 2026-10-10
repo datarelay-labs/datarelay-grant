@@ -5,6 +5,23 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G9/M4 typed fresh Grant MFA assurance audit projection (2026-10-10)
+
+Existing G10A fresh per-decision Grant TOTP source correctly persists
+EMAIL_LINK_PIN_PLUS_MFA on request.decision_recorded after a valid PIN +
+current authorized account's new one-use TOTP. G9 admin audit projection
+had omitted that exact enum from its secret-safe allowlist, so Admin Audit
+Chain/Search/CSV/JSON export incorrectly dropped the actual proof tier.
+A minimal typed projection correction now preserves that source-defined
+assurance while rejecting unknown strings and raw PIN/TOTP/decision URLs,
+OTP seed and current MFA session data as before. The existing audit
+identity_evidence_limit remains a separate contextual indicator.
+No MFA policy, account/session/role, decision, execution or consumer
+authorization behavior was changed. This is authenticated disposable
+API regression evidence; not proof of real human identity, live email
+receipt, customer MFA enrollment or Full User E2E. Existing G9 Work
+Packet #48 revision 3 records the exact tested source.
+
 ## M5 malformed-backup recovery pause fail-closed validation (2026-10-10)
 
 The source recovery restore rejects a corrupt-but-SQLite-quick-check-valid
