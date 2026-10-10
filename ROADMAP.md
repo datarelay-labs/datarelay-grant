@@ -402,6 +402,13 @@ Stellar Cyber:
 - approved/denied/held/expired outcomes correlated;
 - feedback loop excluded.
 
+G11 readiness evidence (Work Packet #52): an online development Control
+instance and an existing failed-delivery replay endpoint were inspected
+read-only. Grant contract guard and correlation checks are locally tested.
+No source-side Grant guard, actual protected replay/destination readback or
+Stellar installed receiver has yet passed external acceptance. M3/M4 are
+WAITING_INTEGRATION; this is not the G11 completion gate.
+
 ### G12 — 1.0 quality closure and release
 
 Priority: **P0**
