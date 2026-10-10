@@ -236,7 +236,7 @@ def register_admin(app, actor):
     @app.post("/api/v1/admin/mail-test")
     def mail_test(request: Request):
         from .db import json_text, uid
-        from .transport import send_email
+        from .transport import require_transport_unpaused, send_email
 
         principal = actor(request)
         principal.require_admin()
@@ -246,6 +246,7 @@ def register_admin(app, actor):
         # the test-mail endpoint with authority to send a new message.
         with app.state.db.transaction(write=False) as conn:
             require_current_authority(conn, principal)
+            require_transport_unpaused(conn)
         event_id = uid()
         payload = json_text(
             {

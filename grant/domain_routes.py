@@ -381,7 +381,7 @@ def register_domain(app, actor, human, reader):
         from .auth import require_current_authority
         from .db import audit, json_text, uid
         from .errors import GrantError
-        from .transport import send_webhook
+        from .transport import require_transport_unpaused, send_webhook
 
         principal = actor(request)
         principal.require_admin()
@@ -390,6 +390,7 @@ def register_domain(app, actor, human, reader):
             # Reject revoked sessions before even attempting an external
             # diagnostic. Callback acceptance is not action authorization.
             require_current_authority(conn, principal)
+            require_transport_unpaused(conn)
             row = conn.execute(
                 "SELECT destination FROM integrations WHERE id=? AND enabled=1", (ident,)
             ).fetchone()
@@ -405,6 +406,9 @@ def register_domain(app, actor, human, reader):
                 "execution_allowed": False,
             }
         )
+        with app.state.db.transaction(write=False) as conn:
+            require_current_authority(conn, principal)
+            require_transport_unpaused(conn)
         try:
             send_webhook(app.state.settings, app.state.settings.unseal(row[0]), payload, event_id)
         except Exception as exc:
