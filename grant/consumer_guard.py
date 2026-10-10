@@ -51,12 +51,16 @@ def check_product_claim(
     operation_key: str,
     execution_id: str,
     expected_action: Action,
+    expected_integration_id: str,
     reservation: ProductReservation,
 ) -> ClaimDisposition:
     """Inspect a claim without running the protected operation.
 
-    Product still requires its own atomic effect ledger and actual result
-    readback. The positive disposition is never permission for direct replay
+    expected_integration_id must come from the product's trusted installed
+    Grant integration configuration, NOT from a submitted request, callback
+    or untrusted claimed receipt. Product still requires its own atomic effect
+    ledger and actual result readback. The positive disposition is never
+    permission for direct replay
     from the Grant service, callbacks, or an HTTP delivery notification.
     """
     try:
@@ -65,7 +69,12 @@ def check_product_claim(
         bounded_json(exact_action)
         action_hash = fingerprint(exact_action)
         if (
-            request.get("state") != "APPROVED"
+            type(expected_integration_id) is not str
+            or not 1 <= len(expected_integration_id) <= 100
+            or any(ord(char) < 32 or ord(char) == 127 for char in expected_integration_id)
+            or type(request.get("integration_id")) is not str
+            or request.get("integration_id") != expected_integration_id
+            or request.get("state") != "APPROVED"
             or request.get("action_hash") != action_hash
             or fingerprint(Action.model_validate(request["action"]).model_dump())
             != action_hash

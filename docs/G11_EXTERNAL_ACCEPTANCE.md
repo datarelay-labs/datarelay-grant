@@ -31,8 +31,9 @@ do not prove a Grant-controlled product execution boundary.
    binding failed delivery log, route and destination.
 2. A Grant producer creates a bounded human approval request with the same
    stable external operation identity and an immutable full action fingerprint.
-   The candidate action kind datarelay.control.delivery_log.replay is a design
-   proposal, not a live configured/accepted policy.
+   The Control G11 **isolated pilot** uses the candidate action
+   `{"kind":"datarelay.control.delivery_log.replay","target":"delivery-log/<log_id>","parameters":{"log_id":<id>,"route_id":<id>,"destination_id":<id>}}`.
+   This is a tested synthetic binding, **not** a live installed policy.
 3. Hold, denial, expiry and Grant outage block product delivery. Callback
    transport success, an email GET or free-form reasoning is not approval.
 4. After explicit human approval, the product executor rereads current Grant
@@ -47,10 +48,17 @@ do not prove a Grant-controlled product execution boundary.
    and token revocation failures; replay with zero additional product effects;
    crash-window uncertainty; and same-build auditing.
 
-The pure helper grant.consumer_guard validates bindings and distinguishes a
-fresh claim from an already-consumed/replayed claim. It NEVER runs product
-actions, changes external product state, writes a business effect ledger or
-turns a local test into independently observed acceptance.
+The pure helper `grant.consumer_guard.check_product_claim` requires the
+product-trusted `expected_integration_id` and compares it strictly to
+the current authenticated Grant request's `integration_id`, in addition
+to the action fingerprint, consumed execution ID and durable product
+reservation. The expected integration ID must come from independently
+verified product configuration; copying it from a request or callback would
+defeat this trust boundary. Missing, mismatched or ill-formed identifiers
+fail closed, not to a product effect attempt. This helper distinguishes
+a fresh claim from an already-consumed/replayed claim, but NEVER runs
+product actions, changes external product state, writes a business effect
+ledger or turns a local test into independently observed acceptance.
 
 ### Required actual M3 evidence (none asserted as PASS)
 
