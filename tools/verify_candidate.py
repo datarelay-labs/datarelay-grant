@@ -9,12 +9,38 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import re
 import tarfile
 from pathlib import Path, PurePosixPath
 
 MAX_MEMBER_BYTES = 64 * 1024 * 1024
 MAX_TOTAL_BYTES = 256 * 1024 * 1024
+
+
+def _strict_metadata_json(data: bytes) -> object:
+    """Reject ambiguous or non-finite archive metadata at any nesting depth."""
+    def unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        values: dict[str, object] = {}
+        for key, value in pairs:
+            if key in values:
+                raise ValueError("Duplicate candidate JSON metadata key")
+            values[key] = value
+        return values
+
+    def invalid_constant(_value: str) -> float:
+        raise ValueError("Non-finite candidate JSON metadata value")
+
+    def finite_float(raw: str) -> float:
+        number = float(raw)
+        if not math.isfinite(number):
+            raise ValueError("Non-finite candidate JSON metadata value")
+        return number
+
+    return json.loads(
+        data, object_pairs_hook=unique_object,
+        parse_constant=invalid_constant, parse_float=finite_float,
+    )
 
 
 def verify(archive: Path, expected_head: str, expected_sha256: str) -> dict:
@@ -38,6 +64,9 @@ def verify(archive: Path, expected_head: str, expected_sha256: str) -> dict:
             if (
                 index >= 10000
                 or not member.isfile()
+                # The candidate builder emits only regular 0644/0755 files.
+                # Never validate setuid/setgid/sticky/world-writable archives.
+                or member.mode not in (0o644, 0o755)
                 or name.is_absolute()
                 or len(name.parts) < 2
                 or name.parts[0] != "datarelay-grant"
@@ -62,10 +91,12 @@ def verify(archive: Path, expected_head: str, expected_sha256: str) -> dict:
                 raise ValueError("Candidate entry size mismatch")
             hashes[key] = hashlib.sha256(data).hexdigest()
             if key == "BUILD-MANIFEST.json":
-                manifest = json.loads(data)
+                manifest = _strict_metadata_json(data)
             elif key == "web/foundation.lock.json":
-                foundation_lock = json.loads(data)
-    if not isinstance(manifest, dict) or manifest.get("schema_version") != 1:
+                foundation_lock = _strict_metadata_json(data)
+    if (not isinstance(manifest, dict)
+            or type(manifest.get("schema_version")) is not int
+            or manifest["schema_version"] != 1):
         raise ValueError("Missing or unsupported build manifest")
     if manifest.get("source_head") != expected_head or manifest.get("source_state") != "clean":
         raise ValueError("Source binding mismatch")
