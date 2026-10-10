@@ -6,6 +6,7 @@ import {
   TextField,
 } from '@datarelay-labs/foundation';
 import { api } from './api';
+import { NotificationResendConfirmation, createNotificationResendReview, submitReviewedNotificationResend, type NotificationResendIntent } from './notification_resend_review';
 import { Form, Select, TextArea, useTask, when } from './common';
 import {
   hasUnsavedTemplateChanges, NotificationPreviewActions,
@@ -152,6 +153,7 @@ export function NotificationDeliveryHealth() {
   const [applied, setApplied] = useState<DeliveryFilter>(defaultDeliveryFilters);
   const [offset, setOffset] = useState(0);
   const [page, setPage] = useState<DeliveryHistoryPage | null>(null);
+  const [pendingResend, setPendingResend] = useState<NotificationResendIntent | null>(null);
   const task = useTask();
 
   async function loadPage() {
@@ -161,21 +163,41 @@ export function NotificationDeliveryHealth() {
   useEffect(() => { void task.run(loadPage); }, [applied, offset]);
 
   function apply() {
+    setPendingResend(null);
     setOffset(0);
     setPage(null);
     setApplied({ ...draft });
   }
   function clear() {
+    setPendingResend(null);
     setDraft({ ...defaultDeliveryFilters });
     setPage(null);
     setOffset(0);
     setApplied({ ...defaultDeliveryFilters });
   }
-  async function scheduleResend(id: string) {
-    // Only explicit administrator button activation reaches this write.
-    await api('/deliveries/' + id + '/resend', 'POST');
-    await loadPage();
-    task.setNotice('Notification resend scheduled. This cannot replay a protected action.');
+  function reviewResend(record: NotificationDelivery) {
+    setPendingResend(createNotificationResendReview(record));
+  }
+
+  async function confirmResend() {
+    const intent = pendingResend;
+    if (!intent) return;
+    const source = page?.deliveries.find((item) => item.id === intent.deliveryId);
+    // Discard the reviewed intent and stale visible FAILED row before any
+    // possibly committed POST. A user must explicitly inspect again if an
+    // ambiguous result arrives; automatic resend retry is forbidden.
+    setPendingResend(null);
+    setPage(null);
+    await submitReviewedNotificationResend(
+      intent, source,
+      (deliveryId) => api('/deliveries/' + encodeURIComponent(deliveryId) + '/resend', 'POST'),
+    );
+    try {
+      await loadPage();
+      task.setNotice('Notification resend scheduled. This cannot replay a protected action.');
+    } catch {
+      task.setNotice('Notification resend scheduled. Delivery status could not be refreshed; inspect current delivery health before scheduling another attempt. No protected action was executed.');
+    }
   }
   return <div className="grant-stack">
     {task.feedback}
@@ -211,6 +233,13 @@ export function NotificationDeliveryHealth() {
           <Button variant="ghost" disabled={task.busy} onClick={clear}>Clear filters</Button>
         </div>
       </section>
+      <NotificationResendConfirmation
+        intent={pendingResend}
+        source={page?.deliveries.find((item) => item.id === pendingResend?.deliveryId)}
+        busy={task.busy}
+        onCancel={() => setPendingResend(null)}
+        onConfirm={() => void task.run(confirmResend)}
+      />
       <p aria-live="polite">{deliveryPageLabel(page)}</p>
       <p>Receipt is not independently confirmed by this delivery ledger.</p>
       <div className="grant-table-scroll">
@@ -230,20 +259,20 @@ export function NotificationDeliveryHealth() {
             <td>{when(item.created_at)}</td>
             <td>{item.state === 'FAILED' ? <Button variant="secondary"
               disabled={task.busy}
-              onClick={() => void task.run(() => scheduleResend(item.id))}>
-              Schedule resend
+              onClick={() => reviewResend(item)}>
+              Review resend
             </Button> : null}</td>
           </tr>)}</tbody>
         </table>
       </div>
       <div className="grant-actions">
         <Button variant="secondary" disabled={task.busy || offset <= 0}
-          onClick={() => { setPage(null); setOffset(Math.max(0, offset - DELIVERY_PAGE_LIMIT)); }}>
+          onClick={() => { setPendingResend(null); setPage(null); setOffset(Math.max(0, offset - DELIVERY_PAGE_LIMIT)); }}>
           Previous page
         </Button>
         <Button variant="secondary"
           disabled={task.busy || !page?.has_more || offset + DELIVERY_PAGE_LIMIT > 100000}
-          onClick={() => { setPage(null); setOffset(offset + DELIVERY_PAGE_LIMIT); }}>
+          onClick={() => { setPendingResend(null); setPage(null); setOffset(offset + DELIVERY_PAGE_LIMIT); }}>
           Next page
         </Button>
       </div>
