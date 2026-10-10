@@ -10,6 +10,7 @@ import { RequestActionSummary } from './request_action_summary';
 import { RequestEvidence, approvalProgressLabel, approvalWaitingLabel } from './request_evidence';
 import { RequestStageSummary } from './request_stage_summary';
 import { RequestExecutionReport } from './request_execution_report';
+import { recordDecisionThenRead } from './request_decision_receipt';
 import { Form, Select, State, TextArea, useTask, when } from './common';
 import type { Profile, RequestRow, Outcome, User } from './types';
 
@@ -101,7 +102,24 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  const [row, setRow] = useState<RequestRow | null>(null); const [reason, setReason] = useState(''); const [choice, setChoice] = useState<Outcome | 'CANCELLED' | ''>(''); const task = useTask();
  async function load() { setChoice(''); setRow(await api<RequestRow>('/requests/' + encodeURIComponent(id))); }
  useEffect(() => { setRow(null); void task.run(load); }, [id]);
- const decide = async () => { if (!row || !choice) return; const result = await api<RequestRow>('/requests/' + id + (choice === 'CANCELLED' ? '/cancel' : '/decision'),'POST',{ expected_revision: row.revision, reason, ...(choice === 'CANCELLED' ? {} : { decision: choice }) }); setRow(await api<RequestRow>('/requests/' + encodeURIComponent(id))); setChoice(''); setReason(''); task.setNotice('Recorded. Delivery and execution are tracked separately.'); };
+ const decide = async () => {
+  if (!row || !choice) return;
+  const outcome = await recordDecisionThenRead(
+    () => api<RequestRow>(
+      '/requests/' + id + (choice === 'CANCELLED' ? '/cancel' : '/decision'),
+      'POST',
+      { expected_revision: row.revision, reason,
+        ...(choice === 'CANCELLED' ? {} : { decision: choice }) },
+    ),
+    () => api<RequestRow>('/requests/' + encodeURIComponent(id)),
+  );
+  setRow(outcome.row);
+  setChoice('');
+  setReason('');
+  task.setNotice(outcome.refreshed
+    ? 'Recorded. Delivery and execution are tracked separately.'
+    : 'Decision recorded by the server. Updated details could not be refreshed; refresh before another action. Delivery and execution remain separate.');
+ };
  const actionable = row && ['AWAITING','HELD'].includes(row.state) && row.deadline * 1000 > Date.now();
  const canDecide = actionable && row.viewer_can_decide === true && row.collaboration_state === 'OPEN';
  const canCancel = row && !row.execution_id && !['CANCELLED','DENIED','EXPIRED'].includes(row.state) && (row.requester_id === user.id || user.role === 'admin');
