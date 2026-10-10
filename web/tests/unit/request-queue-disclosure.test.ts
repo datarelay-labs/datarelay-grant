@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { countAdvancedFilters, queryFor, RequestList } from '../../src/request_inbox';
+import { approvalQuickViewFilters, countAdvancedFilters, queryFor, RequestList } from '../../src/request_inbox';
 import type { Filters } from '../../src/request_inbox';
 import type { User } from '../../src/types';
 
@@ -113,5 +113,37 @@ describe('Grant server-scoped request date filters use UTC calendar days', () =>
       ...emptyFilters(), created_after: '2026-10-03', created_before: '2026-10-01',
     }, 0)).toThrow('INVALID_REQUEST_DATE_RANGE');
     expect(() => queryFor(emptyFilters(), -50)).toThrow('INVALID_REQUEST_PAGE');
+  });
+});
+
+
+describe('Grant approval task-first quick views', () => {
+  it('renders four purpose-labeled queue shortcuts only for approvers', () => {
+    const memberApproval = renderToStaticMarkup(createElement(RequestList, {
+      user: viewer, mode: 'approvals', navigate: () => undefined,
+    }));
+    expect(memberApproval).toContain('aria-label="Approval task views"');
+    for (const label of ['Needs my decision', 'On hold', 'Delegated to me', 'Recently decided']) {
+      expect(memberApproval).toContain(label);
+    }
+    expect(memberApproval).toContain('aria-pressed="true"');
+    expect(memberApproval).not.toContain('Overdue quick action');
+    expect(display('member')).not.toContain('aria-label="Approval task views"');
+  });
+
+  it('clears hidden restrictive filters and keeps server-scoped view in every shortcut', () => {
+    const allowed = ['needs', 'held', 'delegated', 'recent'] as const;
+    for (const view of allowed) {
+      const filters = approvalQuickViewFilters(view);
+      expect(filters.view).toBe(view);
+      expect(countAdvancedFilters(filters)).toBe(0);
+      expect(filters.search).toBe('');
+      expect(filters.state).toBe('');
+      expect(filters.collaboration_state).toBe('');
+      const url = new URL(queryFor(filters, 0), 'http://testserver');
+      expect(url.searchParams.get('view')).toBe(view);
+      expect(url.searchParams.get('limit')).toBe('50');
+      expect(url.searchParams.get('offset')).toBe('0');
+    }
   });
 });

@@ -20,7 +20,7 @@ P0-UX-0** below.
 
 ## P0-UX-0 — OWNER FIRST: competitor UI/UX gap analysis before further screen development
 
-**STATE=RESEARCH_SOURCE_COMPLETE / NEXT_SCREEN_P0=WAITING_BLOCKER / PRIORITY=P0-UX-FIRST / Owner WP #67 (existing packet, revision 7).**
+**STATE=REA_STATIC_SOURCE_COMPLETE + INBOX_SAFE_UI_SOURCE_COMPLETE / NEXT_SCREEN_P0=WAITING_BLOCKER / PRIORITY=P0-UX-FIRST / Owner WP #67 (existing packet, revision 8).**
 This is the **highest-priority prerequisite for NEW discretionary M2–M4 UI/UX
 implementation**, not a ninth product milestone and not a reason to stop
 independent security/reliability P0 fixes or the M6/M7/M8 qualification gates.
@@ -95,6 +95,14 @@ The next discretionary screen work follows the ranked, independently authorized 
 `grant/core.py`, G12 builder and previously denied platform effects remain
 blocked independently, regardless of vendor/REA tool. E2E, CI and release
 readiness are NEVER established by this research.
+
+### 2026-10-10 REA-guided screen design and first safe UI implementation
+
+**New source deliverables, existing #67 rev8:** `docs/UX_REA_KEYCLOAK_20261010.md`, `docs/UX_SCREEN_DESIGN_GRANT_20261010.md`, and standalone offline `docs/ux-prototypes/grant-approval-workspace.html` (five clickable synthetic design views). Actual genuine **REA 6.3.0 static** analysis of **Keycloak Admin UI 26.5.7**, pinned upstream `97c2dad98597b17efae79006be47a51c6f5a72e9` licensed Apache-2.0, 17 TSX files / 0 parse failures, 375/529 application graph, 3657/3284 semantic graph, **1262 unknowns**, zero integrity contradictions; raw 14.8MB evidence and source stay private outside Grant Git. This confirms **licensed static UI source analysis only**, not a competitor browser screenshot, human usability finding, authentication permission guarantee or copied implementation. Existing PF-CI tooling reused, no new decompiler/crawler.
+
+**Actual safe Grant product Web source implementation:** `web/src/request_inbox.tsx` plus `web/tests/unit/request-queue-disclosure.test.ts` implements four accessible quick task views (needs/held/delegated/recent) with server-scoped `view` request filtering, clearing stale hidden filters and pagination to zero; no direct approval or effect side effect. RED 2 failures before source, GREEN 8/8 targeted, **official Web 162/162 PASS + typecheck/Vite build PASS + Static PASS** on the scoped source candidate. Existing known-overdue backend gap is **not** mislabeled as fixed, and no new Overdue shortcut is promoted. All prior platform-denied Grant `web/src/app.tsx`, Administration/styles/mobile/browser, `grant/core.py`, G12 builder or M5 #82 rev7 write remain blocked and untouched.
+
+**Pending separate real gates:** Review the concrete five-screen blueprint with owner as a design; independent same-installed-HEAD browser/mobile and real users not performed; email human PIN route still unmounted; overdue/role-permission/two-admin concurrency and external Control/Stellar/CI/release not qualified. Source-only updates do not mark these as DONE.
 
 ## Product outcome and hard invariants
 

@@ -29,6 +29,25 @@ const initialFilters = (mode: InboxMode): Filters => ({
   approver_id: '', group_id: '', integration_id: '', action_kind: '',
   created_after: '', created_before: '', delivery_state: '', execution_state: '',
 });
+// Task-first shortcuts follow the existing role-scoped server queue views.
+// Switching must clear previously hidden restrictive filters, not imply any
+// decision, load all tenants, or claim an overdue expiry bug is fixed.
+export type ApprovalQuickView = 'needs' | 'held' | 'delegated' | 'recent';
+
+const approvalQuickViews: readonly { value: ApprovalQuickView; label: string }[] = [
+  { value: 'needs', label: 'Needs my decision' },
+  { value: 'held', label: 'On hold' },
+  { value: 'delegated', label: 'Delegated to me' },
+  { value: 'recent', label: 'Recently decided' },
+];
+
+export function approvalQuickViewFilters(view: ApprovalQuickView): Filters {
+  if (!approvalQuickViews.some((item) => item.value === view)) {
+    throw new Error('INVALID_APPROVAL_TASK_VIEW');
+  }
+  return { ...initialFilters('approvals'), view };
+}
+
 const advancedFields = [
   'policy_id', 'action_kind', 'created_after', 'created_before',
   'delivery_state', 'execution_state', 'requester_id',
@@ -190,6 +209,20 @@ export function RequestList({
     setApplied(defaults);
     setAdvancedOpen(countAdvancedFilters(defaults) > 0);
   }
+  function selectApprovalQuickView(view: ApprovalQuickView) {
+    // If the user entered via /approvals?view=overdue, remove the stale
+    // deep-link query before replacing the selected work view.
+    if (typeof window !== 'undefined' && window.location.pathname === '/approvals' &&
+        new URLSearchParams(window.location.search).get('view') === 'overdue') {
+      window.history.replaceState(window.history.state, '', '/approvals');
+    }
+    const next = approvalQuickViewFilters(view);
+    setDraft(next);
+    setApplied(next);
+    setOffset(0);
+    setAdvancedOpen(false);
+  }
+
   const viewChoices = mode === 'requester'
     ? viewOptions.filter((item) => item.value === 'requester')
     : mode === 'approvals'
@@ -206,6 +239,20 @@ export function RequestList({
         <Button onClick={() => navigate('/requests/new')}>New request</Button>
         <Button variant="secondary" disabled={task.busy} onClick={() => void task.run(load)}>Refresh</Button>
       </div>}>
+      {mode === 'approvals' && <>
+        <nav className="grant-actions" aria-label="Approval task views">
+          {approvalQuickViews.map((option) =>
+            <Button
+              key={option.value}
+              variant={applied.view === option.value ? 'primary' : 'secondary'}
+              aria-pressed={applied.view === option.value}
+              disabled={task.busy}
+              onClick={() => selectApprovalQuickView(option.value)}
+            >{option.label}</Button>,
+          )}
+        </nav>
+        <p>Choose a work queue to clear old filters and return to the server-scoped first page. Opening a request never records a decision.</p>
+      </>}
       <div className="grant-grid">
         <TextField label="Search requests" value={draft.search} maxLength={100} onChange={(e) => edit('search', e.target.value)} />
         <Select label="Work view" value={draft.view} onChange={(value) => edit('view', value)}>
