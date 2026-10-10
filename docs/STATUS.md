@@ -5,6 +5,28 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## Foundation B2 pinned PF8.4 source adoption in current integration (2026-10-10)
+
+The current integrated G10A/G0 development candidate now consumes the ten
+exact unpublished Foundation B1 pf8.4 package archives pinned to source
+8726549f, as previously recorded by independent Grant B1 commit 5934b8a.
+Only existing package archives, the nested Foundation lock, Web package
+metadata and the real consumer conformance test have been transferred;
+Grant approval state, permissions, backend/API, existing preview and shared
+Foundation implementation have not been forked or modified. Offline npm
+installation, official Web **156/156** unit tests, TypeScript/Vite build
+and Static qualification pass on this combined source (Work Packet #67).
+
+**B2 remains incomplete:** the new consumer check truthfully detects two
+member-role ADMIN_CAPABILITY_CONTRADICTION findings: core.users and
+grant.smtp.test are unavailable to a member but still marked with
+access=manage. The previously platform-denied Grant Administration source
+change and app/styles/mobile/PR writes were not retried. A passing negative
+regression is NOT a passing member Administration user journey. Independent
+Control-family login/sidebar parity, mobile 320/375, real user/password
+browser, genuine SMTP inbox/PIN/OTP/MFA, actual Control/Stellar result
+and full G12 owner acceptance remain separately unverified.
+
 ## G12 historical populated v8-to-v12 database upgrade regression (2026-10-10)
 
 The current integrated candidate includes a static, SHA256-pinned verbatim
