@@ -45,7 +45,8 @@ describe('Grant collaboration explicit review of exact pending request', () => {
     const row = request();
     const review = prepareCollaborationReview(row, approver, 'REQUEST_INFO', 'Need change ticket', now);
     expect(review).toEqual({
-      requestId: row.id, revision: 4, kind: 'REQUEST_INFO', body: 'Need change ticket',
+      requestId: row.id, revision: 4, actorId: approver.id,
+      kind: 'REQUEST_INFO', body: 'Need change ticket',
     });
     expect(isCurrentCollaborationReview(review, row, approver, 'REQUEST_INFO', 'Need change ticket', now)).toBe(true);
     expect(isCurrentCollaborationReview(review, { ...row, revision: 5 }, approver, 'REQUEST_INFO', 'Need change ticket', now)).toBe(false);
@@ -89,6 +90,23 @@ describe('Grant collaboration explicit review of exact pending request', () => {
     expect(prepareCollaborationReview(row, requester, 'REQUEST_CHANGES', 'Self review', now)).toBeNull();
     expect(prepareCollaborationReview(row, approver, 'COMMENT', '<img src=x onerror=alert(1)>', now)?.body)
       .toBe('<img src=x onerror=alert(1)>');
+  });
+
+  it('binds the actor who reviewed the message even when both reviewers qualify', () => {
+    const row = request({
+      approval_plan: { mode: 'ALL', members: ['seat-a', 'seat-b'], required: 2 },
+    });
+    const reviewerB: User = { ...approver, id: 'seat-b', username: 'second' };
+    const reviewed = prepareCollaborationReview(row, approver, 'COMMENT', 'Check scope', now);
+    expect(reviewed).toEqual({
+      requestId: row.id, revision: 4, kind: 'COMMENT', body: 'Check scope',
+      actorId: approver.id,
+    });
+    expect(prepareCollaborationReview(row, reviewerB, 'COMMENT', 'Check scope', now))
+      .not.toBeNull();
+    expect(isCurrentCollaborationReview(
+      reviewed, row, reviewerB, 'COMMENT', 'Check scope', now,
+    )).toBe(false);
   });
 
   it('maintains React escaping of existing collaboration evidence', () => {

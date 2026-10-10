@@ -8,6 +8,7 @@ type CommentKind = NonNullable<RequestRow['comments']>[number]['kind'];
 export type CollaborationReview = {
   requestId: string;
   revision: number;
+  actorId: string;
   kind: CommentKind;
   body: string;
 };
@@ -42,7 +43,7 @@ export function prepareCollaborationReview(
 ): CollaborationReview | null {
   if (!allowedCollaborationPurposes(row, user, nowSeconds).includes(kind)
       || !body.trim() || body.length > 2000) return null;
-  return { requestId: row.id, revision: row.revision, kind, body };
+  return { requestId: row.id, revision: row.revision, actorId: user.id, kind, body };
 }
 
 export function isCurrentCollaborationReview(
@@ -54,6 +55,7 @@ export function isCurrentCollaborationReview(
   return current !== null
     && reviewed.requestId === current.requestId
     && reviewed.revision === current.revision
+    && reviewed.actorId === current.actorId
     && reviewed.kind === current.kind
     && reviewed.body === current.body;
 }
@@ -65,6 +67,7 @@ export function RequestCollaboration({
   const [kind, setKind] = useState<CommentKind>('COMMENT');
   const [body, setBody] = useState('');
   const [reviewed, setReviewed] = useState<CollaborationReview | null>(null);
+  const [reviewError, setReviewError] = useState('');
   const allowed = allowedCollaborationPurposes(row, user, Date.now() / 1000);
   // A refreshed request can invalidate a formerly selected approver purpose.
   // Never keep an invisible select value or an old reviewed intent actionable.
@@ -81,8 +84,8 @@ export function RequestCollaboration({
       row, user, selectedKind, body, Date.now() / 1000,
     );
     setReviewed(next);
-    if (!next) task.setNotice('Choose a currently allowed purpose and enter up to 2000 characters.');
-    else task.setNotice('');
+    task.setNotice('');
+    setReviewError(next ? '' : 'Choose a currently allowed purpose and enter up to 2000 characters.');
   }
 
   async function submit() {
@@ -92,7 +95,7 @@ export function RequestCollaboration({
       reviewed, row, user, selectedKind, body, Date.now() / 1000,
     )) {
       setReviewed(null);
-      task.setNotice('The request or message changed. Review the current message before confirming.');
+      setReviewError('The request, reviewer or message changed. Review the current message before confirming.');
       return;
     }
     await api('/requests/' + encodeURIComponent(reviewed.requestId) + '/comments', 'POST', {
@@ -101,6 +104,7 @@ export function RequestCollaboration({
     setBody('');
     setKind('COMMENT');
     setReviewed(null);
+    setReviewError('');
     await onReload();
     task.setNotice('Message recorded in the request history. No approval or execution occurred.');
   }
@@ -129,7 +133,7 @@ export function RequestCollaboration({
     </div>
     <Form label="Review message" busy={task.busy} onSubmit={reviewMessage}>
       <Select label="Message purpose" value={selectedKind} onChange={(value) => {
-        setKind(value as CommentKind); setReviewed(null); task.setNotice('');
+        setKind(value as CommentKind); setReviewed(null); setReviewError(''); task.setNotice('');
       }}>
         <option value="COMMENT">Comment (does not pause approval)</option>
         <option value="QUESTION">Question (does not pause approval)</option>
@@ -138,9 +142,10 @@ export function RequestCollaboration({
         {mayRespond && <option value="INFO_RESPONSE">Respond to information request (resumes approval)</option>}
       </Select>
       <TextArea label="Message (up to 2000 characters; no credentials)" value={body}
-        onChange={(value) => { setBody(value); setReviewed(null); task.setNotice(''); }} required />
+        onChange={(value) => { setBody(value); setReviewed(null); setReviewError(''); task.setNotice(''); }} required />
       {body.length > 2000 && <p role="alert">Message exceeds 2000 characters. Shorten it before review.</p>}
     </Form>
+    {reviewError && <Alert tone="warning" title="Review required">{reviewError}</Alert>}
     {reviewReady && reviewed && <Alert tone="warning" title="Confirm message">
       <p>{caption[reviewed.kind]}: {reviewed.body}</p>
       <p>Request revision {reviewed.revision}. Request action and execution authority remain unchanged. This message will be retained in the audit trail.</p>
