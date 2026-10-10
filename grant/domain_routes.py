@@ -7,6 +7,7 @@ from fastapi import Query, Request
 from .integration_diagnostics import configuration_manifest, diagnostics
 from .models import (
     ApproverGroup,
+    ApproverGroupUpdate,
     Cancel,
     Consume,
     Decision,
@@ -145,7 +146,7 @@ def register_domain(app, actor, human, reader):
         return core.create_approver_group(actor(request), body)
 
     @app.put("/api/v1/approver-groups/{ident}")
-    def update_approver_group(ident: str, body: ApproverGroup, request: Request):
+    def update_approver_group(ident: str, body: ApproverGroupUpdate, request: Request):
         return core.update_approver_group(actor(request), ident, body)
 
     @app.get("/api/v1/profiles")
