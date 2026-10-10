@@ -760,7 +760,9 @@ class Database:
     def restore(source: Path, destination: Path) -> None:
         if destination.exists() or destination.is_symlink() or not source.is_file():
             raise ValueError("Restore requires an existing backup and a NEW destination")
-        with closing(sqlite3.connect(f"file:{source}?mode=ro", uri=True)) as old:
+        # Convert the selected path into a percent-escaped URI: literal ? or #
+        # in an operator backup name must not redirect SQLite to another DB.
+        with closing(sqlite3.connect(f"{source.absolute().as_uri()}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
             if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12):

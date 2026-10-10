@@ -257,6 +257,12 @@ control, ensure filesystem space and approved secure retention, and protect
 the installation key separately; these files are **not** automatically signed,
 encrypted as complete archives, off-site backed up or release-authorized.
 Restore accepts a NEW destination only. Do not overwrite or delete the original.
+For a recovery input filename containing URI-reserved characters such as `?` or
+`#`, the SQLite read-only source must bind to the **exact specified backup**,
+not a similarly named file in the same directory. The source-only regression
+checks the recovered record identity as well as SQLite integrity and pause.
+Always verify the selected backup's provenance with an independent operator
+record before any actual recovery; filename correctness alone is not proof.
 Restore also requires a genuine existing recovery pause marker in the backup:
 if that row is missing, it refuses the incomplete SQLite backup before
 publishing any restored destination. Otherwise a future first-run schema

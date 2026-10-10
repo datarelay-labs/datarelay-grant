@@ -22,6 +22,19 @@ API regression evidence; not proof of real human identity, live email
 receipt, customer MFA enrollment or Full User E2E. Existing G9 Work
 Packet #48 revision 3 records the exact tested source.
 
+## M5 exact backup input-path recovery binding (2026-10-10)
+
+The SQLite restore API previously constructed its read-only URI from an
+unescaped operator-supplied filename. A valid backup named with a literal
+`?` or `#` could silently restore a *different*, still valid SQLite file
+from the same directory instead of the explicitly chosen backup. A distinct
+red-first two-database fixture reproduced both wrong-source outcomes. Restore
+now uses a percent-escaped absolute file URI while retaining the SQLite
+read-only mode, integrity check, 0600 staging, recovery pause, session
+revocation, and no-overwrite publication. The regression checks recovered
+content identity, not just SQLite quick_check. This is disposable/local
+source evidence only, not an actual operator restore or external E2E PASS.
+
 ## M5 malformed-backup recovery pause fail-closed validation (2026-10-10)
 
 The source recovery restore rejects a corrupt-but-SQLite-quick-check-valid

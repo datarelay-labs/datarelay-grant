@@ -49,3 +49,41 @@ def test_intact_backup_recovery_always_paused_without_resume(tmp_path: Path, pre
     with original.transaction(write=False) as conn:
         assert conn.execute("SELECT value FROM runtime WHERE key='paused'").fetchone()[0] == previous_pause
     assert not list(tmp_path.glob(".grant-private-*.sqlite"))
+
+
+@pytest.mark.parametrize("reserved_name", ["recovery?target.sqlite", "recovery#target.sqlite"])
+def test_restore_binds_exact_backup_source_with_uri_reserved_filename(
+    tmp_path: Path, reserved_name: str,
+):
+    """Never restore a different valid sibling DB when a filename contains URI syntax."""
+    current = Database(tmp_path / "actual-current.sqlite")
+    stale = Database(tmp_path / "unrelated-stale.sqlite")
+    with current.transaction() as conn:
+        conn.execute(
+            "UPDATE runtime SET value='EXPECTED_CURRENT' WHERE key='notification_brand_name'"
+        )
+    with stale.transaction() as conn:
+        conn.execute(
+            "UPDATE runtime SET value='WRONG_STALE' WHERE key='notification_brand_name'"
+        )
+
+    selected = tmp_path / reserved_name
+    unrelated = tmp_path / "recovery"
+    restored = tmp_path / "restored-from-selected.sqlite"
+    current.backup(selected)
+    stale.backup(unrelated)
+
+    Database.restore(selected, restored)
+    with Database(restored).transaction(write=False) as conn:
+        actual = conn.execute(
+            "SELECT value FROM runtime WHERE key='notification_brand_name'"
+        ).fetchone()[0]
+        paused = conn.execute(
+            "SELECT value FROM runtime WHERE key='paused'"
+        ).fetchone()[0]
+    assert actual == 'EXPECTED_CURRENT', "Restore must use the EXACT selected input path"
+    assert paused == '1'
+    with Database(unrelated).transaction(write=False) as conn:
+        assert conn.execute(
+            "SELECT value FROM runtime WHERE key='notification_brand_name'"
+        ).fetchone()[0] == 'WRONG_STALE'
