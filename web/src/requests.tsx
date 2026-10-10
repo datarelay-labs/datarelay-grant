@@ -9,6 +9,7 @@ import { RevisionComparison } from './revision_diff';
 import { RequestActionSummary } from './request_action_summary';
 import { RequestEvidence, approvalProgressLabel, approvalWaitingLabel } from './request_evidence';
 import { RequestStageSummary } from './request_stage_summary';
+import { RequestExecutionReport } from './request_execution_report';
 import { Form, Select, State, TextArea, useTask, when } from './common';
 import type { Profile, RequestRow, Outcome, User } from './types';
 
@@ -115,7 +116,7 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  {row.predecessor_id && <RevisionComparison requestId={row.id} />}
  <RequestCollaboration row={row} user={user} onReload={load} />
  {user.role === 'admin' && actionable && <RequestAdminControls row={row} onReload={load} />}
- {row.execution_result && <Card title="Reported execution result"><pre>{JSON.stringify(row.execution_result,null,2)}</pre><p>Reported by the connected system; not independently verified by Grant.</p></Card>}
+ <RequestExecutionReport row={row} />
  <RequestEvidence
    row={row}
    isAdmin={user.role === 'admin'}
