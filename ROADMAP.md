@@ -22,7 +22,7 @@ queue.
 
 ## P0-UI-1 — OWNER FIRST: implement competitor-informed Grant UI (2026-10-11)
 
-**STATE=IMPLEMENTATION_FIRST / PRIORITY=TOP_P0_UI_PRODUCT_DELIVERY / EXISTING_WP=#67 rev21.**
+**STATE=IMPLEMENTATION_FIRST / PRIORITY=TOP_P0_UI_PRODUCT_DELIVERY / EXISTING_WP=#67 rev23.**
 **Owner decision:** the competitor documentation and licensed Keycloak REA
 analysis have been completed; further survey or optional reverse engineering
 must NOT displace real user-facing Grant UI implementation. Reuse the existing
@@ -38,13 +38,13 @@ the next independent UI task rather than returning to broad research.
 
 | Priority | Real screen & acceptance outcome | Ownership / existing WP | Current implementation, next unblocked gate |
 | --- | --- | --- | --- |
-| **UI-01 · P0** | **My approvals / Inbox**: task-first action kind, exact target and decision deadline, clear Review details, truthful pending vs overdue, role-safe filters and accessible keyboard/mobile worklist | **Grant M1 #67** (existing RED tests) | Four quick views already live in source; new row/detail source edit was platform safety-denied. Preserved rev9 RED regression stash `03cf0142b688baa17892e48785ff01803fa81c0e`; source change WAITING, no tool/worktree reroute |
+| **UI-01 · P0** | **My approvals / Inbox**: task-first action kind, exact target and decision deadline, clear Review details, truthful pending vs overdue, role-safe filters and accessible keyboard/mobile worklist | **Grant M1 #67** (existing RED tests) | Four quick views already live in source; new row/detail source edit was platform safety-denied. **Independent requester-side New request Review→Confirm SOURCE COMPLETE at `837e33f`**; approver Inbox remains WAITING. Preserved rev9 RED regression stash `03cf0142b688baa17892e48785ff01803fa81c0e`; source change WAITING, no tool/worktree reroute |
 | **UI-02 · P0** | **Emailed human PIN approval**: issued emailed link actually lands on no-login four-digit PIN form, optional policy OTP/fresh TOTP, selected Approve/Hold/Deny and **separate final Confirm**; expired/replayed and revoked links fail closed | **Grant M4 #67/#70–#73** | Decision portal/adapter source exists but **unmounted**; `web/src/app.tsx` previously denied, no alternate entrypoint bypass. Real distinct mailbox/user confirmation is separate M7 |
 | **UI-03 · P0** | **Login / sidebar / Administration**: grouped Foundation work/menu, centered first viewport desktop and 320/375, role-true 9 tasks/4 groups, Grant Mail task and keyboard navigation | **Foundation B2 + Grant M2 #57/#75/#67** | Shared pf8.4 installed; member `core.users` / `grant.smtp.test` capability contradictions unresolved. Prior admin/styles/mobile/browser denial remains; shared Foundation owns global layout |
 | **UI-04 · P0** | **Policies, approver groups, templates**: task-first list→detail→edit→preview, Draft/Testing/Active state and safe explicit save/409 conflict after another admin changes Deny/MFA/integration/templates | **Grant M3 #38/#64–#66/#80** | Existing lifecycle and templates source already present; two-admin lost update requires server CAS, not cosmetic UI-only conflict. Prior protected backend/Phase1 denial persists |
 | **UI-05 · P0 independent / P1 polish** | **Request detail, collaboration, evidence**: immutable action and target first, explicit human decision, accurate current seats vs history, separately *reported* external effect, review-confirm message bound to actor/revision | **Grant M1/M5 #67/#63**, E2E **M7 #54** | **SOURCE PARTIAL COMPLETE:** server-authoritative progress `ecc5110a` / `f2a4e5d`; review/confirm and actor binding `0b267e1` / `d8e136a`; immutable action/stage summary `d9967928`; collapsed unverified external report `ca5a9322`; explicit decision POST receipt fallback on failed/lagging read `53c7169`; exact actor/action/reason-bound decision review `276a49e`; successful collaboration POST projection without secondary GET `9cf423b`. Actual same-installed-HEAD browser/mobile/two-user E2E **NOT PASS**. Do not repeat completed UI-05 source slices merely to restate PASS |
 
-**2026-10-11 implementation evidence, exact current Grant candidate
+**2026-10-11 completed RequestDetail evidence, source checkpoint
 `9cf423b4355e64e2791a071ff8e830154a93dfb8`:** UI-05 has five
 incremental *mounted product UI* improvements beyond the earlier stable
 quorum/review components; it is not merely an offline prototype. Official
@@ -64,6 +64,24 @@ source paths or real external/user gates; never reroute them through another
 host/tool. No new HEAD CI, installed mobile/keyboard, two-person mailbox
 E2E, independent Control/Stellar effect or release acceptance has passed.
 
+**2026-10-11 new requester-side UI delivery (exact Grant source checkpoint
+`837e33f4ab7391c5336c2acf7abfce42ff424e50`):** The mounted
+`New request` page now requires **Review request → Confirm create request**;
+requester previews the configured profile/version, immutable operation and
+target, exact JSON parameters, source selectors and predecessor, reason and
+external request ID. Every edit invalidates the reviewed payload; successful
+confirmation makes one normal API POST, never automatically retries on an
+ambiguous result, then navigates to the server-created request. It does **not**
+authorize approval or an external effect; only the server resolves active
+policy, approver plan and request creation. New unit cases **10/10 PASS**,
+native Web **213/213 PASS**, TypeScript/Vite build **PASS** and native Static
+**PASS** (G12 RED source temporarily path-stashed then restored SHA-exact).
+Git normal push and GitHub independent 3-file commit/ref readback PASS.
+This is **SOURCE COMPLETE only** for this requester slice; UI-01 Inbox,
+UI-02 email PIN mount, UI-03 Foundation Administration/mobile and UI-04
+server CAS remain separately safety/external gated. No installed-browser,
+keyboard/mobile, independent real mailbox E2E, CI or release qualification.
+
 **Exit evidence per screen:** exact source + RED/GREEN tests + Web/build/static,
 then authorized **installed same-HEAD desktop and 320/375 mobile/keyboard
 browser pass, two different authorized real users and two mailboxes** for PIN,
@@ -76,7 +94,7 @@ and user gates precede M8 release authority. No duplicate Work Packets or PRs.
 
 ## P0-UX-0 — completed competitor research, reused for P0-UI-1
 
-**STATE=REA_STATIC_SOURCE_COMPLETE + INBOX_SAFE_UI_SOURCE_COMPLETE / NEXT_SCREEN_P0=P0-UI-1 / PRIORITY=RESEARCH_ALREADY_COMPLETE / Owner WP #67 (existing packet; UI implementation revision 21).**
+**STATE=REA_STATIC_SOURCE_COMPLETE + INBOX_SAFE_UI_SOURCE_COMPLETE / NEXT_SCREEN_P0=P0-UI-1 / PRIORITY=RESEARCH_ALREADY_COMPLETE / Owner WP #67 (existing packet; UI implementation revision 23).**
 This prerequisite is **satisfied by the documented six-vendor screen Gap Matrix,
 Keycloak licensed static REA and five-screen blueprint**; further UI delivery
 is tracked under P0-UI-1 above. It remains separate from independent safety,
