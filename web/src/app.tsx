@@ -17,6 +17,7 @@ import { authAdapter, productConfig, readSession } from './foundation.config';
 import { Home } from './home';
 import { Integrations } from './integrations';
 import { Notifications } from './notifications';
+import { Operations, operatorPresets } from './operations';
 import { Profiles } from './policies';
 import { NewRequest, RequestDetail, RequestList } from './requests';
 import type { Session } from './types';
@@ -183,9 +184,11 @@ export function App() {
       ? path === '/requests/new'
         ? 'New request'
         : 'Request details'
-      : path === '/security'
-        ? 'Account & security'
-        : config.navigation.find((item) => item.path === path)?.label ?? 'Not found';
+      : path.startsWith('/operations/queue/') || path.startsWith('/operations/integration/')
+        ? 'Operational requests'
+        : path === '/security'
+          ? 'Account & security'
+          : config.navigation.find((item) => item.path === path)?.label ?? 'Not found';
 
   let page;
   if (path === '/home') {
@@ -202,6 +205,15 @@ export function App() {
     page = <Delegations user={user} />;
   } else if (path === '/security') {
     page = <Security user={user} onSignedOut={signedOut} onRefresh={refresh} />;
+  } else if (user.role === 'admin' && path === '/operations') {
+    page = <Operations navigate={navigate} />;
+  } else if (user.role === 'admin' && /^\/operations\/queue\/[a-z_]+$/.test(path)
+    && Object.hasOwn(operatorPresets, path.split('/')[3]!)) {
+    page = <RequestList key={path} user={user} mode="all"
+      preset={operatorPresets[path.split('/')[3]!]} navigate={navigate} />;
+  } else if (user.role === 'admin' && /^\/operations\/integration\/[a-f0-9-]{36}$/.test(path)) {
+    page = <RequestList key={path} user={user} mode="all"
+      preset={{ integration_id: path.split('/')[3]! }} navigate={navigate} />;
   } else if (user.role === 'admin' && path === '/integrations') {
     page = <Integrations />;
   } else if (user.role === 'admin' && path === '/profiles') {

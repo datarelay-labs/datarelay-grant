@@ -462,3 +462,40 @@ test('G1 browser policy selectors create a matching request and keep latest draf
  await expect(ap.getByLabel('Policy name',{exact:true})).toHaveValue('Browser selector draft v2');
  await adminContext.close();await reqContext.close();
 });
+
+test('G7 administrator operations counts open the exact request exception queue',async({browser,request})=>{
+ const f=fixture();const headers={authorization:'Bearer '+f.token};
+ const title='G7 pending operator '+crypto.randomUUID().slice(0,8);
+ const created=await request.post('/api/v1/requests',{headers,data:{
+  external_id:crypto.randomUUID(),profile_id:f.profile_id,title,
+  action:{kind:'test.operation',target:'operations-isolated-target',parameters:{}},
+ }});
+ expect(created.status()).toBe(202);
+ const context=await browser.newContext();const page=await context.newPage();
+ await login(page,'admin');
+ await page.goto('/operations');
+ await expect(page.getByRole('heading',{name:'Operational work and exceptions',exact:true})).toBeVisible();
+ await expect(page.getByText('Integration delivery health',{exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:/Pending approvals/})).toBeVisible();
+ await page.getByRole('button',{name:/Pending approvals/}).click();
+ await expect(page).toHaveURL(/\/operations\/queue\/pending$/);
+ await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('ops_pending');
+ await expect(page.getByRole('button',{name:title,exact:true})).toBeVisible();
+ await page.goto('/operations');
+ await page.getByRole('button',{name:'Isolated DataRelay fixture',exact:true}).click();
+ await expect(page).toHaveURL(/\/operations\/integration\/[a-f0-9-]{36}$/);
+ await expect(page.getByLabel('Integration',{exact:true})).toHaveValue(f.integration_id);
+ await expect(page.getByRole('button',{name:title,exact:true})).toBeVisible();
+ await context.close();
+});
+
+test('G7 operations surface is unavailable to non-administrators',async({browser,request})=>{
+ const context=await browser.newContext();const page=await context.newPage();
+ await login(page,'approver');
+ await page.goto('/operations');
+ await expect(page.getByText('Page unavailable',{exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Operations',exact:true})).toHaveCount(0);
+ const result=await context.request.get('/api/v1/admin/operations');
+ expect(result.status()).toBe(403);
+ await context.close();
+});

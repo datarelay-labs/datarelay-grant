@@ -111,6 +111,7 @@ Configuration
 └── Approvers          # when G3/G4 is implemented
 
 Administration
+├── Operations          # G7 authoritative metrics / exceptions
 └── Administration
 
 Signed-in user footer

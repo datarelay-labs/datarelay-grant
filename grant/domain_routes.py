@@ -56,7 +56,11 @@ def register_domain(app, actor, human, reader):
         limit: int = Query(100, ge=1, le=100),
         offset: int = Query(0, ge=0),
         view: Literal[
-            "all", "needs", "overdue", "held", "delegated", "recent", "requester", "escalated"
+            "all", "needs", "overdue", "held", "delegated", "recent", "requester", "escalated",
+            "ops_pending", "ops_overdue", "ops_approved_unused",
+            "ops_execution_unknown", "ops_execution_failed",
+            "ops_email_failed", "ops_webhook_failed", "ops_delivery_failed",
+            "ops_decided",
         ] = "all",
         search: str = Query("", max_length=100),
         state: str | None = Query(None, max_length=24),
