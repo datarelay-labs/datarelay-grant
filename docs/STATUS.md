@@ -5,6 +5,19 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## M5 malformed-backup recovery pause fail-closed validation (2026-10-10)
+
+The source recovery restore rejects a corrupt-but-SQLite-quick-check-valid
+backup if its runtime.paused marker is missing: exactly one preexisting row
+must be updated to PAUSED=1 before any restored database is published.
+Without this guard a subsequent Database initialization previously created
+a default PAUSED=0, silently re-enabling recovered service state without
+operator external-effect reconciliation. Isolated red-first test reproduces
+the failure; fixed source refuses publication and removes private staging.
+Valid backups retain their PAUSED=1 recovery and separate owner-authorized
+resume. This is local source safety evidence, not a customer restore or
+acceptance of a real external operation.
+
 ## M5 private initial database creation/reopen hardening (2026-10-10)
 
 The Grant SQLite initializer now requires a regular non-symlink database path,

@@ -257,6 +257,11 @@ control, ensure filesystem space and approved secure retention, and protect
 the installation key separately; these files are **not** automatically signed,
 encrypted as complete archives, off-site backed up or release-authorized.
 Restore accepts a NEW destination only. Do not overwrite or delete the original.
+Restore also requires a genuine existing recovery pause marker in the backup:
+if that row is missing, it refuses the incomplete SQLite backup before
+publishing any restored destination. Otherwise a future first-run schema
+initializer could mistakenly create an unpaused installation. A successful
+backup integrity check alone does not authorize resumed delivery or execution.
 A database backup is different from version-2 policy/template portability: it
 preserves complete private installation state, including credentials, and
 requires its matching protected installation key. An imported v2 Draft and its

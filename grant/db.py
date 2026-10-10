@@ -770,7 +770,14 @@ class Database:
                 closing(sqlite3.connect(staged)) as new,
             ):
                 old.backup(new)
-                new.execute("UPDATE runtime SET value='1' WHERE key='paused'")
+                pause_update = new.execute(
+                    "UPDATE runtime SET value='1' WHERE key='paused'"
+                )
+                if pause_update.rowcount != 1:
+                    # Without the marker, future schema initialization would
+                    # insert paused='0', silently reviving a damaged backup.
+                    # Refuse publication of any such restored installation.
+                    raise ValueError("Backup missing recovery pause marker")
                 new.execute("DELETE FROM sessions")
                 new.execute(
                     "UPDATE outbox SET state='PENDING',lease_token=NULL,lease_until=NULL WHERE state='SENDING'"
