@@ -22,6 +22,20 @@ API regression evidence; not proof of real human identity, live email
 receipt, customer MFA enrollment or Full User E2E. Existing G9 Work
 Packet #48 revision 3 records the exact tested source.
 
+## M5 operator check/backup no-bootstrap safety (2026-10-10)
+
+Actual disposable Grant CLI probes exposed three fail-open operational errors:
+`grant check` silently created a fresh empty v12 SQLite when the original was
+missing; the same health command mutated a historically pinned v8 schema to
+v12; `grant backup` silently created/archived a newly fabricated empty v12
+installation when the source database was missing. New explicit read-only
+existing-installation validation now prevents bootstrap/migration by those
+commands, requires a valid recovery pause marker and SQLite integrity, and
+preserves a private pre-upgrade backup of the original supported v8 schema.
+The normal application DB constructor, explicit first initialization and
+runtime migrations remain unchanged. Isolated native CLI test evidence is
+not actual customer backup, operational release acceptance or E2E.
+
 ## M5 exact backup input-path recovery binding (2026-10-10)
 
 The SQLite restore API previously constructed its read-only URI from an

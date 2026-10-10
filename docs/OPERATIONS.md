@@ -35,6 +35,9 @@ uv run --frozen grant --config /absolute/private-state/grant.json check
 uv run --frozen grant --config /absolute/private-state/grant.json serve
 ```
 
+`init` creates protected configuration only, not a database. `user-add` or
+normal authorized startup initializes the first database; `check` deliberately
+refuses a missing database rather than silently creating a new empty installation.
 `user-add` prompts twice without echoing a password; no default account/password
 exists. Provision separate requester and approver accounts through System
 administration. Do not reuse the example address for real mail. Initialization
@@ -245,6 +248,15 @@ uv run --frozen grant --config /absolute/private-state/grant.json restore \
   --input /absolute/private-backups/new-backup.sqlite \
   --output /absolute/private-state/new-restored.sqlite
 ```
+
+`grant check` is a read-only **existing-state health inspection**: missing or
+invalid database, unsupported schema, or recovery marker fails closed. An older
+supported schema requires a separately planned upgrade; checking cannot silently
+run database migrations. `grant backup` likewise refuses missing/unusable input,
+and takes an SQLite-consistent private snapshot of an existing supported old
+schema **without upgrading it first**. Never trust a fabricated empty database
+as an installation backup. Both operations assume an operator-controlled private
+state directory and do not acknowledge recovery or execute external effects.
 
 Back up the installation key separately using an approved secret store. The database
 contains personal data, authorization state and token digests and must be protected.

@@ -58,6 +58,20 @@ def main():
         print("Restored NEW database; sessions cleared; delivery/consumption PAUSED.")
         print("Reconcile external effects and configure the new database before resuming.")
         return
+    # Inspection and pre-upgrade backup may NOT bootstrap a missing database or
+    # silently migrate old authorization state before a protected snapshot.
+    if args.command == "check":
+        version, paused = Database.inspect_existing(settings.database)
+        if version != 12:
+            raise SystemExit("SCHEMA_UPGRADE_REQUIRED: backup first; check does not migrate")
+        print("DATABASE=ok")
+        print("PAUSED=" + paused)
+        print("SMTP=" + ("CONFIGURED" if settings.smtp_host else "NOT_CONFIGURED"))
+        return
+    if args.command == "backup":
+        Database.backup_existing(settings.database, args.output)
+        print("Backup created. Protect the installation encryption key separately.")
+        return
     db = Database(settings.database)
     if args.command == "user-add":
         password = getpass.getpass("New password (12+ characters): ")
@@ -68,9 +82,6 @@ def main():
             draft.username, draft.email, draft.password, draft.role
         )
         print("Created local account:", user["username"])
-    elif args.command == "backup":
-        db.backup(args.output)
-        print("Backup created. Protect the installation encryption key separately.")
     elif args.command == "recovery-resume":
         from .core import Core
 
@@ -78,14 +89,6 @@ def main():
             acknowledged=args.acknowledge_external_reconciliation
         )
         print(json.dumps(result))
-    elif args.command == "check":
-        with db.transaction(write=False) as conn:
-            print("DATABASE=" + conn.execute("PRAGMA quick_check").fetchone()[0])
-            print(
-                "PAUSED="
-                + conn.execute("SELECT value FROM runtime WHERE key='paused'").fetchone()[0]
-            )
-        print("SMTP=" + ("CONFIGURED" if settings.smtp_host else "NOT_CONFIGURED"))
     elif args.command == "serve":
         import uvicorn
 

@@ -293,6 +293,30 @@ def _legacy_event_templates(row: sqlite3.Row) -> dict[str, dict[str, str]]:
     return events
 
 
+@contextmanager
+def _existing_installation(path: Path) -> Iterator[tuple[sqlite3.Connection, int, str]]:
+    """Inspect an installed SQLite inode read-only; never initialize or migrate it.
+
+    This is for operator health and pre-upgrade backups, not the ordinary
+    application runtime constructor. SQLite mode=ro must not invent missing state.
+    """
+    if path.is_symlink() or not path.is_file():
+        raise ValueError("Installation database is missing or not a regular file")
+    with closing(sqlite3.connect(f"{path.absolute().as_uri()}?mode=ro", uri=True)) as conn:
+        version = conn.execute("PRAGMA user_version").fetchone()[0]
+        if version not in range(1, 13):
+            raise ValueError("Unsupported installation database schema")
+        if conn.execute("PRAGMA quick_check").fetchone()[0] != "ok":
+            raise ValueError("Installation database integrity check failed")
+        try:
+            pause_rows = conn.execute("SELECT value FROM runtime WHERE key='paused'").fetchall()
+        except sqlite3.DatabaseError as exc:
+            raise ValueError("Installation recovery pause marker is unavailable") from exc
+        if len(pause_rows) != 1 or pause_rows[0][0] not in ("0", "1"):
+            raise ValueError("Installation recovery pause marker is invalid")
+        yield conn, version, pause_rows[0][0]
+
+
 class Database:
     def __init__(self, path: Path):
         self.path = path
@@ -745,6 +769,24 @@ class Database:
             raise
         finally:
             conn.close()
+
+    @staticmethod
+    def inspect_existing(path: Path) -> tuple[int, str]:
+        with _existing_installation(path) as (_source, version, paused):
+            return version, paused
+
+    @staticmethod
+    def backup_existing(source_path: Path, destination: Path) -> None:
+        """Take a complete private pre-upgrade backup without opening/migrating runtime."""
+        if (destination.exists() or destination.is_symlink()
+                or destination.resolve() == source_path.resolve()):
+            raise ValueError("Backup destination must be a new file")
+        with (
+            _existing_installation(source_path) as (source, _version, _paused),
+            _private_sqlite_output(destination) as staged,
+            closing(sqlite3.connect(staged)) as target,
+        ):
+            source.backup(target)
 
     def backup(self, destination: Path) -> None:
         if destination.exists() or destination.is_symlink() or destination.resolve() == self.path.resolve():

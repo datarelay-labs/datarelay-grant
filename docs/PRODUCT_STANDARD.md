@@ -941,7 +941,10 @@ Product 1.0 requires:
 - bounded payloads/rate limits;
 - current-authority checks on privileged mutations;
 - policy/action snapshot integrity;
-- conservative backup/restore reconciliation;
+- conservative backup/restore reconciliation, including fail-closed operator `check` and
+  `backup` when the original database is absent or structurally invalid; health
+  inspection must not initialize/migrate live state and pre-upgrade backups must
+  preserve the original schema and data before an explicitly planned upgrade;
 - explicit credential revocation;
 - fail-closed behavior when Grant authority is unavailable.
 
