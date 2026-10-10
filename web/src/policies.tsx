@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Alert, Button, Card, TextField, type AccountProjection } from '@datarelay-labs/foundation';
 import { api } from './api';
+import { PolicyCloneConfirmation, createPolicyCloneReview, submitReviewedPolicyClone, type PolicyCloneIntent } from './policy_clone_review';
 import { Form, Select, TextArea, useTask, when } from './common';
 import {
   DecisionSecurityFields, policyDecisionSecuritySummary,
@@ -310,6 +311,7 @@ export function Profiles() {
   const [editing, setEditing] = useState('');
   const [editingBaseline, setEditingBaseline] = useState<Profile | null>(null);
   const [pendingTransition, setPendingTransition] = useState<PolicyTransitionIntent | null>(null);
+  const [pendingClone, setPendingClone] = useState<PolicyCloneIntent | null>(null);
   const [name, setName] = useState('');
   const [integration, setIntegration] = useState('');
   const [approver, setApprover] = useState('');
@@ -354,6 +356,7 @@ export function Profiles() {
   }, []);
 
   function resetEditor() {
+    setPendingClone(null);
     setPendingTransition(null);
     setEditingBaseline(null);
     setEditing('');
@@ -380,6 +383,7 @@ export function Profiles() {
   }
 
   function edit(row: Profile) {
+    setPendingClone(null);
     setPendingTransition(null);
     setEditingBaseline({ ...row });
     setEditing(row.id);
@@ -459,9 +463,36 @@ export function Profiles() {
     await transition(current.id, 'test');
   }
 
-  async function cloneStoredPolicy() {
-    const current = await currentStoredPolicy();
-    await clone(current.id);
+  function stageClone(row: Profile) {
+    setPendingTransition(null);
+    setPendingClone(createPolicyCloneReview(row));
+  }
+
+  function stageCloneFromEditor() {
+    const source = rows.find((row) => row.id === editing);
+    if (!source || !isPolicyEditorUnchanged(source, editingBaseline, editorDraft)) return;
+    stageClone(source);
+  }
+
+  async function confirmClone() {
+    const staged = pendingClone;
+    if (!staged) return;
+    // An unsaved edit cannot silently be replaced by a saved-policy clone.
+    if (view !== 'list' && staged.policyId === editing && !editorUnchanged) {
+      setPendingClone(null);
+      throw new Error('POLICY_UNSAVED_CHANGES_SAVE_FIRST');
+    }
+    // Invalidate immediately before the read-only freshness check and only
+    // clone POST. A failed/ambiguous POST must never be automatically retried.
+    setPendingClone(null);
+    await submitReviewedPolicyClone(
+      staged,
+      async () => {
+        const latest = await load();
+        return latest.find((row) => row.id === staged.policyId);
+      },
+      async (sourceId) => { await clone(sourceId); },
+    );
   }
 
   async function discardEditorChanges() {
@@ -519,11 +550,13 @@ export function Profiles() {
   }
 
   async function clone(id: string) {
-    const cloned = await api<Profile>('/profiles/' + id + '/clone', 'POST');
-    await load();
+    const cloned = await api<Profile>('/profiles/' + encodeURIComponent(id) + '/clone', 'POST');
+    // The successful POST already returns the created Draft. A redundant GET
+    // could fail after a durable clone and misleadingly invite a second POST.
+    setRows((current) => [cloned, ...current.filter((row) => row.id !== cloned.id)]);
     edit(cloned);
     setView('details');
-    task.setNotice('Policy cloned as a new Draft.');
+    task.setNotice('Policy cloned as a new Draft. It is not active.');
   }
 
   async function showHistory() {
@@ -586,6 +619,12 @@ export function Profiles() {
           </div>
           <Button onClick={startCreate}>Create policy</Button>
         </section>
+
+        <PolicyCloneConfirmation intent={pendingClone}
+          source={rows.find((row) => row.id === pendingClone?.policyId)}
+          busy={task.busy}
+          onCancel={() => setPendingClone(null)}
+          onConfirm={() => void task.run(confirmClone)} />
 
         <Card
           title="Policies"
@@ -670,9 +709,9 @@ export function Profiles() {
                         <Button
                           variant="ghost"
                           disabled={task.busy}
-                          onClick={() => void task.run(() => clone(row.id))}
+                          onClick={() => stageClone(row)}
                         >
-                          Clone
+                          Review clone
                         </Button>
                       </div>
                     </td>
@@ -696,6 +735,7 @@ export function Profiles() {
       <section className="grant-detail-header" aria-label="Policy workspace">
         <div>
           <Button variant="ghost" onClick={() => {
+            setPendingClone(null);
             setPendingTransition(null);
             setView('list');
           }}>
@@ -740,9 +780,9 @@ export function Profiles() {
             <Button
               variant="ghost"
               disabled={task.busy || !editorUnchanged}
-              onClick={() => void task.run(cloneStoredPolicy)}
+              onClick={stageCloneFromEditor}
             >
-              Clone
+              Review clone
             </Button>
           </div>
         ) : null}
@@ -752,6 +792,12 @@ export function Profiles() {
         busy={task.busy}
         onDiscard={() => void task.run(discardEditorChanges)}
       /> : null}
+
+      <PolicyCloneConfirmation intent={pendingClone}
+        source={rows.find((row) => row.id === pendingClone?.policyId)}
+        busy={task.busy}
+        onCancel={() => setPendingClone(null)}
+        onConfirm={() => void task.run(confirmClone)} />
 
       <PolicyLifecycleConfirmation
         intent={pendingTransition}
