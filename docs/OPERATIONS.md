@@ -78,6 +78,14 @@ A repeated consume returns `replay: true`; reconcile the consumer's durable oper
 ledger, never execute a second time. Transport ambiguity or an UNKNOWN execution
 requires external result inspection. Grant cannot undo a committed external action.
 
+While an installation is recovery-paused, do not use manual Mail delivery
+test, Notification Template Set test send, Integration test connection, or
+Schedule resend as a shortcut around external-effect reconciliation. These
+routes reject attempts with RECOVERY_RECONCILIATION_REQUIRED before any outbound
+transport or resend mutation. Administrator health and permitted audit/inspection
+stay readable. Only the separately authorized, acknowledged recovery-resume
+restores deliberate operator-triggered diagnostic sends.
+
 ## Operations dashboard and exception queues
 
 The administrator **Operations** page reads the current authoritative request,

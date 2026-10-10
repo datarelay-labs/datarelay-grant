@@ -27,6 +27,18 @@ Control-family login/sidebar parity, mobile 320/375, real user/password
 browser, genuine SMTP inbox/PIN/OTP/MFA, actual Control/Stellar result
 and full G12 owner acceptance remain separately unverified.
 
+## Product Foundation B4/B5: recovery-paused manual delivery safety
+
+The native Grant recovery-paused state now rejects direct operator-triggered
+Administration mail tests, Notification Template Set test sends, Integration
+connection tests and manual delivery resend scheduling with
+RECOVERY_RECONCILIATION_REQUIRED, without SMTP/Webhook transmission or a new
+resend audit entry. The existing durable worker and approval/consume recovery
+gates remain authoritative. Normal unpaused operator tests remain available;
+read-only administrator health remains visible and role-checked during pause.
+Work Packet #83 intent revision 2 tracks isolated API proof and exact source;
+this is not real mailbox, customer restoration, or external product E2E.
+
 ## G12 historical populated v8-to-v12 database upgrade regression (2026-10-10)
 
 The current integrated candidate includes a static, SHA256-pinned verbatim

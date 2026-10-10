@@ -517,12 +517,13 @@ class Core:
     def test_notification(
         self, actor: Principal, ident: str, body: NotificationTestSend
     ) -> dict:
-        from .transport import send_email
+        from .transport import require_transport_unpaused, send_email
 
         actor.require_admin()
         principal = actor
         with self.db.transaction(write=False) as conn:
             require_current_authority(conn, principal)
+            require_transport_unpaused(conn)
             row = conn.execute("SELECT * FROM email_templates WHERE id=?", (ident,)).fetchone()
             if not row:
                 raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
@@ -541,6 +542,7 @@ class Core:
         event_id = uid()
         with self.db.transaction(write=False) as conn:
             require_current_authority(conn, principal)
+            require_transport_unpaused(conn)
         send_email(
             self.settings,
             {"email": recipient["email"]},

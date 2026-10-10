@@ -22,6 +22,17 @@ from .db import Database, audit, uid
 from .errors import GrantError
 
 
+def require_transport_unpaused(conn) -> None:
+    """Block direct operator-triggered sends while recovery needs reconciliation.
+
+    The existing durable worker and decision paths have their own pause gates.
+    A direct SMTP/Webhook diagnostic or resend must not bypass that authority.
+    """
+    row = conn.execute("SELECT value FROM runtime WHERE key='paused'").fetchone()
+    if row is None or row[0] != "0":
+        raise GrantError("RECOVERY_RECONCILIATION_REQUIRED", 409)
+
+
 def validate_destination(url: str, settings: Settings, *, resolve: bool = False) -> None:
     """No caller-selected URL. The installation operator registers exact endpoints.
 
@@ -273,6 +284,7 @@ class Worker:
         actor.require_admin()
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
+            require_transport_unpaused(conn)
             row = conn.execute("SELECT * FROM outbox WHERE id=?", (ident,)).fetchone()
             if not row:
                 raise GrantError("DELIVERY_NOT_FOUND", 404)
