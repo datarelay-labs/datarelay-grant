@@ -17,7 +17,7 @@ for(const pass of [1,2]){
   await rp.getByLabel('Target',{exact:true}).fill('isolated-test-target');
   await rp.getByLabel('Reason',{exact:true}).fill('Two-user end-to-end verification; no external production action.');
   await rp.getByRole('button',{name:'Submit request',exact:true}).click();
-  await expect(rp.getByText('Exact action to be approved',{exact:true})).toBeVisible();
+  await expect(rp.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
   const url=rp.url();const id=url.split('/').pop()!;
   await expect.poll(async()=>{const r=await request.get(f.receiver);return (await r.json()).mail.some((m:string)=>m.includes(id));}).toBeTruthy();
   // Email GET previews do not decide, and a different user cannot read this request.
@@ -58,7 +58,7 @@ test('Foundation login and grouped Grant shell follow the DataRelay family layou
  const context=await browser.newContext({viewport:{width:1280,height:800}});const page=await context.newPage();
  await page.goto('/home');await expect(page.locator('.dr-auth-layout')).toBeVisible();await expect(page.getByRole('heading',{name:'Welcome to DataRelay',exact:true})).toBeVisible();await expect(page.getByText('Please sign in to continue.',{exact:true})).toBeVisible();
  await page.getByLabel('Username',{exact:true}).fill('admin');await page.getByLabel('Password',{exact:true}).fill(fixture().password);await page.getByRole('button',{name:'Sign in',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.getByText('Work',{exact:true})).toBeVisible();await expect(page.getByText('Configuration',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByText('Work that needs a human decision',{exact:true})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'My work',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Configuration',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Good to see you, admin',exact:true})).toBeVisible();
  await context.close();
 });
 
@@ -181,7 +181,7 @@ test('requester cancels and creates a newly approved replacement through the UI'
  await page.getByLabel('Request title',{exact:true}).fill('Replace cancelled operation');
  await page.getByLabel('Target',{exact:true}).fill('old-test-target');
  await page.getByRole('button',{name:'Submit request',exact:true}).click();
- await expect(page.getByText('Exact action to be approved',{exact:true})).toBeVisible();
+ await expect(page.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
  const oldId=page.url().split('/').pop()!;
  await page.getByRole('button',{name:'Cancel request',exact:true}).click();
  await page.getByRole('button',{name:'Confirm cancelled',exact:true}).click();
@@ -189,13 +189,14 @@ test('requester cancels and creates a newly approved replacement through the UI'
  await expect(page.getByLabel('Target',{exact:true})).toHaveValue('old-test-target');
  await page.getByLabel('Target',{exact:true}).fill('new-test-target');
  await page.getByRole('button',{name:'Submit request',exact:true}).click();
- await expect(page.getByText('Exact action to be approved',{exact:true})).toBeVisible();
+ await expect(page.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
  const newId=page.url().split('/').pop()!;expect(newId).not.toBe(oldId);
  const headers={authorization:'Bearer '+f.token};
  const row=await(await request.get('/api/v1/requests/'+newId,{headers})).json();
  expect(row.predecessor_id).toBe(oldId);expect(row.state).toBe('AWAITING');expect(row.action.target).toBe('new-test-target');
  expect((await request.post('/api/v1/requests/'+newId+'/consume',{headers,data:{execution_id:crypto.randomUUID(),action_hash:row.action_hash}})).status()).toBe(409);
- await expect(page.getByRole('button',{name:oldId,exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'View prior request',exact:true})).toBeVisible();
+ await expect(page.locator('code').filter({hasText:oldId})).toBeVisible();
  await expect(page.getByText('Replacement revision comparison',{exact:true})).toBeVisible();
  await expect(page.getByText('Changed action.target',{exact:true})).toBeVisible();
  await expect(page.getByText('Previous authorization cannot be reused.',{exact:false})).toBeVisible();
@@ -255,6 +256,9 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  await page.getByRole('button',{name:'Run isolated test',exact:true}).click();
  await expect(page.getByText(/Isolated test: Configured browser approval v1/)).toBeVisible();
  await page.getByRole('button',{name:'Activate policy',exact:true}).click();
+ await expect(page.getByText('Confirm policy activation',{exact:true})).toBeVisible();
+ await expect(page.getByText('Version 1 · TESTING',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Confirm activation',exact:true}).click();
  await expect(page.getByText('Policy activated. Existing requests retain their original version snapshot.')).toBeVisible();
  await page.getByRole('button',{name:'Preview active resolution',exact:true}).click();
  await expect(page.getByText(/Resolved policy: Configured browser approval v1/)).toBeVisible();
@@ -387,7 +391,7 @@ test('G5 two-user request for information pauses approval until response',async(
  await rp.getByLabel('Request title',{exact:true}).fill('G5 collaboration browser request');
  await rp.getByLabel('Target',{exact:true}).fill('isolated-target-for-info');
  await rp.getByRole('button',{name:'Submit request',exact:true}).click();
- await expect(rp.getByText('Exact action to be approved',{exact:true})).toBeVisible();
+ await expect(rp.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
  const id=rp.url().split('/').pop()!;
  const headers={authorization:'Bearer '+f.token};
  const original=await(await request.get('/api/v1/requests/'+id,{headers})).json();
@@ -540,7 +544,7 @@ test('G1 browser policy selectors create a matching request and keep latest draf
  await rp.getByLabel('Request title',{exact:true}).fill('Selector matched browser request');
  await rp.getByLabel('Target',{exact:true}).fill('safe-selector-test');
  await rp.getByRole('button',{name:'Submit request',exact:true}).click();
- await expect(rp.getByText('Exact action to be approved',{exact:true})).toBeVisible();
+ await expect(rp.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
  const id=rp.url().split('/').pop()!;
  const actual=await(await adminContext.request.get('/api/v1/requests/'+id)).json();
  expect(actual.source.tenant_id).toBe('finance');
@@ -558,6 +562,9 @@ test('G1 browser policy selectors create a matching request and keep latest draf
  await policyRow.getByRole('button',{name:'Open',exact:true}).click();
  await expect(ap.getByLabel('Policy name',{exact:true})).toHaveValue('Browser selector draft v2');
  await ap.getByRole('button',{name:'Disable active',exact:true}).click();
+ await expect(ap.getByText('Confirm active policy disable',{exact:true})).toBeVisible();
+ await expect(ap.getByText('Version 2 · DRAFT',{exact:true})).toBeVisible();
+ await ap.getByRole('button',{name:'Confirm disable',exact:true}).click();
  await expect(ap.getByText('Active policy version disabled.')).toBeVisible();
  await expect(ap.getByLabel('Policy name',{exact:true})).toHaveValue('Browser selector draft v2');
  await adminContext.close();await reqContext.close();
@@ -713,8 +720,9 @@ test('G9 safe configuration import preview is a nonmutating conflict report',asy
  const before=await(await context.request.get('/api/v1/integrations/configuration-export')).json();
  await page.getByRole('button',{name:'Preview safe export',exact:true}).click();
  await page.getByRole('button',{name:'Preview import conflicts',exact:true}).click();
- await expect(page.getByText('Dry-run only — no changes applied',{exact:true})).toBeVisible();
- await expect(page.getByText('No permissions, credentials, approval policy or notification content can be imported from this preview.',{exact:true})).toBeVisible();
+ await expect(page.getByText('Manual preparation required — no changes applied',{exact:true})).toBeVisible();
+ await expect(page.getByText('Automatic import and activation are unavailable.',{exact:false})).toBeVisible();
+ await expect(page.getByText('No credentials, recipients or notification message bodies were exported.',{exact:false})).toBeVisible();
  const after=await(await context.request.get('/api/v1/integrations/configuration-export')).json();
  expect(after).toEqual(before);
  await context.close();
@@ -763,9 +771,9 @@ test('G12 Home action summary includes authorized approvals after the first 100 
   }
   expect(expected).toBeGreaterThanOrEqual(101);
   await page.goto('/home');
-  const summary=page.getByRole('region',{name:'Action summary'});
+  const summary=page.getByRole('region',{name:'My work at a glance'});
   await expect(summary.getByRole('button',{name:/Needs my decision/}).locator('strong')).toHaveText(String(expected));
-  await expect(page.getByText('Summary totals are lower bounds',{exact:false})).toHaveCount(0);
+  await expect(page.getByText('These are lower-bound counts',{exact:false})).toHaveCount(0);
  }finally{
   await context.close();
  }
@@ -780,7 +788,7 @@ test('G12 Home overdue drilldown opens an actual filtered approval queue',async(
    const url=new URL(response.url());
    return url.pathname==='/api/v1/requests' && url.searchParams.get('view')==='overdue';
   });
-  await page.getByRole('region',{name:'Action summary'}).getByRole('button',{name:/Overdue/}).click();
+  await page.getByRole('region',{name:'My work at a glance'}).getByRole('button',{name:/Overdue/}).click();
   const response=await filtered;
   expect(response.status()).toBe(200);
   await expect(page).toHaveURL(/\/approvals\?view=overdue$/);
