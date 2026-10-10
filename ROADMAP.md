@@ -12,8 +12,92 @@ Existing Work Packets/PRs are retained and reused, not deleted or multiplied.
 the latest authorized Work Packet. **External evidence contracts:**
 docs/USER_SCENARIOS.md, docs/SURFACE_RECONCILIATION.md,
 docs/FULL_USER_E2E.md, docs/INTEGRATION.md, docs/OPERATIONS.md.
-**Competitive evidence:** docs/COMPETITIVE_GCI_GRANT_20261010.md (Jira /
-Teleport official documents classified separately from observed UI).
+**Competitive evidence:** docs/COMPETITIVE_GCI_GRANT_20261010.md and
+docs/UX_COMPETITOR_RESEARCH_20261009.md (14 vendor reference products;
+official documentation separate from observed UI). **First next UX task:
+P0-UX-0** below.
+
+
+## P0-UX-0 — OWNER FIRST: competitor UI/UX gap analysis before further screen development
+
+**STATE=PLANNED / PRIORITY=P0-UX-FIRST / Owner WP #67 (existing packet, revision 6).**
+This is the **highest-priority prerequisite for NEW discretionary M2–M4 UI/UX
+implementation**, not a ninth product milestone and not a reason to stop
+independent security/reliability P0 fixes or the M6/M7/M8 qualification gates.
+Existing completed sources and existing roadmaps/Work Packets remain authoritative.
+
+**Why first:** Grant already implements many approval/policy/audit capabilities
+but their browser navigation and task visibility do not yet present a coherent
+approver-first product. Avoid more NOC-style or speculative UI construction before
+identifying valuable competitor-proven screen patterns and current Grant gaps.
+
+**Reuse rather than restart:** `docs/UX_COMPETITOR_RESEARCH_20261009.md` (14
+named products), `docs/COMPETITIVE_GCI_GRANT_20261010.md` (official Jira/
+Teleport documented evidence versus actual Grant code), Product Foundation
+PF-CI [#99](https://github.com/datarelay-labs/datarelay-product-foundation/issues/99)
+and merged [#100](https://github.com/datarelay-labs/datarelay-product-foundation/pull/100)
+(licensed REA 6.3.0 source pilot and evidence/provenance tooling). Do not
+create another generic browser collector, REA server or competitive framework.
+
+### First research/implementation queue (five screen families)
+
+| Order | Grant screen / functional flow | Initial vendor comparators (documentation first) | Required conclusion |
+| --- | --- | --- | --- |
+| **UX-01 · P0** | My approvals / Request Inbox, Hold/Deny, pending vs overdue | Teleport, Jira Service Management, Microsoft Entra My Access | Screen-level worklist/detail/action flow, explicit one-seat voting and overdue truthfulness |
+| **UX-02 · P0** | Emailed Approve/Hold/Deny → no-login 4-digit PIN → optional OTP/fresh TOTP → separate final Confirm | Jira Service Management, ServiceNow | Actual human entrypoint, states and errors; distinguish existing unmounted code from functioning page |
+| **UX-03 · P0** | Login, sidebar hierarchy, System Administration / Grant Mail and Account Security | Keycloak, ServiceNow plus DataRelay Control reference | Shared Foundation component vs Grant extension; real capability/RBAC truth, desktop and 320/375px |
+| **UX-04 · P0** | Policy lifecycle, approval groups, MFA rules, notifications and templates | Teleport, StrongDM, Jira Service Management | Admin list→detail→edit→preview progression and stale-editor/concurrent-admin risk |
+| **UX-05 · P1** | Request detail, action fingerprint, reviewer history, audit and reported execution | ServiceNow, Microsoft Entra My Access | Progressive evidence, decision vs actual effect, clear pending/failed/unknown status |
+
+Six first-pass references: **Teleport, Jira Service Management, Microsoft Entra
+My Access, ServiceNow, Keycloak, StrongDM**. Additional existing 14-product
+research is reused only when it resolves a specific unresolved question, rather
+than a new exhaustive survey or full proprietary code reverse engineering.
+
+### Ordered execution and required deliverables
+
+1. **Inventory current Grant as-built screens:** compare exact branch/HEAD,
+   routes, Foundation AuthLayout/ProductShell/AdministrationHub versions,
+   role/capability filters, selected screens, source/backend/API, actual
+   mounted vs standalone UI, existing tests and installed build identity.
+2. **Collect grounded competitive screen evidence:** official public help,
+   UI images/videos and legitimately accessible read-only UI where independently
+   authorized. Record vendor product/edition/version/role/date/source URL,
+   real screenshot digest ONLY when actually captured. Published documentation
+   is `DOCUMENTED`, never mislabeled `OBSERVED UI`.
+3. **Build one Grant-owned screen/feature Gap Matrix** (new bounded
+   `docs/GRANT_UI_UX_GAP_MATRIX.md` or existing competitive evidence record):
+   screen/task, reference, exact evidence class + URL, Grant source path/HEAD,
+   `SOURCE_PRESENT | PRESENT_BUT_UNMOUNTED | UX_DEFECT | CONFIRMED_GAP |
+   UNKNOWN | DEFER`, usability impact, priority, dependency, acceptance
+   scenario, and **Foundation shared vs Grant-owned** implementation route.
+   Absence of a screenshot/document reference never proves a feature absent.
+4. **Selective REA deep analysis only if it answers a real gap:** use existing
+   PF-CI static workflows on first-party or independently licensed/authorized
+   open-source/local JS/Electron/native code, pinned exact version, source SHA
+   and license; inspect component/state/API architecture, not copy implementation
+   or private algorithms. No unauthorized proprietary application reverse
+   engineering, login bypass, network/credential capture or rerouting previously
+   platform-denied Playwright/Grant browser actions. **REA execution itself is
+   optional and cannot block the screen Gap Matrix.**
+5. **Turn findings into owned, tested improvements:** deduplicate against M1
+   completed UX code; rank the first 3–5 meaningful screen changes by user
+   value and implementation readiness; map shared Auth/Menu/Admin work to
+   Foundation and actual Grant behavior to existing M2/M3/M4 Work Packets;
+   preserve current routes, RBAC and approval/execution separation. Finish
+   with affected Web unit/TypeScript/build/static and permitted browser UI
+   checks, then exact-installed-HEAD direct Full User E2E under M7; none of
+   these gates may be inferred from research or source tests.
+
+**UX-0 research acceptance:** evidence-backed comparison across the five
+screen families; explicit disposition for the six first-pass vendors;
+ranked, nonduplicative top 3–5 implementable changes with Foundation/Grant
+owner and tests; unsupported/blocked and deferred findings documented.
+Only then resume **discretionary screen redesign**. Safety-blocked
+`web/src/app.tsx`, Administration/styles/mobile/real browser, broad
+`grant/core.py`, G12 builder and previously denied platform effects remain
+blocked independently, regardless of vendor/REA tool. E2E, CI and release
+readiness are NEVER established by this research.
 
 ## Product outcome and hard invariants
 
@@ -66,7 +150,7 @@ source tests solely to re-report green history.
 
 | Bundle / rough size | Primary original roadmap & Foundation / CI mapping | Existing verified implementation (preserve) | Remaining completion work / gate |
 | --- | --- | --- | --- |
-| **M1 · P0 / L — baseline reconciliation + approval workbench truthfulness** | G0, G5/G6, G9; G-CI-1; WPs **#67, #75, #42, #48, #81** | G0 task-oriented Home/Queues, backend user-scoped request filters, G3–G6 plans and delegation, audit timeline; all 24 trees inventoried; official-vendor source comparison | **First runnable batch now:** replace the single canonical roadmap/Issue #37, classify Jira/Teleport official claims and actual Grant source, fix UTC request-created date/filter drift and surface CURRENT reviewer-seat votes distinctly from chronological audit; focused Web/static. No new approval group/workflow engine. Actual same-HEAD user QA remains separate M7. |
+| **M1 · P0 / L — baseline reconciliation + approval workbench truthfulness** | G0, G5/G6, G9; G-CI-1; WPs **#67, #75, #42, #48, #81** | G0 task-oriented Home/Queues, backend user-scoped request filters, G3–G6 plans and delegation, audit timeline; all 24 trees inventoried; official-vendor source comparison | **Previously completed M1 source batch:** replace the single canonical roadmap/Issue #37, classify Jira/Teleport official claims and actual Grant source, fix UTC request-created date/filter drift and surface CURRENT reviewer-seat votes distinctly from chronological audit; focused Web/static. No new approval group/workflow engine. Actual same-HEAD user QA remains separate M7. |
 | **M2 · P0 / XL — shared Foundation Login/Sidebar/Administration** | G0, B2, G-CI-2 role/first-run surface; WPs **#57, #60, #67, #75** | Foundation pf8.4 ten packs, shared AuthLayout/ProductShell/AdministrationHub, nested task navigation, Account & Security | **2 proven member ADMIN_CAPABILITY_CONTRADICTION** findings (core.users, grant.smtp.test); complete Control-reference centered login/no white border, keyboard & truthful 9-task/4-group Admin, Grant Mail extension and mobile 320/375 visual parity. Earlier Grant app/styles/Administration source, screenshot, PR and credential/browser **platform-denied** actions remain blocked. No workaround. |
 | **M3 · P0 / XL — policy + groups + notification operations** | G1–G4, G2, B4, G-CI-2; WPs **#38, #40, #64, #65, #66, #77, #80, #83–#86** | Versioned Draft→Testing→Active→Disabled, clone/history, single/any/all/quorum/sequential, original/delegate/hold, template sets/preview/branding, filtered delivery queues, recovery-paused direct-send safety | Fix **actual** two-admin lost-update/race for Deny/MFA/integration verification floor, stale template editors, safe registered recipient selection and real SMTP/health guidance where authorized; no fake SMTP credential editor or unapproved live test sends. Prior broad Phase1 write safety refusal still binding. |
 | **M4 · P0 / XL — authenticated identity and G10A real email decisions** | G10/G10A, B3, G-CI-3; WPs **#50, #58, #67, #70–#73, #78, #90** | Account session/TOTP/recovery, signed scoped email answer intents, 4-digit PIN, optional OTP/fresh TOTP, expiry/replay/audit/seat safeguards, unmounted portal+HTTP adapter | Mount allowed no-login decision Web route (not prior blocked app.tsx by workaround); verify current-policy anti-downgrade, current recipient/delegate and named-identity attribution; REAL two-mailbox receipt/PIN/MFA explicit decision. No new credential/role boundary without approval. |
@@ -77,15 +161,23 @@ source tests solely to re-report green history.
 
 ### Priority & dependency rule
 
-M1 is the **first runnable group** on the already integrated candidate.
-After M1 implementation, continue M2/M3/M4 P0 that is independently permitted;
-M5 may proceed in parallel on independently protected worktrees. M6/M7 require
-real owner-authorized external accounts and product effects. M8 is LAST.
-Where a group is blocked, record the exact denied tool/target/error in its
-existing packet, keep other independently runnable groups moving, and never
-relabel a protected write under another packet, tool, branch or host.
-Vendor-inspired **G-CI-2 P1 polish waits for P0**; optional **G-CI-5 P2 REA**
-never delays Grant 1.0 or circumvents earlier browser collector safety stops.
+**P0-UX-0 is FIRST for new M2/M3/M4 discretionary screen design:**
+finish grounded competitor UI/UX Gap Matrix and Foundation-vs-Grant ownership
+before continuing fresh UI construction. Previous M1 approval-workbench source
+and G9 audit source are already complete; never redo them. **This is a UI
+sequencing priority, not authority to postpone independent P0 security/
+reliability fixes, current-user E2E defect remediation, or external M6/M7
+release prerequisites.**
+
+After UX-0, run authorized M2/M3/M4 UI slices by user-value ranking and native
+contracts; M5 recovery/security may proceed separately if authorized. M6/M7
+require real owner-authorized external accounts/product effects. M8 is LAST.
+Where blocked, preserve the exact previously denied target/tool/effect; never
+reroute under another Work Packet, tool, branch or host. G-CI-2 has **P0 UX
+evidence priority**, while generic cosmetic polish remains P1. G-CI-5 REA
+remains an optional P2 *analysis technique* usable only on separately
+authorized/licensed targets; REA must not block the matrix or bypass denied
+browser/source operations.
 
 ## Canonical backlog crosswalk — all pre-reset themes accounted for
 
@@ -106,7 +198,7 @@ never delays Grant 1.0 or circumvents earlier browser collector safety stops.
 | G11: DataRelay source execution + Stellar receiver | M6 |
 | G12: full two-user E2E, CI/freeze/release | M7 + M8 |
 | PF-B2/B3/B4/B5/B6 | M2/M4/M3+M5/M5/M6+M7+M8 respectively |
-| G-CI-1/2/3/4/5 | M1 evidence; P1 M2/M3 polish; M4 invariants; M6/M7 tests; optional post-1.0 research |
+| G-CI-1/2/3/4/5 | **P0-UX-0 first for new M2–M4 screen development**; M1 previous source evidence retained; P1 cosmetic polish later; M4 invariants, M6/M7 actual tests; REA P2 optional licensed analysis |
 
 ### Existing Work Packets / PRs are not deleted
 
