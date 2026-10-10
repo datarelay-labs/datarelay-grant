@@ -14,16 +14,53 @@ docs/USER_SCENARIOS.md, docs/SURFACE_RECONCILIATION.md,
 docs/FULL_USER_E2E.md, docs/INTEGRATION.md, docs/OPERATIONS.md.
 **Competitive evidence:** docs/COMPETITIVE_GCI_GRANT_20261010.md and
 docs/UX_COMPETITOR_RESEARCH_20261009.md (14 vendor reference products;
-official documentation separate from observed UI). **First next UX task:
-P0-UX-0** below.
+official documentation separate from observed UI). **FIRST DELIVERY PRIORITY:
+P0-UI-1 actual product UI implementation.** P0-UX-0 competitive source/REA
+research is already completed and becomes reusable evidence, not a new research
+queue.
 
 
-## P0-UX-0 — OWNER FIRST: competitor UI/UX gap analysis before further screen development
+## P0-UI-1 — OWNER FIRST: implement competitor-informed Grant UI (2026-10-11)
 
-**STATE=REA_STATIC_SOURCE_COMPLETE + INBOX_SAFE_UI_SOURCE_COMPLETE / NEXT_SCREEN_P0=WAITING_BLOCKER / PRIORITY=P0-UX-FIRST / Owner WP #67 (existing packet, revision 8).**
-This is the **highest-priority prerequisite for NEW discretionary M2–M4 UI/UX
-implementation**, not a ninth product milestone and not a reason to stop
-independent security/reliability P0 fixes or the M6/M7/M8 qualification gates.
+**STATE=IMPLEMENTATION_FIRST / PRIORITY=TOP_P0_UI_PRODUCT_DELIVERY / EXISTING_WP=#67 rev13.**
+**Owner decision:** the competitor documentation and licensed Keycloak REA
+analysis have been completed; further survey or optional reverse engineering
+must NOT displace real user-facing Grant UI implementation. Reuse the existing
+six-vendor Gap Matrix, five-screen design, offline synthetic prototype, and
+Keycloak 26.5.7 pinned source analysis. The offline prototype is *not* the
+mounted product, and static/component tests are *not* real-user E2E.
+
+**Delivery order** — execute the highest-priority independently authorized
+product UI slice, RED→GREEN → native Web/Static (API if backend changed) →
+ordinary Git push → exact-source review. A proven platform denial blocks **only**
+that exact effect: do not bypass it under another path/tool/worktree. Continue
+the next independent UI task rather than returning to broad research.
+
+| Priority | Real screen & acceptance outcome | Ownership / existing WP | Current implementation, next unblocked gate |
+| --- | --- | --- | --- |
+| **UI-01 · P0** | **My approvals / Inbox**: task-first action kind, exact target and decision deadline, clear Review details, truthful pending vs overdue, role-safe filters and accessible keyboard/mobile worklist | **Grant M1 #67** (existing RED tests) | Four quick views already live in source; new row/detail source edit was platform safety-denied. Preserved rev9 RED regression stash `03cf0142b688baa17892e48785ff01803fa81c0e`; source change WAITING, no tool/worktree reroute |
+| **UI-02 · P0** | **Emailed human PIN approval**: issued emailed link actually lands on no-login four-digit PIN form, optional policy OTP/fresh TOTP, selected Approve/Hold/Deny and **separate final Confirm**; expired/replayed and revoked links fail closed | **Grant M4 #67/#70–#73** | Decision portal/adapter source exists but **unmounted**; `web/src/app.tsx` previously denied, no alternate entrypoint bypass. Real distinct mailbox/user confirmation is separate M7 |
+| **UI-03 · P0** | **Login / sidebar / Administration**: grouped Foundation work/menu, centered first viewport desktop and 320/375, role-true 9 tasks/4 groups, Grant Mail task and keyboard navigation | **Foundation B2 + Grant M2 #57/#75/#67** | Shared pf8.4 installed; member `core.users` / `grant.smtp.test` capability contradictions unresolved. Prior admin/styles/mobile/browser denial remains; shared Foundation owns global layout |
+| **UI-04 · P0** | **Policies, approver groups, templates**: task-first list→detail→edit→preview, Draft/Testing/Active state and safe explicit save/409 conflict after another admin changes Deny/MFA/integration/templates | **Grant M3 #38/#64–#66/#80** | Existing lifecycle and templates source already present; two-admin lost update requires server CAS, not cosmetic UI-only conflict. Prior protected backend/Phase1 denial persists |
+| **UI-05 · P0 independent / P1 polish** | **Request detail, collaboration, evidence**: immutable action and original target first, explicit human decision, reliable current seats vs history, clearly *reported* external execution, review-confirm message with fresh request revision | **Grant M1/M5 #67/#63**, E2E **M7 #54** | Server-authoritative progress display already fixed by `ecc5110a` / `f2a4e5d`. Next **runnable independent UI slice**: collaboration review must require explicit fresh message review and clear stale intent. No approval/execution granted by showing UI |
+
+**Exit evidence per screen:** exact source + RED/GREEN tests + Web/build/static,
+then authorized **installed same-HEAD desktop and 320/375 mobile/keyboard
+browser pass, two different authorized real users and two mailboxes** for PIN,
+and real external effect readback only under M6/M7. Mark each SOURCE_COMPLETE,
+USER_E2E_PASS, or WAITING_BLOCKER independently; do not call screenshots, mocks,
+vendor documentation or a successful unit test deployed acceptance. Full source
+and user gates precede M8 release authority. No duplicate Work Packets or PRs.
+
+---
+
+## P0-UX-0 — completed competitor research, reused for P0-UI-1
+
+**STATE=REA_STATIC_SOURCE_COMPLETE + INBOX_SAFE_UI_SOURCE_COMPLETE / NEXT_SCREEN_P0=P0-UI-1 / PRIORITY=RESEARCH_ALREADY_COMPLETE / Owner WP #67 (existing packet; UI implementation revision 13).**
+This prerequisite is **satisfied by the documented six-vendor screen Gap Matrix,
+Keycloak licensed static REA and five-screen blueprint**; further UI delivery
+is tracked under P0-UI-1 above. It remains separate from independent safety,
+security, real-user M6/M7 and M8 release qualification gates.
 Existing completed sources and existing roadmaps/Work Packets remain authoritative.
 
 **Why first:** Grant already implements many approval/policy/audit capabilities
@@ -166,10 +203,12 @@ source tests solely to re-report green history.
 
 ### Priority & dependency rule
 
-**P0-UX-0 is FIRST for new M2/M3/M4 discretionary screen design:**
-finish grounded competitor UI/UX Gap Matrix and Foundation-vs-Grant ownership
-before continuing fresh UI construction. Previous M1 approval-workbench source
-and G9 audit source are already complete; never redo them. **This is a UI
+**P0-UI-1 IMPLEMENTATION is FIRST for new M1–M4 screen delivery:**
+the grounded competitive Gap Matrix, licensed Keycloak REA and existing design
+were already produced under completed P0-UX-0. Execute real screens in the
+UI-01→UI-05 priority above, selecting the next independently safe UI task when
+a specific P0 source path is platform-denied. Do not repeat past research or
+finished M1 approval-workbench/G9 audit code. **This is a UI
 sequencing priority, not authority to postpone independent P0 security/
 reliability fixes, current-user E2E defect remediation, or external M6/M7
 release prerequisites.**
@@ -203,7 +242,7 @@ browser/source operations.
 | G11: DataRelay source execution + Stellar receiver | M6 |
 | G12: full two-user E2E, CI/freeze/release | M7 + M8 |
 | PF-B2/B3/B4/B5/B6 | M2/M4/M3+M5/M5/M6+M7+M8 respectively |
-| G-CI-1/2/3/4/5 | **P0-UX-0 first for new M2–M4 screen development**; M1 previous source evidence retained; P1 cosmetic polish later; M4 invariants, M6/M7 actual tests; REA P2 optional licensed analysis |
+| G-CI-1/2/3/4/5 | **P0-UI-1 actual UI implementation FIRST; P0-UX-0 research DONE**; M1 previous source evidence retained; P1 cosmetic polish later; M4 invariants, M6/M7 actual tests; REA P2 optional licensed analysis |
 
 ### Existing Work Packets / PRs are not deleted
 
