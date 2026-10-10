@@ -4,9 +4,32 @@ import { api } from './api';
 import { Form, Select, TextArea, useTask } from './common';
 import type { ApproverGroup, RequestRow } from './types';
 
+export type EscalationReview = {
+  kind: 'escalation'; target: string; afterSeconds: number; revision: number;
+};
+
 type Pending =
-  | { kind: 'escalation'; target: string; afterSeconds: number }
+  | EscalationReview
   | { kind: 'reassignment'; from: string; to: string; reason: string; revision: number };
+
+// A reviewed routing confirmation is bound to the exact server request revision.
+export function prepareEscalationUpdate(review: EscalationReview, currentRevision: number) {
+  if (!Number.isSafeInteger(review.revision) || review.revision < 1 ||
+      review.revision !== currentRevision) {
+    throw new Error('ROUTING_CHANGED_REVIEW_REQUIRED');
+  }
+  const [kind, id] = review.target.split(':', 2);
+  if ((kind !== 'group' && kind !== 'user') || !id ||
+      !Number.isSafeInteger(review.afterSeconds) ||
+      review.afterSeconds < 60 || review.afterSeconds > 604800) {
+    throw new Error('ESCALATION_DRAFT_INVALID');
+  }
+  return {
+    ...(kind === 'group' ? { target_group_id: id } : { target_user_id: id }),
+    after_seconds: review.afterSeconds,
+    expected_revision: review.revision,
+  };
+}
 
 export function RequestAdminControls({ row, onReload }: { row: RequestRow; onReload: () => Promise<void> }) {
   const task = useTask();
@@ -40,7 +63,7 @@ export function RequestAdminControls({ row, onReload }: { row: RequestRow; onRel
       task.setNotice('Select a target and an escalation delay between 1 and 10080 minutes.');
       return;
     }
-    setPending({ kind: 'escalation', target, afterSeconds });
+    setPending({ kind: 'escalation', target, afterSeconds, revision: row.revision });
   }
 
   function stageReassignment() {
@@ -54,11 +77,8 @@ export function RequestAdminControls({ row, onReload }: { row: RequestRow; onRel
   async function confirm() {
     if (!pending) return;
     if (pending.kind === 'escalation') {
-      const [kind, id] = pending.target.split(':', 2);
-      await api('/requests/' + encodeURIComponent(row.id) + '/escalation', 'POST', {
-        ...(kind === 'group' ? { target_group_id: id } : { target_user_id: id }),
-        after_seconds: pending.afterSeconds,
-      });
+      await api('/requests/' + encodeURIComponent(row.id) + '/escalation', 'POST',
+        prepareEscalationUpdate(pending, row.revision));
     } else {
       await api('/requests/' + encodeURIComponent(row.id) + '/reassign', 'POST', {
         from_approver_id: pending.from,
@@ -101,7 +121,7 @@ export function RequestAdminControls({ row, onReload }: { row: RequestRow; onRel
     </Card>
     {pending && <Alert tone="warning" title={pending.kind === 'escalation' ? 'Confirm escalation schedule' : 'Confirm approver reassignment'}>
       {pending.kind === 'escalation'
-        ? <p>Add {pending.target.startsWith('group:') ? 'group' : 'person'} approvers after {pending.afterSeconds / 60} minutes from request creation. {row.created_at + pending.afterSeconds <= Date.now() / 1000 ? 'This delay has already elapsed; escalation may apply on the next maintenance cycle. ' : ''}This never executes the action.</p>
+        ? <p>Add {pending.target.startsWith('group:') ? 'group' : 'person'} approvers after {pending.afterSeconds / 60} minutes from request creation, reviewing request revision {pending.revision}. {row.created_at + pending.afterSeconds <= Date.now() / 1000 ? 'This delay has already elapsed; escalation may apply on the next maintenance cycle. ' : ''}This never executes the action.</p>
         : <p>Replace {labelOf(pending.from)} with {labelOf(pending.to)} at revision {pending.revision}. Previous audit records remain intact.</p>}
       <div className="grant-actions">
         <Button disabled={task.busy} onClick={() => void task.run(confirm)}>Confirm routing change</Button>
