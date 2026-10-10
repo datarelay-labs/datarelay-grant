@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+import math
 import re
 import sqlite3
 from collections.abc import Mapping
@@ -46,7 +47,12 @@ def sanitized_detail(value: str | dict) -> dict:
     for key, item in data.items():
         if (
             (key in SAFE_ENUMS and isinstance(item, str) and item in SAFE_ENUMS[key])
-            or (key in SAFE_NUMBERS and type(item) in (int, float))
+            or (
+                key in SAFE_NUMBERS
+                and type(item) in (int, float)
+                and math.isfinite(item)
+                and abs(item) <= 1_000_000_000
+            )
             or (key in SAFE_BOOLEAN and isinstance(item, bool))
             or (key in SAFE_IDS and isinstance(item, str) and SAFE_IDENTIFIER.fullmatch(item))
         ):
@@ -170,7 +176,14 @@ def audit_export(
         # Spreadsheet programs may evaluate untrusted text beginning with
         # formula operators. Prefix a quote for export-only neutralization.
         writer.writerow([
-            ("'" + item if item and item[0] in "=+-@\t\r" else item)
+            (
+                "'" + item
+                if item and (
+                    item[0] in "\t\r\n"
+                    or item.lstrip(" \t\r\n").startswith(("=", "+", "-", "@"))
+                )
+                else item
+            )
             for item in values
         ])
     return stream.getvalue()

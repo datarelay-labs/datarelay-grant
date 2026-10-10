@@ -607,3 +607,20 @@ test('G9 safe configuration import preview is a nonmutating conflict report',asy
  expect(after).toEqual(before);
  await context.close();
 });
+
+test('G10 real browser sign-out revokes audit access and cached administrator view',async({browser})=>{
+ const context=await browser.newContext(),page=await context.newPage();
+ await login(page,'admin');
+ await page.goto('/audit');
+ await expect(page.getByText('Audit evidence explorer',{exact:true})).toBeVisible();
+ const previous=await context.request.get('/api/v1/admin/audit/search');
+ expect(previous.status()).toBe(200);
+ await page.getByRole('button',{name:'Sign out',exact:true}).first().click();
+ await expect(page.getByLabel('Username',{exact:true})).toBeVisible();
+ const revoked=await context.request.get('/api/v1/admin/audit/search');
+ expect(revoked.status()).toBe(401);
+ await page.goto('/audit');
+ await expect(page.getByLabel('Username',{exact:true})).toBeVisible();
+ await expect(page.getByText('Audit evidence explorer',{exact:true})).toHaveCount(0);
+ await context.close();
+});

@@ -1,6 +1,6 @@
 # Grant 1.0 implementation status
 
-Updated: 2026-10-08. G9 implementation lane: Issue #48; G8 predecessor: Issue #46 / PR #47; G7: Issue #44 / PR #45; G5/G6: Issue #42 / PR #43; G3/G4: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
+Updated: 2026-10-08. G10 implementation lane: Issue #50; G9 predecessor: Issue #48 / PR #49; G8: Issue #46 / PR #47; G7: Issue #44 / PR #45; G5/G6: Issue #42 / PR #43; G3/G4: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
 Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
@@ -102,6 +102,23 @@ capability remains whatever is present and tested at the committed candidate HEA
   configuration import/apply is NOT available: dry-run preview never changes
   an authorization or credential. Actual policy portability/release remains
   subject to the accepted G9/G10 design and owner release authority.
+- G10 security hardening candidate: current human role and session authority
+  is revalidated within domain transactions even for request/approval-list
+  reads and privilege changes; integration-token current scope and revocation
+  are checked before request-list maintenance/read. Concurrent competing
+  human decisions and executor consumption remain single-commit, replay-bound
+  operations. Audit export omits nonfinite/oversized numeric evidence and
+  neutralizes leading-whitespace spreadsheet formulas. CSRF, Origin,
+  malformed-JSON, nonadmin, disabled-session and role-downgrade checks run
+  only against disposable test identities. A per-worktree Linux Web/Browser
+  qualification lock prevents Vite dist replacement while Playwright reads it
+  (smoke PASS). This G10 source reached 219 Python/API test cases PASS
+  (including 12 new targeted security cases), 12 frontend unit PASS, static/
+  typecheck/build PASS and 21 real Chromium browser journeys PASS. A source
+  script modification during the original API wrapper run caused a post-test
+  shell exit 127; exact committed-head wrapper and GitHub CI confirmation
+  must be recorded independently in Work Packet #50. No release readiness is
+  asserted from this fixture-only evidence.
 - Immutable action, explicit approve/hold/deny, expiry, bounded reminders,
   cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.

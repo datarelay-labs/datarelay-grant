@@ -374,6 +374,12 @@ Maintain and extend:
 Add focused security testing for multi-approval, delegation, policy activation/import
 and notification preview.
 
+Development candidate: Work Packet #50 extends current-authority read/role
+verification, concurrent grant decisions, audit-export anomalous value and CSV
+formula handling, CSRF/Origin and safe import-preview misuse testing. This is
+source hardening, not proof of external consumer authorization; exact HEAD
+CI, browser, G11 and release qualification remain independent.
+
 ### G11 — DataRelay and Stellar external acceptance
 
 Priority: **P0**

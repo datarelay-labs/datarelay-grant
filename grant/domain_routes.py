@@ -103,7 +103,7 @@ def register_domain(app, actor, human, reader):
 
     @app.get("/api/v1/requests/{ident}")
     def get_request(ident: str, request: Request):
-        return core.get(reader(request), ident)
+        return core.get(reader(request), ident, required_scope="request:read")
 
     @app.get("/api/v1/requests/{ident}/comparison")
     def request_comparison(ident: str, request: Request):
