@@ -2,6 +2,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { RequestEvidence, approvalProgressLabel, approvalWaitingLabel } from '../../src/request_evidence';
+import { RequestDeliveryResendConfirmation, createRequestDeliveryResendReview } from '../../src/request_delivery_resend_review';
 import type { RequestRow } from '../../src/types';
 
 function request(extra: Partial<RequestRow> = {}): RequestRow {
@@ -32,9 +33,9 @@ function request(extra: Partial<RequestRow> = {}): RequestRow {
   };
 }
 
-function markup(row: RequestRow, isAdmin: boolean, busy = false): string {
+function markup(row: RequestRow, isAdmin: boolean, busy = false, blockedResendIds: string[] = []): string {
   return renderToStaticMarkup(createElement(RequestEvidence, {
-    row, isAdmin, busy, onResend: () => undefined,
+    row, isAdmin, busy, onReviewResend: () => undefined, blockedResendIds,
   }));
 }
 
@@ -53,23 +54,48 @@ describe('Grant progressive evidence and resend boundary', () => {
 
   it('keeps retry controls hidden from member users regardless of delivery state', () => {
     const html = markup(request(), false);
-    expect(html).not.toContain('Resend email');
-    expect(html).not.toContain('Resend webhook');
+    expect(html).not.toContain('Review resend email');
+    expect(html).not.toContain('Review resend webhook');
   });
 
   it('only exposes admin resend for FAILED or PENDING, never successful deliveries', () => {
     const html = markup(request(), true);
-    expect(html).toContain('Resend email');
-    expect(html).toContain('Resend webhook');
-    expect(html.match(/Resend email/g)).toHaveLength(1);
-    expect(html.match(/Resend webhook/g)).toHaveLength(1);
+    expect(html).toContain('Review resend email');
+    expect(html).toContain('Review resend webhook');
+    expect(html.match(/Review resend email/g)).toHaveLength(1);
+    expect(html.match(/Review resend webhook/g)).toHaveLength(1);
   });
 
   it('uses the exact existing busy guard on resend controls', () => {
     const html = markup(request(), true, true);
-    expect(html).toContain('Resend email');
+    expect(html).toContain('Review resend email');
     expect(html).toContain('disabled=""');
-    expect(html).toContain('Resend webhook');
+    expect(html).toContain('Review resend webhook');
+  });
+
+  it('suppresses repeated delivery review until explicit refreshed evidence', () => {
+    const html = markup(request(), true, false, ['failed1']);
+    expect(html).not.toContain('Review resend email');
+    expect(html).toContain('A resend was requested or attempted');
+    expect(html).toContain('Refresh the request before another review');
+    expect(html).toContain('Review resend webhook');
+  });
+
+  it('renders the explicit confirmation inside Delivery history next to the review action', () => {
+    const row = request();
+    const intent = createRequestDeliveryResendReview(row, row.deliveries![0]);
+    const html = renderToStaticMarkup(createElement(RequestEvidence, {
+      row, isAdmin: true, busy: false,
+      onReviewResend: () => undefined,
+      resendConfirmation: createElement(RequestDeliveryResendConfirmation, {
+        row, isAdmin: true, intent, busy: false,
+        onConfirm: () => undefined, onCancel: () => undefined,
+      }),
+    }));
+    expect(html).toContain('Confirm notification resend');
+    expect(html.indexOf('Delivery history')).toBeLessThan(html.indexOf('Confirm notification resend'));
+    expect(html.indexOf('Confirm notification resend')).toBeLessThan(html.indexOf('Delivery attempts'));
+    expect(html).toContain('Review resend email');
   });
 
   it('can show an empty history without fabricating evidence or exposing actions', () => {
@@ -77,8 +103,8 @@ describe('Grant progressive evidence and resend boundary', () => {
     expect(html).toContain('Delivery attempts · 0');
     expect(html).toContain('Recorded events · 0');
     expect(html).not.toContain('request.created');
-    expect(html).not.toContain('Resend email</button>');
-    expect(html).not.toContain('Resend webhook</button>');
+    expect(html).not.toContain('Review resend email</button>');
+    expect(html).not.toContain('Review resend webhook</button>');
   });
 });
 
@@ -108,7 +134,7 @@ describe('G-CI reviewer history is visible but never self-asserts identity or ex
     expect(html).toContain('Current seat votes');
     expect(html).toContain('not proof of the person');
     expect(html).toContain('Request timeline');
-    expect(html).not.toContain('Resend email');
+    expect(html).not.toContain('Review resend email');
   });
 
   it('does not turn an empty vote record into a decision or successful execution', () => {
@@ -161,7 +187,7 @@ describe('Approval progress must not be synthesized from vote records', () => {
     expect(html).toContain('1 of 2 approved');
     expect(html).not.toContain('2 of 2 approved');
     expect(html).toContain('Approval seat 2');
-    expect(html).not.toContain('Resend email');
+    expect(html).not.toContain('Review resend email');
   });
 });
 

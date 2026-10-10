@@ -8,13 +8,14 @@ import { RequestCollaboration } from './collaboration';
 import { RevisionComparison } from './revision_diff';
 import { RequestActionSummary } from './request_action_summary';
 import { RequestEvidence, approvalProgressLabel, approvalWaitingLabel } from './request_evidence';
+import { RequestDeliveryResendConfirmation, createRequestDeliveryResendReview, canConfirmRequestDeliveryResend, submitReviewedRequestDeliveryResend, type RequestDeliveryResendIntent } from './request_delivery_resend_review';
 import { RequestStageSummary } from './request_stage_summary';
 import { RequestExecutionReport } from './request_execution_report';
 import { recordDecisionThenRead } from './request_decision_receipt';
 import { prepareRequestCreationReview, isCurrentRequestCreationReview, submitReviewedRequestCreationWithFreshRead, RequestCreationConfirmation, type NewRequestDraft, type RequestCreationReview } from './request_creation_review';
 import { RequestDecisionConfirmation, prepareRequestDecisionReview, isCurrentRequestDecisionReview, type RequestDecisionReview, type RequestDecisionChoice } from './request_decision_review';
 import { Form, Select, State, TextArea, useTask, when } from './common';
-import type { Profile, RequestRow, Outcome, User } from './types';
+import type { Profile, RequestRow, Delivery, Outcome, User } from './types';
 
 type Navigate = (path: string) => void;
 export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; predecessorId?: string }) {
@@ -136,12 +137,20 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  const [row, setRow] = useState<RequestRow | null>(null);
  const [reason, setReason] = useState('');
  const [reviewed, setReviewed] = useState<RequestDecisionReview | null>(null);
+ const [pendingResend, setPendingResend] = useState<RequestDeliveryResendIntent | null>(null);
+ const [resendAttempted, setResendAttempted] = useState<string[]>([]);
  const task = useTask();
  async function load() {
   setReviewed(null);
+  setPendingResend(null);
   setRow(await api<RequestRow>('/requests/' + encodeURIComponent(id)));
  }
- useEffect(() => { setRow(null); void task.run(load); }, [id]);
+ useEffect(() => {
+  setRow(null);
+  setPendingResend(null);
+  setResendAttempted([]);
+  void task.run(load);
+ }, [id]);
  function chooseForReview(choice: RequestDecisionChoice) {
   if (!row) return;
   setReviewed(prepareRequestDecisionReview(
@@ -181,13 +190,43 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
     ? 'Recorded. Delivery and execution are tracked separately.'
     : 'Decision recorded by the server. Updated details could not be refreshed; refresh before another action. Delivery and execution remain separate.');
  };
+ function reviewDeliveryResend(delivery: Delivery) {
+  if (!row || user.role !== 'admin' || resendAttempted.includes(delivery.id)) return;
+  setPendingResend(createRequestDeliveryResendReview(row, delivery));
+ }
+ async function confirmDeliveryResend() {
+  const intent = pendingResend;
+  if (!intent) return;
+  if (!canConfirmRequestDeliveryResend(intent, row, user.role === 'admin')) {
+   setPendingResend(null);
+   throw new Error('DELIVERY_CHANGED_REVIEW_REQUIRED');
+  }
+  // Hide a previously reviewed resend even when its outcome is ambiguous.
+  // Only an explicit successful Refresh re-enables review of that delivery.
+  setPendingResend(null);
+  setResendAttempted((current) => current.includes(intent.deliveryId)
+   ? current : [...current, intent.deliveryId]);
+  await submitReviewedRequestDeliveryResend(
+   intent, user.role === 'admin',
+   (requestId) => api<RequestRow>('/requests/' + encodeURIComponent(requestId)),
+   (deliveryId) => api('/deliveries/' + encodeURIComponent(deliveryId) + '/resend', 'POST'),
+  );
+  try {
+   await load();
+   task.setNotice('Notification resend scheduled. This does not approve or execute the requested action.');
+  } catch {
+   task.setNotice('Notification resend accepted, but updated delivery history could not be loaded. Refresh before reviewing another resend; no approval or external action was executed.');
+  }
+ }
  const actionable = row && ['AWAITING','HELD'].includes(row.state) && row.deadline * 1000 > Date.now();
  const canDecide = actionable && row.viewer_can_decide === true && row.collaboration_state === 'OPEN' && row.requester_id !== user.id;
  const canCancel = row && !row.execution_id && !['CANCELLED','DENIED','EXPIRED'].includes(row.state) && (row.requester_id === user.id || user.role === 'admin');
  const canReplace = row &&
   (row.state === 'CANCELLED' || (row.state === 'EXPIRED' && row.collaboration_state === 'CHANGES_REQUESTED')) &&
   (row.requester_id === user.id || user.role === 'admin');
- return <div className="grant-stack">{task.feedback}<div className="grant-actions"><Button variant="secondary" onClick={()=>navigate('/requests')}>Back to requests</Button><Button variant="secondary" disabled={task.busy} onClick={()=>void task.run(load)}>Refresh</Button></div>{row && <>
+ return <div className="grant-stack">{task.feedback}<div className="grant-actions"><Button variant="secondary" onClick={()=>navigate('/requests')}>Back to requests</Button><Button variant="secondary" disabled={task.busy} onClick={()=>void task.run(async()=>{
+ await load();setResendAttempted([]);
+ })}>Refresh</Button></div>{row && <>
  <Card title={row.title} description={row.reason || 'No additional reason supplied.'}><RequestStageSummary row={row}/>{row.viewer_delegated_for && <p>You are acting as the recorded substitute for an assigned approver. Both identities remain auditable.</p>}<dl className="grant-facts"><dt>External ID</dt><dd>{row.external_id}</dd><dt>Approval deadline</dt><dd>{when(row.deadline)}</dd><dt>Execution validity</dt><dd>{when(row.grant_until)}</dd><dt>Decision by / at</dt><dd>{row.decision_actor ?? 'Not decided'} / {when(row.decision_at)}</dd><dt>Revision</dt><dd>{row.revision}</dd><dt>Approval progress</dt><dd>{approvalProgressLabel(row)}</dd><dt>Waiting on</dt><dd>{approvalWaitingLabel(row)}</dd></dl></Card>
  {row.escalation && <Card title="Escalation status"><dl className="grant-facts"><dt>Escalation target</dt><dd>{row.escalation.target_group_id ? 'Approver group' : 'Approver'} · {row.escalation.target_members.length} member(s)</dd><dt>Escalation due</dt><dd>{when(row.escalation.due_at)}</dd><dt>Applied at</dt><dd>{when(row.escalation.fired_at)}</dd></dl><p>Escalation changes only who may decide; it never executes the requested action.</p></Card>}
  <RequestActionSummary row={row} canReplace={Boolean(canReplace)} navigate={navigate} />
@@ -219,9 +258,15 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
    row={row}
    isAdmin={user.role === 'admin'}
    busy={task.busy}
-   onResend={(deliveryId) => { void task.run(async () => {
-     await api('/deliveries/' + deliveryId + '/resend', 'POST');
-     await load();
-   }); }}
+   onReviewResend={reviewDeliveryResend}
+   blockedResendIds={resendAttempted}
+   resendConfirmation={<RequestDeliveryResendConfirmation
+     row={row}
+     isAdmin={user.role === 'admin'}
+     intent={pendingResend}
+     busy={task.busy}
+     onCancel={()=>setPendingResend(null)}
+     onConfirm={()=>void task.run(confirmDeliveryResend)}
+   />}
  /></>}</div>;
 }

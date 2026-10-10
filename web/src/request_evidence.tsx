@@ -1,6 +1,7 @@
 import { Button, Card } from '@datarelay-labs/foundation';
+import type { ReactNode } from 'react';
 import { State, when } from './common';
-import type { RequestRow } from './types';
+import type { RequestRow, Delivery } from './types';
 
 /** A missing role-scoped server projection is not an approval or an implicit
  * default one-seat policy. Share these labels with the RequestDetail header.
@@ -25,12 +26,14 @@ export function approvalWaitingLabel(row: Pick<RequestRow, 'approval_progress'>)
  * Resending remains product-owned and is only surfaced to current administrators.
  */
 export function RequestEvidence({
-  row, isAdmin, busy, onResend,
+  row, isAdmin, busy, onReviewResend, blockedResendIds = [], resendConfirmation,
 }: {
   row: RequestRow;
   isAdmin: boolean;
   busy: boolean;
-  onResend: (deliveryId: string) => void;
+  onReviewResend: (delivery: Delivery) => void;
+  blockedResendIds?: readonly string[];
+  resendConfirmation?: ReactNode;
 }) {
   // The server already role-scopes this projection. Current votes represent
   // assigned approval seats, not independently verified human identities.
@@ -73,7 +76,8 @@ export function RequestEvidence({
           </ul>
         ) : <p>No reviewer decisions recorded.</p>}
       </Card>
-      <Card title="Delivery history" description="Transport acceptance does not prove external execution. Resend repeats only the notification.">
+      <Card title="Delivery history" description="Transport acceptance does not prove external execution. Review before resending any notification; a reviewed resend never approves or executes the requested action.">
+        {resendConfirmation}
         <details>
           <summary>Delivery attempts · {row.deliveries?.length ?? 0}</summary>
           {row.deliveries?.map((delivery) => (
@@ -83,13 +87,17 @@ export function RequestEvidence({
                 <small>{delivery.attempts} attempts {delivery.last_error ? '· ' + delivery.last_error : ''}</small>
               </div>
               {isAdmin && ['FAILED', 'PENDING'].includes(delivery.state) && (
-                <Button
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() => onResend(delivery.id)}
-                >
-                  Resend {delivery.kind}
-                </Button>
+                blockedResendIds.includes(delivery.id) ? (
+                  <small role="status">A resend was requested or attempted. Refresh the request before another review.</small>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => onReviewResend(delivery)}
+                  >
+                    Review resend {delivery.kind}
+                  </Button>
+                )
               )}
             </div>
           ))}
