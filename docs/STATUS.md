@@ -1,6 +1,6 @@
 # Grant 1.0 implementation status
 
-Updated: 2026-10-08. G5/G6 implementation lane: Issue #42; G3/G4 predecessor: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
+Updated: 2026-10-08. G8 implementation lane: Issue #46; G7 predecessor: Issue #44 / PR #45; G5/G6: Issue #42 / PR #43; G3/G4: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
 Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
@@ -81,8 +81,18 @@ capability remains whatever is present and tested at the committed candidate HEA
   These are development-worktree observations; exact-HEAD CI and
   owner/release acceptance remain separate. PR #45 review hardening now counts
   only unresolved latest failed callbacks per request, not historical failures
-  subsequently followed by successful delivery. G7 focused regressions
-  including the recovery case passed on the corrected source.
+  subsequently followed by successful delivery. G7 focused regressions passed
+  on the corrected source.
+- G8 development candidate: administrator-only read-only integration diagnostics
+  (requests, callback transport acceptance/failure, scoped credential metadata and
+  issuance/revocation events, connection test history), explicit producer/executor
+  purpose presets and a metadata-only planning manifest for safe configuration
+  export. It never serializes callback destinations, credentials or mail text
+  and is not an executable backup or configuration import. Current failed
+  callback counts reconcile per-request latest webhook outcomes with G7;
+  request:read is neutral and does not trigger the mixed-credential warning.
+  Last accepted HTTP callback is not proof of product execution. Real DataRelay/Stellar approval
+  integration and reversible validated import are NOT implemented.
 - Immutable action, explicit approve/hold/deny, expiry, bounded reminders,
   cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.
@@ -119,6 +129,15 @@ inbox regressions cover these five cases. Combined source has now passed
 180 Python/API cases, 12 frontend unit checks, static/typecheck/production
 build and 13 Chromium journeys (actual browser). Exact committed-head CI,
 release provenance and owner acceptance remain in Work Packet #42.
+
+G8 + inherited G7 review hardening passed **198 Python/API**,
+**12 web unit**, static/typecheck/production build and **17 real Chromium**
+journeys. Focused browser evidence also verifies downloaded JSON manifest
+format and executor scope presets without creating a credential.
+Additional focused negative/portability cases cover callback audit timestamps,
+history partitioning, redacted template bodies and nonexecutable export. These
+are development-worktree tests and do not meet real DataRelay/Stellar E2E,
+final committed-head CI or owner release acceptance.
 
 Browser test sessions use disposable accounts and actual loopback SMTP/HTTP.
 These are not real DataRelay/Stellar integration or production evidence.

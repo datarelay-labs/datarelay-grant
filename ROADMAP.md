@@ -319,6 +319,12 @@ Exit evidence:
 - actual Stellar approved/denied correlated events;
 - no fixture promoted to external evidence.
 
+Development candidate: Work Packet #46 implements read-only integration
+diagnostics, credential-role presets, bounded audit/connection-test history,
+and a non-executable safe configuration metadata export. Full validated import,
+real DataRelay/Stellar integration, external E2E and release acceptance remain
+uncompleted gates. No test fixture is promoted to external PASS.
+
 ### G9 — Audit, export and operations
 
 Priority: **P0**

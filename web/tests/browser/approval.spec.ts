@@ -499,3 +499,52 @@ test('G7 operations surface is unavailable to non-administrators',async({browser
  expect(result.status()).toBe(403);
  await context.close();
 });
+
+test('G8 integration health and safe export are visible without revealing credentials',async({browser})=>{
+ const f=fixture();
+ const context=await browser.newContext();
+ const page=await context.newPage();
+ await login(page,'admin');
+ await page.goto('/integrations');
+ await page.getByLabel('Credential purpose',{exact:true}).selectOption('executor');
+ await expect(page.getByRole('checkbox',{name:'request:create',exact:true})).not.toBeChecked();
+ await expect(page.getByRole('checkbox',{name:'request:read',exact:true})).toBeChecked();
+ await expect(page.getByRole('checkbox',{name:'grant:consume',exact:true})).toBeChecked();
+ await expect(page.getByRole('checkbox',{name:'result:write',exact:true})).toBeChecked();
+ await expect(page.getByText('Mixed integration credential',{exact:true})).toHaveCount(0);
+ await expect(page.getByText('Integration health and activity',{exact:true})).toBeVisible();
+ await page.getByLabel('Inspect integration health',{exact:true}).selectOption({label:'Isolated DataRelay fixture'});
+ await expect(page.getByText('Credential roles',{exact:true})).toBeVisible();
+ await expect(page.getByText('Connection test history',{exact:true})).toBeVisible();
+ await expect(page.getByText('Credential audit history',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Preview safe export',exact:true}).click();
+ await expect(page.getByText('No automatic import or execution',{exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Save JSON manifest',exact:true})).toBeVisible();
+ const downloadPending=page.waitForEvent('download');
+ await page.getByRole('button',{name:'Save JSON manifest',exact:true}).click();
+ const downloaded=await downloadPending;
+ expect(downloaded.suggestedFilename()).toBe('grant-configuration-manifest.json');
+ const downloadedPath=await downloaded.path();
+ expect(downloadedPath).toBeTruthy();
+ const downloadedManifest=JSON.parse(fs.readFileSync(downloadedPath!,'utf8'));
+ expect(downloadedManifest.secret_free).toBe(true);
+ expect(downloadedManifest.import_supported).toBe(false);
+ const exported=await context.request.get('/api/v1/integrations/configuration-export');
+ expect(exported.status()).toBe(200);
+ const manifest=await exported.json();
+ expect(manifest.import_supported).toBe(false);
+ expect(manifest.executable_restore_bundle).toBe(false);
+ expect(JSON.stringify(manifest)).not.toContain(f.token);
+ await context.close();
+});
+
+test('G8 integration diagnostics are unavailable to non-administrators',async({browser})=>{
+ const context=await browser.newContext();
+ const page=await context.newPage();
+ await login(page,'approver');
+ await page.goto('/integrations');
+ await expect(page.getByText('Page unavailable',{exact:true})).toBeVisible();
+ const response=await context.request.get('/api/v1/integrations/configuration-export');
+ expect(response.status()).toBe(403);
+ await context.close();
+});

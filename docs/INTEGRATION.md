@@ -22,6 +22,26 @@ Credentials use `Authorization: Bearer <token>`. Give request producers only
 scopes, not authority to make a human decision. Identifiers/scopes can be listed and
 credentials revoked without exposing their raw value again.
 
+## Integration management (development candidate)
+
+The administrator may view current integration request activity and last
+HTTP callback delivery acceptance/failure, compare nonsecret credential
+scope roles (producer, executor, observer, mixed), and inspect recorded connection-test
+and credential lifecycle events. A successful callback means only that an
+HTTP transport accepted the notification.
+
+The read-only GET /api/v1/integrations/configuration-export contract exposes
+a schema_version 1 planning manifest containing integration identities,
+latest policy selectors/timing, and the names/event types of configured mail
+templates. It does not export callback URLs, signing/authentication material
+or message text and cannot be replayed or imported as a working installation.
+Use the installation protected backup/recovery path for state and approved
+secret storage for cryptographic material.
+
+This metadata and the example below are local development contract evidence,
+not proof that one real DataRelay execution boundary or a deployed Stellar
+receiver has completed acceptance.
+
 ## Request and decision
 
 `POST /api/v1/requests` persists a request and returns HTTP 202 with a stable request

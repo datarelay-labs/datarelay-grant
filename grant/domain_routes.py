@@ -4,6 +4,7 @@ from typing import Literal
 
 from fastapi import Query, Request
 
+from .integration_diagnostics import configuration_manifest, diagnostics
 from .models import (
     ApproverGroup,
     ApproverGroupUpdate,
@@ -242,6 +243,14 @@ def register_domain(app, actor, human, reader):
     def integrations(request: Request):
         return core.integrations(actor(request))
 
+    @app.get("/api/v1/integrations/configuration-export")
+    def integration_manifest(request: Request):
+        return configuration_manifest(app.state.db, actor(request))
+
+    @app.get("/api/v1/integrations/{ident}/diagnostics")
+    def integration_diagnostics(ident: str, request: Request):
+        return diagnostics(app.state.db, actor(request), ident)
+
     @app.post("/api/v1/integrations", status_code=201)
     def add_integration(body: Integration, request: Request):
         return core.create_integration(actor(request), body)
@@ -266,6 +275,7 @@ def register_domain(app, actor, human, reader):
     def test_connection(ident: str, request: Request):
         import time
 
+        from .auth import require_current_authority
         from .db import audit, json_text, uid
         from .errors import GrantError
         from .transport import send_webhook
@@ -274,6 +284,9 @@ def register_domain(app, actor, human, reader):
         principal.require_admin()
         auth.rate("connection-test:" + principal.id, 5, 60)
         with app.state.db.transaction(write=False) as conn:
+            # Reject revoked sessions before even attempting an external
+            # diagnostic. Callback acceptance is not action authorization.
+            require_current_authority(conn, principal)
             row = conn.execute(
                 "SELECT destination FROM integrations WHERE id=? AND enabled=1", (ident,)
             ).fetchone()
@@ -292,8 +305,17 @@ def register_domain(app, actor, human, reader):
         try:
             send_webhook(app.state.settings, app.state.settings.unseal(row[0]), payload, event_id)
         except Exception as exc:
+            # Failure is still an operator-visible diagnostic, never proof of
+            # execution. Store a bounded event without URL or exception text.
+            with app.state.db.transaction() as conn:
+                require_current_authority(conn, principal)
+                audit(
+                    conn, None, principal.id, "integration.test_failed",
+                    {"integration_id": ident, "event_id": event_id},
+                )
             raise GrantError("CONNECTION_TEST_FAILED", 502) from exc
         with app.state.db.transaction() as conn:
+            require_current_authority(conn, principal)
             audit(
                 conn,
                 None,
