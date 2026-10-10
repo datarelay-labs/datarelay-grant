@@ -1,4 +1,4 @@
-from grant.models import ApproverGroup, Profile
+from grant.models import ApproverGroup, ApproverGroupUpdate, Profile
 
 
 def group_profile(env, mode, required=None):
@@ -51,8 +51,13 @@ def test_any_one_group_approval_authorizes_once(env):
 def test_all_group_requires_every_member_and_snapshots_membership(env):
     profile, group = group_profile(env, "ALL")
     request = create(env, profile)
+    group_revision = next(row["updated_at"] for row in env.core.approver_groups(env.admin)
+                          if row["id"] == group["id"])
     env.core.update_approver_group(
-        env.admin, group["id"], ApproverGroup(name="changed", member_ids=[env.users["approver"]["id"]])
+        env.admin, group["id"], ApproverGroupUpdate(
+            name="changed", member_ids=[env.users["approver"]["id"]],
+            expected_updated_at=group_revision,
+        )
     )
     first = decide(env, "approver", request)
     assert first.status_code == 200, first.text
@@ -207,3 +212,128 @@ def test_policy_preview_contains_full_group_approval_plan(env):
         env.users["approver"]["id"],
         env.users["stranger"]["id"],
     ]
+
+
+def test_stale_group_editor_cannot_reduce_future_all_threshold(env):
+    """Two real admin sessions must not silently lose an ALL approver."""
+    import secrets
+
+    from fastapi.testclient import TestClient
+
+    admin_a = env.human("admin")
+    second_password = secrets.token_urlsafe(24)
+    env.auth.create_user(
+        "second-admin", "second-admin@example.invalid", second_password, "admin"
+    )
+    admin_b = TestClient(env.app)
+    try:
+        login = admin_b.post(
+            "/api/v1/auth/login",
+            json={"username": "second-admin", "password": second_password},
+        )
+        assert login.status_code == 200
+        admin_b.headers["x-csrf-token"] = login.json()["csrf"]
+        extra = env.auth.create_user(
+            "extra-approver", "extra-approver@example.invalid",
+            secrets.token_urlsafe(24), "member",
+        )["id"]
+        original_members = [
+            env.users["approver"]["id"], env.users["stranger"]["id"],
+        ]
+        created = admin_a.post(
+            "/api/v1/approver-groups",
+            json={"name": "Three-party review", "member_ids": original_members},
+        )
+        assert created.status_code == 201, created.text
+        group_id = created.json()["id"]
+        path = f"/api/v1/approver-groups/{group_id}"
+
+        def read_group(client):
+            response = client.get("/api/v1/approver-groups")
+            assert response.status_code == 200
+            return next(row for row in response.json() if row["id"] == group_id)
+
+        baseline_a = read_group(admin_a)
+        baseline_b = read_group(admin_b)
+        assert baseline_a["updated_at"] == baseline_b["updated_at"]
+        policy = env.core.create_profile(
+            env.admin,
+            Profile(
+                name="All must approve",
+                integration_id=env.integration["id"],
+                approver_id=original_members[0],
+                approval_mode="ALL",
+                approver_group_id=group_id,
+                action_kind="service.concurrent-approvers",
+            ),
+        )
+        env.core.transition_profile(env.admin, policy["id"], "TESTING")
+        env.core.transition_profile(env.admin, policy["id"], "ACTIVE")
+
+        added = admin_a.put(
+            path,
+            json={
+                "name": baseline_a["name"],
+                "member_ids": original_members + [extra],
+                "expected_updated_at": baseline_a["updated_at"],
+            },
+        )
+        assert added.status_code == 200, added.text
+
+        with env.db.transaction(write=False) as conn:
+            before_audit = conn.execute(
+                "SELECT COUNT(*) FROM audit WHERE action='approver_group.updated' "
+                "AND json_extract(detail, '$.group_id')=?",
+                (group_id,),
+            ).fetchone()[0]
+
+        stale = admin_b.put(
+            path,
+            json={
+                "name": "Renamed from stale browser",
+                "member_ids": original_members,
+                "expected_updated_at": baseline_b["updated_at"],
+            },
+        )
+        assert stale.status_code == 409, stale.text
+        assert stale.json()["error"]["code"] == "APPROVER_GROUP_STALE"
+        unchanged = read_group(admin_b)
+        assert unchanged["member_ids"] == original_members + [extra]
+        with env.db.transaction(write=False) as conn:
+            assert conn.execute(
+                "SELECT COUNT(*) FROM audit WHERE action='approver_group.updated' "
+                "AND json_extract(detail, '$.group_id')=?",
+                (group_id,),
+            ).fetchone()[0] == before_audit
+
+        request = env.human("requester").post(
+            "/api/v1/requests",
+            json=env.intake(
+                profile_id=policy["id"],
+                action={
+                    "kind": policy["action_kind"],
+                    "target": "disposable",
+                    "parameters": {},
+                },
+            ),
+        )
+        assert request.status_code == 202, request.text
+        assert request.json()["approval_plan"]["required"] == 3
+
+        refreshed = admin_b.put(
+            path,
+            json={
+                "name": "Reviewed current members",
+                "member_ids": unchanged["member_ids"],
+                "expected_updated_at": unchanged["updated_at"],
+            },
+        )
+        assert refreshed.status_code == 200, refreshed.text
+        assert refreshed.json()["updated_at"] > unchanged["updated_at"]
+        assert read_group(admin_a)["member_ids"] == original_members + [extra]
+        assert admin_b.put(path, json={
+            "name": "Unsafe blind overwrite",
+            "member_ids": original_members,
+        }).status_code == 422
+    finally:
+        admin_b.close()
