@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import sqlite3
 import time
 from datetime import UTC, datetime
@@ -23,6 +24,7 @@ from .mail_templates import (
 )
 from .models import (
     ApproverGroup,
+    ApproverGroupUpdate,
     Cancel,
     Consume,
     Decision,
@@ -815,6 +817,8 @@ class Core:
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
             row = self._load(conn, ident)
+            if row["revision"] != body.expected_revision:
+                raise GrantError("STALE_OR_FINAL_REQUEST", 409)
             if row["state"] not in ("AWAITING", "HELD") or row["execution_id"]:
                 raise GrantError("ESCALATION_NOT_ALLOWED", 409)
             if body.target_user_id:
@@ -866,14 +870,21 @@ class Core:
                     due,
                 ),
             )
+            changed = conn.execute(
+                "UPDATE requests SET revision=revision+1 WHERE id=? AND revision=?",
+                (ident, body.expected_revision),
+            )
+            if changed.rowcount != 1:
+                raise GrantError("STALE_OR_FINAL_REQUEST", 409)
             detail = {
                 "target_user_id": body.target_user_id,
                 "target_group_id": body.target_group_id,
                 "target_members": members,
                 "due_at": due,
+                "request_revision": body.expected_revision + 1,
             }
             audit(conn, ident, actor.id, "request.escalation_configured", detail)
-            return {"request_id": ident, **detail}
+            return {"request_id": ident, "revision": body.expected_revision + 1, **detail}
 
     def reassign_request(self, actor: Principal, ident: str, body: Reassign) -> dict:
         actor.require_admin()
@@ -930,7 +941,7 @@ class Core:
                 [(ident, member, pos) for pos, member in enumerate(body.member_ids)],
             )
             audit(conn, None, actor.id, "approver_group.created", {"group_id": ident, "member_ids": body.member_ids})
-        return {"id": ident, "name": body.name, "member_ids": body.member_ids, "enabled": True}
+        return {"id": ident, "name": body.name, "member_ids": body.member_ids, "enabled": True, "updated_at": now}
 
     def approver_groups(self, actor: Principal) -> list[dict]:
         actor.require_admin()
@@ -940,22 +951,40 @@ class Core:
                 "SELECT user_id FROM approver_group_members WHERE group_id=? ORDER BY position", (group["id"],)
             ).fetchall()]} for group in groups]
 
-    def update_approver_group(self, actor: Principal, ident: str, body: ApproverGroup) -> dict:
+    def update_approver_group(self, actor: Principal, ident: str, body: ApproverGroupUpdate) -> dict:
         actor.require_admin()
+        # BEGIN IMMEDIATE makes the review and write one serialized decision.
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
-            if not conn.execute("SELECT id FROM approver_groups WHERE id=?", (ident,)).fetchone():
+            current = conn.execute(
+                "SELECT updated_at FROM approver_groups WHERE id=?", (ident,)
+            ).fetchone()
+            if not current:
                 raise GrantError("APPROVER_GROUP_NOT_FOUND", 404)
+            if current["updated_at"] != body.expected_updated_at:
+                raise GrantError("APPROVER_GROUP_STALE", 409)
             for member_id in body.member_ids:
                 row = conn.execute("SELECT enabled FROM users WHERE id=?", (member_id,)).fetchone()
                 if not row or not row["enabled"]:
                     raise GrantError("GROUP_MEMBER_UNAVAILABLE", 409)
-            conn.execute("UPDATE approver_groups SET name=?,updated_at=? WHERE id=?", (body.name, time.time(), ident))
+            # Advance the revision even if two edits occur at the same clock tick.
+            updated_at = max(time.time(), math.nextafter(current["updated_at"], math.inf))
+            changed = conn.execute(
+                "UPDATE approver_groups SET name=?,updated_at=? WHERE id=? AND updated_at=?",
+                (body.name, updated_at, ident, body.expected_updated_at),
+            )
+            if changed.rowcount != 1:
+                raise GrantError("APPROVER_GROUP_STALE", 409)
             conn.execute("DELETE FROM approver_group_members WHERE group_id=?", (ident,))
             conn.executemany("INSERT INTO approver_group_members(group_id,user_id,position) VALUES(?,?,?)",
                              [(ident, member, pos) for pos, member in enumerate(body.member_ids)])
-            audit(conn, None, actor.id, "approver_group.updated", {"group_id": ident, "member_ids": body.member_ids})
-        return {"id": ident, "name": body.name, "member_ids": body.member_ids, "enabled": True}
+            audit(conn, None, actor.id, "approver_group.updated", {
+                "group_id": ident, "member_ids": body.member_ids,
+                "previous_revision": body.expected_updated_at,
+                "updated_revision": updated_at,
+            })
+        return {"id": ident, "name": body.name, "member_ids": body.member_ids,
+                "enabled": True, "updated_at": updated_at}
 
     @staticmethod
     def _approval_plan(conn: sqlite3.Connection, profile: sqlite3.Row) -> dict:

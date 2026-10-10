@@ -29,6 +29,7 @@ export async function api<T>(path: string, method = 'GET', body?: unknown): Prom
 export function errorText(error: unknown): string {
  if (error instanceof ApiError) {
   if (error.status === 401) return 'Sign in again or complete MFA. No action was retried.';
+  if (error.status === 409 && error.code === 'APPROVER_GROUP_STALE') return 'Another administrator changed this group. Review and reload the saved group before retrying.';
   if (error.status === 409) return 'The request changed or is no longer actionable. Refresh before deciding. (' + error.code + ')';
   return error.code.replaceAll('_', ' ');
  }

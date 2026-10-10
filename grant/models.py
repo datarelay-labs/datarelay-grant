@@ -65,6 +65,7 @@ class Escalation(Input):
     target_user_id: str | None = Field(default=None, min_length=1, max_length=100)
     target_group_id: str | None = Field(default=None, min_length=1, max_length=100)
     after_seconds: int = Field(ge=60, le=604800)
+    expected_revision: int = Field(ge=1)
 
     @model_validator(mode="after")
     def exactly_one_target(self):
@@ -280,6 +281,11 @@ class ApproverGroup(Input):
         if len(set(value)) != len(value):
             raise ValueError("Group members must be unique")
         return value
+
+
+class ApproverGroupUpdate(ApproverGroup):
+    # Required for every external edit: never overwrite a newer group membership.
+    expected_updated_at: float = Field(ge=0, allow_inf_nan=False)
 
 
 class ApprovalPlan(Input):

@@ -1,9 +1,22 @@
 # Grant 1.0 implementation status
 
-Updated: 2026-10-09. G12 quality preflight: Issue #54; G11 external readiness: Issue #52 / Draft PR #53; G10: Issue #50 / PR #51; G9: Issue #48 / PR #49; G8: Issue #46 / PR #47; G7: Issue #44 / PR #45; G5/G6: Issue #42 / PR #43; G3/G4: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
+Updated: 2026-10-10. G12 quality preflight: Issue #54; G11 external readiness: Issue #52 / Draft PR #53; G10: Issue #50 / PR #51; G9: Issue #48 / PR #49; G8: Issue #46 / PR #47; G7: Issue #44 / PR #45; G5/G6: Issue #42 / PR #43; G3/G4: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
 Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
+
+## G3/G4 optimistic concurrency convergence on current G10A branch (2026-10-10)
+
+The newest integrated Grant candidate now carries the previously tested G3/G4
+fail-closed cross-admin safety contracts: approver group updates require the
+exact reviewed `expected_updated_at` and stale writes cannot overwrite newer
+membership; request escalation scheduling requires the reviewed
+`expected_revision`, advances request revision atomically and rejects stale
+routing changes without an additional audit event. The typed browser clients
+pass loaded revisions and require explicit reload/review after conflicts.
+Source/test verification and exact committed HEAD are tracked by Work Packet
+#95. This is a pre-release API contract change, not proof of real-email,
+independent human/browser or G11/G12 customer acceptance.
 
 ## G1 save-first policy lifecycle draft-integrity guard (2026-10-09)
 

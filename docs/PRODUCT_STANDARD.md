@@ -238,6 +238,15 @@ Approvers may be:
 - individual Grant users;
 - administrator-managed groups.
 
+Editing a group requires the exact server `updated_at` loaded by that
+administrator. Group name and membership update in one serialized transaction;
+stale updates fail with HTTP 409 without changing membership, recording an
+update audit event, or altering any existing approval. The browser must not
+silently retry an edit based on an earlier group snapshot. A newly reviewed
+group revision is required to save again. Group creation is unaffected.
+This stricter pre-release PUT contract requires existing API clients to
+reload the group and send `expected_updated_at`.
+
 Self-approval remains prohibited unless a future explicit product requirement says
 otherwise for a narrowly defined use case.
 
@@ -256,6 +265,15 @@ Product 1.0 supports:
 - escalation to another user or group.
 
 Delegation and reassignment never rewrite historical attribution.
+
+Escalation configuration is a request-scoped routing edit and must include the
+latest `expected_revision` from the reviewed request. The server checks it
+atomically, increments request revision on a successful schedule replacement,
+and returns 409 without replacing a target or writing an audit event when
+another administrator has already changed the request or its escalation
+configuration. Explicit confirmation may never bypass this freshness check.
+This pre-release API contract requires operators to refresh stale requests;
+outstanding human approvals remain explicit and may need new revision reads.
 
 ## 9. Request collaboration
 
