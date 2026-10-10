@@ -5,6 +5,17 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G11 trusted product and Stellar evidence guard convergence (2026-10-10)
+
+The newer integrated source now carries reviewed non-executing G11 contract
+checks: product-trusted Grant integration identity, mandatory exact Control
+route/destination and immutable Stellar tenant/case/alert/state-revision
+correlation, with fail-closed malformed identifiers. A matching candidate
+readback is **not** independently verified external evidence. The Control
+legacy replay send endpoint is not mounted with a Grant guard, and an actual
+supported authenticated Stellar receiver is still absent. Work Packet #98
+records source tests; G11 external M3/M4 remain WAITING_INTEGRATION.
+
 ## G12 unpublished candidate metadata verification (2026-10-10)
 
 The exact-source candidate verifier now rejects false publication/release
@@ -689,7 +700,7 @@ separate, incomplete gates.
   200 at clean build fc89dadc. The existing Control failed-delivery-log replay
   operation exists but is not currently protected by a Grant consume guard.
   Grant-side pure consumer binding/replay and normalized Stellar receiver
-  correlation utilities have local contract coverage (29 focused cases PASS).
+  correlation utilities have 55 focused current-source regression cases PASS.
   They neither execute remote actions nor independently verify external
   effects. G11 M3/M4 remain WAITING_INTEGRATION pending a real product-owned
   guard/ledger and an actual supported Stellar receiving path; see
@@ -701,8 +712,8 @@ separate, incomplete gates.
   to a real send; even dry-run writes replay stage/audit rows, so no live POST
   was attempted. Existing Control source and regression tests establish that
   legacy failed-delivery replay can send twice when repeated and has no Grant
-  consume/effect ledger. Grant's pure replay readback checker now optionally
-  binds positive exact Control route and destination IDs before returning
+  consume/effect ledger. Grant's current pure replay readback checker requires
+  trusted positive exact Control route and destination IDs before returning
   a **non-independent** candidate record; no business effect or M3 PASS is
   claimed. Details: docs/G11_EXTERNAL_ACCEPTANCE.md.
 - G12 acceptance-validator hardening (active Work Packet #54): the evidence

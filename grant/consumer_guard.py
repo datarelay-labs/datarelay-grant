@@ -51,12 +51,16 @@ def check_product_claim(
     operation_key: str,
     execution_id: str,
     expected_action: Action,
+    expected_integration_id: str,
     reservation: ProductReservation,
 ) -> ClaimDisposition:
     """Inspect a claim without running the protected operation.
 
-    Product still requires its own atomic effect ledger and actual result
-    readback. The positive disposition is never permission for direct replay
+    expected_integration_id must come from the product's trusted installed
+    Grant integration configuration, NOT from a submitted request, callback
+    or untrusted claimed receipt. Product still requires its own atomic effect
+    ledger and actual result readback. The positive disposition is never
+    permission for direct replay
     from the Grant service, callbacks, or an HTTP delivery notification.
     """
     try:
@@ -65,7 +69,12 @@ def check_product_claim(
         bounded_json(exact_action)
         action_hash = fingerprint(exact_action)
         if (
-            request.get("state") != "APPROVED"
+            type(expected_integration_id) is not str
+            or not 1 <= len(expected_integration_id) <= 100
+            or any(ord(char) < 32 or ord(char) == 127 for char in expected_integration_id)
+            or type(request.get("integration_id")) is not str
+            or request.get("integration_id") != expected_integration_id
+            or request.get("state") != "APPROVED"
             or request.get("action_hash") != action_hash
             or fingerprint(Action.model_validate(request["action"]).model_dump())
             != action_hash
@@ -110,23 +119,34 @@ def check_product_claim(
 def validate_control_replay_readback(
     *,
     delivery_log_id: int,
+    expected_route_id: int,
+    expected_destination_id: int,
     response: dict,
     checkpoint_before: dict,
     checkpoint_after: dict,
-    expected_route_id: int | None = None,
-    expected_destination_id: int | None = None,
 ) -> dict:
     """Compare a DataRelay Control replay result against product-owned readbacks.
 
     Returns a bounded *candidate evidence record*, not independent acceptance.
     Only the consuming product's actual operation/audit and destination delivery
-    observations can satisfy M3. No network calls or product state mutation.
+    observations can satisfy M3. Expected route/destination MUST be taken from
+    independently trusted product operation bindings, not the response itself.
+    An empty checkpoint is valid where the product has no checkpoint row.
+    No network calls or product state mutation.
     """
     if (
-        type(delivery_log_id) is not int
+        type(expected_route_id) is not int
+        or expected_route_id <= 0
+        or type(expected_destination_id) is not int
+        or expected_destination_id <= 0
+        or type(delivery_log_id) is not int
         or delivery_log_id <= 0
         or not isinstance(response, dict)
         or response.get("log_id") != delivery_log_id
+        or type(response.get("route_id")) is not int
+        or response.get("route_id") != expected_route_id
+        or type(response.get("destination_id")) is not int
+        or response.get("destination_id") != expected_destination_id
         or response.get("dry_run") is not False
         or response.get("outcome") not in ("delivered", "failed")
         or not isinstance(checkpoint_before, dict)
@@ -136,20 +156,6 @@ def validate_control_replay_readback(
         or response["event_count"] < 1
         or response["event_count"] > 500
         or type(response.get("replay_run_id")) is not str
-        or (expected_route_id is None) != (expected_destination_id is None)
-        or (
-            expected_route_id is not None
-            and (
-                type(expected_route_id) is not int
-                or expected_route_id <= 0
-                or type(expected_destination_id) is not int
-                or expected_destination_id <= 0
-                or type(response.get("route_id")) is not int
-                or response["route_id"] != expected_route_id
-                or type(response.get("destination_id")) is not int
-                or response["destination_id"] != expected_destination_id
-            )
-        )
     ):
         raise ConsumerGuardError("CONTROL_REPLAY_EVIDENCE_INVALID")
     try:
@@ -183,6 +189,8 @@ def correlate_stellar_receiver_observation(
 
     The receiver_observation mapping is an operator-supplied normalized
     readback, NOT a promise of a specific vendor webhook payload field name.
+    A valid normalized readback MUST retain the exact source tenant, case,
+    alert and event state revision, as well as event/request IDs and outcome.
     Even a matching tuple is untrusted without independently querying the
     real deployed receiver.
     """
@@ -208,7 +216,7 @@ def correlate_stellar_receiver_observation(
         if (
             not isinstance(value, str)
             or not 1 <= len(value) <= 128
-            or any(c in value for c in "\r\n")
+            or any(ord(c) < 32 or ord(c) == 127 for c in value)
         ):
             raise ConsumerGuardError("STELLAR_CORRELATION_INVALID")
 
@@ -228,9 +236,15 @@ def correlate_stellar_receiver_observation(
         or receiver_observation.get("grant_request_id") != request_id
         or receiver_observation.get("tenant_id") != source["tenant_id"]
         or receiver_observation.get("case_id") != source["case_id"]
+        or type(receiver_observation.get("alert_id")) is not str
+        or receiver_observation.get("alert_id") != source["alert_id"]
+        or type(receiver_observation.get("state_revision")) is not int
+        or receiver_observation.get("state_revision") != grant_outcome["state_revision"]
         or receiver_observation.get("state") != grant_outcome["state"]
         or not isinstance(receiver_observation.get("receiver_record_id"), str)
         or not 1 <= len(receiver_observation["receiver_record_id"]) <= 128
+        or any(ord(c) < 32 or ord(c) == 127
+               for c in receiver_observation["receiver_record_id"])
     ):
         raise ConsumerGuardError("STELLAR_CORRELATION_INVALID")
     return {
@@ -241,6 +255,8 @@ def correlate_stellar_receiver_observation(
         "state": grant_outcome["state"],
         "tenant_matches": True,
         "case_matches": True,
+        "alert_matches": True,
+        "revision_matches": True,
         "feedback_excluded": True,
         "independently_verified": False,
         "acceptance_state": "RECEIVER_CORRELATION_PENDING_INDEPENDENT_READBACK",

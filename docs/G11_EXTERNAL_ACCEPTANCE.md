@@ -4,6 +4,27 @@ Observed 2026-10-08 by read-only inspection. This document is an acceptance
 readiness ledger, not an external integration PASS. Authority: Grant 1.0
 Product Standard, Roadmap G11, Integration Contract, Full User E2E.
 
+## 2026-10-10 current integrated pure G11 evidence checks (Work Packet #98)
+
+The current G10A integrated candidate now includes the reviewed G11 pure,
+**non-executing** security checks from the older Draft PR #53. Trusted
+product configuration must supply the expected Grant integration ID, and the
+current request must match it. The normalized Control replay readback must
+match **both required**, product-trusted positive Route and Destination IDs,
+rather than accepting the result's own claimed IDs. An absent Control stream
+checkpoint row may legitimately yield an empty unchanged checkpoint.
+Stellar normalized evidence must match the original tenant, case, **alert**
+and outcome **state revision**; malformed identifiers and ASCII controls fail
+closed. The helper never sends a request, starts or replays a Control action,
+nor authenticates the receiver; positive results remain explicitly
+independently_verified=false and require separate actual product readback.
+
+These are only development candidate source guarantees and deterministic test
+evidence. No Grant integration uses these helpers as a mounted real Control
+or Stellar effect path, and neither M3 nor M4 has passed external acceptance.
+The older phase-1 observations below are preserved as historical source
+evidence, not today's installed product-build identity.
+
 ## 2026-10-09 phase 1: source and safe API contract verification
 
 **Scope:** Grant and Control development sources and read-only service health.

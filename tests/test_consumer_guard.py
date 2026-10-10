@@ -14,10 +14,19 @@ from grant.consumer_guard import (
 from grant.core import fingerprint
 from grant.models import Action
 
-ACTION = Action(kind="service.delivery_log.replay", target="log/42", parameters={"log_id": 42})
+# Match the actual staged Control G11 pilot operation contract, never a free-form request.
+TRUSTED_GRANT_INTEGRATION_ID = "control-verified-installation-integration"
+ACTION = Action(
+    kind="datarelay.control.delivery_log.replay",
+    target="delivery-log/42",
+    parameters={"log_id": 42, "route_id": 7, "destination_id": 9},
+)
 RID = str(uuid.uuid4())
 HASH = fingerprint(ACTION.model_dump())
-REQUEST = {"id": RID, "state": "APPROVED", "action": ACTION.model_dump(), "action_hash": HASH}
+REQUEST = {
+    "id": RID, "state": "APPROVED", "integration_id": TRUSTED_GRANT_INTEGRATION_ID,
+    "action": ACTION.model_dump(), "action_hash": HASH,
+}
 CLAIM = {
     "request_id": RID, "execution_id": "product-control-replay-42",
     "action_hash": HASH, "committed": True, "replay": False,
@@ -35,6 +44,7 @@ def decide(request=None, claim=None, reservation=None, action=None):
         claim=CLAIM if claim is None else claim,
         reservation=RESERVATION if reservation is None else reservation,
         expected_action=ACTION if action is None else action,
+        expected_integration_id=TRUSTED_GRANT_INTEGRATION_ID,
         execution_id="product-control-replay-42",
         operation_key="control-replay-log-42",
     )
@@ -107,9 +117,10 @@ def test_control_replay_readback_is_evidence_not_acceptance():
     info = {
         "log_id": 42, "dry_run": False, "outcome": "delivered",
         "event_count": 2, "replay_run_id": str(uuid.uuid4()),
+        "route_id": 7, "destination_id": 9,
     }
     evidence = validate_control_replay_readback(
-        delivery_log_id=42, response=info,
+        delivery_log_id=42, expected_route_id=7, expected_destination_id=9, response=info,
         checkpoint_before={"offset": 100}, checkpoint_after={"offset": 100},
     )
     assert evidence["checkpoint_unchanged"]
@@ -129,68 +140,23 @@ def test_control_replay_readback_rejects_dry_run_wrong_target_or_fake_identity(b
     info = {
         "log_id": 42, "dry_run": False, "outcome": "delivered",
         "event_count": 1, "replay_run_id": str(uuid.uuid4()),
+        "route_id": 7, "destination_id": 9,
     }
     with pytest.raises(ConsumerGuardError):
         validate_control_replay_readback(
-            delivery_log_id=42, response={**info, **bad},
+            delivery_log_id=42, expected_route_id=7, expected_destination_id=9, response={**info, **bad},
             checkpoint_before={}, checkpoint_after={},
-        )
-
-
-def test_control_replay_readback_binds_selected_route_and_destination_without_claiming_acceptance():
-    response = {
-        "log_id": 42, "dry_run": False, "outcome": "delivered",
-        "event_count": 2, "replay_run_id": str(uuid.uuid4()),
-        "route_id": 71, "destination_id": 82,
-    }
-    info = validate_control_replay_readback(
-        delivery_log_id=42, response=response,
-        checkpoint_before={"offset": 7}, checkpoint_after={"offset": 7},
-        expected_route_id=71, expected_destination_id=82,
-    )
-    assert info["route_id"] == 71
-    assert info["destination_id"] == 82
-    assert info["independently_verified"] is False
-    assert info["acceptance_state"] != "PASS"
-
-
-@pytest.mark.parametrize("route,destination,returned_route,returned_destination", [
-    (71, 82, 72, 82),
-    (71, 82, 71, 83),
-    (71, 82, None, 82),
-    (71, 82, 71, None),
-    (71, 82, True, 82),
-    (71, 82, 71, False),
-    (0, 82, 71, 82),
-    (71, -2, 71, 82),
-    (True, 82, 71, 82),
-    (71, "82", 71, 82),
-    (71, None, 71, 82),
-    (None, 82, 71, 82),
-])
-def test_control_replay_readback_rejects_mismatched_or_unscoped_delivery_identity(
-    route, destination, returned_route, returned_destination,
-):
-    with pytest.raises(ConsumerGuardError, match="CONTROL_REPLAY_EVIDENCE_INVALID"):
-        validate_control_replay_readback(
-            delivery_log_id=42,
-            response={
-                "log_id": 42, "dry_run": False, "outcome": "delivered",
-                "event_count": 1, "replay_run_id": str(uuid.uuid4()),
-                "route_id": returned_route, "destination_id": returned_destination,
-            },
-            checkpoint_before={}, checkpoint_after={},
-            expected_route_id=route, expected_destination_id=destination,
         )
 
 
 def test_control_replay_checkpoint_mismatch_rejected():
     with pytest.raises(ConsumerGuardError):
         validate_control_replay_readback(
-            delivery_log_id=42,
+            delivery_log_id=42, expected_route_id=7, expected_destination_id=9,
             response={
                 "log_id": 42, "dry_run": False, "outcome": "delivered",
                 "event_count": 1, "replay_run_id": str(uuid.uuid4()),
+                "route_id": 7, "destination_id": 9,
             },
             checkpoint_before={"offset": 1}, checkpoint_after={"offset": 2},
         )
@@ -213,6 +179,7 @@ def test_stellar_correlated_normalized_readback_never_claims_independent_accepta
     observed = {
         "grant_event_id": evt, "grant_request_id": rid,
         "tenant_id": original["tenant_id"], "case_id": original["case_id"],
+        "alert_id": original["alert_id"], "state_revision": outcome["state_revision"],
         "state": "APPROVED", "receiver_record_id": "xdr-isolated-event",
     }
     candidate = correlate_stellar_receiver_observation(
@@ -221,11 +188,15 @@ def test_stellar_correlated_normalized_readback_never_claims_independent_accepta
     )
     assert candidate["tenant_matches"]
     assert candidate["case_matches"]
+    assert candidate["alert_matches"] and candidate["revision_matches"]
     assert candidate["independently_verified"] is False
     assert candidate["acceptance_state"] != "PASS"
     for drift in (
         {"tenant_id": "other"},
         {"case_id": "other"},
+        {"alert_id": "other"},
+        {"state_revision": outcome["state_revision"] + 1},
+        {"state_revision": True},
         {"grant_event_id": str(uuid.uuid4())},
         {"grant_request_id": str(uuid.uuid4())},
         {"state": "DENIED"},
@@ -240,3 +211,200 @@ def test_stellar_correlated_normalized_readback_never_claims_independent_accepta
             deployed_version="7.0.xs", source=original, grant_outcome=outcome,
             receiver_observation=observed, feedback_excluded=False,
         )
+
+
+def test_control_pilot_exact_action_and_canonical_hash_contract():
+    assert ACTION.kind == "datarelay.control.delivery_log.replay"
+    assert ACTION.target == "delivery-log/42"
+    assert ACTION.parameters == {"log_id": 42, "route_id": 7, "destination_id": 9}
+    assert HASH == fingerprint(ACTION.model_dump())
+    assert decide().kind == "PRODUCT_LEDGER_ONCE_ONLY"
+
+
+@pytest.mark.parametrize("unsafe_request", [
+    {},
+    {"integration_id": None},
+    {"integration_id": "another-integration"},
+    {"integration_id": TRUSTED_GRANT_INTEGRATION_ID.upper()},
+    {"integration_id": 7},
+    {"integration_id": True},
+    {"integration_id": TRUSTED_GRANT_INTEGRATION_ID + "\n"},
+])
+def test_untrusted_or_missing_request_integration_never_qualifies(unsafe_request):
+    with pytest.raises(ConsumerGuardError, match="PRODUCT_GRANT_BINDING_INVALID"):
+        decide(request={**REQUEST, **unsafe_request} if unsafe_request else
+               {key: value for key, value in REQUEST.items() if key != "integration_id"})
+
+
+@pytest.mark.parametrize("untrusted_expected_id", [
+    "", "another-integration", "control-verified-installation-integration\n",
+    42, None, True, "a" * 101,
+])
+def test_wrong_or_invalid_product_owned_integration_binding_rejected(untrusted_expected_id):
+    with pytest.raises(ConsumerGuardError, match="PRODUCT_GRANT_BINDING_INVALID"):
+        check_product_claim(
+            request=REQUEST, claim=CLAIM, operation_key=RESERVATION.operation_key,
+            execution_id=RESERVATION.execution_id, expected_action=ACTION,
+            expected_integration_id=untrusted_expected_id, reservation=RESERVATION,
+        )
+
+
+@pytest.mark.parametrize("parameters", [
+    {"log_id": 43, "route_id": 7, "destination_id": 9},
+    {"log_id": 42, "route_id": 8, "destination_id": 9},
+    {"log_id": 42, "route_id": 7, "destination_id": 10},
+])
+def test_control_pilot_changed_product_route_destination_or_log_rejected(parameters):
+    with pytest.raises(ConsumerGuardError, match="PRODUCT_GRANT_BINDING_INVALID"):
+        decide(action=Action(kind=ACTION.kind, target=ACTION.target, parameters=parameters))
+
+
+@pytest.mark.parametrize("state", ["APPROVED", "DENIED", "HELD", "EXPIRED"])
+def test_stellar_normalized_observation_requires_exact_alert_and_revision(state):
+    from grant.consumer_guard import correlate_stellar_receiver_observation
+
+    source = {
+        "product": "stellar",
+        "tenant_id": "tenant-a",
+        "case_id": "case-a",
+        "alert_id": "alert-1",
+    }
+    event = {
+        "event_type": "grant.approval.outcome",
+        "event_id": str(uuid.uuid4()),
+        "request_id": str(uuid.uuid4()),
+        "state": state,
+        "state_revision": 3,
+        "source": source,
+    }
+    valid = {
+        "grant_event_id": event["event_id"],
+        "grant_request_id": event["request_id"],
+        "tenant_id": source["tenant_id"],
+        "case_id": source["case_id"],
+        "alert_id": source["alert_id"],
+        "state_revision": event["state_revision"],
+        "state": state,
+        "receiver_record_id": "local-normalized-record",
+    }
+
+    def validate(observed):
+        return correlate_stellar_receiver_observation(
+            deployed_version="7.0.xs",
+            source=source,
+            grant_outcome=event,
+            receiver_observation=observed,
+            feedback_excluded=True,
+        )
+
+    candidate = validate(valid)
+    assert candidate["alert_matches"] is True
+    assert candidate["revision_matches"] is True
+    assert candidate["independently_verified"] is False
+    assert candidate["acceptance_state"] == (
+        "RECEIVER_CORRELATION_PENDING_INDEPENDENT_READBACK"
+    )
+
+    for field, invalid in (
+        ("alert_id", "other-alert"),
+        ("alert_id", ""),
+        ("alert_id", None),
+        ("state_revision", 2),
+        ("state_revision", 4),
+        ("state_revision", True),
+        ("state_revision", 3.0),
+        ("state_revision", "3"),
+        ("state_revision", 0),
+        ("receiver_record_id", "injected\nrecord"),
+    ):
+        with pytest.raises(ConsumerGuardError, match="STELLAR_CORRELATION_INVALID"):
+            validate({**valid, field: invalid})
+
+    for missing in ("alert_id", "state_revision"):
+        with pytest.raises(ConsumerGuardError, match="STELLAR_CORRELATION_INVALID"):
+            validate({key: value for key, value in valid.items() if key != missing})
+
+
+@pytest.mark.parametrize("unsafe", ["bad\x00id", "bad\x1fid", "bad\x7fid"])
+def test_stellar_source_identity_control_characters_fail_closed(unsafe):
+    from grant.consumer_guard import correlate_stellar_receiver_observation
+
+    source = {
+        "product": "stellar",
+        "tenant_id": unsafe,
+        "case_id": "case-a",
+        "alert_id": "alert-1",
+    }
+    event = {
+        "event_type": "grant.approval.outcome",
+        "event_id": str(uuid.uuid4()),
+        "request_id": str(uuid.uuid4()),
+        "state": "APPROVED",
+        "state_revision": 1,
+        "source": source,
+    }
+    readback = {
+        "grant_event_id": event["event_id"],
+        "grant_request_id": event["request_id"],
+        "tenant_id": unsafe,
+        "case_id": "case-a",
+        "alert_id": "alert-1",
+        "state_revision": 1,
+        "state": "APPROVED",
+        "receiver_record_id": "local-record-1",
+    }
+    with pytest.raises(ConsumerGuardError, match="STELLAR_CORRELATION_INVALID"):
+        correlate_stellar_receiver_observation(
+            deployed_version="7.0.xs",
+            source=source,
+            grant_outcome=event,
+            receiver_observation=readback,
+            feedback_excluded=True,
+        )
+
+
+def test_control_readback_requires_product_owned_route_and_destination_binding():
+    # Product-owned exact IDs must match the actual Control ReplayExecutionResult.
+    run_id = str(uuid.uuid4())
+    received = {
+        "log_id": 42, "dry_run": False, "outcome": "delivered",
+        "event_count": 1, "replay_run_id": run_id,
+        "route_id": 7, "destination_id": 9,
+    }
+
+    def check(actual, *, expected_route=7, expected_destination=9):
+        return validate_control_replay_readback(
+            delivery_log_id=42,
+            expected_route_id=expected_route,
+            expected_destination_id=expected_destination,
+            response=actual,
+            checkpoint_before={}, checkpoint_after={},  # legitimate Control empty checkpoint
+        )
+
+    valid = check(received)
+    assert valid["route_id"] == 7
+    assert valid["destination_id"] == 9
+    assert valid["independently_verified"] is False
+    assert valid["acceptance_state"] == "PRODUCT_READBACK_NEEDS_INDEPENDENT_CONFIRMATION"
+
+    for field, incorrect in (
+        ("route_id", 1), ("route_id", 0), ("route_id", "7"),
+        ("route_id", True), ("route_id", 7.0), ("route_id", None),
+        ("destination_id", 1), ("destination_id", 0),
+        ("destination_id", "9"), ("destination_id", True),
+        ("destination_id", 9.0), ("destination_id", None),
+    ):
+        with pytest.raises(ConsumerGuardError, match="CONTROL_REPLAY_EVIDENCE_INVALID"):
+            check({**received, field: incorrect})
+    for missing in ("route_id", "destination_id"):
+        with pytest.raises(ConsumerGuardError, match="CONTROL_REPLAY_EVIDENCE_INVALID"):
+            check({k: v for k, v in received.items() if k != missing})
+
+    for expected_route, expected_destination in (
+        (999, 9), (7, 999), (True, 9), (7, False),
+        (0, 9), (7, 0), (7.0, 9), (7, 9.0),
+        ("7", 9), (7, "9"), (None, 9), (7, None),
+    ):
+        with pytest.raises(ConsumerGuardError, match="CONTROL_REPLAY_EVIDENCE_INVALID"):
+            check(received, expected_route=expected_route,
+                  expected_destination=expected_destination)
