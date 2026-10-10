@@ -1,6 +1,6 @@
 # Grant 1.0 implementation status
 
-Updated: 2026-10-08. G1/G2 coordination: GitHub Issue #38; baseline/external lane: Issue #33 / PR #34.
+Updated: 2026-10-08. G3/G4 development lane: Issue #40 / PR #41; G0/G1/G2 predecessor: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
 Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
@@ -23,10 +23,10 @@ capability remains whatever is present and tested at the committed candidate HEA
 ## Implemented candidate
 
 - Pinned unpublished Foundation SDK and public imports with Foundation-backed auth,
-  shell, MFA/recovery, accounts/sessions, health and audit adapters. The accepted G0
-  grouped task-oriented navigation, centered DataRelay-family login composition, action
-  center Home and focused Administration/configuration layouts are roadmap/design targets
-  until committed implementation and browser evidence establish them.
+  shell, MFA/recovery, accounts/sessions, health and audit adapters. The G0 development
+  candidate includes centered shared login, task-oriented Home, grouped Work / Configuration
+  / Administration navigation and focused configuration pages, covered by real browser
+  journeys. Final integration and release qualification are not yet complete.
 - Versioned approval policies with explicit Draft -> Testing -> Active -> Disabled
   lifecycle, clone/history, bounded deterministic selectors and shared runtime/preview
   resolution. The browser request form populates configured policy selectors
@@ -40,8 +40,21 @@ capability remains whatever is present and tested at the committed candidate HEA
   is restricted to the currently authenticated administrator's own mailbox. Each
   request snapshots the exact policy version and notification content so
   later policy/template/branding changes apply only to new requests.
-- One fixed approver per policy; immutable action, explicit approve/hold/deny,
-  expiry, bounded reminders, cancellation and a linked replacement request.
+- G3 development candidate: approver groups and Single / Any One / All / N-of-M /
+  Sequential modes, validated quorum bounds, policy-plan preview, request-time membership
+  snapshots and auditable per-member decisions. An approval plan cannot silently count
+  duplicate votes or allow approval by an unavailable member. G3 candidate group edits
+  now require an exact loaded updated_at revision; stale writes fail with HTTP 409
+  without losing newer membership, reducing future ALL thresholds, or writing an audit
+  event. Existing group snapshots remain unchanged.
+- G4 development candidate: time-bounded self-service delegation and revocation,
+  administrator reassignment (recorded voters cannot be silently replaced), user/group
+  escalation with snapshotted targets, overdue/escalated request projections, and
+  delegated work queue/administrator browser controls. G4 candidate escalation
+  scheduling requires the reviewed request revision, advances it on successful
+  updates, and refuses stale scheduling without overwriting the target.
+- Immutable action, explicit approve/hold/deny, expiry, bounded reminders,
+  cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.
   An integration credential cannot make a human decision.
 - Transactional decision/outbox, HTTP/SMTP delivery, registered endpoints, TLS,
@@ -56,19 +69,22 @@ capability remains whatever is present and tested at the committed candidate HEA
 
 ## Observed development evidence
 
-PR #39 review hardening covers all five latest actionable findings:
-selector-complete browser requests, self-only notification test sends, latest
-draft retained after active disable, expired requests counted as overdue, and
-SMTP failures surfaced separately from callback failures. These changes have
-focused deterministic API and real-browser regressions. Final commit and
-exact-head CI/review evidence are recorded in Work Packet #38, not this source file.
+G1/G2 predecessor PR #39 review hardening addresses five findings:
+browser-created requests include policy tenant/environment/severity/risk selectors,
+test emails are restricted to the administrator until a safe-recipient registry,
+the latest draft survives active-version disable, overdue includes EXPIRED requests,
+and SMTP failures are counted separately from webhook delivery. This predecessor
+development candidate passed 139 Python/API, 12 frontend and seven Chromium
+journeys. Exact predecessor validation evidence belongs in Work Packet #38.
 
-The current G1/G2 review-hardening development tree passes 139 Python/API cases,
-12 frontend unit cases, static checks, typecheck/build and seven real Chromium
-browser journeys, including policy-selector creation and draft-preserving disable.
-The browser administration journey exercises Notification template-set preview/test send
-and Approval Policy Draft -> Testing -> isolated test -> Activate -> runtime preview ->
-history. Final exact-HEAD confirmation and CI belong in active Work Packet #38.
+G3/G4 plus inherited G1/G2 review fixes pass 160 Python/API, 12 frontend,
+static/typecheck/production build and 10 actual Chromium journeys together on
+the resolved non-force merge worktree. Authoritative committed exact-HEAD CI
+evidence belongs in Work Packet #40.
+
+The browser administration journey exercises Notification preview/test-send
+and Policy Draft -> Testing -> isolated test -> Activate -> runtime preview
+-> history.
 
 Browser cases include two independently signed-in requester/approver passes,
 mobile shared administration, cancellation/replacement, account creation,

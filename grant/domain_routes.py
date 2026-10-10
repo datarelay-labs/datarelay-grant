@@ -3,11 +3,15 @@
 from fastapi import Query, Request
 
 from .models import (
+    ApproverGroup,
+    ApproverGroupUpdate,
     Cancel,
     Consume,
     Decision,
+    Delegation,
     EmailTemplate,
     EmailTemplateUpdate,
+    Escalation,
     Intake,
     Integration,
     NotificationBrandingUpdate,
@@ -18,6 +22,7 @@ from .models import (
     PolicySample,
     Profile,
     ProfileUpdate,
+    Reassign,
     Result,
     Token,
 )
@@ -25,6 +30,22 @@ from .models import (
 
 def register_domain(app, actor, human, reader):
     core, auth, worker = app.state.core, app.state.auth, app.state.worker
+
+    @app.get("/api/v1/delegations")
+    def delegations(request: Request):
+        return core.delegations(human(request))
+
+    @app.post("/api/v1/delegations", status_code=201)
+    def add_delegation(body: Delegation, request: Request):
+        return core.create_delegation(human(request), body)
+
+    @app.post("/api/v1/delegations/{ident}/revoke")
+    def revoke_delegation(ident: str, request: Request):
+        return core.revoke_delegation(human(request), ident)
+
+    @app.get("/api/v1/approvers/directory")
+    def approver_directory(request: Request):
+        return core.approver_directory(human(request))
 
     @app.get("/api/v1/requests")
     def requests(
@@ -44,6 +65,14 @@ def register_domain(app, actor, human, reader):
     def decision(ident: str, body: Decision, request: Request):
         return core.decide(human(request), ident, body)
 
+    @app.post("/api/v1/requests/{ident}/escalation")
+    def escalation(ident: str, body: Escalation, request: Request):
+        return core.configure_escalation(actor(request), ident, body)
+
+    @app.post("/api/v1/requests/{ident}/reassign")
+    def reassign(ident: str, body: Reassign, request: Request):
+        return core.reassign_request(actor(request), ident, body)
+
     @app.post("/api/v1/requests/{ident}/cancel")
     def cancel(ident: str, body: Cancel, request: Request):
         return core.cancel(actor(request), ident, body)
@@ -55,6 +84,18 @@ def register_domain(app, actor, human, reader):
     @app.post("/api/v1/requests/{ident}/result")
     def result(ident: str, body: Result, request: Request):
         return core.report(actor(request), ident, body)
+
+    @app.get("/api/v1/approver-groups")
+    def approver_groups(request: Request):
+        return core.approver_groups(actor(request))
+
+    @app.post("/api/v1/approver-groups", status_code=201)
+    def add_approver_group(body: ApproverGroup, request: Request):
+        return core.create_approver_group(actor(request), body)
+
+    @app.put("/api/v1/approver-groups/{ident}")
+    def update_approver_group(ident: str, body: ApproverGroupUpdate, request: Request):
+        return core.update_approver_group(actor(request), ident, body)
 
     @app.get("/api/v1/profiles")
     def profiles(request: Request):

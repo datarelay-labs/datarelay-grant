@@ -100,7 +100,8 @@ Home
 
 Work
 ├── My approvals
-└── Requests
+├── Requests
+└── Delegations          # G4 self-service scheduling/revocation
 
 Configuration
 ├── Approval policies

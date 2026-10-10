@@ -3,6 +3,7 @@ import { Alert, Button, Card, TextField, type AccountProjection } from '@datarel
 import { api } from './api';
 import { Form, Select, TextArea, useTask, when } from './common';
 import type {
+  ApproverGroup,
   Integration,
   NotificationTemplateSet,
   PolicyHistory,
@@ -46,6 +47,10 @@ export function Profiles() {
   const [name, setName] = useState('');
   const [integration, setIntegration] = useState('');
   const [approver, setApprover] = useState('');
+  const [approvalMode, setApprovalMode] = useState('SINGLE');
+  const [approverGroup, setApproverGroup] = useState('');
+  const [approvalsRequired, setApprovalsRequired] = useState('2');
+  const [groups, setGroups] = useState<ApproverGroup[]>([]);
   const [action, setAction] = useState('');
   const [template, setTemplate] = useState('');
   const [deadline, setDeadline] = useState('86400');
@@ -62,16 +67,18 @@ export function Profiles() {
   const task = useTask();
 
   const load = async () => {
-    const [policies, integrationRows, accounts, templateSets] = await Promise.all([
+    const [policies, integrationRows, accounts, templateSets, approverGroups] = await Promise.all([
       api<Profile[]>('/profiles'),
       api<Integration[]>('/integrations'),
       api<AccountProjection[]>('/admin/users'),
       api<NotificationTemplateSet[]>('/notification-template-sets'),
+      api<ApproverGroup[]>('/approver-groups'),
     ]);
     setRows(policies);
     setIntegrations(integrationRows);
     setUsers(accounts);
     setTemplates(templateSets);
+    setGroups(approverGroups);
     return policies;
   };
 
@@ -84,6 +91,9 @@ export function Profiles() {
     setName('');
     setIntegration('');
     setApprover('');
+    setApprovalMode('SINGLE');
+    setApproverGroup('');
+    setApprovalsRequired('2');
     setAction('');
     setTemplate('');
     setDeadline('86400');
@@ -104,6 +114,9 @@ export function Profiles() {
     setName(row.name);
     setIntegration(row.integration_id);
     setApprover(row.approver_id);
+    setApprovalMode(row.approval_mode ?? 'SINGLE');
+    setApproverGroup(row.approver_group_id ?? '');
+    setApprovalsRequired(String(row.approvals_required ?? 2));
     setAction(row.action_kind);
     setTemplate(row.email_template_id ?? '');
     setDeadline(String(row.deadline_seconds));
@@ -141,6 +154,9 @@ export function Profiles() {
       name,
       integration_id: integration,
       approver_id: approver,
+      approval_mode: approvalMode,
+      approver_group_id: approvalMode === 'SINGLE' ? null : approverGroup,
+      approvals_required: approvalMode === 'N_OF_M' ? Number(approvalsRequired) : null,
       action_kind: action,
       email_template_id: template || null,
       deadline_seconds: Number(deadline),
@@ -460,6 +476,24 @@ export function Profiles() {
                     <option key={user.id} value={user.id}>{user.displayName}</option>
                   ))}
                 </Select>
+                <Select label="Approval mode" value={approvalMode} onChange={setApprovalMode}>
+                  <option value="SINGLE">Single</option>
+                  <option value="ANY_ONE">Any one of group</option>
+                  <option value="ALL">All group members</option>
+                  <option value="N_OF_M">N of M</option>
+                  <option value="SEQUENTIAL">Sequential</option>
+                </Select>
+                {approvalMode !== 'SINGLE' ? (
+                  <Select label="Approver group" value={approverGroup} onChange={setApproverGroup}>
+                    <option value="">Select group</option>
+                    {groups.filter((group) => group.enabled).map((group) => (
+                      <option key={group.id} value={group.id}>{group.name}</option>
+                    ))}
+                  </Select>
+                ) : null}
+                {approvalMode === 'N_OF_M' ? (
+                  <TextField label="Approvals required" type="number" min="1" value={approvalsRequired} onChange={(event) => setApprovalsRequired(event.target.value)} />
+                ) : null}
                 <Select label="Notification template set" value={template} onChange={setTemplate} required={false}>
                   <option value="">Built-in default</option>
                   {templates.filter((item) => item.enabled || item.id === template).map((item) => (

@@ -9,6 +9,8 @@ import {
   ThemeRoot,
 } from '@datarelay-labs/foundation';
 import { Administration, Security } from './administration';
+import { Approvers } from './approvers';
+import { Delegations } from './delegations';
 import { ApiError, setCsrf } from './api';
 import { useTask } from './common';
 import { authAdapter, productConfig, readSession } from './foundation.config';
@@ -196,12 +198,16 @@ export function App() {
     page = <NewRequest key={path} navigate={navigate} predecessorId={path.split('/')[2]!} />;
   } else if (/^\/requests\/[a-f0-9-]{36}$/.test(path)) {
     page = <RequestDetail key={path} id={path.split('/')[2]!} user={user} navigate={navigate} />;
+  } else if (path === '/delegations') {
+    page = <Delegations user={user} />;
   } else if (path === '/security') {
     page = <Security user={user} onSignedOut={signedOut} onRefresh={refresh} />;
   } else if (user.role === 'admin' && path === '/integrations') {
     page = <Integrations />;
   } else if (user.role === 'admin' && path === '/profiles') {
     page = <Profiles />;
+  } else if (user.role === 'admin' && path === '/approvers') {
+    page = <Approvers />;
   } else if (user.role === 'admin' && path === '/notifications') {
     page = <Notifications />;
   } else if (user.role === 'admin' && path === '/email-templates') {

@@ -3,7 +3,7 @@
 import re
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from .mail_templates import validate_event_templates
 
@@ -46,6 +46,39 @@ class Intake(Input):
     source: dict[str, Any] = Field(default_factory=dict)
     reason: str = Field(default="", max_length=4000)
     predecessor_id: str | None = Field(default=None, max_length=100)
+
+
+class Delegation(Input):
+    substitute_id: str = Field(min_length=1, max_length=100)
+    starts_at: float
+    ends_at: float
+
+    @field_validator("ends_at")
+    @classmethod
+    def bounded_end(cls, value: float) -> float:
+        if value <= 0:
+            raise ValueError("Delegation end must be positive")
+        return value
+
+
+class Escalation(Input):
+    target_user_id: str | None = Field(default=None, min_length=1, max_length=100)
+    target_group_id: str | None = Field(default=None, min_length=1, max_length=100)
+    after_seconds: int = Field(ge=60, le=604800)
+    expected_revision: int = Field(ge=1)
+
+    @model_validator(mode="after")
+    def exactly_one_target(self):
+        if (self.target_user_id is None) == (self.target_group_id is None):
+            raise ValueError("Exactly one escalation target is required")
+        return self
+
+
+class Reassign(Input):
+    from_approver_id: str = Field(min_length=1, max_length=100)
+    to_approver_id: str = Field(min_length=1, max_length=100)
+    expected_revision: int = Field(ge=1)
+    reason: str = Field(min_length=1, max_length=2000)
 
 
 class Decision(Input):
@@ -195,10 +228,36 @@ class PolicySample(Input):
     source: dict[str, Any] = Field(default_factory=dict)
 
 
+class ApproverGroup(Input):
+    name: str = Field(min_length=1, max_length=100)
+    member_ids: list[str] = Field(min_length=1, max_length=50)
+
+    @field_validator("member_ids")
+    @classmethod
+    def unique_members(cls, value: list[str]) -> list[str]:
+        if len(set(value)) != len(value):
+            raise ValueError("Group members must be unique")
+        return value
+
+
+class ApproverGroupUpdate(ApproverGroup):
+    # Required for every external edit: never overwrite a newer group membership.
+    expected_updated_at: float = Field(ge=0, allow_inf_nan=False)
+
+
+class ApprovalPlan(Input):
+    mode: Literal["SINGLE", "ANY_ONE", "ALL", "N_OF_M", "SEQUENTIAL"] = "SINGLE"
+    group_id: str | None = None
+    approvals_required: int | None = Field(default=None, ge=1, le=50)
+
+
 class Profile(Input):
     name: str = Field(min_length=1, max_length=100)
     integration_id: str
     approver_id: str
+    approval_mode: Literal["SINGLE", "ANY_ONE", "ALL", "N_OF_M", "SEQUENTIAL"] = "SINGLE"
+    approver_group_id: str | None = None
+    approvals_required: int | None = Field(default=None, ge=1, le=50)
     action_kind: str = Field(min_length=1, max_length=100)
     email_template_id: str | None = None
     deadline_seconds: int = Field(default=86400, ge=60, le=604800)

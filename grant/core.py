@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import sqlite3
 import time
 from datetime import UTC, datetime
@@ -22,11 +23,15 @@ from .mail_templates import (
     snapshot,
 )
 from .models import (
+    ApproverGroup,
+    ApproverGroupUpdate,
     Cancel,
     Consume,
     Decision,
+    Delegation,
     EmailTemplate,
     EmailTemplateUpdate,
+    Escalation,
     Intake,
     Integration,
     NotificationBrandingUpdate,
@@ -37,6 +42,7 @@ from .models import (
     PolicySample,
     Profile,
     ProfileUpdate,
+    Reassign,
     Result,
 )
 from .policy import (
@@ -154,15 +160,62 @@ class Core:
         parsed = urlsplit(self.settings.unseal(sealed)["url"])
         return f"{parsed.scheme}://{parsed.netloc}"
 
+    @staticmethod
+    def _validate_approval_refs(
+        conn: sqlite3.Connection,
+        *,
+        approval_mode: str,
+        approver_id: str,
+        approver_group_id: str | None,
+        approvals_required: int | None,
+    ) -> None:
+        if approval_mode == "SINGLE":
+            if not conn.execute(
+                "SELECT id FROM users WHERE id=? AND enabled=1", (approver_id,)
+            ).fetchone():
+                raise GrantError("APPROVER_NOT_FOUND", 404)
+            return
+        if not approver_group_id:
+            raise GrantError("APPROVER_GROUP_REQUIRED", 422)
+        group = conn.execute(
+            "SELECT enabled FROM approver_groups WHERE id=?", (approver_group_id,)
+        ).fetchone()
+        if not group or not group["enabled"]:
+            raise GrantError("APPROVER_GROUP_UNAVAILABLE", 409)
+        members = [
+            r["user_id"]
+            for r in conn.execute(
+                "SELECT user_id FROM approver_group_members WHERE group_id=? ORDER BY position",
+                (approver_group_id,),
+            ).fetchall()
+        ]
+        if not members:
+            raise GrantError("APPROVER_GROUP_UNAVAILABLE", 409)
+        for member_id in members:
+            member = conn.execute(
+                "SELECT enabled FROM users WHERE id=?", (member_id,)
+            ).fetchone()
+            if not member or not member["enabled"]:
+                raise GrantError("GROUP_MEMBER_UNAVAILABLE", 409)
+        if approval_mode == "N_OF_M" and (
+            approvals_required is None
+            or approvals_required < 1
+            or approvals_required > len(members)
+        ):
+            raise GrantError("APPROVAL_QUORUM_INVALID", 422)
+
     def _validate_profile_refs(self, conn: sqlite3.Connection, body: Profile) -> None:
         if not conn.execute(
             "SELECT id FROM integrations WHERE id=? AND enabled=1", (body.integration_id,)
         ).fetchone():
             raise GrantError("INTEGRATION_NOT_FOUND", 404)
-        if not conn.execute(
-            "SELECT id FROM users WHERE id=? AND enabled=1", (body.approver_id,)
-        ).fetchone():
-            raise GrantError("APPROVER_NOT_FOUND", 404)
+        self._validate_approval_refs(
+            conn,
+            approval_mode=body.approval_mode,
+            approver_id=body.approver_id,
+            approver_group_id=body.approver_group_id,
+            approvals_required=body.approvals_required,
+        )
         if body.email_template_id and not conn.execute(
             "SELECT id FROM email_templates WHERE id=? AND enabled=1",
             (body.email_template_id,),
@@ -175,10 +228,13 @@ class Core:
             "SELECT id FROM integrations WHERE id=? AND enabled=1", (row["integration_id"],)
         ).fetchone():
             raise GrantError("INTEGRATION_NOT_FOUND", 404)
-        if not conn.execute(
-            "SELECT id FROM users WHERE id=? AND enabled=1", (row["approver_id"],)
-        ).fetchone():
-            raise GrantError("APPROVER_NOT_FOUND", 404)
+        Core._validate_approval_refs(
+            conn,
+            approval_mode=row["approval_mode"],
+            approver_id=row["approver_id"],
+            approver_group_id=row["approver_group_id"],
+            approvals_required=row["approvals_required"],
+        )
         if row["email_template_id"] and not conn.execute(
             "SELECT id FROM email_templates WHERE id=? AND enabled=1",
             (row["email_template_id"],),
@@ -502,11 +558,11 @@ class Core:
         version_id, now = uid(), time.time()
         conn.execute(
             """INSERT INTO profile_versions(
-               id,profile_id,version,name,integration_id,approver_id,action_kind,email_template_id,
+               id,profile_id,version,name,integration_id,approver_id,approval_mode,approver_group_id,approvals_required,action_kind,email_template_id,
                deadline_seconds,reminder_seconds,max_reminders,grant_seconds,
                tenant_selector,environment,severity,risk_level,lifecycle,
                created_at,updated_at,activated_at,disabled_at
-            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL,NULL)""",
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL,NULL)""",
             (
                 version_id,
                 profile_id,
@@ -514,6 +570,9 @@ class Core:
                 body.name,
                 body.integration_id,
                 body.approver_id,
+                body.approval_mode,
+                body.approver_group_id,
+                body.approvals_required,
                 body.action_kind,
                 body.email_template_id,
                 body.deadline_seconds,
@@ -537,13 +596,16 @@ class Core:
     ) -> None:
         conn.execute(
             """UPDATE profiles
-               SET name=?,integration_id=?,approver_id=?,action_kind=?,email_template_id=?,
+               SET name=?,integration_id=?,approver_id=?,approval_mode=?,approver_group_id=?,approvals_required=?,action_kind=?,email_template_id=?,
                    deadline_seconds=?,reminder_seconds=?,max_reminders=?,grant_seconds=?,enabled=?
                WHERE id=?""",
             (
                 body.name,
                 body.integration_id,
                 body.approver_id,
+                body.approval_mode,
+                body.approver_group_id,
+                body.approvals_required,
                 body.action_kind,
                 body.email_template_id,
                 body.deadline_seconds,
@@ -555,6 +617,271 @@ class Core:
             ),
         )
 
+    def create_delegation(self, actor: Principal, body: Delegation) -> dict:
+        if actor.kind != "human":
+            raise GrantError("HUMAN_REQUIRED", 403)
+        if body.ends_at <= body.starts_at or body.ends_at <= time.time():
+            raise GrantError("DELEGATION_WINDOW_INVALID", 422)
+        if body.substitute_id == actor.id:
+            raise GrantError("DELEGATION_SELF_INVALID", 422)
+        ident, now = uid(), time.time()
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            target = conn.execute("SELECT enabled FROM users WHERE id=?", (body.substitute_id,)).fetchone()
+            if not target or not target["enabled"]:
+                raise GrantError("DELEGATE_UNAVAILABLE", 409)
+            conn.execute(
+                "INSERT INTO delegations(id,delegator_id,substitute_id,starts_at,ends_at,created_at) VALUES(?,?,?,?,?,?)",
+                (ident, actor.id, body.substitute_id, body.starts_at, body.ends_at, now),
+            )
+            audit(conn, None, actor.id, "delegation.created", {"delegation_id": ident, "substitute_id": body.substitute_id, "starts_at": body.starts_at, "ends_at": body.ends_at}, now)
+        return {"id": ident, "delegator_id": actor.id, **body.model_dump(), "revoked_at": None}
+
+    def delegations(self, actor: Principal) -> list[dict]:
+        if actor.kind != "human":
+            raise GrantError("HUMAN_REQUIRED", 403)
+        with self.db.transaction(write=False) as conn:
+            if actor.role == "admin":
+                rows = conn.execute("SELECT * FROM delegations ORDER BY created_at DESC").fetchall()
+            else:
+                rows = conn.execute("SELECT * FROM delegations WHERE delegator_id=? OR substitute_id=? ORDER BY created_at DESC", (actor.id, actor.id)).fetchall()
+            return [dict(row) for row in rows]
+
+    def approver_directory(self, actor: Principal) -> list[dict]:
+        if actor.kind != "human":
+            raise GrantError("HUMAN_REQUIRED", 403)
+        with self.db.transaction(write=False) as conn:
+            rows = conn.execute(
+                "SELECT id,username FROM users WHERE enabled=1 AND id<>? ORDER BY username",
+                (actor.id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def revoke_delegation(self, actor: Principal, ident: str) -> dict:
+        if actor.kind != "human":
+            raise GrantError("HUMAN_REQUIRED", 403)
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            row = conn.execute("SELECT * FROM delegations WHERE id=?", (ident,)).fetchone()
+            if not row:
+                raise GrantError("DELEGATION_NOT_FOUND", 404)
+            if actor.role != "admin" and row["delegator_id"] != actor.id:
+                raise GrantError("DELEGATION_REVOKE_FORBIDDEN", 403)
+            if row["revoked_at"] is None:
+                now = time.time()
+                conn.execute("UPDATE delegations SET revoked_at=? WHERE id=?", (now, ident))
+                audit(
+                    conn,
+                    None,
+                    actor.id,
+                    "delegation.revoked",
+                    {"delegation_id": ident, "delegator_id": row["delegator_id"]},
+                    now,
+                )
+            current = conn.execute("SELECT * FROM delegations WHERE id=?", (ident,)).fetchone()
+        return dict(current)
+
+    @staticmethod
+    def _delegated_from(conn: sqlite3.Connection, actor_id: str, members: list[str], now: float) -> str | None:
+        if actor_id in members:
+            return actor_id
+        rows = conn.execute(
+            """SELECT delegator_id FROM delegations
+               WHERE substitute_id=? AND revoked_at IS NULL AND starts_at<=? AND ends_at>?
+               ORDER BY created_at DESC""",
+            (actor_id, now, now),
+        ).fetchall()
+        return next(
+            (row["delegator_id"] for row in rows if row["delegator_id"] in members),
+            None,
+        )
+
+    def configure_escalation(self, actor: Principal, ident: str, body: Escalation) -> dict:
+        actor.require_admin()
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            row = self._load(conn, ident)
+            if row["revision"] != body.expected_revision:
+                raise GrantError("STALE_OR_FINAL_REQUEST", 409)
+            if row["state"] not in ("AWAITING", "HELD") or row["execution_id"]:
+                raise GrantError("ESCALATION_NOT_ALLOWED", 409)
+            if body.target_user_id:
+                target = conn.execute(
+                    "SELECT enabled FROM users WHERE id=?", (body.target_user_id,)
+                ).fetchone()
+                if (
+                    not target
+                    or not target["enabled"]
+                    or body.target_user_id == row["requester_id"]
+                ):
+                    raise GrantError("ESCALATION_TARGET_UNAVAILABLE", 409)
+                members = [body.target_user_id]
+            else:
+                group = conn.execute(
+                    "SELECT enabled FROM approver_groups WHERE id=?", (body.target_group_id,)
+                ).fetchone()
+                if not group or not group["enabled"]:
+                    raise GrantError("ESCALATION_TARGET_UNAVAILABLE", 409)
+                members = [
+                    member["user_id"]
+                    for member in conn.execute(
+                        """SELECT gm.user_id
+                           FROM approver_group_members gm
+                           JOIN users u ON u.id=gm.user_id
+                           WHERE gm.group_id=? AND u.enabled=1
+                           ORDER BY gm.position""",
+                        (body.target_group_id,),
+                    ).fetchall()
+                ]
+                if not members or row["requester_id"] in members:
+                    raise GrantError("ESCALATION_TARGET_UNAVAILABLE", 409)
+            due = row["created_at"] + body.after_seconds
+            conn.execute(
+                """INSERT INTO escalations(
+                       request_id,target_user_id,target_group_id,target_members,due_at,fired_at
+                   ) VALUES(?,?,?,?,?,NULL)
+                   ON CONFLICT(request_id) DO UPDATE SET
+                   target_user_id=excluded.target_user_id,
+                   target_group_id=excluded.target_group_id,
+                   target_members=excluded.target_members,
+                   due_at=excluded.due_at,
+                   fired_at=NULL""",
+                (
+                    ident,
+                    body.target_user_id,
+                    body.target_group_id,
+                    json_text(members),
+                    due,
+                ),
+            )
+            changed = conn.execute(
+                "UPDATE requests SET revision=revision+1 WHERE id=? AND revision=?",
+                (ident, body.expected_revision),
+            )
+            if changed.rowcount != 1:
+                raise GrantError("STALE_OR_FINAL_REQUEST", 409)
+            detail = {
+                "target_user_id": body.target_user_id,
+                "target_group_id": body.target_group_id,
+                "target_members": members,
+                "due_at": due,
+                "request_revision": body.expected_revision + 1,
+            }
+            audit(conn, ident, actor.id, "request.escalation_configured", detail)
+            return {"request_id": ident, "revision": body.expected_revision + 1, **detail}
+
+    def reassign_request(self, actor: Principal, ident: str, body: Reassign) -> dict:
+        actor.require_admin()
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            row = self._load(conn, ident)
+            if row["revision"] != body.expected_revision or row["state"] not in ("AWAITING", "HELD"):
+                raise GrantError("STALE_OR_FINAL_REQUEST", 409)
+            plan = json.loads(row["approval_plan"] or "{}")
+            members = list(plan.get("members", [row["approver_id"]]))
+            if body.from_approver_id not in members or body.to_approver_id in members:
+                raise GrantError("REASSIGNMENT_INVALID", 422)
+            existing_decision = conn.execute(
+                "SELECT decision FROM request_decisions WHERE request_id=? AND actor_id=?",
+                (ident, body.from_approver_id),
+            ).fetchone()
+            if existing_decision:
+                # Never carry a replaced member's vote into the new approval plan.
+                # Even HELD is a recorded decision; require a separate, auditable
+                # recovery workflow instead of silently discarding the ledger.
+                raise GrantError("REASSIGNMENT_ALREADY_DECIDED", 409)
+            target = conn.execute("SELECT enabled FROM users WHERE id=?", (body.to_approver_id,)).fetchone()
+            if not target or not target["enabled"] or body.to_approver_id == row["requester_id"]:
+                raise GrantError("REASSIGNMENT_TARGET_UNAVAILABLE", 409)
+            members[members.index(body.from_approver_id)] = body.to_approver_id
+            plan["members"] = members
+            conn.execute("UPDATE requests SET approval_plan=?,approver_id=?,revision=revision+1 WHERE id=?",
+                         (json_text(plan), members[0], ident))
+            audit(conn, ident, actor.id, "request.reassigned", {"from": body.from_approver_id, "to": body.to_approver_id, "reason": body.reason})
+            return self._project(conn, self._load(conn, ident))
+
+    def create_approver_group(self, actor: Principal, body: ApproverGroup) -> dict:
+        actor.require_admin()
+        ident, now = uid(), time.time()
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            for member_id in body.member_ids:
+                row = conn.execute("SELECT enabled FROM users WHERE id=?", (member_id,)).fetchone()
+                if not row or not row["enabled"]:
+                    raise GrantError("GROUP_MEMBER_UNAVAILABLE", 409)
+            conn.execute("INSERT INTO approver_groups VALUES(?,?,1,?,?)", (ident, body.name, now, now))
+            conn.executemany(
+                "INSERT INTO approver_group_members(group_id,user_id,position) VALUES(?,?,?)",
+                [(ident, member, pos) for pos, member in enumerate(body.member_ids)],
+            )
+            audit(conn, None, actor.id, "approver_group.created", {"group_id": ident, "member_ids": body.member_ids})
+        return {"id": ident, "name": body.name, "member_ids": body.member_ids, "enabled": True, "updated_at": now}
+
+    def approver_groups(self, actor: Principal) -> list[dict]:
+        actor.require_admin()
+        with self.db.transaction(write=False) as conn:
+            groups = conn.execute("SELECT * FROM approver_groups ORDER BY name,id").fetchall()
+            return [{**dict(group), "member_ids": [r["user_id"] for r in conn.execute(
+                "SELECT user_id FROM approver_group_members WHERE group_id=? ORDER BY position", (group["id"],)
+            ).fetchall()]} for group in groups]
+
+    def update_approver_group(self, actor: Principal, ident: str, body: ApproverGroupUpdate) -> dict:
+        actor.require_admin()
+        # BEGIN IMMEDIATE makes the review and write one serialized decision.
+        with self.db.transaction() as conn:
+            require_current_authority(conn, actor)
+            current = conn.execute(
+                "SELECT updated_at FROM approver_groups WHERE id=?", (ident,)
+            ).fetchone()
+            if not current:
+                raise GrantError("APPROVER_GROUP_NOT_FOUND", 404)
+            if current["updated_at"] != body.expected_updated_at:
+                raise GrantError("APPROVER_GROUP_STALE", 409)
+            for member_id in body.member_ids:
+                row = conn.execute("SELECT enabled FROM users WHERE id=?", (member_id,)).fetchone()
+                if not row or not row["enabled"]:
+                    raise GrantError("GROUP_MEMBER_UNAVAILABLE", 409)
+            # Advance the revision even if two edits occur at the same clock tick.
+            updated_at = max(time.time(), math.nextafter(current["updated_at"], math.inf))
+            changed = conn.execute(
+                "UPDATE approver_groups SET name=?,updated_at=? WHERE id=? AND updated_at=?",
+                (body.name, updated_at, ident, body.expected_updated_at),
+            )
+            if changed.rowcount != 1:
+                raise GrantError("APPROVER_GROUP_STALE", 409)
+            conn.execute("DELETE FROM approver_group_members WHERE group_id=?", (ident,))
+            conn.executemany("INSERT INTO approver_group_members(group_id,user_id,position) VALUES(?,?,?)",
+                             [(ident, member, pos) for pos, member in enumerate(body.member_ids)])
+            audit(conn, None, actor.id, "approver_group.updated", {
+                "group_id": ident, "member_ids": body.member_ids,
+                "previous_revision": body.expected_updated_at,
+                "updated_revision": updated_at,
+            })
+        return {"id": ident, "name": body.name, "member_ids": body.member_ids,
+                "enabled": True, "updated_at": updated_at}
+
+    @staticmethod
+    def _approval_plan(conn: sqlite3.Connection, profile: sqlite3.Row) -> dict:
+        mode = profile["approval_mode"]
+        if mode == "SINGLE":
+            return {"mode": "SINGLE", "members": [profile["approver_id"]], "required": 1}
+        group = conn.execute(
+            "SELECT enabled FROM approver_groups WHERE id=?", (profile["approver_group_id"],)
+        ).fetchone()
+        if not group or not group["enabled"]:
+            raise GrantError("APPROVER_GROUP_UNAVAILABLE", 409)
+        members = [r["user_id"] for r in conn.execute(
+            "SELECT user_id FROM approver_group_members WHERE group_id=? ORDER BY position", (profile["approver_group_id"],)
+        ).fetchall()]
+        if not members:
+            raise GrantError("APPROVER_GROUP_UNAVAILABLE", 409)
+        required = {"ANY_ONE": 1, "ALL": len(members), "SEQUENTIAL": len(members)}.get(mode, profile["approvals_required"])
+        if mode == "N_OF_M" and (
+            required is None or required < 1 or required > len(members)
+        ):
+            raise GrantError("APPROVAL_QUORUM_INVALID", 422)
+        return {"mode": mode, "group_id": profile["approver_group_id"], "members": members, "required": required}
+
     def create_profile(self, actor: Principal, body: Profile) -> dict:
         actor.require_admin()
         ident = uid()
@@ -563,14 +890,17 @@ class Core:
             self._validate_profile_refs(conn, body)
             conn.execute(
                 """INSERT INTO profiles(
-                   id,name,integration_id,approver_id,action_kind,email_template_id,
+                   id,name,integration_id,approver_id,approval_mode,approver_group_id,approvals_required,action_kind,email_template_id,
                    deadline_seconds,reminder_seconds,max_reminders,grant_seconds,enabled
-                ) VALUES(?,?,?,?,?,?,?,?,?,?,0)""",
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,0)""",
                 (
                     ident,
                     body.name,
                     body.integration_id,
                     body.approver_id,
+                    body.approval_mode,
+                    body.approver_group_id,
+                    body.approvals_required,
                     body.action_kind,
                     body.email_template_id,
                     body.deadline_seconds,
@@ -607,7 +937,7 @@ class Core:
             if current["lifecycle"] in ("DRAFT", "TESTING"):
                 conn.execute(
                     """UPDATE profile_versions
-                       SET name=?,integration_id=?,approver_id=?,action_kind=?,email_template_id=?,
+                       SET name=?,integration_id=?,approver_id=?,approval_mode=?,approver_group_id=?,approvals_required=?,action_kind=?,email_template_id=?,
                            deadline_seconds=?,reminder_seconds=?,max_reminders=?,grant_seconds=?,
                            tenant_selector=?,environment=?,severity=?,risk_level=?,
                            lifecycle='DRAFT',updated_at=?,activated_at=NULL,disabled_at=NULL
@@ -616,6 +946,9 @@ class Core:
                         body.name,
                         body.integration_id,
                         body.approver_id,
+                        body.approval_mode,
+                        body.approver_group_id,
+                        body.approvals_required,
                         body.action_kind,
                         body.email_template_id,
                         body.deadline_seconds,
@@ -768,6 +1101,9 @@ class Core:
                 name=row["name"] + " copy",
                 integration_id=row["integration_id"],
                 approver_id=row["approver_id"],
+                approval_mode=row["approval_mode"],
+                approver_group_id=row["approver_group_id"],
+                approvals_required=row["approvals_required"],
                 action_kind=row["action_kind"],
                 email_template_id=row["email_template_id"],
                 deadline_seconds=row["deadline_seconds"],
@@ -781,14 +1117,17 @@ class Core:
             )
             conn.execute(
                 """INSERT INTO profiles(
-                   id,name,integration_id,approver_id,action_kind,email_template_id,
+                   id,name,integration_id,approver_id,approval_mode,approver_group_id,approvals_required,action_kind,email_template_id,
                    deadline_seconds,reminder_seconds,max_reminders,grant_seconds,enabled
-                ) VALUES(?,?,?,?,?,?,?,?,?,?,0)""",
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,0)""",
                 (
                     new_id,
                     cloned.name,
                     cloned.integration_id,
                     cloned.approver_id,
+                    cloned.approval_mode,
+                    cloned.approver_group_id,
+                    cloned.approvals_required,
                     cloned.action_kind,
                     cloned.email_template_id,
                     cloned.deadline_seconds,
@@ -850,10 +1189,12 @@ class Core:
                 "execution_state": "NOT_STARTED",
             }
             rendered = render_from_context(template, "requested", context)
+            approval_plan = self._approval_plan(conn, row)
         return {
             "policy": version_view(row),
             "resolution": resolution,
             "approver_id": row["approver_id"],
+            "approval_plan": approval_plan,
             "timing": {
                 "deadline_seconds": row["deadline_seconds"],
                 "reminder_seconds": row["reminder_seconds"],
@@ -918,12 +1259,15 @@ class Core:
             return snapshot(row, branding=branding)
         return snapshot(None, branding=branding)
 
-    def _visible(self, row: sqlite3.Row, actor: Principal) -> None:
+    def _visible(self, conn: sqlite3.Connection, row: sqlite3.Row, actor: Principal) -> None:
         if actor.kind == "integration":
             if row["integration_id"] != actor.integration_id:
                 raise GrantError("REQUEST_NOT_FOUND", 404)
-        elif actor.role != "admin" and actor.id not in (row["requester_id"], row["approver_id"]):
-            raise GrantError("REQUEST_NOT_FOUND", 404)
+        elif actor.role != "admin":
+            plan = json.loads(row["approval_plan"] or "{}")
+            members = plan.get("members", [row["approver_id"]])
+            if actor.id != row["requester_id"] and not self._delegated_from(conn, actor.id, members, time.time()):
+                raise GrantError("REQUEST_NOT_FOUND", 404)
 
     def _load(
         self, conn: sqlite3.Connection, ident: str, actor: Principal | None = None
@@ -932,7 +1276,7 @@ class Core:
         if not row:
             raise GrantError("REQUEST_NOT_FOUND", 404)
         if actor:
-            self._visible(row, actor)
+            self._visible(conn, row, actor)
         return row
 
     def _mail_event(
@@ -1076,7 +1420,7 @@ class Core:
                     (idempotency_integration_id, body.external_id),
                 ).fetchone()
             if existing:
-                self._visible(existing, actor)
+                self._visible(conn, existing, actor)
                 if (
                     existing["intake_hash"] != intake_hash
                     or existing["requester_id"] != requester
@@ -1125,13 +1469,15 @@ class Core:
                 raise GrantError("PROFILE_SELECTION_MISMATCH", 409)
 
             mail_template = self._notification_snapshot(conn, profile)
-            if requester == profile["approver_id"]:
+            approval_plan = self._approval_plan(conn, profile)
+            if requester in approval_plan["members"]:
                 raise GrantError("SELF_APPROVAL_PROHIBITED", 403)
-            approver = conn.execute(
-                "SELECT enabled FROM users WHERE id=?", (profile["approver_id"],)
-            ).fetchone()
-            if not approver or not approver[0]:
-                raise GrantError("APPROVER_UNAVAILABLE", 409)
+            for member_id in approval_plan["members"]:
+                approver = conn.execute(
+                    "SELECT enabled FROM users WHERE id=?", (member_id,)
+                ).fetchone()
+                if not approver or not approver["enabled"]:
+                    raise GrantError("APPROVER_UNAVAILABLE", 409)
 
             if body.predecessor_id:
                 previous = self._load(conn, body.predecessor_id, actor)
@@ -1148,7 +1494,8 @@ class Core:
                 "profile_id": body.profile_id,
                 "profile_version_id": profile["id"],
                 "requester_id": requester,
-                "approver_id": profile["approver_id"],
+                "approver_id": approval_plan["members"][0],
+                "approval_plan": json_text(approval_plan),
                 "title": body.title,
                 "action": json_text(action),
                 "action_hash": action_hash,
@@ -1187,11 +1534,49 @@ class Core:
             self._mail_event(conn, row, now, "requested")
             return self._project(conn, row)
 
+    @classmethod
+    def _viewer_assignment(
+        cls, conn: sqlite3.Connection, row: sqlite3.Row, actor: Principal, now: float
+    ) -> dict:
+        if actor.kind != "human":
+            return {"viewer_assigned": False, "viewer_can_decide": False, "viewer_delegated_for": None}
+        plan = json.loads(row["approval_plan"] or "{}")
+        members = plan.get("members", [row["approver_id"]])
+        represented = cls._delegated_from(conn, actor.id, members, now)
+        assigned = bool(represented) and actor.id != row["requester_id"]
+        can_decide = assigned and row["state"] in ("AWAITING", "HELD") and row["deadline"] > now
+        if can_decide:
+            decisions = {
+                decision["actor_id"]: decision["decision"]
+                for decision in conn.execute(
+                    "SELECT actor_id,decision FROM request_decisions WHERE request_id=?",
+                    (row["id"],),
+                ).fetchall()
+            }
+            if decisions.get(represented) in ("APPROVED", "DENIED"):
+                can_decide = False
+            elif plan.get("mode") == "SEQUENTIAL":
+                pending = [
+                    member for member in members
+                    if decisions.get(member) not in ("APPROVED", "DENIED")
+                ]
+                can_decide = bool(pending) and pending[0] == represented
+        return {
+            "viewer_assigned": assigned,
+            "viewer_can_decide": can_decide,
+            "viewer_delegated_for": represented if represented != actor.id else None,
+        }
+
     def get(self, actor: Principal, ident: str) -> dict:
         with self.db.transaction() as conn:
             row = self._load(conn, ident, actor)
-            self._expire(conn, row, time.time())
-            return self._project(conn, self._load(conn, ident))
+            now = time.time()
+            self._expire(conn, row, now)
+            current = self._load(conn, ident)
+            return {
+                **self._project(conn, current),
+                **self._viewer_assignment(conn, current, actor, now),
+            }
 
     def list_requests(self, actor: Principal, limit: int = 100, offset: int = 0) -> list[dict]:
         self.maintenance()
@@ -1200,53 +1585,103 @@ class Core:
             query += " WHERE integration_id=?"
             args.append(actor.integration_id)
         elif actor.role != "admin":
-            query += " WHERE requester_id=? OR approver_id=?"
-            args += [actor.id, actor.id]
+            now = time.time()
+            query += """ WHERE requester_id=? OR approver_id=? OR approval_plan LIKE ?
+                OR EXISTS (
+                    SELECT 1 FROM delegations d
+                    WHERE d.substitute_id=? AND d.revoked_at IS NULL
+                      AND d.starts_at<=? AND d.ends_at>?
+                      AND (
+                        d.delegator_id=requests.approver_id
+                        OR requests.approval_plan LIKE '%"' || d.delegator_id || '"%'
+                      )
+                )"""
+            args += [actor.id, actor.id, f'%"{actor.id}"%', actor.id, now, now]
         query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
         with self.db.transaction(write=False) as conn:
+            now = time.time()
             return [
-                self._project(conn, r, detail=False)
-                for r in conn.execute(query, (*args, limit, offset)).fetchall()
+                {
+                    **self._project(conn, row, detail=False),
+                    **self._viewer_assignment(conn, row, actor, now),
+                }
+                for row in conn.execute(query, (*args, limit, offset)).fetchall()
             ]
 
     def decide(self, actor: Principal, ident: str, body: Decision) -> dict:
         if actor.kind != "human":
             raise GrantError("HUMAN_REQUIRED", 403)
-        self.get(actor, ident)  # Commit any observed expiry before reporting a conflict.
+        self.get(actor, ident)
         error = None
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
             row = self._load(conn, ident, actor)
             now = time.time()
-            if actor.id != row["approver_id"] or actor.id == row["requester_id"]:
+            plan = json.loads(row["approval_plan"] or "{}") or {
+                "mode": "SINGLE", "members": [row["approver_id"]], "required": 1
+            }
+            members = plan.get("members", [row["approver_id"]])
+            represented = self._delegated_from(conn, actor.id, members, now)
+            if not represented or actor.id == row["requester_id"]:
                 raise GrantError("ASSIGNED_APPROVER_REQUIRED", 403)
+            prior = conn.execute(
+                "SELECT decision FROM request_decisions WHERE request_id=? AND actor_id=?",
+                (ident, represented),
+            ).fetchone()
+            if prior and prior["decision"] == body.decision:
+                return self._project(conn, row)
+            if prior and prior["decision"] != "HELD":
+                raise GrantError("DECISION_ALREADY_RECORDED", 409)
             if self._expire(conn, row, now):
                 error = GrantError("REQUEST_EXPIRED")
-            elif row["state"] == body.decision and row["decision_actor"] == actor.id:
-                pass  # Retried identical choice cannot produce a second effect.
-            elif row["revision"] != body.expected_revision or row["state"] not in (
-                "AWAITING",
-                "HELD",
-            ):
+            elif row["revision"] != body.expected_revision or row["state"] not in ("AWAITING", "HELD"):
                 raise GrantError("STALE_OR_FINAL_DECISION")
             else:
-                until = now + row["grant_seconds"] if body.decision == "APPROVED" else None
+                mode = plan.get("mode", "SINGLE")
+                decisions = {r["actor_id"]: r["decision"] for r in conn.execute(
+                    "SELECT actor_id,decision FROM request_decisions WHERE request_id=?", (ident,)
+                ).fetchall()}
+                if mode == "SEQUENTIAL":
+                    pending = [
+                        member
+                        for member in members
+                        if decisions.get(member) not in ("APPROVED", "DENIED")
+                    ]
+                    if not pending or pending[0] != represented:
+                        raise GrantError("APPROVAL_STEP_NOT_CURRENT", 409)
+                conn.execute(
+                    """INSERT INTO request_decisions(request_id,actor_id,decision,reason,decided_at)
+                       VALUES(?,?,?,?,?) ON CONFLICT(request_id,actor_id) DO UPDATE SET
+                       decision=excluded.decision,reason=excluded.reason,decided_at=excluded.decided_at""",
+                    (ident, represented, body.decision, body.reason, now),
+                )
+                decisions[represented] = body.decision
+                approvals = sum(value == "APPROVED" for value in decisions.values())
+                denials = sum(value == "DENIED" for value in decisions.values())
+                holds = sum(value == "HELD" for value in decisions.values())
+                required = int(plan.get("required") or 1)
+                if denials:
+                    state, until = "DENIED", None
+                elif approvals >= required:
+                    state, until = "APPROVED", now + row["grant_seconds"]
+                elif holds:
+                    state, until = "HELD", None
+                else:
+                    state, until = "AWAITING", None
                 conn.execute(
                     "UPDATE requests SET state=?,decision=?,decision_actor=?,decision_at=?,grant_until=?,revision=revision+1 WHERE id=?",
-                    (body.decision, body.decision, actor.id, now, until, ident),
+                    (state, state if state in ("APPROVED","DENIED") else None,
+                     actor.id if state in ("APPROVED","DENIED") else None,
+                     now if state in ("APPROVED","DENIED") else None, until, ident),
                 )
-                audit(
-                    conn,
-                    ident,
-                    actor.id,
-                    "request." + body.decision.lower(),
-                    {"reason": body.reason},
-                    now,
-                )
+                audit(conn, ident, actor.id, "request.decision_recorded", {
+                    "decision": body.decision, "reason": body.reason, "mode": mode, "represented_approver": represented,
+                    "approvals": approvals, "required": required, "final_state": state,
+                }, now)
                 updated = self._load(conn, ident)
                 self._event(conn, updated, now, body.reason)
-                if body.decision in ("APPROVED", "DENIED"):
-                    self._mail_event(conn, updated, now, body.decision.lower())
+                if state in ("APPROVED", "DENIED"):
+                    self._mail_event(conn, updated, now, state.lower())
             result = self._project(conn, self._load(conn, ident))
         if error:
             raise error
@@ -1435,6 +1870,57 @@ class Core:
             rows = conn.execute(
                 "SELECT * FROM requests WHERE state IN ('AWAITING','HELD','APPROVED') AND execution_id IS NULL"
             ).fetchall()
+            for escalation in conn.execute(
+                "SELECT * FROM escalations WHERE fired_at IS NULL AND due_at<=?", (now,)
+            ).fetchall():
+                current = conn.execute(
+                    "SELECT * FROM requests WHERE id=?", (escalation["request_id"],)
+                ).fetchone()
+                if (
+                    not current
+                    or current["state"] not in ("AWAITING", "HELD")
+                    or current["deadline"] <= now
+                ):
+                    continue
+                plan = json.loads(current["approval_plan"] or "{}")
+                members = list(plan.get("members", [current["approver_id"]]))
+                targets = json.loads(escalation["target_members"] or "[]")
+                added: list[str] = []
+                for target in targets:
+                    available = conn.execute(
+                        "SELECT enabled FROM users WHERE id=?", (target,)
+                    ).fetchone()
+                    if (
+                        available
+                        and available["enabled"]
+                        and target != current["requester_id"]
+                        and target not in members
+                    ):
+                        members.append(target)
+                        added.append(target)
+                if added:
+                    plan["members"] = members
+                    conn.execute(
+                        "UPDATE requests SET approval_plan=?,revision=revision+1 WHERE id=?",
+                        (json_text(plan), current["id"]),
+                    )
+                conn.execute(
+                    "UPDATE escalations SET fired_at=? WHERE request_id=?",
+                    (now, current["id"]),
+                )
+                audit(
+                    conn,
+                    current["id"],
+                    "policy",
+                    "request.escalated",
+                    {
+                        "target_user_id": escalation["target_user_id"],
+                        "target_group_id": escalation["target_group_id"],
+                        "target_members": targets,
+                        "added_members": added,
+                    },
+                    now,
+                )
             for row in rows:
                 if self._expire(conn, row, now):
                     continue
@@ -1452,7 +1938,7 @@ class Core:
 
     def _project(self, conn: sqlite3.Connection, row: sqlite3.Row, detail: bool = True) -> dict:
         out = dict(row)
-        for field in ("action", "source", "execution_result"):
+        for field in ("action", "source", "execution_result", "approval_plan"):
             out[field] = json.loads(out[field]) if out[field] else None
         for field in (
             "intake_hash",
@@ -1469,6 +1955,25 @@ class Core:
             ).fetchone()
             version = version_row["version"] if version_row else None
         out["policy_version"] = version
+        out["decisions"] = [dict(r) for r in conn.execute("SELECT actor_id,decision,reason,decided_at FROM request_decisions WHERE request_id=? ORDER BY decided_at,actor_id", (row["id"],)).fetchall()]
+        escalation = conn.execute(
+            """SELECT target_user_id,target_group_id,target_members,due_at,fired_at
+               FROM escalations WHERE request_id=?""",
+            (row["id"],),
+        ).fetchone()
+        out["escalation"] = (
+            {
+                **dict(escalation),
+                "target_members": json.loads(escalation["target_members"] or "[]"),
+            }
+            if escalation
+            else None
+        )
+        out["overdue"] = bool(
+            escalation
+            and row["state"] in ("AWAITING", "HELD")
+            and escalation["due_at"] <= time.time()
+        )
         deliveries = [
             dict(r)
             for r in conn.execute(
