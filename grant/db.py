@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import stat
 import tempfile
 import time
 import uuid
@@ -13,8 +14,32 @@ from contextlib import closing, contextmanager
 from copy import deepcopy
 from pathlib import Path
 
-from .config import private_file
 from .mail_templates import DEFAULT_EVENT_TEMPLATES, DEFAULT_MAIL_TEMPLATE
+
+
+def _ensure_private_database_path(path: Path) -> None:
+    """Reserve or open only a regular database inode, private before SQLite.
+
+    An exclusive 0600 create never follows an existing symlink. On an existing
+    file, O_NOFOLLOW binds the mode change to the opened inode before SQLite
+    reads or writes any state. The operator owns the private parent directory.
+    """
+    if path.is_symlink():
+        raise ValueError("SQLite database path must not be a symlink")
+    try:
+        descriptor = os.open(
+            path, os.O_CREAT | os.O_EXCL | os.O_RDWR | os.O_NOFOLLOW, 0o600
+        )
+    except FileExistsError:
+        if path.is_symlink():
+            raise ValueError("SQLite database path must not be a symlink") from None
+        descriptor = os.open(path, os.O_RDWR | os.O_NOFOLLOW)
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise ValueError("SQLite database path must be a regular file")
+        os.fchmod(descriptor, 0o600)
+    finally:
+        os.close(descriptor)
 
 
 @contextmanager
@@ -272,6 +297,7 @@ class Database:
     def __init__(self, path: Path):
         self.path = path
         path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        _ensure_private_database_path(path)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
             if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12):
@@ -310,7 +336,6 @@ class Database:
             if version == 11:
                 self._migrate_v11_to_v12(conn)
             conn.executescript(SCHEMA)
-        private_file(path)
 
     @staticmethod
     def _migrate_v1_to_v2(conn: sqlite3.Connection) -> None:

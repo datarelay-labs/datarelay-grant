@@ -39,6 +39,12 @@ uv run --frozen grant --config /absolute/private-state/grant.json serve
 exists. Provision separate requester and approver accounts through System
 administration. Do not reuse the example address for real mail. Initialization
 refuses to overwrite existing configuration. The config must have mode 0600.
+Before the first SQLite schema write, Grant atomically reserves a NEW database
+file at mode 0600; an existing regular database is made owner-only via its
+no-follow file descriptor BEFORE SQLite opens it. Final-component database
+symlinks/nonregular files are rejected; operators must select a trusted private
+parent directory, not an attacker-controlled writable path. Initialization
+does not replace an existing database or restore a customer backup.
 Its installation encryption key is necessary to decrypt integration/TOTP material.
 `serve` listens on 127.0.0.1 only. Stop it with Ctrl-C; restart using the same config.
 Only one active installation should process a given database.

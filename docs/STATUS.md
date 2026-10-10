@@ -5,6 +5,17 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## M5 private initial database creation/reopen hardening (2026-10-10)
+
+The Grant SQLite initializer now requires a regular non-symlink database path,
+reserves first-run state at mode 0600 before sqlite3.connect writes schema and
+tightens an existing database via its open no-follow file descriptor before
+the first database read. Isolated regression reproduces pre-fix 0644 initial
+modes under umask 022 and dangling symlink creation; the native migration
+schema, user/session authorization and live external effects are unchanged.
+This assumes a trusted operator-controlled parent directory, and is local
+source hardening only, not proof of a deployed private installation.
+
 ## M5 private backup/restore publication hardening (2026-10-10)
 
 The existing SQLite backup/restore path had verified source defects: with a
