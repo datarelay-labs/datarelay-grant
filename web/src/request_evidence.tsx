@@ -2,6 +2,25 @@ import { Button, Card } from '@datarelay-labs/foundation';
 import { State, when } from './common';
 import type { RequestRow } from './types';
 
+/** A missing role-scoped server projection is not an approval or an implicit
+ * default one-seat policy. Share these labels with the RequestDetail header.
+ */
+export function approvalProgressLabel(row: Pick<RequestRow, 'approval_progress'>): string {
+  const progress = row.approval_progress;
+  return progress
+    ? `${progress.approved_count} of ${progress.required_count} approved`
+    : 'Approval progress unavailable';
+}
+
+export function approvalWaitingLabel(row: Pick<RequestRow, 'approval_progress'>): string {
+  const progress = row.approval_progress;
+  if (!progress) return 'Waiting status unavailable';
+  const waiting = progress.waiting_on.replaceAll('_', ' ');
+  const group = progress.group_name ? ' · ' + progress.group_name : '';
+  const reviewers = progress.waiting_approvers.map((person) => person.username).join(', ');
+  return waiting + group + (reviewers ? ': ' + reviewers : '');
+}
+
 /** Technical transport/audit evidence follows the primary business decision.
  * Resending remains product-owned and is only surfaced to current administrators.
  */
@@ -27,7 +46,7 @@ export function RequestEvidence({
       <Card title="Reviewer decisions" description="Current seat votes, not a complete chronological history. Email PIN alone is not proof of the person. A vote is not itself authorization to execute. See Request timeline for prior changes.">
         <p>
           {progress ? (
-            <strong>{progress.approved_count} of {progress.required_count} approved</strong>
+            <strong>{approvalProgressLabel(row)}</strong>
           ) : (
             <>
               <strong>Approval progress unavailable</strong>

@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { RequestEvidence } from '../../src/request_evidence';
+import { RequestEvidence, approvalProgressLabel, approvalWaitingLabel } from '../../src/request_evidence';
 import type { RequestRow } from '../../src/types';
 
 function request(extra: Partial<RequestRow> = {}): RequestRow {
@@ -162,5 +162,35 @@ describe('Approval progress must not be synthesized from vote records', () => {
     expect(html).not.toContain('2 of 2 approved');
     expect(html).toContain('Approval seat 2');
     expect(html).not.toContain('Resend email');
+  });
+});
+
+
+describe('RequestDetail and reviewer evidence share server-authoritative progress', () => {
+  it('discloses missing projection without inferring approval from a recorded vote', () => {
+    const row = request({
+      decisions: [{ actor_id: 'removed-seat', decision: 'APPROVED', reason: '', decided_at: 150 }],
+    });
+    expect(approvalProgressLabel(row)).toBe('Approval progress unavailable');
+    expect(approvalWaitingLabel(row)).toBe('Waiting status unavailable');
+    expect(markup(row, false)).toContain(approvalProgressLabel(row));
+  });
+
+  it('formats the same server-provided progress for the summary and vote card', () => {
+    const row = request({
+      approval_progress: {
+        mode: 'ALL', approved_count: 1, required_count: 2, total_members: 2,
+        waiting_approver_ids: ['seat-b'], waiting_approvers: [{ id: 'seat-b', username: 'Reviewer B' }],
+        group_name: 'Production', waiting_on: 'APPROVERS',
+      },
+      decisions: [
+        { actor_id: 'seat-a', decision: 'APPROVED', reason: '', decided_at: 200 },
+        { actor_id: 'seat-b', decision: 'HELD', reason: '', decided_at: 201 },
+      ],
+    });
+    expect(approvalProgressLabel(row)).toBe('1 of 2 approved');
+    expect(approvalWaitingLabel(row)).toBe('APPROVERS · Production: Reviewer B');
+    expect(markup(row, false)).toContain(approvalProgressLabel(row));
+    expect(approvalProgressLabel(request({ decisions: [] }))).toBe('Approval progress unavailable');
   });
 });
