@@ -11,20 +11,37 @@ from pathlib import Path
 import pytest
 
 HEAD = "a" * 40
+SOURCE_TREE = "c" * 40
+FOUNDATION_COMMIT = "b" * 40
 TOOL = Path(__file__).resolve().parents[1] / "tools/verify_candidate.py"
 
 
-def make_archive(tmp_path, *, corrupt=False, extra=False, duplicate=False):
+def make_archive(
+    tmp_path, *, corrupt=False, extra=False, duplicate=False,
+    manifest_changes=None, lock_changes=None, omit_lock=False,
+):
     entries = {
         "grant/__init__.py": b'__version__ = "test"\n',
         "web/dist/index.html": b"<html></html>",
     }
+    if not omit_lock:
+        foundation = {
+            "schema_version": 1, "commit": FOUNDATION_COMMIT,
+            "source_head": FOUNDATION_COMMIT,
+        }
+        foundation.update(lock_changes or {})
+        entries["web/foundation.lock.json"] = json.dumps(foundation).encode()
     manifest = {
         "schema_version": 1,
         "source_head": HEAD,
+        "source_tree": SOURCE_TREE,
+        "foundation_commit": FOUNDATION_COMMIT,
+        "publication": "NOT_PUBLISHED",
+        "release_readiness": "NOT_ASSERTED",
         "source_state": "clean",
         "files": {name: hashlib.sha256(data).hexdigest() for name, data in entries.items()},
     }
+    manifest.update(manifest_changes or {})
     if corrupt:
         entries["grant/__init__.py"] = b"different source"
     if extra:
@@ -55,7 +72,7 @@ def test_verifies_every_file_without_extracting(tmp_path):
     result = invoke(archive, digest)
     assert result.returncode == 0, result.stderr
     evidence = json.loads(result.stdout)
-    assert evidence["integrity"] == "PASS" and evidence["verified_files"] == 2
+    assert evidence["integrity"] == "PASS" and evidence["verified_files"] == 3
     assert evidence["release_readiness"] == "NOT_ASSERTED"
     assert list(tmp_path.iterdir()) == [archive]
 
@@ -80,3 +97,30 @@ def test_truncated_archive_rejected(tmp_path):
     archive = tmp_path / "bad.tar.gz"
     archive.write_bytes(b"not a tar archive")
     assert invoke(archive, hashlib.sha256(archive.read_bytes()).hexdigest()).returncode != 0
+
+
+@pytest.mark.parametrize("field,value", [
+    ("publication", "PUBLISHED"),
+    ("publication", None),
+    ("release_readiness", "ACCEPTED"),
+    ("release_readiness", None),
+    ("source_tree", "not-a-commit"),
+    ("source_tree", None),
+    ("foundation_commit", "not-a-commit"),
+    ("foundation_commit", "d" * 40),
+])
+def test_rejects_unreviewed_release_or_source_metadata(tmp_path, field, value):
+    archive, digest = make_archive(tmp_path, manifest_changes={field: value})
+    result = invoke(archive, digest)
+    assert result.returncode != 0, f"accepted forbidden {field}={value!r}"
+
+
+@pytest.mark.parametrize("field", ["commit", "source_head"])
+def test_foundation_lock_must_match_manifest_and_itself(tmp_path, field):
+    archive, digest = make_archive(tmp_path, lock_changes={field: "d" * 40})
+    assert invoke(archive, digest).returncode != 0
+
+
+def test_missing_foundation_lock_is_not_a_verified_candidate(tmp_path):
+    archive, digest = make_archive(tmp_path, omit_lock=True)
+    assert invoke(archive, digest).returncode != 0

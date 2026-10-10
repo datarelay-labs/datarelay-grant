@@ -31,6 +31,7 @@ def verify(archive: Path, expected_head: str, expected_sha256: str) -> dict:
     if digest.hexdigest() != expected_sha256:
         raise ValueError("Archive SHA256 mismatch")
     hashes, total, manifest = {}, 0, None
+    foundation_lock = None
     with tarfile.open(archive, "r:gz") as bundle:
         for index, member in enumerate(bundle):
             name = PurePosixPath(member.name)
@@ -62,15 +63,37 @@ def verify(archive: Path, expected_head: str, expected_sha256: str) -> dict:
             hashes[key] = hashlib.sha256(data).hexdigest()
             if key == "BUILD-MANIFEST.json":
                 manifest = json.loads(data)
+            elif key == "web/foundation.lock.json":
+                foundation_lock = json.loads(data)
     if not isinstance(manifest, dict) or manifest.get("schema_version") != 1:
         raise ValueError("Missing or unsupported build manifest")
     if manifest.get("source_head") != expected_head or manifest.get("source_state") != "clean":
         raise ValueError("Source binding mismatch")
+    if (manifest.get("publication") != "NOT_PUBLISHED"
+            or manifest.get("release_readiness") != "NOT_ASSERTED"):
+        raise ValueError("Candidate cannot claim publication or release acceptance")
+    if not isinstance(manifest.get("source_tree"), str) or not re.fullmatch(
+        r"[0-9a-f]{40}", manifest["source_tree"]
+    ):
+        raise ValueError("Invalid candidate Git tree binding")
+    foundation_commit = manifest.get("foundation_commit")
+    if not isinstance(foundation_commit, str) or not re.fullmatch(
+        r"[0-9a-f]{40}", foundation_commit
+    ):
+        raise ValueError("Invalid candidate Foundation source binding")
     hashes.pop("BUILD-MANIFEST.json", None)
     if manifest.get("files") != hashes:
         raise ValueError("Candidate file manifest mismatch")
     if "grant/__init__.py" not in hashes or "web/dist/index.html" not in hashes:
         raise ValueError("Candidate is missing product code or compiled UI")
+    if not isinstance(foundation_lock, dict) or type(foundation_lock.get("schema_version")) is not int:
+        raise ValueError("Missing or invalid candidate Foundation lock")
+    if (foundation_lock["schema_version"] != 1
+            or foundation_lock.get("commit") != foundation_commit
+            or foundation_lock.get("source_head") != foundation_commit):
+        raise ValueError("Candidate Foundation lock differs from manifest")
+    # Internal metadata consistency only: this does not authenticate the upstream
+    # Foundation checkout, attest a release, or authorize publication.
     return {
         "integrity": "PASS",
         "source_head": expected_head,

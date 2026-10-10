@@ -5,6 +5,17 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G12 unpublished candidate metadata verification (2026-10-10)
+
+The exact-source candidate verifier now rejects false publication/release
+acceptance assertions, malformed Git tree or Foundation source identifiers,
+and missing/mismatched pinned Foundation lock data inside the archive. This
+validates internal bundle consistency against a separately supplied expected
+archive SHA256 and Git HEAD; it does not authenticate the upstream Foundation
+checkout, attest a user E2E result, authorize deployment or prove release
+readiness. Regressions and isolated artifact qualification are tracked by
+Work Packet #97, not by an owner-accepted release.
+
 ## G3/G4 optimistic concurrency convergence on current G10A branch (2026-10-10)
 
 The newest integrated Grant candidate now carries the previously tested G3/G4
