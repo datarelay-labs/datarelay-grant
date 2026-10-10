@@ -4,10 +4,23 @@ import { api } from './api';
 import { Form, useTask } from './common';
 import type { ApproverGroup } from './types';
 
+// Every edit sends the server revision the operator actually reviewed.
+export function prepareApproverGroupUpdate(
+  baseline: ApproverGroup | null,
+  name: string,
+  members: readonly string[],
+): { name: string; member_ids: string[]; expected_updated_at: number } {
+  if (!baseline || !Number.isFinite(baseline.updated_at) || baseline.updated_at <= 0) {
+    throw new Error('APPROVER_GROUP_VERSION_UNAVAILABLE');
+  }
+  return { name, member_ids: [...members], expected_updated_at: baseline.updated_at };
+}
+
 export function Approvers() {
   const [groups, setGroups] = useState<ApproverGroup[]>([]);
   const [users, setUsers] = useState<AccountProjection[]>([]);
   const [editing, setEditing] = useState('');
+  const [editingBaseline, setEditingBaseline] = useState<ApproverGroup | null>(null);
   const [name, setName] = useState('');
   const [members, setMembers] = useState<string[]>([]);
   const task = useTask();
@@ -25,24 +38,37 @@ export function Approvers() {
 
   function edit(group: ApproverGroup) {
     setEditing(group.id);
+    setEditingBaseline({ ...group, member_ids: [...group.member_ids] });
     setName(group.name);
-    setMembers(group.member_ids);
+    setMembers([...group.member_ids]);
   }
 
   function reset() {
     setEditing('');
+    setEditingBaseline(null);
     setName('');
     setMembers([]);
   }
 
   async function save() {
-    await api(editing ? '/approver-groups/' + editing : '/approver-groups', editing ? 'PUT' : 'POST', {
-      name,
-      member_ids: members,
-    });
+    const payload = editing
+      ? prepareApproverGroupUpdate(editingBaseline, name, members)
+      : { name, member_ids: [...members] };
+    await api(editing ? '/approver-groups/' + editing : '/approver-groups',
+      editing ? 'PUT' : 'POST', payload);
     reset();
     await load();
     task.setNotice('Approver group saved. Existing requests retain their approval-plan snapshot.');
+  }
+
+  async function reloadSavedGroup() {
+    if (!editing) return;
+    const fresh = await api<ApproverGroup[]>('/approver-groups');
+    const current = fresh.find((group) => group.id === editing);
+    if (!current) throw new Error('APPROVER_GROUP_NOT_FOUND');
+    setGroups(fresh);
+    edit(current);
+    task.setNotice('Latest saved group loaded. Unsaved edits were discarded.');
   }
 
   return <div className="grant-stack">
@@ -70,7 +96,13 @@ export function Approvers() {
             {user.displayName} · {user.detail}
           </label>)}
         </fieldset>
-        {editing ? <Button type="button" variant="ghost" onClick={reset}>Cancel</Button> : null}
+        {editing ? <>
+          <p>Group membership is security-sensitive. If another administrator changes
+            this group, your save is rejected until you review the latest saved version.</p>
+          <Button type="button" variant="secondary" disabled={task.busy}
+            onClick={() => void task.run(reloadSavedGroup)}>Reload saved group</Button>
+          <Button type="button" variant="ghost" onClick={reset}>Cancel</Button>
+        </> : null}
       </Form>
     </Card>
   </div>;
