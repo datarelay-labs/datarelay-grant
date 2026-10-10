@@ -176,6 +176,7 @@ def test_stellar_correlated_normalized_readback_never_claims_independent_accepta
     observed = {
         "grant_event_id": evt, "grant_request_id": rid,
         "tenant_id": original["tenant_id"], "case_id": original["case_id"],
+        "alert_id": original["alert_id"], "state_revision": outcome["state_revision"],
         "state": "APPROVED", "receiver_record_id": "xdr-isolated-event",
     }
     candidate = correlate_stellar_receiver_observation(
@@ -184,11 +185,15 @@ def test_stellar_correlated_normalized_readback_never_claims_independent_accepta
     )
     assert candidate["tenant_matches"]
     assert candidate["case_matches"]
+    assert candidate["alert_matches"] and candidate["revision_matches"]
     assert candidate["independently_verified"] is False
     assert candidate["acceptance_state"] != "PASS"
     for drift in (
         {"tenant_id": "other"},
         {"case_id": "other"},
+        {"alert_id": "other"},
+        {"state_revision": outcome["state_revision"] + 1},
+        {"state_revision": True},
         {"grant_event_id": str(uuid.uuid4())},
         {"grant_request_id": str(uuid.uuid4())},
         {"state": "DENIED"},
@@ -249,3 +254,107 @@ def test_wrong_or_invalid_product_owned_integration_binding_rejected(untrusted_e
 def test_control_pilot_changed_product_route_destination_or_log_rejected(parameters):
     with pytest.raises(ConsumerGuardError, match="PRODUCT_GRANT_BINDING_INVALID"):
         decide(action=Action(kind=ACTION.kind, target=ACTION.target, parameters=parameters))
+
+
+@pytest.mark.parametrize("state", ["APPROVED", "DENIED", "HELD", "EXPIRED"])
+def test_stellar_normalized_observation_requires_exact_alert_and_revision(state):
+    from grant.consumer_guard import correlate_stellar_receiver_observation
+
+    source = {
+        "product": "stellar",
+        "tenant_id": "tenant-a",
+        "case_id": "case-a",
+        "alert_id": "alert-1",
+    }
+    event = {
+        "event_type": "grant.approval.outcome",
+        "event_id": str(uuid.uuid4()),
+        "request_id": str(uuid.uuid4()),
+        "state": state,
+        "state_revision": 3,
+        "source": source,
+    }
+    valid = {
+        "grant_event_id": event["event_id"],
+        "grant_request_id": event["request_id"],
+        "tenant_id": source["tenant_id"],
+        "case_id": source["case_id"],
+        "alert_id": source["alert_id"],
+        "state_revision": event["state_revision"],
+        "state": state,
+        "receiver_record_id": "local-normalized-record",
+    }
+
+    def validate(observed):
+        return correlate_stellar_receiver_observation(
+            deployed_version="7.0.xs",
+            source=source,
+            grant_outcome=event,
+            receiver_observation=observed,
+            feedback_excluded=True,
+        )
+
+    candidate = validate(valid)
+    assert candidate["alert_matches"] is True
+    assert candidate["revision_matches"] is True
+    assert candidate["independently_verified"] is False
+    assert candidate["acceptance_state"] == (
+        "RECEIVER_CORRELATION_PENDING_INDEPENDENT_READBACK"
+    )
+
+    for field, invalid in (
+        ("alert_id", "other-alert"),
+        ("alert_id", ""),
+        ("alert_id", None),
+        ("state_revision", 2),
+        ("state_revision", 4),
+        ("state_revision", True),
+        ("state_revision", 3.0),
+        ("state_revision", "3"),
+        ("state_revision", 0),
+        ("receiver_record_id", "injected\nrecord"),
+    ):
+        with pytest.raises(ConsumerGuardError, match="STELLAR_CORRELATION_INVALID"):
+            validate({**valid, field: invalid})
+
+    for missing in ("alert_id", "state_revision"):
+        with pytest.raises(ConsumerGuardError, match="STELLAR_CORRELATION_INVALID"):
+            validate({key: value for key, value in valid.items() if key != missing})
+
+
+@pytest.mark.parametrize("unsafe", ["bad\x00id", "bad\x1fid", "bad\x7fid"])
+def test_stellar_source_identity_control_characters_fail_closed(unsafe):
+    from grant.consumer_guard import correlate_stellar_receiver_observation
+
+    source = {
+        "product": "stellar",
+        "tenant_id": unsafe,
+        "case_id": "case-a",
+        "alert_id": "alert-1",
+    }
+    event = {
+        "event_type": "grant.approval.outcome",
+        "event_id": str(uuid.uuid4()),
+        "request_id": str(uuid.uuid4()),
+        "state": "APPROVED",
+        "state_revision": 1,
+        "source": source,
+    }
+    readback = {
+        "grant_event_id": event["event_id"],
+        "grant_request_id": event["request_id"],
+        "tenant_id": unsafe,
+        "case_id": "case-a",
+        "alert_id": "alert-1",
+        "state_revision": 1,
+        "state": "APPROVED",
+        "receiver_record_id": "local-record-1",
+    }
+    with pytest.raises(ConsumerGuardError, match="STELLAR_CORRELATION_INVALID"):
+        correlate_stellar_receiver_observation(
+            deployed_version="7.0.xs",
+            source=source,
+            grant_outcome=event,
+            receiver_observation=readback,
+            feedback_excluded=True,
+        )

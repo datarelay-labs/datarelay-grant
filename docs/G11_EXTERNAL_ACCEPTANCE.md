@@ -83,11 +83,18 @@ tenant-scoped auth, supported receiver endpoint or actual correlated XDR record
 was available here. No customer/production Stellar connection was invoked.
 
 To close M4, record the installed version and supported outgoing/incoming
-capabilities, approved responder and receiver configuration, original case and
-tenant binding, received APPROVED/DENIED/HELD/EXPIRED outcome events by immutable
-Grant request/event ID, receiver deduplication, and explicit exclusion of Grant
-outcome and connection-test events from any approval-trigger rule. Verify
-actual receiver readback, not just callback HTTP acceptance.
+capabilities, approved responder and receiver configuration, original case,
+alert and tenant binding, received APPROVED/DENIED/HELD/EXPIRED outcome events
+by immutable Grant request/event ID AND its exact positive state revision,
+receiver deduplication, and explicit exclusion of Grant outcome and
+connection-test events from any approval-trigger rule. Grant's unmounted pure
+normalized readback checker rejects missing/wrong alert IDs and mismatched
+event state revisions, including booleans in place of integers. Source and
+receiver record identifiers cannot contain control characters. Vendor
+payloads need a separately verified deployed-version mapping into these
+normalized fields; no particular Stellar payload keys are invented here.
+A matching tuple remains only a candidate pending independently verified
+receiver readback, not M4 PASS or approval authority.
 
 ## Owner-controlled gates / responsibilities
 

@@ -174,6 +174,8 @@ def correlate_stellar_receiver_observation(
 
     The receiver_observation mapping is an operator-supplied normalized
     readback, NOT a promise of a specific vendor webhook payload field name.
+    A valid normalized readback MUST retain the exact source tenant, case,
+    alert and event state revision, as well as event/request IDs and outcome.
     Even a matching tuple is untrusted without independently querying the
     real deployed receiver.
     """
@@ -199,7 +201,7 @@ def correlate_stellar_receiver_observation(
         if (
             not isinstance(value, str)
             or not 1 <= len(value) <= 128
-            or any(c in value for c in "\r\n")
+            or any(ord(c) < 32 or ord(c) == 127 for c in value)
         ):
             raise ConsumerGuardError("STELLAR_CORRELATION_INVALID")
 
@@ -219,9 +221,15 @@ def correlate_stellar_receiver_observation(
         or receiver_observation.get("grant_request_id") != request_id
         or receiver_observation.get("tenant_id") != source["tenant_id"]
         or receiver_observation.get("case_id") != source["case_id"]
+        or type(receiver_observation.get("alert_id")) is not str
+        or receiver_observation.get("alert_id") != source["alert_id"]
+        or type(receiver_observation.get("state_revision")) is not int
+        or receiver_observation.get("state_revision") != grant_outcome["state_revision"]
         or receiver_observation.get("state") != grant_outcome["state"]
         or not isinstance(receiver_observation.get("receiver_record_id"), str)
         or not 1 <= len(receiver_observation["receiver_record_id"]) <= 128
+        or any(ord(c) < 32 or ord(c) == 127
+               for c in receiver_observation["receiver_record_id"])
     ):
         raise ConsumerGuardError("STELLAR_CORRELATION_INVALID")
     return {
@@ -232,6 +240,8 @@ def correlate_stellar_receiver_observation(
         "state": grant_outcome["state"],
         "tenant_matches": True,
         "case_matches": True,
+        "alert_matches": True,
+        "revision_matches": True,
         "feedback_excluded": True,
         "independently_verified": False,
         "acceptance_state": "RECEIVER_CORRELATION_PENDING_INDEPENDENT_READBACK",
