@@ -189,6 +189,12 @@ def quality_close(surface_path: Path, e2e_path: Path, root: Path) -> None:
     print("CANDIDATE_FREEZE_ELIGIBLE=NO")
     print("AUTHORIZES_RELEASE=NO")
     print("PERFORMS_EXTERNAL_MUTATION=NO")
+    # A structural contract check can verify field presence, SHA binding and
+    # self-reported percentages; it cannot independently attest who drove the
+    # browser or verify real consumer effects. Exit nonzero even when every
+    # self-asserted field is PASS, so shell/CI callers cannot accidentally
+    # promote this printed BLOCK to a release-ready process success.
+    raise ContractError("TRUSTED_PERSONA_ATTESTATION_REQUIRED")
 
 
 def parser() -> argparse.ArgumentParser:

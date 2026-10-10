@@ -1,0 +1,90 @@
+/* Grant-specific Administration composition built from shared Foundation cards. */
+.grant-admin-workspace {
+  width: 100%;
+  max-width: none;
+  gap: var(--dr-space-5);
+}
+
+.grant-admin-workspace > .grant-admin-heading {
+  padding-bottom: var(--dr-space-4);
+  border-bottom: 1px solid var(--dr-border-divider);
+}
+
+.grant-admin-access-context {
+  display: grid;
+  gap: var(--dr-space-1);
+  padding: var(--dr-space-3) var(--dr-space-4);
+  border: 1px solid var(--dr-border-default);
+  border-radius: var(--dr-radius-card);
+  background: var(--dr-surface-section);
+}
+
+.grant-admin-access-context p {
+  margin: 0;
+  font-size: var(--dr-font-size-sm);
+  color: var(--dr-text-muted);
+}
+
+.grant-admin-task-groups {
+  display: grid;
+  gap: var(--dr-space-6);
+}
+
+.grant-admin-task-group {
+  display: grid;
+  min-width: 0;
+  gap: var(--dr-space-3);
+}
+
+.grant-admin-task-group > header h3 {
+  margin: 0;
+  font-size: var(--dr-font-size-base);
+  font-weight: var(--dr-font-weight-strong);
+}
+
+.grant-admin-task-group > header p {
+  margin: var(--dr-space-1) 0 0;
+  font-size: var(--dr-font-size-sm);
+  color: var(--dr-text-muted);
+}
+
+.grant-admin-task-group .dr-admin__task-grid {
+  gap: var(--dr-space-3);
+}
+
+.grant-admin-task-group .dr-card {
+  min-width: 0;
+}
+
+.grant-admin-task-group .dr-card__header,
+.grant-admin-task-group .dr-card__body {
+  padding: var(--dr-space-3);
+}
+
+.grant-admin-task-group .dr-card__description {
+  line-height: 1.45;
+}
+
+.grant-admin-task-group .dr-admin__muted {
+  margin: 0 0 var(--dr-space-3);
+}
+
+/* The chosen task opens below the catalog; focus and scroll to actual work. */
+.grant-admin-selected-task {
+  display: grid;
+  min-width: 0;
+  gap: var(--dr-space-4);
+  scroll-margin-block-start: var(--dr-space-5);
+}
+
+.grant-admin-selected-task:focus-visible {
+  outline: 2px solid var(--dr-border-default);
+  outline-offset: 2px;
+  border-radius: var(--dr-radius-card);
+}
+
+@media (max-width: 640px) {
+  .grant-admin-task-groups {
+    gap: var(--dr-space-5);
+  }
+}

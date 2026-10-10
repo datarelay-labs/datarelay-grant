@@ -215,13 +215,34 @@ permanently expanded global page.
 Administration uses Product Foundation capability-driven task presentation instead of a
 wall of settings panels.
 
-Initial Grant tasks:
+The DataRelay Control Administration reference uses the same Foundation
+`AdminTaskCatalog` as Grant, but Control groups multiple catalog instances. Grant
+must likewise present **four clear task groups**, with a current-access-context banner
+and direct in-page details or real routes:
 
-- System health / information
-- Accounts
-- Audit history
-- Mail delivery test
-- Lifecycle / recovery guidance
+- **Access & security**: actual local user management and self-service password/MFA
+  can be managed; an HTTPS/certificate editor is **unavailable** in Grant.
+- **Platform & network**: timezone, port and reverse-proxy editors are **unavailable**.
+  They must be clearly distinguished from real read-only operational guidance.
+- **Lifecycle & recovery**: current backup/restore is documented **CLI-only**;
+  policy retention scheduling has no Administration editor; the safe configuration
+  export/conflict preview lives in Integrations and is non-applying.
+- **Operations & audit**: read-only System health/Audit and real admin-only mail
+  delivery test; existing Operations/Audit explorer remain separate workspaces.
+
+Render each group with the **shared Foundation `AdminTaskCatalog`**, including
+`showUnavailable` for honest capability status rather than falsely enabled
+Manage actions. Selecting an in-page task must bring its actual details into
+view and transfer keyboard focus to the task region so a click near the top
+of the long catalog never appears to do nothing. Avoid cloning Control's platform-specific TLS certificate manager,
+network settings or credentials. The Administration workspace may span the content
+area and use Foundation token-based, locally scoped spacing; do not fork the
+Foundation shell, auth, card or admin components.
+
+The Grant login must use the **shared** Foundation Auth Layout's centered composition.
+Foundation owns the reusable login layout, resource/credential focus order and
+320/375-pixel mobile usability. No Grant-owned auth markup/CSS fork is permitted;
+upstream remediation plus a verified versioned Foundation lock is required.
 
 Foundation renders shared task/status/account/audit patterns. Grant adapters remain the
 authority for reads and mutations.
