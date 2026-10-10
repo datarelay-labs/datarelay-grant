@@ -1,7 +1,7 @@
 import time
 
 from grant.auth import Principal
-from grant.models import ApproverGroup, Delegation, Profile
+from grant.models import ApproverGroup, ApproverGroupUpdate, Delegation, Profile
 
 
 def active_group_profile(env):
@@ -89,6 +89,7 @@ def test_escalation_adds_target_once_and_audits(env):
     admin = env.human('admin')
     configured = admin.post(f"/api/v1/requests/{request['id']}/escalation", json={
         'target_user_id': env.users['stranger']['id'], 'after_seconds': 60,
+        'expected_revision': request['revision'],
     })
     assert configured.status_code == 200, configured.text
     with env.db.transaction() as conn:
@@ -169,15 +170,23 @@ def test_group_escalation_snapshots_members_and_marks_overdue(env):
     admin = env.human("admin")
     configured = admin.post(
         f"/api/v1/requests/{request['id']}/escalation",
-        json={"target_group_id": target_group["id"], "after_seconds": 60},
+        json={
+            "target_group_id": target_group["id"], "after_seconds": 60,
+            "expected_revision": request["revision"],
+        },
     )
     assert configured.status_code == 200, configured.text
     assert configured.json()["target_members"] == [env.users["stranger"]["id"]]
 
+    target_revision = next(row["updated_at"] for row in env.core.approver_groups(env.admin)
+                           if row["id"] == target_group["id"])
     env.core.update_approver_group(
         env.admin,
         target_group["id"],
-        ApproverGroup(name="Escalation team changed", member_ids=[env.users["admin"]["id"]]),
+        ApproverGroupUpdate(
+            name="Escalation team changed", member_ids=[env.users["admin"]["id"]],
+            expected_updated_at=target_revision,
+        ),
     )
     with env.db.transaction() as conn:
         conn.execute(
@@ -275,3 +284,70 @@ def test_reassignment_rejects_previous_vote_without_changing_quorum(env):
     ]
     assert current["state"] == "AWAITING"
     assert len([decision for decision in current["decisions"] if decision["decision"] == "APPROVED"]) == 1
+
+
+def test_two_admin_escalation_stale_update_cannot_replace_routing(env):
+    """Two independently authenticated admins cannot silently replace escalation."""
+    import secrets
+
+    from fastapi.testclient import TestClient
+
+    profile = active_group_profile(env)
+    request = create(env, profile)
+    endpoint = f"/api/v1/requests/{request['id']}/escalation"
+    original_revision = request["revision"]
+    admin_a = env.human("admin")
+    password = secrets.token_urlsafe(24)
+    second = env.auth.create_user(
+        "routing-admin", "routing-admin@example.invalid", password, "admin",
+    )
+    admin_b = TestClient(env.app)
+    try:
+        login = admin_b.post("/api/v1/auth/login", json={
+            "username": "routing-admin", "password": password,
+        })
+        assert login.status_code == 200
+        admin_b.headers["x-csrf-token"] = login.json()["csrf"]
+        first = admin_a.post(endpoint, json={
+            "target_user_id": env.users["stranger"]["id"],
+            "after_seconds": 3600,
+            "expected_revision": original_revision,
+        })
+        assert first.status_code == 200, first.text
+        assert first.json()["revision"] == original_revision + 1
+        with env.db.transaction(write=False) as conn:
+            audit_count = conn.execute(
+                "SELECT COUNT(*) FROM audit WHERE request_id=? "
+                "AND action='request.escalation_configured'",
+                (request["id"],),
+            ).fetchone()[0]
+        stale = admin_b.post(endpoint, json={
+            "target_user_id": second["id"],
+            "after_seconds": 1800,
+            "expected_revision": original_revision,
+        })
+        assert stale.status_code == 409, stale.text
+        assert stale.json()["error"]["code"] == "STALE_OR_FINAL_REQUEST"
+        current = admin_a.get(f"/api/v1/requests/{request['id']}")
+        assert current.status_code == 200
+        assert current.json()["revision"] == original_revision + 1
+        assert current.json()["escalation"]["target_user_id"] == env.users["stranger"]["id"]
+        with env.db.transaction(write=False) as conn:
+            assert conn.execute(
+                "SELECT COUNT(*) FROM audit WHERE request_id=? "
+                "AND action='request.escalation_configured'",
+                (request["id"],),
+            ).fetchone()[0] == audit_count
+
+        refreshed = admin_b.post(endpoint, json={
+            "target_user_id": second["id"],
+            "after_seconds": 1800,
+            "expected_revision": current.json()["revision"],
+        })
+        assert refreshed.status_code == 200, refreshed.text
+        assert refreshed.json()["revision"] == original_revision + 2
+        assert admin_b.post(endpoint, json={
+            "target_user_id": second["id"], "after_seconds": 1800,
+        }).status_code == 422
+    finally:
+        admin_b.close()

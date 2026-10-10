@@ -43,11 +43,16 @@ capability remains whatever is present and tested at the committed candidate HEA
 - G3 development candidate: approver groups and Single / Any One / All / N-of-M /
   Sequential modes, validated quorum bounds, policy-plan preview, request-time membership
   snapshots and auditable per-member decisions. An approval plan cannot silently count
-  duplicate votes or allow approval by an unavailable member.
+  duplicate votes or allow approval by an unavailable member. G3 candidate group edits
+  now require an exact loaded updated_at revision; stale writes fail with HTTP 409
+  without losing newer membership, reducing future ALL thresholds, or writing an audit
+  event. Existing group snapshots remain unchanged.
 - G4 development candidate: time-bounded self-service delegation and revocation,
   administrator reassignment (recorded voters cannot be silently replaced), user/group
   escalation with snapshotted targets, overdue/escalated request projections, and
-  delegated work queue/administrator browser controls.
+  delegated work queue/administrator browser controls. G4 candidate escalation
+  scheduling requires the reviewed request revision, advances it on successful
+  updates, and refuses stale scheduling without overwriting the target.
 - Immutable action, explicit approve/hold/deny, expiry, bounded reminders,
   cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.

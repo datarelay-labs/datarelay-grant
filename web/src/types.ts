@@ -34,4 +34,4 @@ export type NotificationBranding = { brand_name: string; sender_display_name: st
 export type PolicyHistory = { profile_id: string; versions: Profile[]; events: { id: string; at: number; actor: string; action: string; detail: Record<string, unknown> }[] };
 export type PolicyPreview = { policy: Profile; resolution: { matched: boolean; specificity: number; selectors: Record<string, { configured: string | null; actual: string | null; matched: boolean; wildcard: boolean }> }; approver_id: string; timing: { deadline_seconds: number; reminder_seconds: number; max_reminders: number }; execution_grant: { action_kind: string; validity_seconds: number }; notification: { subject: string; body: string; sender_display_name: string; brand_name: string }; execution_allowed: boolean; test_mode?: boolean };
 
-export type ApproverGroup = { id: string; name: string; member_ids: string[]; enabled: boolean };
+export type ApproverGroup = { id: string; name: string; member_ids: string[]; enabled: boolean; updated_at: number };
