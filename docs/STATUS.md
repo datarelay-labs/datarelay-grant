@@ -5,6 +5,21 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G12 historical populated v8-to-v12 database upgrade regression (2026-10-10)
+
+The current integrated candidate includes a static, SHA256-pinned verbatim
+SQLite v8 schema captured from historical Git source e21a080. A new offline
+regression migrates its **populated** synthetic requester, administrator,
+two-approver ALL policy, pending/denied requests, unchanged action hashes,
+approval group, audit, outbox and session from v8 to v12. It checks that the
+old request's email-PIN path stays disabled, no PIN issuance or OTP is minted,
+all four approval assignments are restored exactly once across restarts,
+and a fresh-path backup/restore clears old sessions and remains PAUSED.
+The original v8 source database is preserved for rollback. This tests a
+real older schema rather than only lowering PRAGMA user_version on a modern
+database. Work Packet #99 owns source qualification. It does **not** imply a
+customer migration, actual email execution, direct human E2E, or release.
+
 ## G11 trusted product and Stellar evidence guard convergence (2026-10-10)
 
 The newer integrated source now carries reviewed non-executing G11 contract
