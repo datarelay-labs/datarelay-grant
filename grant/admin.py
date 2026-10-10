@@ -1,9 +1,13 @@
 """Read-only common administration projections for Foundation."""
 
-from fastapi import Request
+from typing import Literal
+
+from fastapi import Query, Request, Response
 
 from . import __version__
+from .audit_evidence import audit_export, audit_search, request_chain, sanitized_detail
 from .auth import require_current_authority
+from .configuration_preview import preview_configuration
 from .db import audit
 from .errors import GrantError
 from .models import NewUser
@@ -72,20 +76,83 @@ def register_admin(app, actor):
     def audits(request: Request):
         from .identity_routes import iso
 
-        actor(request).require_admin()
+        principal = actor(request)
+        principal.require_admin()
         with app.state.db.transaction(write=False) as conn:
-            rows = conn.execute("SELECT * FROM audit ORDER BY at DESC LIMIT 200").fetchall()
+            require_current_authority(conn, principal)
+            rows = conn.execute(
+                "SELECT * FROM audit ORDER BY at DESC,id DESC LIMIT 200"
+            ).fetchall()
+        # Retain the Foundation AuditList adapter shape but do not leak
+        # untrusted free-text audit details into that older projection.
+        import json
+
         return [
             {
-                "id": r["id"],
-                "timestamp": iso(r["at"]),
-                "action": r["action"],
-                "actor": r["actor"],
-                "reference": r["request_id"] or "",
-                "summary": r["detail"],
+                "id": row["id"],
+                "timestamp": iso(row["at"]),
+                "action": row["action"],
+                "actor": row["actor"],
+                "reference": row["request_id"] or "",
+                "summary": json.dumps(sanitized_detail(row["detail"]), sort_keys=True),
             }
-            for r in rows
+            for row in rows
         ]
+
+    @app.get("/api/v1/admin/audit/search")
+    def search_audit(
+        request: Request,
+        limit: int = Query(50, ge=1, le=100),
+        offset: int = Query(0, ge=0, le=100000),
+        action: str | None = Query(None, max_length=128),
+        actor_id: str | None = Query(None, alias="actor", max_length=128),
+        request_id: str | None = Query(None, max_length=100),
+        search: str = Query("", max_length=100),
+        since: float | None = Query(None, ge=0),
+        until: float | None = Query(None, ge=0),
+    ):
+        return audit_search(
+            app.state.db, actor(request),
+            limit=limit, offset=offset, action=action, actor=actor_id,
+            request_id=request_id, search=search, since=since, until=until,
+        )
+
+    @app.get("/api/v1/admin/audit/export")
+    def export_audit(
+        request: Request,
+        format: Literal["csv", "json"] = "json",
+        limit: int = Query(1000, ge=1, le=1000),
+        offset: int = Query(0, ge=0, le=100000),
+        action: str | None = Query(None, max_length=128),
+        actor_id: str | None = Query(None, alias="actor", max_length=128),
+        request_id: str | None = Query(None, max_length=100),
+        search: str = Query("", max_length=100),
+        since: float | None = Query(None, ge=0),
+        until: float | None = Query(None, ge=0),
+    ):
+        content = audit_export(
+            app.state.db, actor(request),
+            fmt=format, limit=limit, offset=offset,
+            action=action, actor=actor_id, request_id=request_id,
+            search=search, since=since, until=until,
+        )
+        return Response(
+            content=content,
+            media_type="text/csv; charset=utf-8" if format == "csv" else "application/json",
+            headers={
+                "Content-Disposition": f'attachment; filename="grant-audit-export.{format}"',
+                "Cache-Control": "no-store",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
+
+    @app.get("/api/v1/admin/audit/chain/{ident}")
+    def audit_chain(ident: str, request: Request):
+        return request_chain(app.state.db, actor(request), ident)
+
+    @app.post("/api/v1/admin/configuration/preview")
+    def configuration_import_preview(payload: dict, request: Request):
+        return preview_configuration(app.state.db, actor(request), payload)
 
     @app.get("/api/v1/admin/operations")
     def operations(request: Request):

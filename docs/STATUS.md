@@ -1,6 +1,6 @@
 # Grant 1.0 implementation status
 
-Updated: 2026-10-08. G8 implementation lane: Issue #46; G7 predecessor: Issue #44 / PR #45; G5/G6: Issue #42 / PR #43; G3/G4: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
+Updated: 2026-10-08. G9 implementation lane: Issue #48; G8 predecessor: Issue #46 / PR #47; G7: Issue #44 / PR #45; G5/G6: Issue #42 / PR #43; G3/G4: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
 Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
@@ -93,6 +93,15 @@ capability remains whatever is present and tested at the committed candidate HEA
   request:read is neutral and does not trigger the mixed-credential warning.
   Last accepted HTTP callback is not proof of product execution. Real DataRelay/Stellar approval
   integration and reversible validated import are NOT implemented.
+- G9 development candidate: admin-only filtered/paginated audit explorer,
+  bounded CSV/JSON export with spreadsheet formula neutralization and typed
+  evidence field allowlisting, read-only request-to-policy/decision/delivery/
+  execution chain, and versioned safe-metadata configuration conflict preview.
+  Disposable backup/restore covers audit, comments, policy versions, tokens,
+  approver groups, delegations and request action hashes. Policy/template
+  configuration import/apply is NOT available: dry-run preview never changes
+  an authorization or credential. Actual policy portability/release remains
+  subject to the accepted G9/G10 design and owner release authority.
 - Immutable action, explicit approve/hold/deny, expiry, bounded reminders,
   cancellation and a linked replacement request.
 - Source-scoped credentials, metadata/revocation and current-authority checks.
@@ -130,10 +139,18 @@ inbox regressions cover these five cases. Combined source has now passed
 build and 13 Chromium journeys (actual browser). Exact committed-head CI,
 release provenance and owner acceptance remain in Work Packet #42.
 
-G8 + inherited G7 review hardening passed **198 Python/API**,
+G8 + inherited G7 review hardening previously passed **198 Python/API**,
 **12 web unit**, static/typecheck/production build and **17 real Chromium**
-journeys. Focused browser evidence also verifies downloaded JSON manifest
+journeys. Focused browser evidence also verified downloaded JSON manifest
 format and executor scope presets without creating a credential.
+
+G9 + updated G8 review corrections now passed **207 Python/API**,
+**12 frontend unit**, static/typecheck/production build and **20 real
+Chromium journeys** on the resolved merge worktree. The previous
+FRONTEND_NOT_BUILT browser failure was caused by overlapping frontend rebuild
+and Playwright execution; the full serial-build browser run passed 20/20.
+These are source-worktree observations; GitHub exact-head CI, external
+product acceptance and release/owner gates remain separate.
 Additional focused negative/portability cases cover callback audit timestamps,
 history partitioning, redacted template bodies and nonexecutable export. These
 are development-worktree tests and do not meet real DataRelay/Stellar E2E,

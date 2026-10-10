@@ -548,3 +548,62 @@ test('G8 integration diagnostics are unavailable to non-administrators',async({b
  expect(response.status()).toBe(403);
  await context.close();
 });
+
+test('G9 admin audit search, CSV/JSON download and request evidence chain',async({browser,request})=>{
+ const f=fixture();
+ const title='G9 audit browser '+crypto.randomUUID().slice(0,8);
+ const created=await request.post('/api/v1/requests',{
+  headers:{authorization:'Bearer '+f.token},
+  data:{external_id:crypto.randomUUID(),profile_id:f.profile_id,title,
+   action:{kind:'test.operation',target:'audit-disposable-target',parameters:{}} },
+ });
+ expect(created.status()).toBe(202);
+ const item=await created.json();
+ const context=await browser.newContext(),page=await context.newPage();
+ await login(page,'admin');await page.goto('/audit');
+ await expect(page.getByText('Audit evidence explorer',{exact:true})).toBeVisible();
+ await page.getByLabel('Request ID',{exact:true}).fill(item.id);
+ await page.getByRole('button',{name:'Search evidence',exact:true}).click();
+ await expect(page.getByText('request.created',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Inspect request evidence',exact:true}).first().click();
+ await expect(page.getByText('Request-to-result evidence chain',{exact:true})).toBeVisible();
+ await expect(page.getByText(item.action_hash,{exact:true})).toBeVisible();
+ for(const format of ['json','csv'] as const){
+   const pending=page.waitForEvent('download');
+   await page.getByRole('button',{name:format==='csv'?'Export CSV':'Export JSON',exact:true}).click();
+   const transfer=await pending;
+   expect(transfer.suggestedFilename()).toBe('grant-audit-export.'+format);
+   const filePath=await transfer.path();
+   expect(filePath).toBeTruthy();
+   const downloaded=fs.readFileSync(filePath!,'utf8');
+   expect(downloaded).toContain('request.created');
+   expect(downloaded).not.toContain('password_hash');
+ }
+ await context.close();
+});
+
+test('G9 audit search and export reject non-administrator browser',async({browser})=>{
+ const context=await browser.newContext(),page=await context.newPage();
+ await login(page,'approver');
+ await page.goto('/audit');
+ await expect(page.getByText('Page unavailable',{exact:true})).toBeVisible();
+ const denied=await context.request.get('/api/v1/admin/audit/search');
+ expect(denied.status()).toBe(403);
+ const exportDenied=await context.request.get('/api/v1/admin/audit/export?format=csv');
+ expect(exportDenied.status()).toBe(403);
+ await context.close();
+});
+
+test('G9 safe configuration import preview is a nonmutating conflict report',async({browser})=>{
+ const context=await browser.newContext(),page=await context.newPage();
+ await login(page,'admin');
+ await page.goto('/integrations');
+ const before=await(await context.request.get('/api/v1/integrations/configuration-export')).json();
+ await page.getByRole('button',{name:'Preview safe export',exact:true}).click();
+ await page.getByRole('button',{name:'Preview import conflicts',exact:true}).click();
+ await expect(page.getByText('Dry-run only — no changes applied',{exact:true})).toBeVisible();
+ await expect(page.getByText('No permissions, credentials, approval policy or notification content can be imported from this preview.',{exact:true})).toBeVisible();
+ const after=await(await context.request.get('/api/v1/integrations/configuration-export')).json();
+ expect(after).toEqual(before);
+ await context.close();
+});

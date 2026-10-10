@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Button, Card, StatusBadge } from '@datarelay-labs/foundation';
 import { api } from './api';
+import { TextArea } from './common';
 import { Select, useTask, when } from './common';
 import type { Integration } from './types';
 
@@ -28,6 +29,14 @@ type Diagnostics = {
   credential_history: AuditEvent[];
   connection_tests: ConnectionEvent[];
 };
+type DryRunPreview = {
+  schema_version: number;
+  preview_only: true;
+  can_apply: false;
+  summary: { integrations: number; policies: number; templates: number };
+  conflicts: { kind: string; name: string; reason: string }[];
+  warnings: string[];
+};
 type ConfigurationManifest = {
   schema_version: number;
   secret_free: true;
@@ -44,6 +53,8 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
   const [selected, setSelected] = useState('');
   const [details, setDetails] = useState<Diagnostics | null>(null);
   const [manifest, setManifest] = useState<ConfigurationManifest | null>(null);
+  const [pastedManifest, setPastedManifest] = useState('');
+  const [conflictPreview, setConflictPreview] = useState<DryRunPreview | null>(null);
 
   async function inspect(id: string) {
     setSelected(id);
@@ -55,6 +66,23 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
 
   async function loadManifest() {
     setManifest(await api<ConfigurationManifest>('/integrations/configuration-export'));
+  }
+
+  async function dryRunImport() {
+    const source = pastedManifest.trim() || (manifest ? JSON.stringify(manifest) : '');
+    if (!source || source.length > 64000) {
+      task.setNotice('Provide a bounded G8 metadata manifest before previewing conflicts.');
+      return;
+    }
+    let candidate: unknown;
+    try {
+      candidate = JSON.parse(source);
+    } catch {
+      task.setNotice('Manifest must be valid JSON metadata; no credentials or secrets.');
+      return;
+    }
+    setConflictPreview(await api<DryRunPreview>('/admin/configuration/preview', 'POST', candidate));
+    task.setNotice('Preview complete. No policy, credential or integration configuration was changed.');
   }
 
   function saveManifest() {
@@ -126,6 +154,22 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
         {manifest.warning}
       </Alert>}
       {manifest && <pre className="grant-mono">{JSON.stringify(manifest, null, 2)}</pre>}
+    </Card>
+    <Card title="Configuration import conflict preview" description="Strict schema-v1 metadata dry run. Paste a safe manifest or use the current preview above. This cannot apply, activate or edit configuration.">
+      <TextArea label="Safe metadata manifest (optional JSON)" value={pastedManifest}
+        onChange={(value) => { setPastedManifest(value); setConflictPreview(null); }} />
+      <div className="grant-actions">
+        <Button disabled={task.busy} onClick={() => void task.run(dryRunImport)}>Preview import conflicts</Button>
+      </div>
+      {conflictPreview && <Alert tone="warning" title="Dry-run only — no changes applied">
+        <p>Integrations: {conflictPreview.summary.integrations};
+          policies: {conflictPreview.summary.policies};
+          templates: {conflictPreview.summary.templates}.</p>
+        <p>{conflictPreview.conflicts.length} existing names or unresolved references require review.</p>
+        <ul>{conflictPreview.conflicts.map((issue, i) =>
+          <li key={i}>{issue.kind}: {issue.name} — {issue.reason}</li>)}</ul>
+        <p>No permissions, credentials, approval policy or notification content can be imported from this preview.</p>
+      </Alert>}
     </Card>
   </div>;
 }

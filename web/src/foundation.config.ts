@@ -124,6 +124,14 @@ export function productConfig(user: User) {
         requiredCapability: 'health.read',
       },
       {
+        id: 'audit',
+        label: 'Audit explorer',
+        path: '/audit',
+        icon: 'activity',
+        group: 'Administration',
+        requiredCapability: 'audit.read',
+      },
+      {
         id: 'system',
         label: 'Administration',
         path: '/system',

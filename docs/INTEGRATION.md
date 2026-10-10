@@ -103,6 +103,18 @@ receiver bodies and protect/rotate keys through approved administrative procedur
 Configured static authentication headers are available when a vendor cannot verify
 HMAC. Redirects and environment-proxy routing are not followed.
 
+## Grant audit and evidence reconstruction (development candidate)
+
+Administrators can search Grant historical events and fetch a sanitized,
+bounded CSV/JSON evidence export. The per-request chain links the current
+policy-version snapshot and immutable action hash to human decisions, comment
+metadata, outgoing notification delivery state, execution commitment and
+reporting evidence. No raw message text, callback destination, authentication
+material or arbitrary user-entered audit reason is exported. The chain
+records a consumer-reported outcome, not an independently attested operation.
+Retention/reconciliation of the product's actual execution ledger remains
+the consuming product's responsibility.
+
 ## DataRelay execution boundary
 
 Use `GET /api/v1/requests/{id}` for current state. Immediately before a protected
