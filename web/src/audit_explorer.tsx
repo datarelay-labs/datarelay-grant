@@ -19,6 +19,7 @@ type RequestEvidence = {
   total_events: number; events_truncated: boolean; events: AuditItem[];
   decisions: { actor_id: string; decision: string; decided_at: number }[];
   comments: { id: string; author_id: string; kind: string; created_at: number }[];
+  comments_total: number; comments_truncated: boolean;
   deliveries: { id: string; kind: string; event_type: string; state: string; attempts: number }[];
   current_is_execution_verified: false;
 };
@@ -149,6 +150,9 @@ export function AuditExplorer() {
       {chain.events_truncated && <Alert tone="warning" title="Evidence page bounded">
         This request has more events than the first 1,000. Use the filtered audit list and export for additional events.
       </Alert>}
+      {chain.comments_truncated && <Alert tone="warning" title="Comment history bounded">
+        Only the first 1,000 comment references are included in this evidence summary. Review the request collaboration history for additional comments.
+      </Alert>}
       <dl className="grant-facts">
         <dt>Request</dt><dd>{chain.request.id}</dd>
         <dt>Matched policy</dt><dd>{chain.request.profile_id}</dd>
@@ -158,7 +162,7 @@ export function AuditExplorer() {
         <dt>Execution state</dt><dd>{chain.request.execution_state}</dd>
         <dt>Event count</dt><dd>{chain.total_events}</dd>
         <dt>Recorded decisions</dt><dd>{chain.decisions.length}</dd>
-        <dt>Comments</dt><dd>{chain.comments.length}</dd>
+        <dt>Comments</dt><dd>{chain.comments_total}</dd>
         <dt>Transport records</dt><dd>{chain.deliveries.length}</dd>
       </dl>
       <div className="grant-stack">

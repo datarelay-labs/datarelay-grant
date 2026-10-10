@@ -2,8 +2,9 @@
 
 import csv
 import io
+import time
 
-from grant.db import Database, audit
+from grant.db import Database, audit, uid
 
 
 def make_request(env, title="Audit evidence request"):
@@ -289,3 +290,48 @@ def test_audit_typed_fresh_grant_mfa_assurance_is_exact_and_secret_safe():
     assert "actor_assurance" not in sanitized_detail({
         "actor_assurance": "=HYPERLINK('sensitive')",
     })
+
+def test_request_audit_chain_comments_are_bounded_with_truthful_total(env):
+    """A noisy request cannot make admin evidence responses unbounded."""
+    row = make_request(env, "Disposable large audit-chain request")
+    second = make_request(env, "Distinct request without comments")
+    first_author = env.users["approver"]["id"]
+    other_author = env.users["stranger"]["id"]
+    base = time.time()
+    with env.db.transaction() as conn:
+        conn.executemany(
+            """INSERT INTO request_comments
+               (id,request_id,author_id,kind,body,created_at)
+               VALUES(?,?,?,?,?,?)""",
+            [
+                (
+                    uid(), row["id"],
+                    first_author if i % 2 == 0 else other_author,
+                    "COMMENT", "Private comment text never included in audit summary",
+                    base + i / 1000,
+                )
+                for i in range(2005)
+            ],
+        )
+
+    admin = env.human("admin")
+    response = admin.get(f"/api/v1/admin/audit/chain/{row['id']}")
+    assert response.status_code == 200, response.text
+    chain = response.json()
+    assert len(chain["comments"]) == 1000
+    assert chain["comments_total"] == 2005
+    assert chain["comments_truncated"] is True
+    assert all("body" not in item for item in chain["comments"])
+    assert [item["created_at"] for item in chain["comments"]] == sorted(
+        item["created_at"] for item in chain["comments"]
+    )
+    assert len(chain["events"]) <= 1000
+    assert env.human("requester").get(
+        f"/api/v1/admin/audit/chain/{row['id']}"
+    ).status_code == 403
+
+    other = admin.get(f"/api/v1/admin/audit/chain/{second['id']}")
+    assert other.status_code == 200
+    assert other.json()["comments"] == []
+    assert other.json()["comments_total"] == 0
+    assert other.json()["comments_truncated"] is False

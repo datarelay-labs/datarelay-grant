@@ -229,9 +229,12 @@ def request_chain(db: Database, actor: Principal, ident: str) -> dict:
                WHERE request_id=? ORDER BY decided_at,actor_id""",
             (ident,),
         ).fetchall()
+        comments_total = conn.execute(
+            "SELECT COUNT(*) FROM request_comments WHERE request_id=?", (ident,),
+        ).fetchone()[0]
         comments = conn.execute(
             """SELECT id,author_id,kind,created_at FROM request_comments
-               WHERE request_id=? ORDER BY created_at,id""",
+               WHERE request_id=? ORDER BY created_at,id LIMIT 1000""",
             (ident,),
         ).fetchall()
         delivery = conn.execute(
@@ -300,6 +303,8 @@ def request_chain(db: Database, actor: Principal, ident: str) -> dict:
         "events": [_project(event) for event in events],
         "decisions": [dict(item) for item in decisions],
         "comments": [dict(item) for item in comments],
+        "comments_total": comments_total,
+        "comments_truncated": comments_total > len(comments),
         "deliveries": [
             {
                 **dict(item), "sealed_payload": bool(item["sealed_payload"]),
