@@ -4,6 +4,20 @@ Observed 2026-10-08 by read-only inspection. This document is an acceptance
 readiness ledger, not an external integration PASS. Authority: Grant 1.0
 Product Standard, Roadmap G11, Integration Contract, Full User E2E.
 
+## 2026-10-10 typed Control replay source/readback evidence (Work Packet #98 rev3)
+
+The non-executing `validate_control_replay_readback` helper now requires
+`response.log_id` to be a genuine positive integer equal to the independent
+Control log ID: Python's `True == 1 == 1.0` must not authenticate a malformed
+identifier. Before/after Control checkpoint snapshots must match as
+**canonical JSON data**, including scalar types at nested depths, not Python
+mapping equality (which equates booleans, integers and floating-point
+values). Non-JSON or non-finite checkpoint data fails closed; empty checkpoints
+and differently ordered but identical JSON objects remain valid.
+A matching record is still only **candidate evidence** with
+`independently_verified=false`; it does not establish a real product effect,
+Control-owned one-send lock, deployed Stellar receiver or M6 acceptance.
+
 ## 2026-10-10 pre-consume Grant execution-state binding (Work Packet #98 rev2)
 
 The original product-scoped Grant `GET /requests/{id}` snapshot is taken

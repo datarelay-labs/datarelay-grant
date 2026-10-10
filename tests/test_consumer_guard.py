@@ -500,3 +500,77 @@ def test_actual_grant_request_projection_only_accepts_preconsume_snapshot(env):
     assert check_product_claim(request=before, claim=replay.json(),
                                **{k: v for k, v in arguments.items() if k != "claim"}
                                ).kind == "RECONCILE_NO_SEND"
+
+
+@pytest.mark.parametrize("spoofed_log_id", [True, 1.0])
+def test_control_replay_log_id_never_accepts_numeric_type_alias(spoofed_log_id):
+    """A Control log is bound to an exact integer, not Python bool/float equality."""
+    info = {
+        "log_id": spoofed_log_id, "dry_run": False, "outcome": "delivered",
+        "event_count": 1, "replay_run_id": str(uuid.uuid4()),
+        "route_id": 3, "destination_id": 4,
+    }
+    with pytest.raises(ConsumerGuardError, match="CONTROL_REPLAY_EVIDENCE_INVALID"):
+        validate_control_replay_readback(
+            delivery_log_id=1, expected_route_id=3,
+            expected_destination_id=4, response=info,
+            checkpoint_before={"offset": 1}, checkpoint_after={"offset": 1},
+        )
+
+
+@pytest.mark.parametrize(("before", "after"), [
+    ({"offset": 1}, {"offset": True}),
+    ({"offset": True}, {"offset": 1}),
+    ({"offset": 1}, {"offset": 1.0}),
+    ({"state": {"cursor": 1}}, {"state": {"cursor": True}}),
+    ({"state": [{"cursor": 1}]}, {"state": [{"cursor": 1.0}]}),
+])
+def test_control_checkpoint_requires_exact_json_typed_readback(before, after):
+    """Python True==1==1.0 is NOT identical JSON checkpoint evidence."""
+    response = {
+        "log_id": 1, "dry_run": False, "outcome": "delivered",
+        "event_count": 1, "replay_run_id": str(uuid.uuid4()),
+        "route_id": 3, "destination_id": 4,
+    }
+    with pytest.raises(ConsumerGuardError, match="CONTROL_REPLAY_EVIDENCE_INVALID"):
+        validate_control_replay_readback(
+            delivery_log_id=1, expected_route_id=3,
+            expected_destination_id=4, response=response,
+            checkpoint_before=before, checkpoint_after=after,
+        )
+
+
+def test_control_checkpoint_json_equivalence_preserves_key_order_and_empty():
+    """Identical JSON with re-ordered object keys remains unchanged evidence."""
+    response = {
+        "log_id": 1, "dry_run": False, "outcome": "delivered",
+        "event_count": 1, "replay_run_id": str(uuid.uuid4()),
+        "route_id": 3, "destination_id": 4,
+    }
+    for before, after in [
+        ({}, {}),
+        ({"nested": {"cursor": 1, "active": False}, "offset": 4},
+         {"offset": 4, "nested": {"active": False, "cursor": 1}}),
+    ]:
+        evidence = validate_control_replay_readback(
+            delivery_log_id=1, expected_route_id=3,
+            expected_destination_id=4, response=response,
+            checkpoint_before=before, checkpoint_after=after,
+        )
+        assert evidence["checkpoint_unchanged"] is True
+        assert evidence["independently_verified"] is False
+
+
+@pytest.mark.parametrize("bad", [float("nan"), object()])
+def test_control_checkpoint_non_json_payload_fails_closed(bad):
+    response = {
+        "log_id": 1, "dry_run": False, "outcome": "delivered",
+        "event_count": 1, "replay_run_id": str(uuid.uuid4()),
+        "route_id": 3, "destination_id": 4,
+    }
+    with pytest.raises(ConsumerGuardError, match="CONTROL_REPLAY_EVIDENCE_INVALID"):
+        validate_control_replay_readback(
+            delivery_log_id=1, expected_route_id=3,
+            expected_destination_id=4, response=response,
+            checkpoint_before={"cursor": bad}, checkpoint_after={"cursor": bad},
+        )

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from .core import bounded_json, fingerprint
+from .db import json_text
 from .models import Action
 
 
@@ -124,6 +125,15 @@ def check_product_claim(
     )
 
 
+def _checkpoints_match_json(before: dict, after: dict) -> bool:
+    """Compare actual JSON snapshots, never Python bool/int/float coercions."""
+    try:
+        return json_text(before) == json_text(after)
+    except (TypeError, ValueError, OverflowError, RecursionError):
+        # A non-JSON checkpoint cannot be trusted as unchanged evidence.
+        return False
+
+
 def validate_control_replay_readback(
     *,
     delivery_log_id: int,
@@ -150,6 +160,7 @@ def validate_control_replay_readback(
         or type(delivery_log_id) is not int
         or delivery_log_id <= 0
         or not isinstance(response, dict)
+        or type(response.get("log_id")) is not int
         or response.get("log_id") != delivery_log_id
         or type(response.get("route_id")) is not int
         or response.get("route_id") != expected_route_id
@@ -159,7 +170,7 @@ def validate_control_replay_readback(
         or response.get("outcome") not in ("delivered", "failed")
         or not isinstance(checkpoint_before, dict)
         or not isinstance(checkpoint_after, dict)
-        or checkpoint_before != checkpoint_after
+        or not _checkpoints_match_json(checkpoint_before, checkpoint_after)
         or type(response.get("event_count")) is not int
         or response["event_count"] < 1
         or response["event_count"] > 500
