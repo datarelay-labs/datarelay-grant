@@ -18,14 +18,24 @@ export function RequestEvidence({
   // A later decision may supersede a Hold; the timeline retains the history.
   const votes = row.decisions ?? [];
   const seats = row.approval_plan?.members ?? [row.approver_id];
-  const approved = row.approval_progress?.approved_count
-    ?? votes.filter((vote) => vote.decision === 'APPROVED').length;
-  const required = row.approval_progress?.required_count
-    ?? row.approval_plan?.required ?? 1;
+  // Current quorum is authoritative only when the server supplies its
+  // role-scoped approval progress. Archived votes may refer to superseded
+  // approval seats and cannot establish a current approval threshold.
+  const progress = row.approval_progress;
   return (
     <>
       <Card title="Reviewer decisions" description="Current seat votes, not a complete chronological history. Email PIN alone is not proof of the person. A vote is not itself authorization to execute. See Request timeline for prior changes.">
-        <p><strong>{approved} of {required} approved</strong> · {row.approval_plan?.mode ?? 'Single approver'}</p>
+        <p>
+          {progress ? (
+            <strong>{progress.approved_count} of {progress.required_count} approved</strong>
+          ) : (
+            <>
+              <strong>Approval progress unavailable</strong>
+              {' · '}{votes.length} recorded vote{votes.length === 1 ? '' : 's'} (not verified quorum)
+            </>
+          )}
+          {' · '}{row.approval_plan?.mode ?? 'Single approver'}
+        </p>
         {votes.length ? (
           <ul>
             {votes.map((vote) => {

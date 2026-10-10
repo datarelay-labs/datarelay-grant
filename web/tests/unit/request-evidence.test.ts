@@ -118,3 +118,49 @@ describe('G-CI reviewer history is visible but never self-asserts identity or ex
     expect(html).not.toContain('Execution succeeded');
   });
 });
+
+
+describe('Approval progress must not be synthesized from vote records', () => {
+  const recorded = [
+    { actor_id: 'former-reviewer', decision: 'APPROVED', reason: '', decided_at: 100 },
+    { actor_id: 'seat-b', decision: 'APPROVED', reason: '', decided_at: 110 },
+  ];
+
+  it('marks missing server quorum as unavailable when a former reviewer is recorded', () => {
+    const html = markup(request({
+      state: 'AWAITING',
+      approval_plan: { mode: 'ALL', members: ['seat-a', 'seat-b'], required: 2 },
+      decisions: recorded,
+    }), false);
+    expect(html).toContain('Approval progress unavailable');
+    expect(html).toContain('2 recorded votes');
+    expect(html).not.toContain('2 of 2 approved');
+    expect(html).toContain('Recorded reviewer vote');
+    expect(html).not.toContain('Execution succeeded');
+  });
+
+  it('does not invent one-seat approval from a legacy vote without a current plan', () => {
+    const html = markup(request({
+      state: 'AWAITING', decisions: [recorded[0]],
+    }), false);
+    expect(html).toContain('Approval progress unavailable');
+    expect(html).toContain('1 recorded vote');
+    expect(html).not.toContain('1 of 1 approved');
+  });
+
+  it('uses authoritative server quorum even when two vote records appear approved', () => {
+    const html = markup(request({
+      approval_plan: { mode: 'ALL', members: ['seat-a', 'seat-b'], required: 2 },
+      approval_progress: {
+        mode: 'ALL', approved_count: 1, required_count: 2, total_members: 2,
+        waiting_approver_ids: ['seat-a'], waiting_approvers: [{ id: 'seat-a', username: 'Reviewer A' }],
+        group_name: 'Reviewers', waiting_on: 'APPROVERS',
+      },
+      decisions: recorded,
+    }), false);
+    expect(html).toContain('1 of 2 approved');
+    expect(html).not.toContain('2 of 2 approved');
+    expect(html).toContain('Approval seat 2');
+    expect(html).not.toContain('Resend email');
+  });
+});
