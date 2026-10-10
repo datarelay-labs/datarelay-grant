@@ -179,7 +179,7 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
     onConfirm={()=>void task.run(decide)} onBack={()=>setReviewed(null)} />
  </Card>}
  {row.predecessor_id && <RevisionComparison requestId={row.id} />}
- <RequestCollaboration row={row} user={user} onReload={load} />
+ <RequestCollaboration row={row} user={user} onRecorded={(updated) => { setRow(updated); setReviewed(null); }} />
  {user.role === 'admin' && actionable && <RequestAdminControls row={row} onReload={load} />}
  <RequestExecutionReport row={row} />
  <RequestEvidence

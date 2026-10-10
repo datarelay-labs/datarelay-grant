@@ -60,9 +60,31 @@ export function isCurrentCollaborationReview(
     && reviewed.body === current.body;
 }
 
+/** The POST response already contains the current server-projected request.
+ * Use it immediately: a separate failing GET must never make a successful
+ * message write look like a failed write or invite duplicate submissions.
+ * A failed/ambiguous POST is propagated without retry or local projection.
+ */
+export async function submitReviewedCollaboration(
+  reviewed: CollaborationReview,
+  postOnce: (
+    path: string, method: 'POST',
+    body: { kind: CommentKind; body: string; expected_revision: number },
+  ) => Promise<RequestRow>,
+  onRecorded: (row: RequestRow) => void,
+): Promise<RequestRow> {
+  const updated = await postOnce(
+    '/requests/' + encodeURIComponent(reviewed.requestId) + '/comments',
+    'POST',
+    { kind: reviewed.kind, body: reviewed.body, expected_revision: reviewed.revision },
+  );
+  onRecorded(updated);
+  return updated;
+}
+
 export function RequestCollaboration({
-  row, user, onReload,
-}: { row: RequestRow; user: User; onReload: () => Promise<void> }) {
+  row, user, onRecorded,
+}: { row: RequestRow; user: User; onRecorded: (row: RequestRow) => void }) {
   const task = useTask();
   const [kind, setKind] = useState<CommentKind>('COMMENT');
   const [body, setBody] = useState('');
@@ -98,14 +120,15 @@ export function RequestCollaboration({
       setReviewError('The request, reviewer or message changed. Review the current message before confirming.');
       return;
     }
-    await api('/requests/' + encodeURIComponent(reviewed.requestId) + '/comments', 'POST', {
-      kind: reviewed.kind, body: reviewed.body, expected_revision: reviewed.revision,
-    });
+    await submitReviewedCollaboration(
+      reviewed,
+      (path, method, payload) => api<RequestRow>(path, method, payload),
+      onRecorded,
+    );
     setBody('');
     setKind('COMMENT');
     setReviewed(null);
     setReviewError('');
-    await onReload();
     task.setNotice('Message recorded in the request history. No approval or execution occurred.');
   }
 

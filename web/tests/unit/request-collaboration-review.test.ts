@@ -34,7 +34,7 @@ function request(overrides: Partial<RequestRow> = {}): RequestRow {
 describe('Grant collaboration explicit review of exact pending request', () => {
   it('requires the Review message step before Confirm is offered', () => {
     const html = renderToStaticMarkup(createElement(RequestCollaboration, {
-      row: request(), user: approver, onReload: async () => undefined,
+      row: request(), user: approver, onRecorded: () => undefined,
     }));
     expect(html).toContain('Review message');
     expect(html).not.toContain('Confirm message');
@@ -115,7 +115,7 @@ describe('Grant collaboration explicit review of exact pending request', () => {
         comments: [{ id: 'history', author_id: outsider.id, kind: 'COMMENT',
           body: '<img src=x onerror=alert(1)>', created_at: now }],
       }),
-      user: approver, onReload: async () => undefined,
+      user: approver, onRecorded: () => undefined,
     }));
     expect(html).toContain('&lt;img');
     expect(html).not.toContain('<img src=x');
