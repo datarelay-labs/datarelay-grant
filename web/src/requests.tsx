@@ -11,6 +11,7 @@ import { RequestEvidence, approvalProgressLabel, approvalWaitingLabel } from './
 import { RequestStageSummary } from './request_stage_summary';
 import { RequestExecutionReport } from './request_execution_report';
 import { recordDecisionThenRead } from './request_decision_receipt';
+import { RequestDecisionConfirmation, prepareRequestDecisionReview, isCurrentRequestDecisionReview, type RequestDecisionReview, type RequestDecisionChoice } from './request_decision_review';
 import { Form, Select, State, TextArea, useTask, when } from './common';
 import type { Profile, RequestRow, Outcome, User } from './types';
 
@@ -99,29 +100,56 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
  </Card>;
 }
 export function RequestDetail({ id, user, navigate }: { id: string; user: User; navigate: Navigate }) {
- const [row, setRow] = useState<RequestRow | null>(null); const [reason, setReason] = useState(''); const [choice, setChoice] = useState<Outcome | 'CANCELLED' | ''>(''); const task = useTask();
- async function load() { setChoice(''); setRow(await api<RequestRow>('/requests/' + encodeURIComponent(id))); }
+ const [row, setRow] = useState<RequestRow | null>(null);
+ const [reason, setReason] = useState('');
+ const [reviewed, setReviewed] = useState<RequestDecisionReview | null>(null);
+ const task = useTask();
+ async function load() {
+  setReviewed(null);
+  setRow(await api<RequestRow>('/requests/' + encodeURIComponent(id)));
+ }
  useEffect(() => { setRow(null); void task.run(load); }, [id]);
+ function chooseForReview(choice: RequestDecisionChoice) {
+  if (!row) return;
+  setReviewed(prepareRequestDecisionReview(
+    row, user, choice, reason, Date.now() / 1000,
+  ));
+ }
  const decide = async () => {
-  if (!row || !choice) return;
-  const outcome = await recordDecisionThenRead(
-    () => api<RequestRow>(
-      '/requests/' + id + (choice === 'CANCELLED' ? '/cancel' : '/decision'),
-      'POST',
-      { expected_revision: row.revision, reason,
-        ...(choice === 'CANCELLED' ? {} : { decision: choice }) },
-    ),
-    () => api<RequestRow>('/requests/' + encodeURIComponent(id)),
-  );
+  if (!row || !reviewed || !isCurrentRequestDecisionReview(
+    reviewed, row, user, reason, Date.now() / 1000,
+  )) {
+    setReviewed(null);
+    return;
+  }
+  // The reviewed values, not mutable form state, are the only POST payload.
+  const selected = reviewed;
+  let outcome: { row: RequestRow; refreshed: boolean };
+  try {
+    outcome = await recordDecisionThenRead(
+      () => api<RequestRow>(
+        '/requests/' + encodeURIComponent(selected.requestId)
+          + (selected.choice === 'CANCELLED' ? '/cancel' : '/decision'),
+        'POST',
+        { expected_revision: selected.revision, reason: selected.reason,
+          ...(selected.choice === 'CANCELLED' ? {} : { decision: selected.choice }) },
+      ),
+      () => api<RequestRow>('/requests/' + encodeURIComponent(selected.requestId)),
+    );
+  } catch (error) {
+    // An ambiguous POST must never be automatically repeated with old review.
+    setReviewed(null);
+    throw error;
+  }
   setRow(outcome.row);
-  setChoice('');
+  setReviewed(null);
   setReason('');
   task.setNotice(outcome.refreshed
     ? 'Recorded. Delivery and execution are tracked separately.'
     : 'Decision recorded by the server. Updated details could not be refreshed; refresh before another action. Delivery and execution remain separate.');
  };
  const actionable = row && ['AWAITING','HELD'].includes(row.state) && row.deadline * 1000 > Date.now();
- const canDecide = actionable && row.viewer_can_decide === true && row.collaboration_state === 'OPEN';
+ const canDecide = actionable && row.viewer_can_decide === true && row.collaboration_state === 'OPEN' && row.requester_id !== user.id;
  const canCancel = row && !row.execution_id && !['CANCELLED','DENIED','EXPIRED'].includes(row.state) && (row.requester_id === user.id || user.role === 'admin');
  const canReplace = row &&
   (row.state === 'CANCELLED' || (row.state === 'EXPIRED' && row.collaboration_state === 'CHANGES_REQUESTED')) &&
@@ -130,7 +158,26 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  <Card title={row.title} description={row.reason || 'No additional reason supplied.'}><RequestStageSummary row={row}/>{row.viewer_delegated_for && <p>You are acting as the recorded substitute for an assigned approver. Both identities remain auditable.</p>}<dl className="grant-facts"><dt>External ID</dt><dd>{row.external_id}</dd><dt>Approval deadline</dt><dd>{when(row.deadline)}</dd><dt>Execution validity</dt><dd>{when(row.grant_until)}</dd><dt>Decision by / at</dt><dd>{row.decision_actor ?? 'Not decided'} / {when(row.decision_at)}</dd><dt>Revision</dt><dd>{row.revision}</dd><dt>Approval progress</dt><dd>{approvalProgressLabel(row)}</dd><dt>Waiting on</dt><dd>{approvalWaitingLabel(row)}</dd></dl></Card>
  {row.escalation && <Card title="Escalation status"><dl className="grant-facts"><dt>Escalation target</dt><dd>{row.escalation.target_group_id ? 'Approver group' : 'Approver'} · {row.escalation.target_members.length} member(s)</dd><dt>Escalation due</dt><dd>{when(row.escalation.due_at)}</dd><dt>Applied at</dt><dd>{when(row.escalation.fired_at)}</dd></dl><p>Escalation changes only who may decide; it never executes the requested action.</p></Card>}
  <RequestActionSummary row={row} canReplace={Boolean(canReplace)} navigate={navigate} />
- {(canDecide || canCancel) && <Card title="Explicit decision"><TextArea label="Decision or cancellation reason" value={reason} onChange={setReason}/><div className="grant-actions">{canDecide && (['APPROVED','HELD','DENIED'] as Outcome[]).map(c => <Button key={c} variant={c==='DENIED'?'danger':'secondary'} disabled={task.busy} onClick={()=>setChoice(c)}>{c==='APPROVED'?'Approve':c==='HELD'?'Hold':'Deny'}</Button>)}{canCancel && <Button variant="danger" disabled={task.busy} onClick={()=>setChoice('CANCELLED')}>Cancel request</Button>}</div>{choice && <Alert tone="warning" title={'Confirm: ' + choice}><p>You are deciding revision {row.revision} for {row.action.target}. Approval does not itself execute the action.</p><Button disabled={task.busy} onClick={()=>void task.run(decide)}>Confirm {choice.toLowerCase()}</Button><Button variant="ghost" disabled={task.busy} onClick={()=>setChoice('')}>Go back</Button></Alert>}</Card>}
+ {(canDecide || canCancel) && <Card title="Explicit decision">
+  <TextArea label="Decision or cancellation reason (maximum 2000 characters)"
+    value={reason} onChange={(value) => { setReason(value); setReviewed(null); }} />
+  {reason.length > 2000 && <Alert tone="warning" title="Reason is too long">
+    Enter no more than 2000 characters before choosing an action.
+  </Alert>}
+  <div className="grant-actions">
+    {canDecide && (['APPROVED','HELD','DENIED'] as Outcome[]).map((choice) =>
+      <Button key={choice} variant={choice==='DENIED'?'danger':'secondary'}
+        disabled={task.busy || reason.length > 2000}
+        onClick={()=>chooseForReview(choice)}>
+        {choice==='APPROVED'?'Approve':choice==='HELD'?'Hold':'Deny'}
+      </Button>)}
+    {canCancel && <Button variant="danger" disabled={task.busy || reason.length > 2000}
+      onClick={()=>chooseForReview('CANCELLED')}>Cancel request</Button>}
+  </div>
+  <RequestDecisionConfirmation row={row} user={user} reviewed={reviewed}
+    reason={reason} nowSeconds={Date.now() / 1000} busy={task.busy}
+    onConfirm={()=>void task.run(decide)} onBack={()=>setReviewed(null)} />
+ </Card>}
  {row.predecessor_id && <RevisionComparison requestId={row.id} />}
  <RequestCollaboration row={row} user={user} onReload={load} />
  {user.role === 'admin' && actionable && <RequestAdminControls row={row} onReload={load} />}
