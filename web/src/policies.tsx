@@ -243,7 +243,7 @@ export function PolicyUnsavedNotice({ busy, onDiscard }: {
 
 export type PolicyTransitionIntent = {
   policyId: string;
-  action: 'activate' | 'disable';
+  action: 'test' | 'activate' | 'disable';
   versionId: string;
   version: number;
   activeVersion: number | null;
@@ -260,9 +260,11 @@ export function canConfirmPolicyTransition(
       policy.version_id !== intent.versionId ||
       policy.version !== intent.version ||
       (policy.active_version ?? null) !== intent.activeVersion) return false;
-  return intent.action === 'activate'
-    ? policy.lifecycle === 'TESTING'
-    : intent.action === 'disable' && intent.activeVersion !== null;
+  return intent.action === 'test'
+    ? policy.lifecycle === 'DRAFT'
+    : intent.action === 'activate'
+      ? policy.lifecycle === 'TESTING'
+      : intent.action === 'disable' && intent.activeVersion !== null;
 }
 
 export function PolicyLifecycleConfirmation({
@@ -277,15 +279,20 @@ export function PolicyLifecycleConfirmation({
 }) {
   if (!intent) return null;
   const canConfirm = editorUnchanged && canConfirmPolicyTransition(intent, policy);
+  const testing = intent.action === 'test';
   const activating = intent.action === 'activate';
   return <Alert tone="warning"
-    title={activating ? 'Confirm policy activation' : 'Confirm active policy disable'}>
+    title={testing ? 'Confirm policy testing'
+      : activating ? 'Confirm policy activation' : 'Confirm active policy disable'}>
     <p><strong>{policy?.name ?? intent.policyId}</strong></p>
-    <p>{activating
-      ? 'Activate reviewed policy v' + intent.version +
-        ' for new matching requests. The change applies only to future matches; existing requests retain their original policy snapshot.'
-      : 'Disable currently active policy v' + intent.activeVersion +
-        ' for future requests. The change applies only to future matches; existing requests retain their original policy snapshot.'}</p>
+    <p>{testing
+      ? 'Move reviewed Draft policy v' + intent.version +
+        ' to Testing for isolated validation. Testing does not activate this policy for incoming requests, grant approval, or execute any action.'
+      : activating
+        ? 'Activate reviewed policy v' + intent.version +
+          ' for new matching requests. The change applies only to future matches; existing requests retain their original policy snapshot.'
+        : 'Disable currently active policy v' + intent.activeVersion +
+          ' for future requests. The change applies only to future matches; existing requests retain their original policy snapshot.'}</p>
     {!editorUnchanged ? <p role="alert">
       Policy editor has unsaved changes. Save draft or discard edits, then review this action again.
     </p> : !canConfirm ? <p role="alert">
@@ -294,7 +301,7 @@ export function PolicyLifecycleConfirmation({
     <div className="grant-actions">
       <Button variant="secondary" disabled={busy} onClick={onCancel}>Cancel</Button>
       <Button disabled={busy || !canConfirm} onClick={onConfirm}>
-        {activating ? 'Confirm activation' : 'Confirm disable'}
+        {testing ? 'Confirm testing' : activating ? 'Confirm activation' : 'Confirm disable'}
       </Button>
     </div>
   </Alert>;
@@ -457,12 +464,6 @@ export function Profiles() {
     return fresh!;
   }
 
-  async function testStoredPolicy() {
-    const current = await currentStoredPolicy();
-    if (current.lifecycle !== 'DRAFT') throw new Error('POLICY_CHANGED_REVIEW_REQUIRED');
-    await transition(current.id, 'test');
-  }
-
   function stageClone(row: Profile) {
     setPendingTransition(null);
     setPendingClone(createPolicyCloneReview(row));
@@ -522,7 +523,7 @@ export function Profiles() {
     );
   }
 
-  function stageLiveTransition(actionName: 'activate' | 'disable') {
+  function stagePolicyTransition(actionName: 'test' | 'activate' | 'disable') {
     const current = rows.find((row) => row.id === editing);
     if (!current || !isPolicyEditorUnchanged(current, editingBaseline, editorDraft)) return;
     const intent: PolicyTransitionIntent = {
@@ -532,10 +533,13 @@ export function Profiles() {
       version: current.version,
       activeVersion: current.active_version ?? null,
     };
-    if (canConfirmPolicyTransition(intent, current)) setPendingTransition(intent);
+    if (canConfirmPolicyTransition(intent, current)) {
+      setPendingClone(null);
+      setPendingTransition(intent);
+    }
   }
 
-  async function confirmLiveTransition() {
+  async function confirmPolicyTransition() {
     const staged = pendingTransition;
     if (!staged) return;
     // Recheck the unchanged draft as well as live authority and version after
@@ -755,7 +759,7 @@ export function Profiles() {
               <Button
                 variant="secondary"
                 disabled={task.busy || !editorUnchanged}
-                onClick={() => void task.run(testStoredPolicy)}
+                onClick={() => stagePolicyTransition('test')}
               >
                 Test policy
               </Button>
@@ -763,7 +767,7 @@ export function Profiles() {
             {selected?.lifecycle === 'TESTING' ? (
               <Button
                 disabled={task.busy || !editorUnchanged}
-                onClick={() => stageLiveTransition('activate')}
+                onClick={() => stagePolicyTransition('activate')}
               >
                 Activate policy
               </Button>
@@ -772,7 +776,7 @@ export function Profiles() {
               <Button
                 variant="secondary"
                 disabled={task.busy || !editorUnchanged}
-                onClick={() => stageLiveTransition('disable')}
+                onClick={() => stagePolicyTransition('disable')}
               >
                 Disable active
               </Button>
@@ -805,7 +809,7 @@ export function Profiles() {
         editorUnchanged={editorUnchanged}
         busy={task.busy}
         onCancel={() => setPendingTransition(null)}
-        onConfirm={() => void task.run(confirmLiveTransition)}
+        onConfirm={() => void task.run(confirmPolicyTransition)}
       />
 
       <nav className="grant-tabs" aria-label="Policy sections">

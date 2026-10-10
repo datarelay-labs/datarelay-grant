@@ -71,6 +71,36 @@ describe('G1 explicit approval policy lifecycle confirmation', () => {
       { ...policy, active_version: 1 })).toContain('Confirm active policy disable');
   });
 
+  it('requires explicit Draft-to-Testing confirmation before changing lifecycle', () => {
+    const draft: Profile = { ...policy, lifecycle: 'DRAFT' };
+    const testIntent: PolicyTransitionIntent = { ...intent, action: 'test' };
+    expect(canConfirmPolicyTransition(testIntent, draft)).toBe(true);
+    const output = html(testIntent, draft);
+    expect(output).toContain('Confirm policy testing');
+    expect(output).toContain('Privileged service restart');
+    expect(output).toContain('v2');
+    expect(output).toContain('Testing');
+    expect(output).toContain('not activate');
+    expect(output).toContain('Confirm testing');
+    expect(output).toContain('Cancel');
+    expect(output).not.toContain('<form');
+    expect(output).not.toContain('type="submit"');
+    expect(output).not.toContain('Confirm activation');
+  });
+
+  it('rejects Testing confirmation after Draft status, version or active lineage changes', () => {
+    const draft: Profile = { ...policy, lifecycle: 'DRAFT' };
+    const testIntent: PolicyTransitionIntent = { ...intent, action: 'test' };
+    expect(canConfirmPolicyTransition(testIntent, policy)).toBe(false);
+    expect(canConfirmPolicyTransition(testIntent, { ...draft, version: 3 })).toBe(false);
+    expect(canConfirmPolicyTransition(testIntent, { ...draft, version_id: 'new' })).toBe(false);
+    expect(canConfirmPolicyTransition(testIntent, { ...draft, active_version: 1 })).toBe(false);
+    const stale = html(testIntent, { ...draft, version_id: 'new' });
+    expect(stale).toContain('Policy changed since review');
+    expect(stale).toContain('disabled');
+    expect(stale).toContain('Cancel');
+  });
+
   it('disables confirmation on a stale version without leaking name as HTML', () => {
     const changed = { ...policy, name: '<script>alert(1)</script>', version_id: 'fresh' };
     const markup = html(intent, changed);
