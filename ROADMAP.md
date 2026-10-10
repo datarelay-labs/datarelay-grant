@@ -22,7 +22,7 @@ queue.
 
 ## P0-UI-1 — OWNER FIRST: implement competitor-informed Grant UI (2026-10-11)
 
-**STATE=IMPLEMENTATION_FIRST / PRIORITY=TOP_P0_UI_PRODUCT_DELIVERY / EXISTING_WP=#67 rev13.**
+**STATE=IMPLEMENTATION_FIRST / PRIORITY=TOP_P0_UI_PRODUCT_DELIVERY / EXISTING_WP=#67 rev21.**
 **Owner decision:** the competitor documentation and licensed Keycloak REA
 analysis have been completed; further survey or optional reverse engineering
 must NOT displace real user-facing Grant UI implementation. Reuse the existing
@@ -42,22 +42,27 @@ the next independent UI task rather than returning to broad research.
 | **UI-02 · P0** | **Emailed human PIN approval**: issued emailed link actually lands on no-login four-digit PIN form, optional policy OTP/fresh TOTP, selected Approve/Hold/Deny and **separate final Confirm**; expired/replayed and revoked links fail closed | **Grant M4 #67/#70–#73** | Decision portal/adapter source exists but **unmounted**; `web/src/app.tsx` previously denied, no alternate entrypoint bypass. Real distinct mailbox/user confirmation is separate M7 |
 | **UI-03 · P0** | **Login / sidebar / Administration**: grouped Foundation work/menu, centered first viewport desktop and 320/375, role-true 9 tasks/4 groups, Grant Mail task and keyboard navigation | **Foundation B2 + Grant M2 #57/#75/#67** | Shared pf8.4 installed; member `core.users` / `grant.smtp.test` capability contradictions unresolved. Prior admin/styles/mobile/browser denial remains; shared Foundation owns global layout |
 | **UI-04 · P0** | **Policies, approver groups, templates**: task-first list→detail→edit→preview, Draft/Testing/Active state and safe explicit save/409 conflict after another admin changes Deny/MFA/integration/templates | **Grant M3 #38/#64–#66/#80** | Existing lifecycle and templates source already present; two-admin lost update requires server CAS, not cosmetic UI-only conflict. Prior protected backend/Phase1 denial persists |
-| **UI-05 · P0 independent / P1 polish** | **Request detail, collaboration, evidence**: immutable action and target first, explicit human decision, accurate current seats vs history, separately *reported* external effect, review-confirm message bound to actor/revision | **Grant M1/M5 #67/#63**, E2E **M7 #54** | **SOURCE PARTIAL COMPLETE:** server-authoritative progress `ecc5110a` / `f2a4e5d`; review/confirm and actor binding `0b267e1` / `d8e136a`; immutable action/stage summary `d9967928`; collapsed unverified external report `ca5a9322`; explicit decision POST receipt fallback on failed/lagging read `53c7169`. Actual same-installed-HEAD browser/mobile/two-user E2E **NOT PASS**. Do not repeat completed UI-05 source slices merely to restate PASS |
+| **UI-05 · P0 independent / P1 polish** | **Request detail, collaboration, evidence**: immutable action and target first, explicit human decision, accurate current seats vs history, separately *reported* external effect, review-confirm message bound to actor/revision | **Grant M1/M5 #67/#63**, E2E **M7 #54** | **SOURCE PARTIAL COMPLETE:** server-authoritative progress `ecc5110a` / `f2a4e5d`; review/confirm and actor binding `0b267e1` / `d8e136a`; immutable action/stage summary `d9967928`; collapsed unverified external report `ca5a9322`; explicit decision POST receipt fallback on failed/lagging read `53c7169`; exact actor/action/reason-bound decision review `276a49e`; successful collaboration POST projection without secondary GET `9cf423b`. Actual same-installed-HEAD browser/mobile/two-user E2E **NOT PASS**. Do not repeat completed UI-05 source slices merely to restate PASS |
 
 **2026-10-11 implementation evidence, exact current Grant candidate
-`53c716906b271dcd82a9679dcc61f6f66404ac91`:** UI-05 is a partially
-delivered *real mounted product screen*, not just an offline prototype. Three
-new self-contained UI source increments have focused regressions and official
-Web **180/180**, **186/186**, then **191/191 PASS**, with TypeScript/Vite
-production build PASS throughout. Official Static **PASS** for the first two
-increments only; the third incremental Static invocation was blocked by the
-platform safety evaluator **before execution**, so **latest exact-HEAD Static
-is NOT QUALIFIED** and must not be relabeled. Existing G12 deliberately RED
-test remains uncommitted and unchanged, and prior UI-01 Inbox RED stash is
+`9cf423b4355e64e2791a071ff8e830154a93dfb8`:** UI-05 has five
+incremental *mounted product UI* improvements beyond the earlier stable
+quorum/review components; it is not merely an offline prototype. Official
+Web regression totals progressed **180/180 → 186/186 → 191/191 → 198/198 →
+203/203 PASS**, TypeScript/Vite production build PASS throughout. Official
+Static PASS for the new rev15, rev16, rev19 and rev20 source increments;
+**rev17 Static** was explicitly platform safety-blocked **before executing**
+and has **NOT** been retrospectively relabeled PASS. Independent later rev19
+and rev20 Static PASS qualifies those separate newer source states, not the
+rev17 historical invocation. The UI now binds human decision review to
+actor/request/action/reason and uses the successful server POST receipt to
+display updated collaboration without a redundant second GET; neither
+path auto-retries a possibly committed POST. Existing G12 deliberately RED
+test remains uncommitted and unchanged, and the old UI-01 Inbox RED stash is
 retained. UI-01 through UI-04 remain priority blockers at previously denied
 source paths or real external/user gates; never reroute them through another
-host/tool. No current-HEAD CI, mobile/keyboard, two-person mailbox E2E,
-Control/Stellar independent effect or release acceptance has passed.
+host/tool. No new HEAD CI, installed mobile/keyboard, two-person mailbox
+E2E, independent Control/Stellar effect or release acceptance has passed.
 
 **Exit evidence per screen:** exact source + RED/GREEN tests + Web/build/static,
 then authorized **installed same-HEAD desktop and 320/375 mobile/keyboard
@@ -71,7 +76,7 @@ and user gates precede M8 release authority. No duplicate Work Packets or PRs.
 
 ## P0-UX-0 — completed competitor research, reused for P0-UI-1
 
-**STATE=REA_STATIC_SOURCE_COMPLETE + INBOX_SAFE_UI_SOURCE_COMPLETE / NEXT_SCREEN_P0=P0-UI-1 / PRIORITY=RESEARCH_ALREADY_COMPLETE / Owner WP #67 (existing packet; UI implementation revision 13).**
+**STATE=REA_STATIC_SOURCE_COMPLETE + INBOX_SAFE_UI_SOURCE_COMPLETE / NEXT_SCREEN_P0=P0-UI-1 / PRIORITY=RESEARCH_ALREADY_COMPLETE / Owner WP #67 (existing packet; UI implementation revision 21).**
 This prerequisite is **satisfied by the documented six-vendor screen Gap Matrix,
 Keycloak licensed static REA and five-screen blueprint**; further UI delivery
 is tracked under P0-UI-1 above. It remains separate from independent safety,
