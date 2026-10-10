@@ -136,6 +136,12 @@ claim/result replies to request ID, execution ID and action hash. HTTP success a
 is not permission. Ambiguous or oversized JSON is rejected. No mutation is retried
 automatically on a protocol or transport failure; reconcile instead.
 
+An unmounted G11 pure consumer guard also compares the authenticated request
+`integration_id` to the product's independently trusted `expected_integration_id`
+before producing a possible ledger-only disposition. A claimed integration
+identity copied from an email, callback or untrusted request is never authority.
+The guard is not connected to a DataRelay Control replay execution endpoint.
+
 The bundled client only sends API requests. There is intentionally no callback that
 executes arbitrary user code and no generic Runner. Tests with a fixture consumer
 are contract evidence, not completion of R1-M3. That milestone requires one real
