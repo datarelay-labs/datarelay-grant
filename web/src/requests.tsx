@@ -11,6 +11,7 @@ import { RequestEvidence, approvalProgressLabel, approvalWaitingLabel } from './
 import { RequestStageSummary } from './request_stage_summary';
 import { RequestExecutionReport } from './request_execution_report';
 import { recordDecisionThenRead } from './request_decision_receipt';
+import { prepareRequestCreationReview, isCurrentRequestCreationReview, submitReviewedRequestCreation, RequestCreationConfirmation, type NewRequestDraft, type RequestCreationReview } from './request_creation_review';
 import { RequestDecisionConfirmation, prepareRequestDecisionReview, isCurrentRequestDecisionReview, type RequestDecisionReview, type RequestDecisionChoice } from './request_decision_review';
 import { Form, Select, State, TextArea, useTask, when } from './common';
 import type { Profile, RequestRow, Outcome, User } from './types';
@@ -30,8 +31,18 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
  const [severity,setSeverity]=useState('');
  const [riskLevel,setRiskLevel]=useState('');
  const task=useTask();
+ const [reviewed,setReviewed]=useState<RequestCreationReview | null>(null);
+ const [reviewError,setReviewError]=useState('');
  const selected=profiles.find(p=>p.id===profile);
+ const draft:NewRequestDraft={
+  profile:selected??null,predecessor,predecessorId,title,target,parameters,
+  reason,external,sourceTenant,environment,severity,riskLevel,
+ };
+ function resetReview(){
+  setReviewed(null);setReviewError('');task.setNotice('');
+ }
  function chooseProfile(id:string){
+  resetReview();
   setProfile(id);
   const policy=profiles.find(p=>p.id===id);
   // The source attributes must be explicit; do not silently omit the exact
@@ -41,7 +52,7 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
   setSeverity(policy?.severity || '');
   setRiskLevel(policy?.risk_level || '');
  }
- useEffect(()=>{void task.run(async()=>{
+ useEffect(()=>{resetReview();void task.run(async()=>{
   const loaded=await api<Profile[]>('/profiles');
   setProfiles(loaded);
   if(predecessorId){
@@ -58,45 +69,53 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
    setTarget(previous.action.target);setParameters(JSON.stringify(previous.action.parameters,null,2));setReason(previous.reason);
   }
  });},[predecessorId]);
+ function reviewRequest(){
+  try{
+   const next=prepareRequestCreationReview(draft);
+   setReviewed(next);setReviewError('');task.setNotice('');
+  }catch(error){
+   setReviewed(null);
+   setReviewError(error instanceof Error ? error.message : 'Review the current request details.');
+  }
+ }
  async function submit(){
-  if(!selected)throw new Error('Select a profile');
-  if(predecessorId&&!predecessor)throw new Error('The original request is not available');
-  let parsed;try{parsed=JSON.parse(parameters);}catch{task.setNotice('Parameters must be a JSON object.');return;}
-  if(!parsed||Array.isArray(parsed)||typeof parsed!=='object'){task.setNotice('Parameters must be a JSON object.');return;}
-  const source={...(predecessor?.source??{}),channel:'grant.web',
-   ...(sourceTenant?{tenant_id:sourceTenant}:{}),
-   ...(environment?{environment}:{}),
-   ...(severity?{severity}:{}),
-   ...(riskLevel?{risk_level:riskLevel}:{})};
-  if(selected.tenant && sourceTenant!==selected.tenant)throw new Error('Tenant must match the integration scope.');
-  if((selected.tenant_selector && !sourceTenant) || (selected.environment && !environment) ||
-     (selected.severity && !severity) || (selected.risk_level && !riskLevel))
-     throw new Error('Fill every required policy selector.');
-  const row=await api<RequestRow>('/requests','POST',{
-   external_id:external,profile_id:profile,title,action:{kind:selected.action_kind,target,parameters:parsed},
-   reason,source,...(predecessorId?{predecessor_id:predecessorId}:{}),
-  });
-  navigate('/requests/'+row.id);
+  if(!reviewed||!isCurrentRequestCreationReview(reviewed,draft)){
+   setReviewed(null);
+   setReviewError('The request changed. Review the current action and selectors again.');
+   return;
+  }
+  // Clear before the only POST. If the response is ambiguous, the user must
+  // inspect the existing request before reviewing again; no automatic retry.
+  const reviewedNow=reviewed;
+  setReviewed(null);
+  const row=await submitReviewedRequestCreation(
+   reviewedNow,draft,
+   (payload)=>api<RequestRow>('/requests','POST',payload),
+  );
+  navigate('/requests/'+encodeURIComponent(row.id));
  }
  return <Card title="Create an approval request" description="This creates a request, not an execution. The assigned approver is determined by the profile.">
   {task.feedback}{predecessor&&<p>Replacement for cancelled request <code>{predecessor.id}</code>. A new explicit approval is required.</p>}
-  <Form busy={task.busy} onSubmit={()=>void task.run(submit)} label="Submit request">
+  <Form busy={task.busy} onSubmit={reviewRequest} label="Review request">
    <Select label="Approval profile" value={profile} onChange={chooseProfile}><option value="">Select a configured profile</option>{profiles.filter(p=>p.enabled).map(p=><option key={p.id} value={p.id}>{p.name} · {p.action_kind}</option>)}</Select>
    {selected?.tenant&&<p>Tenant scope: {selected.tenant}</p>}
    {selected?.tenant_selector && !selected.tenant &&
-    <TextField label="Source tenant" required maxLength={200} value={sourceTenant} onChange={e=>setSourceTenant(e.target.value)} />}
+    <TextField label="Source tenant" required maxLength={200} value={sourceTenant} onChange={e=>{setSourceTenant(e.target.value);resetReview();}} />}
    {selected?.environment &&
-    <TextField label="Environment" required maxLength={200} value={environment} onChange={e=>setEnvironment(e.target.value)} />}
+    <TextField label="Environment" required maxLength={200} value={environment} onChange={e=>{setEnvironment(e.target.value);resetReview();}} />}
    {selected?.severity &&
-    <TextField label="Severity" required maxLength={200} value={severity} onChange={e=>setSeverity(e.target.value)} />}
+    <TextField label="Severity" required maxLength={200} value={severity} onChange={e=>{setSeverity(e.target.value);resetReview();}} />}
    {selected?.risk_level &&
-    <TextField label="Risk level" required maxLength={200} value={riskLevel} onChange={e=>setRiskLevel(e.target.value)} />}
-   <TextField label="Request title" required maxLength={250} value={title} onChange={e=>setTitle(e.target.value)}/>
-   <TextField label="Target" required maxLength={500} value={target} onChange={e=>setTarget(e.target.value)}/>
-   <TextField label="External request ID" required maxLength={200} value={external} onChange={e=>setExternal(e.target.value)}/>
-   <TextArea label="Action parameters (JSON object; no credentials)" value={parameters} onChange={setParameters} required/>
-   <TextArea label="Reason" value={reason} onChange={setReason}/>
+    <TextField label="Risk level" required maxLength={200} value={riskLevel} onChange={e=>{setRiskLevel(e.target.value);resetReview();}} />}
+   <TextField label="Request title" required maxLength={250} value={title} onChange={e=>{setTitle(e.target.value);resetReview();}}/>
+   <TextField label="Target" required maxLength={500} value={target} onChange={e=>{setTarget(e.target.value);resetReview();}}/>
+   <TextField label="External request ID" required maxLength={200} value={external} onChange={e=>{setExternal(e.target.value);resetReview();}}/>
+   <TextArea label="Action parameters (JSON object; no credentials)" value={parameters} onChange={v=>{setParameters(v);resetReview();}} required/>
+   <TextArea label="Reason" value={reason} onChange={v=>{setReason(v);resetReview();}}/>
   </Form>
+  {reviewError && <Alert tone="warning" title="Review required">{reviewError}</Alert>}
+  <RequestCreationConfirmation reviewed={reviewed} draft={draft} busy={task.busy}
+    onConfirm={()=>void task.run(submit)} onBack={()=>setReviewed(null)} />
  </Card>;
 }
 export function RequestDetail({ id, user, navigate }: { id: string; user: User; navigate: Navigate }) {
