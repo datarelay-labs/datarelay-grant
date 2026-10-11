@@ -6,8 +6,10 @@ import {
   TextField,
 } from '@datarelay-labs/foundation';
 import { api } from './api';
-import { NotificationResendConfirmation, createNotificationResendReview, submitReviewedNotificationResend, type NotificationResendIntent } from './notification_resend_review';
+import { NotificationResendConfirmation, createNotificationResendReview, canConfirmNotificationResend, submitReviewedNotificationResend, type NotificationResendIntent } from './notification_resend_review';
+import { createDeliveryHealthGuard } from './notification_delivery_guard';
 import { Form, Select, TextArea, useTask, when } from './common';
+import { createNotificationTestSendReview, isCurrentNotificationTestSendReview, createNotificationTestSendAttemptGuard, submitReviewedNotificationTestSend, NotificationTestSendConfirmation, type NotificationTestSendPreview, type NotificationTestSendReview, type NotificationTestSendSample } from './notification_test_send_review';
 import {
   hasUnsavedTemplateChanges, NotificationPreviewActions,
   NotificationRequestLink, templateDraftSignature,
@@ -71,18 +73,7 @@ const defaults: Record<NotificationEvent, NotificationEventTemplate> = {
   },
 };
 
-type PreviewResult = {
-  event: NotificationEvent;
-  rendered: {
-    subject: string;
-    body: string;
-    sender_display_name: string;
-    brand_name: string;
-  };
-  transport_accepted: boolean;
-  receipt_confirmed: boolean;
-  execution_allowed: boolean;
-};
+type PreviewResult = NotificationTestSendPreview;
 
 type NotificationView = 'templates' | 'delivery' | 'branding';
 type TemplateView = 'list' | 'editor';
@@ -154,21 +145,47 @@ export function NotificationDeliveryHealth() {
   const [offset, setOffset] = useState(0);
   const [page, setPage] = useState<DeliveryHistoryPage | null>(null);
   const [pendingResend, setPendingResend] = useState<NotificationResendIntent | null>(null);
+  const deliveryGate = useRef(createDeliveryHealthGuard());
   const task = useTask();
 
-  async function loadPage() {
-    const next = await api<DeliveryHistoryPage>(notificationDeliveryQuery(applied, offset));
-    setPage(next);
+  async function loadPage(): Promise<boolean> {
+    const token = deliveryGate.current.beginRead();
+    try {
+      const next = await api<DeliveryHistoryPage>(notificationDeliveryQuery(applied, offset));
+      if (!deliveryGate.current.readCurrent(token)) return false;
+      setPage(next);
+      return true;
+    } catch (error) {
+      // A superseded GET cannot overwrite the current filter/page view.
+      if (deliveryGate.current.readCurrent(token)) throw error;
+      return false;
+    }
   }
-  useEffect(() => { void task.run(loadPage); }, [applied, offset]);
+
+  async function refreshPage() {
+    const accepted = await loadPage();
+    // Auto-refresh after a resend never calls this. Only a deliberate
+    // operator Refresh may unlock an uncertain previous notification POST.
+    if (accepted) deliveryGate.current.readSucceeded();
+  }
+
+  function changePage(nextOffset: number) {
+    deliveryGate.current.invalidateRead();
+    setPendingResend(null);
+    setPage(null);
+    setOffset(nextOffset);
+  }
+  useEffect(() => { void task.run(async () => { await loadPage(); }); }, [applied, offset]);
 
   function apply() {
+    deliveryGate.current.invalidateRead();
     setPendingResend(null);
     setOffset(0);
     setPage(null);
     setApplied({ ...draft });
   }
   function clear() {
+    deliveryGate.current.invalidateRead();
     setPendingResend(null);
     setDraft({ ...defaultDeliveryFilters });
     setPage(null);
@@ -176,6 +193,7 @@ export function NotificationDeliveryHealth() {
     setApplied({ ...defaultDeliveryFilters });
   }
   function reviewResend(record: NotificationDelivery) {
+    if (deliveryGate.current.blocked(record.id)) return;
     setPendingResend(createNotificationResendReview(record));
   }
 
@@ -183,20 +201,30 @@ export function NotificationDeliveryHealth() {
     const intent = pendingResend;
     if (!intent) return;
     const source = page?.deliveries.find((item) => item.id === intent.deliveryId);
-    // Discard the reviewed intent and stale visible FAILED row before any
-    // possibly committed POST. A user must explicitly inspect again if an
-    // ambiguous result arrives; automatic resend retry is forbidden.
+    if (!canConfirmNotificationResend(intent, source)) {
+      setPendingResend(null);
+      throw new Error('DELIVERY_CHANGED_REVIEW_REQUIRED');
+    }
+    // Claim synchronously before any await; React busy or setState alone is
+    // not enough to prevent two same-render resend POSTs.
+    if (!deliveryGate.current.claimResend(intent.deliveryId)) return;
     setPendingResend(null);
     setPage(null);
-    await submitReviewedNotificationResend(
-      intent, source,
-      (deliveryId) => api('/deliveries/' + encodeURIComponent(deliveryId) + '/resend', 'POST'),
-    );
     try {
-      await loadPage();
-      task.setNotice('Notification resend scheduled. This cannot replay a protected action.');
-    } catch {
-      task.setNotice('Notification resend scheduled. Delivery status could not be refreshed; inspect current delivery health before scheduling another attempt. No protected action was executed.');
+      await submitReviewedNotificationResend(
+        intent, source,
+        (deliveryId) => api('/deliveries/' + encodeURIComponent(deliveryId) + '/resend', 'POST'),
+      );
+      try {
+        await loadPage();
+        task.setNotice('Notification resend scheduled. This cannot replay a protected action.');
+      } catch {
+        task.setNotice('Notification resend acknowledged but current delivery health could not be loaded. Refresh before another resend; no protected action was executed.');
+      }
+    } finally {
+      // An accepted or ambiguous POST stays latched until an explicit
+      // successful Refresh, even if an automatic follow-up read succeeds.
+      deliveryGate.current.settledResend();
     }
   }
   return <div className="grant-stack">
@@ -204,7 +232,7 @@ export function NotificationDeliveryHealth() {
     <Card title="Delivery Health"
       description="Search stored email delivery events. Resend is a separate explicit notification-only operation; transport acceptance never proves inbox receipt."
       actions={<Button variant="secondary" disabled={task.busy}
-        onClick={() => void task.run(loadPage)}>Refresh</Button>}>
+        onClick={() => void task.run(refreshPage)}>Refresh</Button>}>
       <section className="grant-stack" aria-label="Filter delivery health">
         <div className="grant-grid">
           <Select label="Delivery state" required={false} value={draft.state}
@@ -257,22 +285,23 @@ export function NotificationDeliveryHealth() {
             <td><NotificationRequestLink requestId={item.request_id} /></td>
             <td>{item.last_error ?? '—'}</td>
             <td>{when(item.created_at)}</td>
-            <td>{item.state === 'FAILED' ? <Button variant="secondary"
-              disabled={task.busy}
-              onClick={() => reviewResend(item)}>
-              Review resend
-            </Button> : null}</td>
+            <td>{item.state === 'FAILED' ? (
+              deliveryGate.current.blocked(item.id)
+                ? <small role="status">Resend attempted. Refresh before another review.</small>
+                : <Button variant="secondary" disabled={task.busy}
+                    onClick={() => reviewResend(item)}>Review resend</Button>
+            ) : null}</td>
           </tr>)}</tbody>
         </table>
       </div>
       <div className="grant-actions">
         <Button variant="secondary" disabled={task.busy || offset <= 0}
-          onClick={() => { setPendingResend(null); setPage(null); setOffset(Math.max(0, offset - DELIVERY_PAGE_LIMIT)); }}>
+          onClick={() => changePage(Math.max(0, offset - DELIVERY_PAGE_LIMIT))}>
           Previous page
         </Button>
         <Button variant="secondary"
           disabled={task.busy || !page?.has_more || offset + DELIVERY_PAGE_LIMIT > 100000}
-          onClick={() => { setPendingResend(null); setPage(null); setOffset(offset + DELIVERY_PAGE_LIMIT); }}>
+          onClick={() => changePage(offset + DELIVERY_PAGE_LIMIT)}>
           Next page
         </Button>
       </div>
@@ -304,6 +333,10 @@ export function Notifications() {
   const [draftTemplates, setDraftTemplates] =
     useState<Record<NotificationEvent, NotificationEventTemplate>>(copyDefaults());
   const [preview, setPreview] = useState<PreviewResult | null>(null);
+  const [reviewedTestSend, setReviewedTestSend] = useState<NotificationTestSendReview | null>(null);
+  const testSendAttempt = useRef(createNotificationTestSendAttemptGuard());
+  const [testSendNeedsRefresh, setTestSendNeedsRefresh] = useState(false);
+  const [testSendAttemptedId, setTestSendAttemptedId] = useState('');
   const [sampleTitle, setSampleTitle] = useState('Sample approval request');
   const [sampleTarget, setSampleTarget] = useState('sample-target');
   const [sampleReason, setSampleReason] = useState('Notification preview');
@@ -313,10 +346,14 @@ export function Notifications() {
   const draftDirty = hasUnsavedTemplateChanges(savedSignature, {
     name, enabled, templates: draftTemplates,
   });
+  const sampleInputsKey = JSON.stringify([
+    sampleTitle, sampleTarget, sampleReason, decisionState, executionState,
+  ]);
 
   function invalidatePreview() {
     previewGeneration.current += 1;
     setPreview(null);
+    setReviewedTestSend(null);
   }
 
   const load = async () => {
@@ -397,7 +434,7 @@ export function Notifications() {
     );
   }
 
-  function sample() {
+  function sample(): NotificationTestSendSample {
     return {
       request_title: sampleTitle,
       request_url: location.origin + '/requests/sample',
@@ -422,24 +459,85 @@ export function Notifications() {
     if (previewGeneration.current === generation) setPreview(rendered);
   }
 
-  async function sendTest() {
-    if (!editing || draftDirty) return;
-    const result = await api<{
-      transport_accepted: boolean;
-      receipt_confirmed: boolean;
-      execution_allowed: boolean;
-      event_id: string;
-    }>('/notification-template-sets/' + editing + '/test-send', 'POST', {
-      event,
-      sample: sample(),
-    });
-    task.setNotice(
-      'Transport accepted: ' +
-        String(result.transport_accepted) +
-        '. Inbox receipt confirmed: ' +
-        String(result.receipt_confirmed) +
-        '. Test messages never authorize execution.',
+  async function reviewTestSend() {
+    if (!editing || draftDirty || testSendAttempt.current.blocked()) return;
+    const saved = sets.find((row) => row.id === editing);
+    if (!saved || templateDraftSignature(saved) !== savedSignature) {
+      throw new Error('TEST_SEND_SAVED_TEMPLATE_CHANGED');
+    }
+    const generation = previewGeneration.current;
+    const exactSample = sample();
+    const frozenInputs = sampleInputsKey;
+    // The preview POST is non-sending. No SMTP effect is attempted here.
+    const rendered = await api<PreviewResult>(
+      '/notification-template-sets/' + editing + '/preview',
+      'POST', { event, sample: exactSample },
     );
+    if (previewGeneration.current !== generation) return;
+    setPreview(rendered);
+    setReviewedTestSend(createNotificationTestSendReview(
+      saved, event, exactSample, frozenInputs, rendered,
+    ));
+  }
+
+  async function sendTest() {
+    const reviewed = reviewedTestSend;
+    const saved = sets.find((row) => row.id === editing) ?? null;
+    if (!reviewed || !isCurrentNotificationTestSendReview(
+      reviewed, saved, event, sampleInputsKey, draftDirty,
+    )) {
+      setReviewedTestSend(null);
+      throw new Error('TEST_SEND_CHANGED_REVIEW_REQUIRED');
+    }
+    // A synchronous claim inside the helper runs before any awaited network
+    // operation; stale saved content is rejected without initiating SMTP.
+    if (testSendAttempt.current.blocked()) return;
+    setReviewedTestSend(null);
+    setTestSendAttemptedId(reviewed.templateSetId);
+    setTestSendNeedsRefresh(true);
+    try {
+      const result = await submitReviewedNotificationTestSend(
+        reviewed,
+        testSendAttempt.current,
+        () => api<NotificationTemplateSet[]>('/notification-template-sets'),
+        (intent) => api<{
+          transport_accepted: boolean;
+          receipt_confirmed: boolean;
+          execution_allowed: boolean;
+          event_id: string;
+        }>('/notification-template-sets/' + intent.templateSetId + '/test-send', 'POST', {
+          event: intent.event, sample: intent.sample,
+        }),
+      );
+      if (result) task.setNotice(
+        'Transport accepted: ' + String(result.transport_accepted)
+          + '. Inbox receipt confirmed: ' + String(result.receipt_confirmed)
+          + '. Test messages never authorize execution.',
+      );
+    } finally {
+      // Failed pre-POST GET can be re-reviewed; a possible SMTP write latches.
+      const blocked = testSendAttempt.current.blocked();
+      setTestSendNeedsRefresh(blocked);
+      if (!blocked) setTestSendAttemptedId('');
+    }
+  }
+
+  async function refreshAfterTestSend() {
+    if (!testSendAttemptedId || draftDirty) {
+      throw new Error('TEST_SEND_SAVE_OR_SELECT_CURRENT_TEMPLATE_FIRST');
+    }
+    const latest = await api<NotificationTemplateSet[]>('/notification-template-sets');
+    const current = latest.find((row) => row.id === testSendAttemptedId);
+    if (!current) throw new Error('TEST_SEND_SAVED_TEMPLATE_NOT_FOUND');
+    // A changed server row must replace the editor's older saved snapshot.
+    setSets(latest);
+    if (editing === current.id) edit(current);
+    if (!testSendAttempt.current.readSucceeded()) {
+      throw new Error('TEST_SEND_STILL_IN_FLIGHT');
+    }
+    setTestSendNeedsRefresh(false);
+    setTestSendAttemptedId('');
+    task.setNotice('Saved template refreshed. Review a fresh preview before any new test email.');
   }
 
   async function saveBranding() {
@@ -689,9 +787,31 @@ export function Notifications() {
                 saved={Boolean(editing)}
                 dirty={draftDirty}
                 busy={task.busy}
+                testAttempted={testSendNeedsRefresh}
                 onPreview={() => void task.run(runPreview)}
-                onTestSend={() => void task.run(sendTest)}
+                onTestSend={() => void task.run(reviewTestSend)}
               />
+              <NotificationTestSendConfirmation
+                reviewed={reviewedTestSend}
+                valid={isCurrentNotificationTestSendReview(
+                  reviewedTestSend, sets.find((row) => row.id === editing) ?? null,
+                  event, sampleInputsKey, draftDirty,
+                )}
+                busy={task.busy || testSendNeedsRefresh}
+                onCancel={() => setReviewedTestSend(null)}
+                onConfirm={() => void task.run(sendTest)}
+              />
+              {testSendNeedsRefresh && (
+                <Alert tone="warning" title="Test email outcome requires reconciliation">
+                  A test email may have been sent to your registered admin mailbox.
+                  Inspect your mailbox before a new test; an ambiguous SMTP POST
+                  is never retried automatically.
+                  <Button variant="secondary" disabled={task.busy}
+                    onClick={() => void task.run(refreshAfterTestSend)}>
+                    Refresh saved template
+                  </Button>
+                </Alert>
+              )}
               {preview ? (
                 <Alert tone="warning" title={preview.rendered.subject}>
                   <pre className="grant-mono">{preview.rendered.body}</pre>

@@ -3,6 +3,7 @@ import { Alert, Button, Card, TextField, type AccountProjection } from '@datarel
 import { api } from './api';
 import { PolicyCloneConfirmation, createPolicyCloneReview, submitReviewedPolicyClone, type PolicyCloneIntent } from './policy_clone_review';
 import { Form, Select, TextArea, useTask, when } from './common';
+import { PolicyApprovalSummary } from './policy_approval_summary';
 import {
   DecisionSecurityFields, policyDecisionSecuritySummary,
   readDecisionSecurity, serializeDecisionSecurity, type DecisionSecurityDraft,
@@ -105,6 +106,7 @@ export function filterPolicyList(
   integrations: readonly Pick<Integration, 'id' | 'name'>[],
   approvers: readonly Pick<AccountProjection, 'id' | 'displayName'>[],
   filter: PolicyListFilter,
+  groups: readonly Pick<ApproverGroup, 'id' | 'name'>[] = [],
 ): Profile[] {
   if (!(['ALL', 'DRAFT', 'TESTING', 'ACTIVE', 'DISABLED'] as string[])
     .includes(filter.lifecycle) || filter.search.length > 128) {
@@ -113,6 +115,7 @@ export function filterPolicyList(
   const query = filter.search.trim().toLowerCase();
   const integrationNames = new Map(integrations.map((item) => [item.id, item.name]));
   const approverNames = new Map(approvers.map((item) => [item.id, item.displayName]));
+  const groupNames = new Map(groups.map((item) => [item.id, item.name]));
   return rows.filter((row) => {
     if (filter.lifecycle !== 'ALL' && row.lifecycle !== filter.lifecycle) return false;
     if (!query) return true;
@@ -121,6 +124,9 @@ export function filterPolicyList(
       row.action_kind,
       integrationNames.get(row.integration_id) ?? row.integration_id,
       approverNames.get(row.approver_id) ?? row.approver_id,
+      row.approval_mode,
+      row.approver_group_id ? (groupNames.get(row.approver_group_id)
+        ?? row.approver_group_id) : '',
     ].some((value) => value.toLowerCase().includes(query));
   });
 }
@@ -608,7 +614,7 @@ export function Profiles() {
   if (view === 'list') {
     const visibleRows = filterPolicyList(rows, integrations, users, {
       search: listSearch, lifecycle: listLifecycle,
-    });
+    }, groups);
     return (
       <div className="grant-stack">
         {task.feedback}
@@ -636,7 +642,7 @@ export function Profiles() {
         >
           <div className="grant-grid">
             <TextField label="Search policies"
-              placeholder="Policy, action, integration or approver"
+              placeholder="Policy, action, integration, approver or approver group"
               value={listSearch}
               onChange={(event) => setListSearch(event.target.value.slice(0, 128))}
             />
@@ -664,7 +670,7 @@ export function Profiles() {
                   <th>Policy</th>
                   <th>Status</th>
                   <th>Applies to</th>
-                  <th>Approver</th>
+                  <th>Approval rule</th>
                   <th>Notifications</th>
                   <th>Updated</th>
                   <th aria-label="Actions" />
@@ -700,8 +706,9 @@ export function Profiles() {
                       </small>
                     </td>
                     <td>
-                      {users.find((user) => user.id === row.approver_id)?.displayName ??
-                        row.approver_id}
+                      <PolicyApprovalSummary
+                        policy={row} groups={groups} approvers={users}
+                      />
                     </td>
                     <td>{row.email_template_name ?? 'Built-in default'}</td>
                     <td>{when(row.updated_at)}</td>

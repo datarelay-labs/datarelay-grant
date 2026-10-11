@@ -174,6 +174,29 @@ describe('Approval progress must not be synthesized from vote records', () => {
     expect(html).not.toContain('1 of 1 approved');
   });
 
+  it('never labels an inferred primary approver as a current assigned seat when the server omits its plan', () => {
+    const html = markup(request({
+      approval_plan: undefined,
+      approval_progress: undefined,
+      decisions: [{ actor_id: 'u2', decision: 'APPROVED', reason: '', decided_at: 120 }],
+    }), false);
+    expect(html).toContain('Approval plan unavailable');
+    expect(html).toContain('Recorded reviewer vote');
+    expect(html).not.toContain('Single approver');
+    expect(html).not.toContain('Approval seat 1');
+    expect(html).not.toContain('1 of 1 approved');
+  });
+
+  it('identifies current seats only when the role-scoped server plan explicitly supplies them', () => {
+    const html = markup(request({
+      approval_plan: { mode: 'SINGLE', members: ['u2'], required: 1 },
+      decisions: [{ actor_id: 'u2', decision: 'HELD', reason: '', decided_at: 120 }],
+    }), false);
+    expect(html).toContain('Approval seat 1');
+    expect(html).toContain('SINGLE');
+    expect(html).not.toContain('Approval plan unavailable');
+  });
+
   it('uses authoritative server quorum even when two vote records appear approved', () => {
     const html = markup(request({
       approval_plan: { mode: 'ALL', members: ['seat-a', 'seat-b'], required: 2 },

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card } from '@datarelay-labs/foundation';
 import { api } from './api';
 import { Form, Select, TextArea, useTask, when } from './common';
 import type { RequestRow, User } from './types';
+import { createCollaborationSubmissionGuard } from './request_collaboration_one_shot';
 
 type CommentKind = NonNullable<RequestRow['comments']>[number]['kind'];
 export type CollaborationReview = {
@@ -90,6 +91,15 @@ export function RequestCollaboration({
   const [body, setBody] = useState('');
   const [reviewed, setReviewed] = useState<CollaborationReview | null>(null);
   const [reviewError, setReviewError] = useState('');
+  const submission = useRef(createCollaborationSubmissionGuard());
+  const [needsFreshRead, setNeedsFreshRead] = useState(false);
+  useEffect(() => {
+    submission.current = createCollaborationSubmissionGuard();
+    setNeedsFreshRead(false);
+    setReviewed(null);
+    setBody('');
+    setKind('COMMENT');
+  }, [row.id, user.id]);
   const allowed = allowedCollaborationPurposes(row, user, Date.now() / 1000);
   // A refreshed request can invalidate a formerly selected approver purpose.
   // Never keep an invisible select value or an old reviewed intent actionable.
@@ -102,6 +112,7 @@ export function RequestCollaboration({
   const mayRespond = allowed.includes('INFO_RESPONSE');
 
   function reviewMessage() {
+    if (submission.current.blocked()) return;
     const next = prepareCollaborationReview(
       row, user, selectedKind, body, Date.now() / 1000,
     );
@@ -120,16 +131,50 @@ export function RequestCollaboration({
       setReviewError('The request, reviewer or message changed. Review the current message before confirming.');
       return;
     }
-    await submitReviewedCollaboration(
-      reviewed,
-      (path, method, payload) => api<RequestRow>(path, method, payload),
-      onRecorded,
+    // Claim synchronously inside submitOnce before awaiting the message POST.
+    // The POST's projection is checked before parent state is updated.
+    const intent = reviewed;
+    const attempt = submission.current.submitOnce(
+      () => submitReviewedCollaboration(
+        intent,
+        (path, method, payload) => api<RequestRow>(path, method, payload),
+        () => undefined,
+      ),
+      (projected) => {
+        if (projected.id !== intent.requestId
+            || projected.revision < intent.revision
+            || projected.action_hash !== row.action_hash) {
+          throw new Error('COLLABORATION_POST_PROJECTION_MISMATCH');
+        }
+        onRecorded(projected);
+      },
     );
+    setReviewed(null);
+    setNeedsFreshRead(true);
+    if (!await attempt) return;
+    setNeedsFreshRead(false);
     setBody('');
     setKind('COMMENT');
-    setReviewed(null);
     setReviewError('');
     task.setNotice('Message recorded in the request history. No approval or execution occurred.');
+  }
+
+  async function refreshAfterUncertainMessage() {
+    // A possibly committed message is never retried. Only a fresh role-scoped
+    // read of this exact immutable request unlocks a new explicit review.
+    const fresh = await api<RequestRow>('/requests/' + encodeURIComponent(row.id));
+    if (fresh.id !== row.id || fresh.action_hash !== row.action_hash
+        || fresh.revision < row.revision) {
+      throw new Error('COLLABORATION_READBACK_MISMATCH');
+    }
+    if (!submission.current.readSucceeded()) {
+      throw new Error('COLLABORATION_POST_STILL_PENDING');
+    }
+    onRecorded(fresh);
+    setNeedsFreshRead(false);
+    setReviewed(null);
+    setBody('');
+    task.setNotice('Request refreshed. Review a new message before submitting.');
   }
 
   const caption: Record<CommentKind, string> = {
@@ -142,6 +187,12 @@ export function RequestCollaboration({
 
   return <Card title="Request collaboration" description="An immutable discussion around the exact requested action. Questions and comments are not approvals.">
     {task.feedback}
+    {needsFreshRead && <Alert tone="warning" title="Refresh request before another message">
+      A collaboration message POST was attempted. Its outcome could be uncertain;
+      inspect the current request instead of sending the same message again.
+      <Button variant="secondary" disabled={task.busy}
+        onClick={() => void task.run(refreshAfterUncertainMessage)}>Refresh collaboration</Button>
+    </Alert>}
     {row.collaboration_state === 'INFO_REQUESTED' && <Alert tone="warning" title="Waiting for requester information">
       Approval is paused until the original requester provides a response.</Alert>}
     {row.collaboration_state === 'CHANGES_REQUESTED' && <Alert tone="warning" title="Action changes requested">
@@ -154,7 +205,7 @@ export function RequestCollaboration({
       </div>)}
       {!row.comments?.length && <p>No comments yet. Participants can ask questions or supply safe context.</p>}
     </div>
-    <Form label="Review message" busy={task.busy} onSubmit={reviewMessage}>
+    <Form label="Review message" busy={task.busy || needsFreshRead} onSubmit={reviewMessage}>
       <Select label="Message purpose" value={selectedKind} onChange={(value) => {
         setKind(value as CommentKind); setReviewed(null); setReviewError(''); task.setNotice('');
       }}>
@@ -169,7 +220,7 @@ export function RequestCollaboration({
       {body.length > 2000 && <p role="alert">Message exceeds 2000 characters. Shorten it before review.</p>}
     </Form>
     {reviewError && <Alert tone="warning" title="Review required">{reviewError}</Alert>}
-    {reviewReady && reviewed && <Alert tone="warning" title="Confirm message">
+    {reviewReady && reviewed && !needsFreshRead && <Alert tone="warning" title="Confirm message">
       <p>{caption[reviewed.kind]}: {reviewed.body}</p>
       <p>Request revision {reviewed.revision}. Request action and execution authority remain unchanged. This message will be retained in the audit trail.</p>
       <Button disabled={task.busy} onClick={() => void task.run(submit)}>Confirm message</Button>

@@ -134,14 +134,14 @@ describe('B1 RequestDetail routing receipt and independent readback', () => {
     expect(posts).toBe(0);
   });
 
-  it('a successful POST with invalid or stale projection reports readback unavailable, not false failure', async () => {
+  it('an unverified reassignment POST projection stays uncertain, not claimed as accepted', async () => {
     const output = await submitReviewedRequestRouting(
       reassign(), request(),
       async () => notCalled(),
       async () => request({ revision: 7 }),
       async () => { throw new Error('GET failed'); },
     );
-    expect(output).toEqual({ status: 'readback_unavailable', row: null });
+    expect(output).toEqual({ status: 'receipt_unverified', row: null });
   });
 
   it('does not retry a POST with ambiguous outcome', async () => {
@@ -179,5 +179,68 @@ describe('B1 RequestDetail routing receipt and independent readback', () => {
       async () => request(),
     )).rejects.toThrow('ROUTING_CHANGED_REVIEW_REQUIRED');
     expect(mutation).toBe(0);
+  });
+
+  it('rejects unrelated or stale escalation acknowledgements without trusting a later GET', async () => {
+    for (const receipt of [
+      { request_id: 'different-request', revision: 8 },
+      { request_id: request().id, revision: 7 },
+      { request_id: request().id, revision: Number.NaN },
+    ]) {
+      let reads = 0;
+      const result = await submitReviewedRequestRouting(
+        escalate(), request(),
+        async () => receipt, async () => notCalled(),
+        async () => { reads++; return request({ revision: 8 }); },
+      );
+      expect(result).toEqual({ status: 'receipt_unverified', row: null });
+      expect(reads).toBe(0);
+    }
+  });
+
+  it('refuses a mismatched reassignment POST projection despite a later suitable GET', async () => {
+    for (const partial of [
+      { id: 'different-request' },
+      { action_hash: 'altered-action' },
+      { revision: Number.NaN },
+      { approval_plan: { mode: 'ALL', members: ['seat-a', 'seat-b'], required: 2 } },
+    ]) {
+      let reads = 0;
+      const result = await submitReviewedRequestRouting(
+        reassign(), request(),
+        async () => notCalled(),
+        async () => request({ revision: 8, approver_id: 'seat-c',
+          approval_plan: { mode: 'ALL', members: ['seat-c', 'seat-b'], required: 2 }, ...partial }),
+        async () => { reads++; return request({ revision: 9 }); },
+      );
+      expect(result).toEqual({ status: 'receipt_unverified', row: null });
+      expect(reads).toBe(0);
+    }
+  });
+
+  it('keeps a valid escalation acknowledgement but rejects readback with changed immutable action', async () => {
+    for (const wrong of [
+      { action_hash: 'altered-action' },
+      { id: 'another-request' },
+      { revision: 7 },
+    ]) {
+      const result = await submitReviewedRequestRouting(
+        escalate(), request(),
+        async () => ({ request_id: request().id, revision: 8 }),
+        async () => notCalled(),
+        async () => request({ revision: 8, ...wrong }),
+      );
+      expect(result).toEqual({ status: 'readback_unavailable', row: null });
+    }
+  });
+
+  it('cannot label a stale GET as a verified escalation receipt', async () => {
+    const result = await submitReviewedRequestRouting(
+      escalate(), request(),
+      async () => ({ request_id: request().id, revision: 10 }),
+      async () => notCalled(),
+      async () => request({ revision: 8 }),
+    );
+    expect(result).toEqual({ status: 'readback_unavailable', row: null });
   });
 });

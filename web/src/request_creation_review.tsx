@@ -32,13 +32,15 @@ export type RequestCreationReview = {
   payload: RequestCreationPayload;
   profileName: string;
   profileVersion: number;
+  profileVersionId: string;
+  integrationId: string;
   draftSignature: string;
 };
 
 export function prepareRequestCreationReview(draft: NewRequestDraft): RequestCreationReview {
   const selected = draft.profile;
-  if (!selected || !selected.enabled) {
-    throw new Error('Select an enabled approval profile before reviewing.');
+  if (!selected || !selected.enabled || selected.lifecycle !== 'ACTIVE') {
+    throw new Error('Select an active, enabled approval profile before reviewing.');
   }
   if (!draft.title.trim() || draft.title.length > 250
     || !draft.target.trim() || draft.target.length > 500
@@ -98,6 +100,8 @@ export function prepareRequestCreationReview(draft: NewRequestDraft): RequestCre
     },
     profileName: selected.name,
     profileVersion: selected.version,
+    profileVersionId: selected.version_id,
+    integrationId: selected.integration_id,
     // Includes the exact user-authored JSON text and the loaded policy and
     // predecessor snapshots; even edits that preserve parsed JSON semantics
     // force a new explicit review.
@@ -196,6 +200,51 @@ export async function submitReviewedRequestCreationWithFreshRead<T>(
     throw new Error('PREDECESSOR_CHANGED_REVIEW_REQUIRED');
   }
   return await submitReviewedRequestCreation(reviewed, draft, createOnce);
+}
+
+/** Stable JSON equality: object key order is not an action change, but a
+ * changed array position or nested value is. The editor accepts JSON only.
+ */
+function canonicalJson(value: unknown): string {
+  function sortJson(node: unknown): unknown {
+    if (Array.isArray(node)) return node.map(sortJson);
+    if (node !== null && typeof node === 'object') {
+      return Object.fromEntries(
+        Object.entries(node).sort(([a], [b]) => a.localeCompare(b))
+          .map(([key, nested]) => [key, sortJson(nested)]),
+      );
+    }
+    return node;
+  }
+  return JSON.stringify(sortJson(value));
+}
+
+/** The server may have created a request before a response is verified.
+ * Never navigate to an unrelated ID, assert the reviewed action was created,
+ * or retry a POST if the server's returned projection does not match.
+ * The UI cannot make creation atomic; the backend remains the authority.
+ */
+export function verifyCreatedRequestReceipt(
+  reviewed: RequestCreationReview, row: RequestRow,
+): RequestRow {
+  const p = reviewed.payload;
+  if (!row || !/^[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}$/.test(row.id)
+    || !Number.isSafeInteger(row.revision) || row.revision < 1
+    || row.external_id !== p.external_id
+    || row.integration_id !== reviewed.integrationId
+    || row.profile_id !== p.profile_id
+    || row.profile_version_id !== reviewed.profileVersionId
+    || row.policy_version !== reviewed.profileVersion
+    || row.title !== p.title || row.reason !== p.reason
+    || row.action?.kind !== p.action.kind
+    || row.action?.target !== p.action.target
+    || !row.action_hash
+    || canonicalJson(row.action.parameters) !== canonicalJson(p.action.parameters)
+    || canonicalJson(row.source) !== canonicalJson(p.source)
+    || (row.predecessor_id ?? null) !== (p.predecessor_id ?? null)) {
+    throw new Error('REQUEST_CREATE_RECEIPT_MISMATCH');
+  }
+  return row;
 }
 
 /** No POST or navigation happens here; caller retains the one-submit guard. */

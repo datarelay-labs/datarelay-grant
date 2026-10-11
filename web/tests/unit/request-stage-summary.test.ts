@@ -57,6 +57,33 @@ describe('Grant request-detail task-first status presentation', () => {
     expect(output).not.toContain('Execute</button>');
   });
 
+  it('does not present successful webhook delivery as successful email transport', () => {
+    const output = html(request({
+      delivery_state: 'DELIVERED', notification_failure_count: 2,
+    }));
+    expect(output).toContain('Notification transport');
+    expect(output).toContain('Webhook callback');
+    expect(output).toContain('DELIVERED');
+    expect(output).toContain('Email failures');
+    expect(output).toContain('2 failed email notifications');
+    expect(output).toContain('webhook state does not describe email delivery');
+    expect(output).not.toContain('Email delivered');
+  });
+
+  it('does not infer recipient mailbox delivery from zero failed emails', () => {
+    const output = html(request({ delivery_state: 'NOT_SCHEDULED', notification_failure_count: 0 }));
+    expect(output).toContain('0 failed email notifications');
+    expect(output).toContain('zero failures is not proof of mailbox receipt');
+    expect(output).not.toContain('Email delivered');
+  });
+
+  it('does not invent zero email failures when the server omits that count', () => {
+    const output = html(request({ delivery_state: 'PENDING',
+      notification_failure_count: undefined }));
+    expect(output).toContain('Email failure count unavailable');
+    expect(output).not.toContain('0 failed email notifications');
+  });
+
   it('qualifies only reported success or failure as unverified product reports', () => {
     const success = html(request({
       state: 'APPROVED', execution_state: 'REPORTED_SUCCEEDED',

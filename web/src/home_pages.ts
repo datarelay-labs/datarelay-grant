@@ -122,9 +122,9 @@ export function requesterProgress(row: RequestRow): string {
   }
   if (row.state === 'APPROVED') {
     if (row.execution_state === 'NOT_STARTED') return 'Approved · awaiting execution';
-    if (row.execution_state.includes('FAILED')) return 'Approved · execution failed';
+    if (row.execution_state.includes('FAILED')) return 'Approved · executor reported failure (not independently verified)';
     if (row.execution_state.includes('UNKNOWN')) return 'Approved · execution status unknown';
-    if (row.execution_state.includes('SUCCEEDED')) return 'Approved · execution completed';
+    if (row.execution_state.includes('SUCCEEDED')) return 'Approved · executor reported success (not independently verified)';
     return 'Approved · execution pending verification';
   }
   if (row.state === 'HELD') return 'On hold';

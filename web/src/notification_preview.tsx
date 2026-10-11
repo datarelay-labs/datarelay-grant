@@ -28,12 +28,14 @@ export function NotificationPreviewActions({
   saved,
   dirty,
   busy,
+  testAttempted = false,
   onPreview,
   onTestSend,
 }: {
   saved: boolean;
   dirty: boolean;
   busy: boolean;
+  testAttempted?: boolean;
   onPreview: () => void;
   onTestSend: () => void;
 }) {
@@ -55,10 +57,10 @@ export function NotificationPreviewActions({
         </Button>
         <Button
           variant="secondary"
-          disabled={!saved || dirty || busy}
+          disabled={!saved || dirty || busy || testAttempted}
           onClick={onTestSend}
         >
-          Send test to me
+          Review: Send test to me
         </Button>
       </div>
     </>

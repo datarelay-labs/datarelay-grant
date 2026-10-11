@@ -59,6 +59,60 @@ describe('Grant task-oriented Home composition', () => {
     expect(html).toContain('New request');
   });
 
+  it('exposes exact operation and target in the approval queue without entering details', () => {
+    const html = markup(member, [
+      row('approve-prod', {
+        requester_id: 'other', title: 'Approve production rollout',
+        viewer_assigned: true, viewer_can_decide: true, deadline: 810,
+        action: { kind: 'service.deploy', target: 'customer-api-prod', parameters: {} },
+      }),
+    ]);
+    const decisionSection = html.slice(html.indexOf('Decisions awaiting you'),
+      html.indexOf('My submitted requests'));
+    expect(decisionSection).toContain('Approve production rollout');
+    expect(decisionSection).toContain('Operation');
+    expect(decisionSection).toContain('service.deploy');
+    expect(decisionSection).toContain('Target');
+    expect(decisionSection).toContain('customer-api-prod');
+    expect(decisionSection).toContain('Decision needed');
+    expect(decisionSection).not.toContain('Execute</button>');
+  });
+
+  it('escapes untrusted operation and target in the approval worklist', () => {
+    const html = markup(member, [
+      row('untrusted', {
+        requester_id: 'other', viewer_assigned: true, viewer_can_decide: true,
+        action: {
+          kind: '<script>alert(1)</script>',
+          target: '<img src=x onerror=alert(1)>',
+          parameters: {},
+        },
+      }),
+    ]);
+    expect(html).toContain('&lt;script&gt;');
+    expect(html).toContain('&lt;img');
+    expect(html).not.toContain('<script>');
+    expect(html).not.toContain('<img src=x');
+  });
+
+  it('shows exact action context for requester follow-up and submitted history', () => {
+    const html = markup(member, [
+      row('needs-info', {
+        title: 'Provide supporting documents',
+        collaboration_state: 'INFO_REQUESTED', created_at: 300,
+        action: { kind: 'account.review', target: 'customer-42', parameters: {} },
+      }),
+      row('recent', {
+        title: 'Scheduled restart', created_at: 200,
+        action: { kind: 'service.restart', target: 'reporting-worker', parameters: {} },
+      }),
+    ]);
+    expect(html).toContain('Your response is needed');
+    expect(html).toMatch(/<strong>Provide supporting documents<\/strong><small>Operation: account\.review · Target: customer-42<\/small>/);
+    expect(html).toMatch(/<strong>Scheduled restart<\/strong><small>Operation: service\.restart · Target: reporting-worker<\/small>/);
+    expect(html).not.toContain('Execute</button>');
+  });
+
   it('prioritizes requester questions but hides other requesters personal data', () => {
     const html = markup(member, [
       row('mine', { title: 'Provide new details', collaboration_state: 'INFO_REQUESTED' }),
@@ -70,6 +124,24 @@ describe('Grant task-oriented Home composition', () => {
     expect(html).toContain('Information requested');
     expect(html).not.toContain('Another customer confidential');
     expect(html).not.toContain('not-mine');
+  });
+
+  it('shows executor reported outcomes as unverified in the actual requester Home', () => {
+    const output = markup(member, [
+      row('reported-success', {
+        state: 'APPROVED', execution_state: 'REPORTED_SUCCEEDED',
+        title: 'Reported completed deployment',
+      }),
+      row('reported-failure', {
+        state: 'APPROVED', execution_state: 'REPORTED_FAILED',
+        title: 'Reported failed deployment',
+      }),
+    ]);
+    expect(output).toContain('executor reported success (not independently verified)');
+    expect(output).toContain('executor reported failure (not independently verified)');
+    expect(output).not.toContain('Approved · execution completed');
+    expect(output).not.toContain('Approved · execution failed');
+    expect(output).not.toContain('Execution verified');
   });
 
   it('shows operational exception counts only to administrators and keeps each status separate', () => {

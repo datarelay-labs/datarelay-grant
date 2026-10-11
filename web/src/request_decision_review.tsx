@@ -5,10 +5,16 @@ export type RequestDecisionChoice = Outcome | 'CANCELLED';
 export type RequestDecisionReview = {
   requestId: string;
   actorId: string;
+  /** Server records the represented approval seat for delegated decisions. */
+  representedSeatId: string;
   revision: number;
   actionHash: string;
   actionKind: string;
   actionTarget: string;
+  /** Exact immutable request and action snapshot shown at final Confirm. */
+  requestTitle: string;
+  externalId: string;
+  actionParametersJson: string;
   choice: RequestDecisionChoice;
   reason: string;
 };
@@ -40,9 +46,14 @@ export function prepareRequestDecisionReview(
     return null;
   }
   return {
-    requestId: row.id, actorId: user.id, revision: row.revision,
+    requestId: row.id, actorId: user.id,
+    representedSeatId: choice === 'CANCELLED' ? user.id : (row.viewer_delegated_for || user.id),
+    revision: row.revision,
     actionHash: row.action_hash, actionKind: row.action.kind,
-    actionTarget: row.action.target, choice, reason,
+    actionTarget: row.action.target,
+    requestTitle: row.title, externalId: row.external_id,
+    actionParametersJson: JSON.stringify(row.action.parameters, null, 2),
+    choice, reason,
   };
 }
 
@@ -60,10 +71,14 @@ export function isCurrentRequestDecisionReview(
   return current !== null
     && current.requestId === reviewed.requestId
     && current.actorId === reviewed.actorId
+    && current.representedSeatId === reviewed.representedSeatId
     && current.revision === reviewed.revision
     && current.actionHash === reviewed.actionHash
     && current.actionKind === reviewed.actionKind
     && current.actionTarget === reviewed.actionTarget
+    && current.requestTitle === reviewed.requestTitle
+    && current.externalId === reviewed.externalId
+    && current.actionParametersJson === reviewed.actionParametersJson
     && current.choice === reviewed.choice
     && current.reason === reviewed.reason;
 }
@@ -87,9 +102,16 @@ export function RequestDecisionConfirmation({
     <Alert tone="warning" title={'Confirm: ' + reviewed.choice}>
       <p>Review the exact human decision before recording it. No external action is executed by this confirmation.</p>
       <dl className="grant-facts">
+        <dt>Request title</dt><dd>{reviewed.requestTitle}</dd>
+        <dt>External ID</dt><dd>{reviewed.externalId}</dd>
+        <dt>Request ID</dt><dd><code>{reviewed.requestId}</code></dd>
         <dt>Operation</dt><dd>{reviewed.actionKind}</dd>
         <dt>Target</dt><dd>{reviewed.actionTarget}</dd>
+        <dt>Action fingerprint</dt><dd><code>{reviewed.actionHash}</code></dd>
         <dt>Revision</dt><dd>{reviewed.revision}</dd>
+        <dt>Acting user</dt><dd>{reviewed.actorId}</dd>
+        {reviewed.choice !== 'CANCELLED' && <><dt>Reviewing approval seat</dt><dd>{reviewed.representedSeatId}</dd></>}
+        <dt>Action parameters</dt><dd><pre>{reviewed.actionParametersJson}</pre></dd>
         <dt>Decision</dt><dd>{reviewed.choice}</dd>
         <dt>Reason</dt><dd>{reviewed.reason || 'Not provided'}</dd>
       </dl>

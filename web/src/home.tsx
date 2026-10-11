@@ -87,6 +87,7 @@ export function HomeWorkspaceContent({
             >
               <span>
                 <strong>{row.title}</strong>
+                <small>Operation: {row.action.kind} · Target: {row.action.target}</small>
                 <small>{requesterProgress(row)} · deadline {when(row.deadline)}</small>
               </span>
               <span aria-hidden="true">›</span>
@@ -113,6 +114,7 @@ export function HomeWorkspaceContent({
             >
               <span>
                 <strong>{row.title}</strong>
+                <small>Operation: {row.action.kind} · Target: {row.action.target}</small>
                 <small>{row.state === 'HELD' ? 'On hold' : 'Decision needed'}
                   {row.viewer_delegated_for ? ' · delegated to you' : ''}
                   {' · due ' + when(row.deadline)}</small>
@@ -143,6 +145,7 @@ export function HomeWorkspaceContent({
             >
               <span>
                 <strong>{row.title}</strong>
+                <small>Operation: {row.action.kind} · Target: {row.action.target}</small>
                 <small>{requesterProgress(row)} · submitted {when(row.created_at)}</small>
               </span>
               <span aria-hidden="true">›</span>

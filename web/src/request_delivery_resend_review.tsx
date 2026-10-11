@@ -15,6 +15,38 @@ export type RequestDeliveryResendIntent = {
   lastError: string | null;
 };
 
+/**
+ * Synchronous per-request latch for a reviewed notification resend.
+ * React's busy/attempted state is not a same-render mutex. Only an explicit
+ * successful role-scoped Refresh clears uncertain or acknowledged attempts.
+ * No role/transport/approval authority is granted by this guard.
+ */
+export function createDeliveryResendAttemptGuard() {
+  const attempted = new Set<string>();
+  let inFlight = false;
+  return {
+    claim(deliveryId: string): boolean {
+      if (!deliveryId || inFlight || attempted.has(deliveryId)) return false;
+      attempted.add(deliveryId);
+      inFlight = true;
+      return true;
+    },
+    settled(): void {
+      // A possible POST remains latched even after network rejection.
+      inFlight = false;
+    },
+    readSucceeded(): boolean {
+      // An unrelated Refresh racing an active resend cannot clear the latch.
+      if (inFlight) return false;
+      attempted.clear();
+      return true;
+    },
+    blocked(deliveryId: string): boolean {
+      return inFlight || attempted.has(deliveryId);
+    },
+  };
+}
+
 /** The server ultimately validates the admin and permitted notification
  * retry, and this UI never equates transport with approval or execution.
  */

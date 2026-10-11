@@ -113,11 +113,34 @@ describe('Grant Home task-first projection', () => {
     expect(requesterProgress(sample('a', { state: 'APPROVED' })))
       .toBe('Approved · awaiting execution');
     expect(requesterProgress(sample('b', { state: 'APPROVED', execution_state: 'FAILED' })))
-      .toBe('Approved · execution failed');
+      .toBe('Approved · executor reported failure (not independently verified)');
     expect(requesterProgress(sample('c', { state: 'APPROVED', execution_state: 'UNKNOWN' })))
       .toBe('Approved · execution status unknown');
     expect(requesterProgress(sample('d', { state: 'APPROVED', execution_state: 'SUCCEEDED' })))
-      .toBe('Approved · execution completed');
+      .toBe('Approved · executor reported success (not independently verified)');
+  });
+
+  it('never calls a connected executor success report independently completed execution', () => {
+    const reported = requesterProgress(sample('reported', {
+      state: 'APPROVED', execution_state: 'REPORTED_SUCCEEDED',
+    }));
+    expect(reported).toContain('reported success');
+    expect(reported).toContain('not independently verified');
+    expect(reported).not.toContain('execution completed');
+  });
+
+  it('qualifies both executor failure and legacy success signals as reports only', () => {
+    const failed = requesterProgress(sample('reported-failure', {
+      state: 'APPROVED', execution_state: 'REPORTED_FAILED',
+    }));
+    const legacySuccess = requesterProgress(sample('legacy-success', {
+      state: 'APPROVED', execution_state: 'SUCCEEDED',
+    }));
+    expect(failed).toContain('reported failure');
+    expect(failed).toContain('not independently verified');
+    expect(failed).not.toBe('Approved · execution failed');
+    expect(legacySuccess).toContain('not independently verified');
+    expect(legacySuccess).not.toBe('Approved · execution completed');
   });
 
   it('prioritizes requester collaboration state over stale decision state', () => {

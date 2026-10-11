@@ -39,7 +39,9 @@ export function RequestEvidence({
   // assigned approval seats, not independently verified human identities.
   // A later decision may supersede a Hold; the timeline retains the history.
   const votes = row.decisions ?? [];
-  const seats = row.approval_plan?.members ?? [row.approver_id];
+  // A legacy approver_id is not an authoritative current approval plan.
+  // Do not assign a visible seat number when the role-scoped plan is absent.
+  const seats = row.approval_plan?.members ?? [];
   // Current quorum is authoritative only when the server supplies its
   // role-scoped approval progress. Archived votes may refer to superseded
   // approval seats and cannot establish a current approval threshold.
@@ -56,7 +58,7 @@ export function RequestEvidence({
               {' · '}{votes.length} recorded vote{votes.length === 1 ? '' : 's'} (not verified quorum)
             </>
           )}
-          {' · '}{row.approval_plan?.mode ?? 'Single approver'}
+          {' · '}{row.approval_plan?.mode ?? 'Approval plan unavailable'}
         </p>
         {votes.length ? (
           <ul>

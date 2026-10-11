@@ -1,27 +1,43 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, TextField } from '@datarelay-labs/foundation';
-import { api } from './api';
+import { api, errorText } from './api';
 import { RequestAdminControls } from './request_admin';
 export { RequestList } from './request_inbox';
 export type { Filters } from './request_inbox';
 import { RequestCollaboration } from './collaboration';
 import { RevisionComparison } from './revision_diff';
-import { RequestActionSummary } from './request_action_summary';
-import { RequestEvidence, approvalProgressLabel, approvalWaitingLabel } from './request_evidence';
-import { RequestDeliveryResendConfirmation, createRequestDeliveryResendReview, canConfirmRequestDeliveryResend, submitReviewedRequestDeliveryResend, type RequestDeliveryResendIntent } from './request_delivery_resend_review';
-import { RequestStageSummary } from './request_stage_summary';
+import { RequestDetailOverview } from './request_detail_overview';
+import {
+ createRequestDetailReadGate, readScopedRequestDetail,
+ currentRouteRequest, acceptCurrentRequestMutation,
+} from './request_detail_read_scope';
+import {
+ createRequestIntakeReadGate, readScopedRequestIntake,
+ currentIntakeProjection, type IntakeProjection,
+} from './request_intake_read_scope';
+import { RequestTaskBackLink } from './request_task_navigation';
+import { RequestEvidence } from './request_evidence';
+import { RequestDeliveryResendConfirmation, createRequestDeliveryResendReview, canConfirmRequestDeliveryResend, submitReviewedRequestDeliveryResend, createDeliveryResendAttemptGuard, type RequestDeliveryResendIntent } from './request_delivery_resend_review';
 import { RequestExecutionReport } from './request_execution_report';
 import { recordDecisionThenRead } from './request_decision_receipt';
 import { createDecisionAttemptGuard } from './request_decision_attempt';
-import { prepareRequestCreationReview, isCurrentRequestCreationReview, submitReviewedRequestCreationWithFreshRead, RequestCreationConfirmation, type NewRequestDraft, type RequestCreationReview } from './request_creation_review';
+import { createRequestCreationAttemptGuard } from './request_creation_attempt';
+import { eligibleIntakeProfiles, NewRequestPolicyContext, RequestCreationReconciliationNotice } from './request_intake_context';
+import { prepareRequestCreationReview, isCurrentRequestCreationReview, submitReviewedRequestCreationWithFreshRead, verifyCreatedRequestReceipt, RequestCreationConfirmation, type NewRequestDraft, type RequestCreationReview } from './request_creation_review';
 import { RequestDecisionConfirmation, prepareRequestDecisionReview, isCurrentRequestDecisionReview, type RequestDecisionReview, type RequestDecisionChoice } from './request_decision_review';
 import { Form, Select, State, TextArea, useTask, when } from './common';
 import type { Profile, RequestRow, Delivery, Outcome, User } from './types';
 
 type Navigate = (path: string) => void;
 export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; predecessorId?: string }) {
- const [predecessor,setPredecessor] = useState<RequestRow | null>(null);
- const [profiles,setProfiles] = useState<Profile[]>([]);
+ const intakeGate = useRef(createRequestIntakeReadGate());
+ const [loadedContext, setLoadedContext] =
+   useState<IntakeProjection<Profile, RequestRow> | null>(null);
+ // Old request/policy data cannot be rendered or confirmed after changing
+ // the predecessor route, even before React flushes the next useEffect.
+ const currentContext = currentIntakeProjection(loadedContext, predecessorId);
+ const profiles = currentContext?.profiles ?? [];
+ const predecessor = currentContext?.predecessor ?? null;
  const [profile,setProfile] = useState('');
  const [title,setTitle] = useState('');
  const [target,setTarget] = useState('');
@@ -34,8 +50,11 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
  const [riskLevel,setRiskLevel]=useState('');
  const task=useTask();
  const [reviewed,setReviewed]=useState<RequestCreationReview | null>(null);
+ const createGuard=useRef(createRequestCreationAttemptGuard());
+ const [createOutcomeUnknown,setCreateOutcomeUnknown]=useState(false);
  const [reviewError,setReviewError]=useState('');
- const selected=profiles.find(p=>p.id===profile);
+ const availableProfiles=eligibleIntakeProfiles(profiles);
+ const selected=availableProfiles.find(p=>p.id===profile);
  const draft:NewRequestDraft={
   profile:selected??null,predecessor,predecessorId,title,target,parameters,
   reason,external,sourceTenant,environment,severity,riskLevel,
@@ -46,7 +65,7 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
  function chooseProfile(id:string){
   resetReview();
   setProfile(id);
-  const policy=profiles.find(p=>p.id===id);
+  const policy=availableProfiles.find(p=>p.id===id);
   // The source attributes must be explicit; do not silently omit the exact
   // selectors this active policy uses when creating a request from the browser.
   setSourceTenant(policy?.tenant || policy?.tenant_selector || '');
@@ -54,24 +73,51 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
   setSeverity(policy?.severity || '');
   setRiskLevel(policy?.risk_level || '');
  }
- useEffect(()=>{resetReview();void task.run(async()=>{
-  const loaded=await api<Profile[]>('/profiles');
-  setProfiles(loaded);
-  if(predecessorId){
-   const previous=await api<RequestRow>('/requests/'+encodeURIComponent(predecessorId));
-   if(previous.state!=='CANCELLED' &&
-      !(previous.state==='EXPIRED' && previous.collaboration_state==='CHANGES_REQUESTED'))
-      throw new Error('Cancel the original request or wait for a requested-change revision to expire before replacing it');
-   setPredecessor(previous);setProfile(previous.profile_id);setTitle(previous.title);
-   const selected=loaded.find(p=>p.id===previous.profile_id);
-   setSourceTenant(String(previous.source?.tenant_id ?? selected?.tenant ?? selected?.tenant_selector ?? ''));
-   setEnvironment(String(previous.source?.environment ?? selected?.environment ?? ''));
-   setSeverity(String(previous.source?.severity ?? selected?.severity ?? ''));
-   setRiskLevel(String(previous.source?.risk_level ?? selected?.risk_level ?? ''));
-   setTarget(previous.action.target);setParameters(JSON.stringify(previous.action.parameters,null,2));setReason(previous.reason);
-  }
- });},[predecessorId]);
+ useEffect(()=>{
+  intakeGate.current.selectContext(predecessorId);
+  resetReview();
+  setLoadedContext(null);
+  setProfile('');setTitle('');setTarget('');setParameters('{}');
+  setReason('');setSourceTenant('');setEnvironment('');
+  setSeverity('');setRiskLevel('');
+  setExternal(crypto.randomUUID());
+  // A pre-existing create attempt remains locked: navigation alone must not
+  // permit an ambiguous request-create POST to be issued again.
+  void readScopedRequestIntake(
+    intakeGate.current, predecessorId,
+    () => api<Profile[]>('/profiles'),
+    () => api<RequestRow>('/requests/'+encodeURIComponent(predecessorId!)),
+    (previous) => previous.state==='CANCELLED'
+      || (previous.state==='EXPIRED'
+        && previous.collaboration_state==='CHANGES_REQUESTED'),
+    (loaded) => {
+      setLoadedContext(loaded);
+      if (loaded.predecessor) {
+        const previous=loaded.predecessor;
+        setProfile(previous.profile_id);setTitle(previous.title);
+        const policy=loaded.profiles.find(p=>p.id===previous.profile_id);
+        setSourceTenant(String(previous.source?.tenant_id
+          ?? policy?.tenant ?? policy?.tenant_selector ?? ''));
+        setEnvironment(String(previous.source?.environment
+          ?? policy?.environment ?? ''));
+        setSeverity(String(previous.source?.severity
+          ?? policy?.severity ?? ''));
+        setRiskLevel(String(previous.source?.risk_level
+          ?? policy?.risk_level ?? ''));
+        setTarget(previous.action.target);
+        setParameters(JSON.stringify(previous.action.parameters,null,2));
+        setReason(previous.reason);
+      }
+    },
+  ).catch((error) => {
+    if (intakeGate.current.isActive(predecessorId)) {
+      setReviewError(error instanceof Error
+        ? error.message : 'Unable to load current policies and original request.');
+    }
+  });
+ },[predecessorId]);
  function reviewRequest(){
+  if (createGuard.current.blocked()) return;
   try{
    const next=prepareRequestCreationReview(draft);
    setReviewed(next);setReviewError('');task.setNotice('');
@@ -86,11 +132,14 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
    setReviewError('The request changed. Review the current action and selectors again.');
    return;
   }
-  // Clear before the only POST. If the response is ambiguous, the user must
-  // inspect the existing request before reviewing again; no automatic retry.
+  // Claim synchronously before policy GET, not after React marks the button busy.
+  // A second Confirm in the same render must never start a second create POST.
+  if (!createGuard.current.claim()) return;
   const reviewedNow=reviewed;
+  const creationContext=predecessorId;
   setReviewed(null);
-  const row=await submitReviewedRequestCreationWithFreshRead(
+  try {
+   const row=await submitReviewedRequestCreationWithFreshRead(
    reviewedNow,draft,
    async()=>{
     const currentProfiles=await api<Profile[]>('/profiles');
@@ -99,65 +148,131 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
     const currentPredecessor=draft.predecessorId
      ? await api<RequestRow>('/requests/'+encodeURIComponent(draft.predecessorId))
      : null;
-    setProfiles(currentProfiles);
-    if(currentPredecessor) setPredecessor(currentPredecessor);
+    if (!intakeGate.current.isActive(creationContext)) {
+      throw new Error('REQUEST_CREATION_CONTEXT_CHANGED');
+    }
+    setLoadedContext({ key: creationContext ?? '',
+      profiles: currentProfiles, predecessor: currentPredecessor });
     return {
      policy:currentProfiles.find(p=>p.id===reviewedNow.payload.profile_id),
      predecessor:currentPredecessor,
     };
    },
-   (payload)=>api<RequestRow>('/requests','POST',payload),
-  );
-  navigate('/requests/'+encodeURIComponent(row.id));
+   (payload)=>{
+    if (!intakeGate.current.isActive(creationContext)) {
+      throw new Error('REQUEST_CREATION_CONTEXT_CHANGED');
+    }
+    createGuard.current.markPostStarted();
+    setCreateOutcomeUnknown(true);
+    return api<RequestRow>('/requests','POST',payload);
+   },
+   );
+   // A creation POST might already have committed. Only the exact reviewed
+   // server projection qualifies for navigation; mismatches are not retried.
+   const confirmed = verifyCreatedRequestReceipt(reviewedNow, row);
+   if (intakeGate.current.isActive(creationContext)) {
+     navigate('/requests/'+encodeURIComponent(confirmed.id));
+   }
+  } catch(error) {
+   // A failed read-only policy check is safely re-reviewable. A POST that
+   // was attempted is not: reconcile My requests rather than retry here.
+   const safelyBeforePost = createGuard.current.failed();
+   if (!intakeGate.current.isActive(creationContext)) return;
+   if (!safelyBeforePost) setCreateOutcomeUnknown(true);
+   throw error;
+  }
  }
  return <Card title="Create an approval request" description="This creates a request, not an execution. The assigned approver is determined by the profile.">
-  {task.feedback}{predecessor&&<p>Replacement for cancelled request <code>{predecessor.id}</code>. A new explicit approval is required.</p>}
-  <Form busy={task.busy} onSubmit={reviewRequest} label="Review request">
-   <Select label="Approval profile" value={profile} onChange={chooseProfile}><option value="">Select a configured profile</option>{profiles.filter(p=>p.enabled).map(p=><option key={p.id} value={p.id}>{p.name} · {p.action_kind}</option>)}</Select>
-   {selected?.tenant&&<p>Tenant scope: {selected.tenant}</p>}
-   {selected?.tenant_selector && !selected.tenant &&
-    <TextField label="Source tenant" required maxLength={200} value={sourceTenant} onChange={e=>{setSourceTenant(e.target.value);resetReview();}} />}
-   {selected?.environment &&
-    <TextField label="Environment" required maxLength={200} value={environment} onChange={e=>{setEnvironment(e.target.value);resetReview();}} />}
-   {selected?.severity &&
-    <TextField label="Severity" required maxLength={200} value={severity} onChange={e=>{setSeverity(e.target.value);resetReview();}} />}
-   {selected?.risk_level &&
-    <TextField label="Risk level" required maxLength={200} value={riskLevel} onChange={e=>{setRiskLevel(e.target.value);resetReview();}} />}
-   <TextField label="Request title" required maxLength={250} value={title} onChange={e=>{setTitle(e.target.value);resetReview();}}/>
-   <TextField label="Target" required maxLength={500} value={target} onChange={e=>{setTarget(e.target.value);resetReview();}}/>
-   <TextField label="External request ID" required maxLength={200} value={external} onChange={e=>{setExternal(e.target.value);resetReview();}}/>
-   <TextArea label="Action parameters (JSON object; no credentials)" value={parameters} onChange={v=>{setParameters(v);resetReview();}} required/>
-   <TextArea label="Reason" value={reason} onChange={v=>{setReason(v);resetReview();}}/>
+  {task.feedback}
+  {createOutcomeUnknown && (
+    <RequestCreationReconciliationNotice openMyRequests={() => navigate('/my-requests')} />
+  )}
+  {predecessor && <p>Replacement for cancelled request <code>{predecessor.id}</code>.
+    A new explicit approval is required.</p>}
+  <Form busy={task.busy || createOutcomeUnknown} onSubmit={reviewRequest} label="Review request">
+   <section className="grant-stack" aria-label="Choose active approval policy">
+    <h3>1. Choose an active approval policy</h3>
+    <p>Select an available policy to review the exact operation, approval rule,
+      deadline and verification requirement before entering request details.</p>
+    <Select label="Approval profile" value={profile} onChange={chooseProfile}>
+     <option value="">Select an active approval policy</option>
+     {availableProfiles.map(p=><option key={p.id} value={p.id}>{p.name} · {p.action_kind}</option>)}
+    </Select>
+    <NewRequestPolicyContext profile={selected ?? null} />
+   </section>
+   <section className="grant-stack" aria-label="Describe the requested business action">
+    <h3>2. Describe the exact requested action</h3>
+    <p>The selected active policy owns the operation and assigned reviewers.
+      State only the target, request identity, parameters and business reason.</p>
+    <TextField label="Request title" required maxLength={250} value={title} onChange={e=>{setTitle(e.target.value);resetReview();}}/>
+    <TextField label="Target" required maxLength={500} value={target} onChange={e=>{setTarget(e.target.value);resetReview();}}/>
+    <TextField label="External request ID" required maxLength={200} value={external} onChange={e=>{setExternal(e.target.value);resetReview();}}/>
+    {selected?.tenant&&<p>Tenant scope: {selected.tenant}</p>}
+    {selected?.tenant_selector && !selected.tenant &&
+     <TextField label="Source tenant" required maxLength={200} value={sourceTenant} onChange={e=>{setSourceTenant(e.target.value);resetReview();}} />}
+    {selected?.environment &&
+     <TextField label="Environment" required maxLength={200} value={environment} onChange={e=>{setEnvironment(e.target.value);resetReview();}} />}
+    {selected?.severity &&
+     <TextField label="Severity" required maxLength={200} value={severity} onChange={e=>{setSeverity(e.target.value);resetReview();}} />}
+    {selected?.risk_level &&
+     <TextField label="Risk level" required maxLength={200} value={riskLevel} onChange={e=>{setRiskLevel(e.target.value);resetReview();}} />}
+    <TextArea label="Action parameters (JSON object; no credentials)" value={parameters} onChange={v=>{setParameters(v);resetReview();}} required/>
+    <TextArea label="Reason" value={reason} onChange={v=>{setReason(v);resetReview();}}/>
+   </section>
+   <section className="grant-stack" aria-label="Review before creating">
+    <h3>3. Review before creating</h3>
+    <p>Reviewing never sends a request. A separate Confirm shows the exact
+      action and source, and only that final confirmation can create a request.
+      Approval and external execution require their own subsequent steps.</p>
+   </section>
   </Form>
   {reviewError && <Alert tone="warning" title="Review required">{reviewError}</Alert>}
-  <RequestCreationConfirmation reviewed={reviewed} draft={draft} busy={task.busy}
+  <RequestCreationConfirmation reviewed={createOutcomeUnknown ? null : reviewed} draft={draft} busy={task.busy || createOutcomeUnknown}
     onConfirm={()=>void task.run(submit)} onBack={()=>setReviewed(null)} />
  </Card>;
 }
 export function RequestDetail({ id, user, navigate }: { id: string; user: User; navigate: Navigate }) {
- const [row, setRow] = useState<RequestRow | null>(null);
+ const [storedRow, setRow] = useState<RequestRow | null>(null);
+ // An old route's saved row is never actionable during the first render
+ // after navigation, even before the next useEffect has invalidated its GET.
+ const row = currentRouteRequest(storedRow, id);
+ const readGate = useRef(createRequestDetailReadGate());
+ const [loadError, setLoadError] = useState('');
  const [reason, setReason] = useState('');
  const [reviewed, setReviewed] = useState<RequestDecisionReview | null>(null);
  const decisionGuard = useRef(createDecisionAttemptGuard());
  const [decisionMustRefresh, setDecisionMustRefresh] = useState(false);
  const [pendingResend, setPendingResend] = useState<RequestDeliveryResendIntent | null>(null);
+ const resendGate = useRef(createDeliveryResendAttemptGuard());
  const [resendAttempted, setResendAttempted] = useState<string[]>([]);
  const task = useTask();
- async function load() {
+ async function load(): Promise<boolean> {
+  if (!readGate.current.isActive(id)) return false;
   setReviewed(null);
   setPendingResend(null);
-  const current = await api<RequestRow>('/requests/' + encodeURIComponent(id));
-  if (current.id !== id) throw new Error('REQUEST_READ_ID_MISMATCH');
-  setRow(current);
-  if (decisionGuard.current.readSucceeded()) setDecisionMustRefresh(false);
+  return readScopedRequestDetail(
+    readGate.current, id,
+    () => api<RequestRow>('/requests/' + encodeURIComponent(id)),
+    (current) => {
+      setRow(current);
+      if (decisionGuard.current.readSucceeded()) setDecisionMustRefresh(false);
+    },
+  );
  }
  useEffect(() => {
+  readGate.current.selectRequest(id);
+  setLoadError('');
   decisionGuard.current = createDecisionAttemptGuard();
+  resendGate.current = createDeliveryResendAttemptGuard();
   setDecisionMustRefresh(false);
   setRow(null);
   setPendingResend(null);
   setResendAttempted([]);
-  void task.run(load);
+  // Initial loading must not be skipped by an old route's useTask busy flag.
+  // The read gate drops any superseded result/error from another route.
+  void load().catch((error) => {
+    if (readGate.current.isActive(id)) setLoadError(errorText(error));
+  });
  }, [id]);
  function chooseForReview(choice: RequestDecisionChoice) {
   if (!row || decisionGuard.current.blocked()) return;
@@ -174,7 +289,11 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
   }
   // Claim before any await or React rerender; both cancellation and decisions
   // must remain one-shot even on a double click or an ambiguous POST.
-  if (!decisionGuard.current.claim()) return;
+  const actionGuard = decisionGuard.current;
+  if (!actionGuard.claim()) return;
+  // This exact request's attempt guard cannot be replaced by a later route
+  // before the pending POST completes or fails.
+  readGate.current.invalidateCurrent(id);
   // The reviewed values, not mutable form state, are the only POST payload.
   const selected = reviewed;
   setReviewed(null);
@@ -190,22 +309,28 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
           ...(selected.choice === 'CANCELLED' ? {} : { decision: selected.choice }) },
       ),
       () => api<RequestRow>('/requests/' + encodeURIComponent(selected.requestId)),
+      selected,
     );
-    decisionGuard.current.complete(outcome.refreshed);
+    actionGuard.complete(outcome.refreshed);
   } catch (error) {
     // A failed or ambiguous POST cannot be retried until an explicit fresh GET.
-    decisionGuard.current.complete(false);
+    actionGuard.complete(false);
+    // The original request may have changed or failed; never surface its
+    // old operation's error in a newly selected request workspace.
+    if (!readGate.current.isActive(selected.requestId)) return;
     throw error;
   }
-  setRow(outcome.row);
-  setDecisionMustRefresh(decisionGuard.current.blocked());
+  if (!acceptCurrentRequestMutation(readGate.current, selected.requestId,
+    outcome.row, setRow)) return;
+  setDecisionMustRefresh(actionGuard.blocked());
   setReason('');
   task.setNotice(outcome.refreshed
     ? 'Recorded. Delivery and execution are tracked separately.'
     : 'Decision recorded by the server. Updated details could not be refreshed; refresh before another action. Delivery and execution remain separate.');
  };
  function reviewDeliveryResend(delivery: Delivery) {
-  if (!row || user.role !== 'admin' || resendAttempted.includes(delivery.id)) return;
+  if (!row || user.role !== 'admin' || resendAttempted.includes(delivery.id)
+      || resendGate.current.blocked(delivery.id)) return;
   setPendingResend(createRequestDeliveryResendReview(row, delivery));
  }
  async function confirmDeliveryResend() {
@@ -215,20 +340,33 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
    setPendingResend(null);
    throw new Error('DELIVERY_CHANGED_REVIEW_REQUIRED');
   }
+  // A sync claim before the role-scoped GET closes the same-render
+  // double-Confirm window, which asynchronous React busy state cannot close.
+  const attemptGate = resendGate.current;
+  if (!attemptGate.claim(intent.deliveryId)) return;
+  readGate.current.invalidateCurrent(intent.requestId);
   // Hide a previously reviewed resend even when its outcome is ambiguous.
   // Only an explicit successful Refresh re-enables review of that delivery.
   setPendingResend(null);
   setResendAttempted((current) => current.includes(intent.deliveryId)
    ? current : [...current, intent.deliveryId]);
-  await submitReviewedRequestDeliveryResend(
-   intent, user.role === 'admin',
-   (requestId) => api<RequestRow>('/requests/' + encodeURIComponent(requestId)),
-   (deliveryId) => api('/deliveries/' + encodeURIComponent(deliveryId) + '/resend', 'POST'),
-  );
   try {
-   await load();
+   await submitReviewedRequestDeliveryResend(
+    intent, user.role === 'admin',
+    (requestId) => api<RequestRow>('/requests/' + encodeURIComponent(requestId)),
+    (deliveryId) => api('/deliveries/' + encodeURIComponent(deliveryId) + '/resend', 'POST'),
+   );
+  } finally {
+   // Failed GET/uncertain POST remains latched until explicit Refresh.
+   attemptGate.settled();
+  }
+  if (!readGate.current.isActive(intent.requestId)) return;
+  try {
+   const accepted = await load();
+   if (!accepted || !readGate.current.isActive(intent.requestId)) return;
    task.setNotice('Notification resend scheduled. This does not approve or execute the requested action.');
   } catch {
+   if (!readGate.current.isActive(intent.requestId)) return;
    task.setNotice('Notification resend accepted, but updated delivery history could not be loaded. Refresh before reviewing another resend; no approval or external action was executed.');
   }
  }
@@ -238,12 +376,14 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  const canReplace = row &&
   (row.state === 'CANCELLED' || (row.state === 'EXPIRED' && row.collaboration_state === 'CHANGES_REQUESTED')) &&
   (row.requester_id === user.id || user.role === 'admin');
- return <div className="grant-stack">{task.feedback}<div className="grant-actions"><Button variant="secondary" onClick={()=>navigate('/requests')}>Back to requests</Button><Button variant="secondary" disabled={task.busy} onClick={()=>void task.run(async()=>{
- await load();setResendAttempted([]);
+ return <div className="grant-stack">{task.feedback}
+ {loadError && <Alert tone="warning" title="Unable to load this request">{loadError}</Alert>}
+ <div className="grant-actions"><RequestTaskBackLink row={row} user={user} navigate={navigate} /><Button variant="secondary" disabled={task.busy} onClick={()=>void task.run(async()=>{
+ const accepted = await load();
+ if (accepted && resendGate.current.readSucceeded()) setResendAttempted([]);
  })}>Refresh</Button></div>{row && <>
- <Card title={row.title} description={row.reason || 'No additional reason supplied.'}><RequestStageSummary row={row}/>{row.viewer_delegated_for && <p>You are acting as the recorded substitute for an assigned approver. Both identities remain auditable.</p>}<dl className="grant-facts"><dt>External ID</dt><dd>{row.external_id}</dd><dt>Approval deadline</dt><dd>{when(row.deadline)}</dd><dt>Execution validity</dt><dd>{when(row.grant_until)}</dd><dt>Decision by / at</dt><dd>{row.decision_actor ?? 'Not decided'} / {when(row.decision_at)}</dd><dt>Revision</dt><dd>{row.revision}</dd><dt>Approval progress</dt><dd>{approvalProgressLabel(row)}</dd><dt>Waiting on</dt><dd>{approvalWaitingLabel(row)}</dd></dl></Card>
+ <RequestDetailOverview row={row} canReplace={Boolean(canReplace)} navigate={navigate} />
  {row.escalation && <Card title="Escalation status"><dl className="grant-facts"><dt>Escalation target</dt><dd>{row.escalation.target_group_id ? 'Approver group' : 'Approver'} · {row.escalation.target_members.length} member(s)</dd><dt>Escalation due</dt><dd>{when(row.escalation.due_at)}</dd><dt>Applied at</dt><dd>{when(row.escalation.fired_at)}</dd></dl><p>Escalation changes only who may decide; it never executes the requested action.</p></Card>}
- <RequestActionSummary row={row} canReplace={Boolean(canReplace)} navigate={navigate} />
  {decisionMustRefresh && <Alert tone="warning" title="Refresh required before another decision">A human decision or cancellation was attempted. A possible server write is never repeated automatically. Use Refresh to load the current request before reviewing another action.</Alert>}
  {(canDecide || canCancel) && !decisionMustRefresh && <Card title="Explicit decision">
   <TextArea label="Decision or cancellation reason (maximum 2000 characters)"
@@ -266,15 +406,23 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
     onConfirm={()=>void task.run(decide)} onBack={()=>setReviewed(null)} />
  </Card>}
  {row.predecessor_id && <RevisionComparison requestId={row.id} />}
- <RequestCollaboration row={row} user={user} onRecorded={(updated) => { setRow(updated); setReviewed(null); }} />
+ <RequestCollaboration row={row} user={user} onRecorded={(updated) => {
+   if (acceptCurrentRequestMutation(readGate.current, id, updated, setRow)) setReviewed(null);
+ }} />
  {user.role === 'admin' && actionable && <RequestAdminControls
-   row={row} onReload={load}
-   onRecorded={(updated) => { setRow(updated); setReviewed(null); setPendingResend(null); }}
-   onReadbackUnavailable={() => {
+   row={row} onReload={async () => { await load(); }}
+   onRecorded={(updated) => {
+     if (!acceptCurrentRequestMutation(readGate.current, id, updated, setRow)) return;
+     setReviewed(null); setPendingResend(null);
+   }}
+   onReadbackUnavailable={(acknowledged) => {
+     if (!readGate.current.invalidateCurrent(id)) return;
      setRow(null);
      setReviewed(null);
      setPendingResend(null);
-     task.setNotice('Approval routing was recorded, but current request details could not be refreshed. Use Refresh before another routing change. This did not execute the requested action.');
+     task.setNotice(acknowledged
+       ? 'Approval routing was acknowledged by the server, but current details could not be read. Refresh before another routing change. This did not execute the action.'
+       : 'Routing POST response could not be verified for the reviewed request. Do not retry automatically. Refresh and inspect the request history before any new routing change.');
    }}
  />}
  <RequestExecutionReport row={row} />

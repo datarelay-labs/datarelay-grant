@@ -1,10 +1,18 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Alert, Button, Card, StatusBadge } from '@datarelay-labs/foundation';
-import { api } from './api';
+import { api, errorText } from './api';
+import {
+  createIntegrationDiagnosticsReadScope, readSelectedIntegrationDiagnostics,
+  currentIntegrationDiagnostics,
+} from './integration_diagnostics_read_scope';
 import { TextArea } from './common';
 import { Select, useTask, when } from './common';
 import type { Integration } from './types';
 import { ConfigurationPortabilityV2 } from './configuration_portability_v2';
+import {
+  createConfigurationPreviewReadScope, readCurrentConfigurationPreview,
+  readCurrentConfigurationExport,
+} from './integration_configuration_preview_guard';
 
 type CredentialMetadata = {
   id: string;
@@ -105,22 +113,40 @@ export function ConfigurationImportReadiness({ preview }: { preview: DryRunPrevi
 export function IntegrationDiagnostics({ integrations }: { integrations: Integration[] }) {
   const task = useTask();
   const [selected, setSelected] = useState('');
-  const [details, setDetails] = useState<Diagnostics | null>(null);
+  const [detailsRecord, setDetailsRecord] =
+    useState<{key:string;value:Diagnostics}|null>(null);
+  const [readError,setReadError]=useState('');
+  const diagnosticsScope=useRef(createIntegrationDiagnosticsReadScope());
+  const details=currentIntegrationDiagnostics(detailsRecord,selected,
+    integrations.map(item=>item.id));
   const [manifest, setManifest] = useState<ConfigurationManifest | null>(null);
   const [pastedManifest, setPastedManifest] = useState('');
   const [conflictPreview, setConflictPreview] = useState<DryRunPreview | null>(null);
+  const previewReadScope=useRef(createConfigurationPreviewReadScope());
 
-  async function inspect(id: string) {
+  function inspect(id: string) {
+    // Do not serialize GETs via useTask.busy: B must be readable while A
+    // is pending. The scoped generation discards all old A or same-ID
+    // responses/errors, and the projection hides old data on first render.
+    diagnosticsScope.current.select(id);
     setSelected(id);
-    setDetails(null);
-    if (id) {
-      setDetails(await api<Diagnostics>('/integrations/' + encodeURIComponent(id) + '/diagnostics'));
-    }
+    setDetailsRecord(null);
+    setReadError('');
+    if(!id)return;
+    void readSelectedIntegrationDiagnostics(diagnosticsScope.current,id,
+      ()=>api<Diagnostics>('/integrations/'+encodeURIComponent(id)+'/diagnostics'),
+      fresh=>setDetailsRecord({key:id,value:fresh}),
+    ).catch(error=>{
+      if(diagnosticsScope.current.isSelected(id))setReadError(errorText(error));
+    });
   }
 
   async function loadManifest() {
+    previewReadScope.current.invalidate();
     setConflictPreview(null);
-    setManifest(await api<ConfigurationManifest>('/integrations/configuration-export'));
+    await readCurrentConfigurationExport(previewReadScope.current,
+      ()=>api<ConfigurationManifest>('/integrations/configuration-export'),
+      value=>setManifest(value));
   }
 
   async function dryRunImport() {
@@ -136,8 +162,12 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
       task.setNotice('Manifest must be valid JSON metadata; no credentials or secrets.');
       return;
     }
-    setConflictPreview(await api<DryRunPreview>('/admin/configuration/preview', 'POST', candidate));
-    task.setNotice('Preview complete. No policy, credential or integration configuration was changed.');
+    const current=await readCurrentConfigurationPreview(previewReadScope.current,
+      ()=>api<DryRunPreview>('/admin/configuration/preview', 'POST', candidate),
+      value=>setConflictPreview(value));
+    if(current){
+      task.setNotice('Preview complete for current source. No policy, credential or integration configuration was changed.');
+    }
   }
 
   function saveManifest() {
@@ -157,10 +187,13 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
     {task.feedback}
     <Card title="Integration health and activity" description="Read-only observations. HTTP callback accepted never proves the action was executed.">
       <Select label="Inspect integration health" value={selected}
-        onChange={(id) => void task.run(() => inspect(id))} required={false}>
+        onChange={inspect} required={false}>
         <option value="">Select registered integration</option>
         {integrations.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
       </Select>
+      {readError && <Alert tone="critical" title="Unable to inspect selected integration">
+        {readError}
+      </Alert>}
       {details && <>
         <dl className="grant-facts">
           <dt>Integration</dt><dd>{details.integration.name}</dd>
@@ -212,7 +245,12 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
     </Card>
     <Card title="Configuration import conflict preview" description="Strict schema-v1 metadata dry run. Paste a safe manifest or use the current preview above. This cannot apply, activate or edit configuration.">
       <TextArea label="Safe metadata manifest (optional JSON)" value={pastedManifest}
-        onChange={(value) => { setPastedManifest(value); setConflictPreview(null); }} />
+        onChange={(value) => {
+          // Invalidate before React commits the new input; an old backend
+          // read must never be presented as the new source's results.
+          previewReadScope.current.invalidate();
+          setPastedManifest(value);setConflictPreview(null);
+        }} />
       <div className="grant-actions">
         <Button disabled={task.busy} onClick={() => void task.run(dryRunImport)}>Preview import conflicts</Button>
       </div>

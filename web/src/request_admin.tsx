@@ -37,7 +37,7 @@ export function RequestAdminControls({
   row: RequestRow;
   onReload: () => Promise<void>;
   onRecorded: (updated: RequestRow) => void;
-  onReadbackUnavailable: () => void;
+  onReadbackUnavailable: (acknowledged: boolean) => void;
 }) {
   const task = useTask();
   const [users, setUsers] = useState<AccountProjection[]>([]);
@@ -128,7 +128,7 @@ export function RequestAdminControls({
       setAttempted(false);
       task.setNotice('Approval routing recorded. Changes to assigned reviewers do not execute the requested action.');
     } else {
-      onReadbackUnavailable();
+      onReadbackUnavailable(result.status === 'readback_unavailable');
     }
   }
 

@@ -25,6 +25,9 @@ function executionExplanation(state: string): string {
 
 /** Task-first, safe presentation only: no approval, resend or execution CTA. */
 export function RequestStageSummary({ row }: { row: RequestRow }) {
+  const failures = row.notification_failure_count;
+  const failedEmailCountKnown = typeof failures === 'number'
+    && Number.isSafeInteger(failures) && failures >= 0;
   return (
     <section aria-label="Request action and workflow stages">
       <p><strong>Action requiring approval</strong></p>
@@ -40,8 +43,13 @@ export function RequestStageSummary({ row }: { row: RequestRow }) {
         </div>
         <div>
           <strong>Notification transport</strong>
-          <p><State value={row.delivery_state} /></p>
-          <small>Delivery is transport status, not proof of mailbox receipt or human approval.</small>
+          <p>Webhook callback: <State value={row.delivery_state} /></p>
+          <p><strong>Email failures</strong>{' · '}{failedEmailCountKnown
+            ? `${failures} failed email notifications`
+            : 'Email failure count unavailable'}</p>
+          <small>Current webhook state does not describe email delivery.
+            Delivery is transport status, not proof of mailbox receipt or human approval;
+            zero failures is not proof of mailbox receipt.</small>
         </div>
         <div>
           <strong>Reported external execution</strong>

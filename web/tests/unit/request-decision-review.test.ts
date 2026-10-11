@@ -44,9 +44,12 @@ describe('RequestDetail explicit human decision reviewed intent', () => {
     const row = request();
     const reviewed = prepareRequestDecisionReview(row, reviewer, 'APPROVED', 'Window confirmed', now);
     expect(reviewed).toEqual({
-      requestId: row.id, actorId: reviewer.id, revision: 4,
+      requestId: row.id, actorId: reviewer.id, representedSeatId: reviewer.id,
+      revision: 4,
       actionHash: row.action_hash, actionKind: row.action.kind,
-      actionTarget: row.action.target, choice: 'APPROVED', reason: 'Window confirmed',
+      actionTarget: row.action.target, requestTitle: row.title,
+      externalId: row.external_id, actionParametersJson: '{}',
+      choice: 'APPROVED', reason: 'Window confirmed',
     });
     expect(isCurrentRequestDecisionReview(reviewed, row, reviewer, 'Window confirmed', now)).toBe(true);
   });
@@ -72,6 +75,79 @@ describe('RequestDetail explicit human decision reviewed intent', () => {
     expect(confirmMarkup(row, reviewer, 'changed', snapshot)).toBe('');
   });
 
+  it('shows the exact immutable action parameters and request identity at final Confirm', () => {
+    const row = request({
+      title: 'Production-safe request preview',
+      external_id: 'CASE-314',
+      action: {
+        kind: 'service.deploy', target: 'isolated-service',
+        parameters: { rollout: { batch: 2, dry_run: true }, hosts: ['one', 'two'] },
+      },
+    });
+    const html = confirmMarkup(row, reviewer, 'Approved maintenance');
+    for (const value of [
+      'Production-safe request preview', 'CASE-314', row.id,
+      'Action fingerprint', 'fixed-action-fingerprint',
+      'Action parameters', '"rollout"', '"batch"', '2', '"dry_run"',
+      '"hosts"', '"one"', '"two"',
+      'Reviewing approval seat', 'seat-a',
+    ]) expect(html).toContain(value.replaceAll('"', '&quot;'));
+    expect(html).not.toContain('Execute</button>');
+    expect(html).not.toContain('type="submit"');
+  });
+
+  it('invalidates final Confirm when a parameter changes despite unchanged action hash', () => {
+    const original = request({
+      action: { kind: 'service.deploy', target: 'isolated-service',
+        parameters: { rollout: { batch: 2, dry_run: true }, hosts: ['one', 'two'] } },
+    });
+    const snapshot = prepareRequestDecisionReview(original, reviewer, 'APPROVED', 'reviewed', now);
+    expect(snapshot?.actionParametersJson).toContain('"batch": 2');
+    const changed = request({
+      action: { ...original.action,
+        parameters: { rollout: { batch: 3, dry_run: true }, hosts: ['one', 'two'] } },
+    });
+    expect(changed.action_hash).toBe(original.action_hash);
+    expect(isCurrentRequestDecisionReview(snapshot, changed, reviewer, 'reviewed', now)).toBe(false);
+    expect(confirmMarkup(changed, reviewer, 'reviewed', snapshot)).toBe('');
+  });
+
+  it('requires a new review if the visible request title or external identity changed', () => {
+    const original = request();
+    const intent = prepareRequestDecisionReview(original, reviewer, 'APPROVED', 'reviewed', now);
+    for (const changed of [
+      request({ title: 'Reassigned business request' }),
+      request({ external_id: 'REVIEW-DIFFERENT' }),
+    ]) {
+      expect(changed.action_hash).toBe(original.action_hash);
+      expect(isCurrentRequestDecisionReview(intent, changed, reviewer, 'reviewed', now))
+        .toBe(false);
+      expect(confirmMarkup(changed, reviewer, 'reviewed', intent)).toBe('');
+    }
+  });
+
+  it('escapes untrusted action parameter text in the final confirmation', () => {
+    const value = '<img src=x onerror=alert(1)>';
+    const row = request({
+      action: { kind: 'service.deploy', target: 'isolated-service',
+        parameters: { note: value, approved: false } },
+    });
+    const html = confirmMarkup(row, reviewer, 'reviewed');
+    expect(html).toContain('&lt;img');
+    expect(html).not.toContain('<img src=x');
+    expect(html).toContain('"approved"'.replaceAll('"', '&quot;'));
+  });
+
+  it('identifies the acting delegate and represented approval seat at final Confirm', () => {
+    const delegate = { ...reviewer, id: 'temporary-delegate' };
+    const row = request({ viewer_delegated_for: 'seat-a' });
+    const html = confirmMarkup(row, delegate, 'delegated review');
+    expect(html).toContain('Acting user');
+    expect(html).toContain('temporary-delegate');
+    expect(html).toContain('Reviewing approval seat');
+    expect(html).toContain('seat-a');
+  });
+
   it('invalidates a prior reviewer confirmation for another valid reviewer', () => {
     const row = request({ approval_plan: {
       mode: 'ALL', members: ['seat-a', 'seat-b'], required: 2,
@@ -79,6 +155,26 @@ describe('RequestDetail explicit human decision reviewed intent', () => {
     const second: User = { ...reviewer, id: 'seat-b', username: 'other-reviewer' };
     const snapshot = prepareRequestDecisionReview(row, reviewer, 'APPROVED', '', now);
     expect(isCurrentRequestDecisionReview(snapshot, row, second, '', now)).toBe(false);
+  });
+
+  it('binds a delegated reviewer to the represented server approval seat', () => {
+    const delegate = { ...reviewer, id: 'delegate-one', username: 'substitute' };
+    const row = request({
+      viewer_delegated_for: 'seat-a',
+      approval_plan: { mode: 'ALL', members: ['seat-a', 'seat-b'], required: 2 },
+    });
+    const submitted = prepareRequestDecisionReview(
+      row, delegate, 'APPROVED', 'Reviewed maintenance', now,
+    );
+    expect(submitted?.actorId).toBe('delegate-one');
+    expect(submitted?.representedSeatId).toBe('seat-a');
+    expect(isCurrentRequestDecisionReview(
+      submitted, row, delegate, 'Reviewed maintenance', now,
+    )).toBe(true);
+    expect(isCurrentRequestDecisionReview(
+      submitted, { ...row, viewer_delegated_for: 'seat-b' },
+      delegate, 'Reviewed maintenance', now,
+    )).toBe(false);
   });
 
   it('permits cancellation only to requester/admin while no execution has committed', () => {

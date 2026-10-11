@@ -18,7 +18,8 @@ export type ReassignmentPayload = {
 };
 export type RoutingReadback =
   | { status: 'updated'; row: RequestRow }
-  | { status: 'readback_unavailable'; row: null };
+  | { status: 'readback_unavailable'; row: null }
+  | { status: 'receipt_unverified'; row: null };
 
 /** Fail closed on the current role-scoped request projection before the
  * administrator's one explicit routing POST. The server owns final RBAC,
@@ -49,6 +50,21 @@ export function isCurrentAdminRoutingIntent(
     && row.requester_id !== review.to && !oldSeatVoted;
 }
 
+/** Only a projection with the reviewed immutable action may be shown as the
+ * current routing result. The server still makes the actual routing decision.
+ */
+function matchesRoutingProjection(
+  updated: RequestRow, reviewed: AdminRoutingIntent, original: RequestRow,
+  minimumRevision: number,
+): boolean {
+  return updated?.id === reviewed.requestId
+    && updated.action_hash === reviewed.actionHash
+    && updated.action?.kind === original.action.kind
+    && updated.action?.target === original.action.target
+    && Number.isSafeInteger(updated.revision)
+    && updated.revision >= minimumRevision;
+}
+
 /** POST is never retried. Reassignment's own projected RequestRow is already
  * authoritative and avoids a fragile mandatory secondary GET. Escalation's
  * server reply is only a revision receipt, so one read-only GET is useful,
@@ -64,26 +80,36 @@ export async function submitReviewedRequestRouting(
   if (!isCurrentAdminRoutingIntent(review, row)) {
     throw new Error('ROUTING_CHANGED_REVIEW_REQUIRED');
   }
-  let projection: RequestRow | null = null;
-  if (review.kind === 'escalation') {
-    // The acknowledged revision is not the role-scoped current request.
-    await postEscalation(review);
-  } else {
-    projection = await postReassignment({
+  if (review.kind === 'reassignment') {
+    const projection = await postReassignment({
       from_approver_id: review.from, to_approver_id: review.to,
       reason: review.reason, expected_revision: review.revision,
     });
-  }
-  if (projection?.id === review.requestId && projection.revision > review.revision) {
+    // A mismatched POST projection cannot prove this approver replacement.
+    // Reading some independently advanced revision would not prove it either.
+    const seats = projection?.approval_plan?.members;
+    if (!matchesRoutingProjection(projection, review, row, review.revision + 1)
+        || !seats?.includes(review.to) || seats?.includes(review.from) === true) {
+      return { status: 'receipt_unverified', row: null };
+    }
     return { status: 'updated', row: projection };
+  }
+
+  // The escalation reply is only a revision acknowledgement, never a
+  // role-visible projected request. Validate it before any optional readback.
+  const receipt = await postEscalation(review);
+  if (receipt?.request_id !== review.requestId
+      || !Number.isSafeInteger(receipt.revision)
+      || receipt.revision <= review.revision) {
+    return { status: 'receipt_unverified', row: null };
   }
   try {
     const fresh = await readCurrent();
-    if (fresh.id === review.requestId && fresh.revision > review.revision) {
+    if (matchesRoutingProjection(fresh, review, row, receipt.revision)) {
       return { status: 'updated', row: fresh };
     }
   } catch {
-    // A successful POST is already recorded; no automatic retry of a write.
+    // An acknowledged POST must never be retried because a later GET fails.
   }
   return { status: 'readback_unavailable', row: null };
 }
