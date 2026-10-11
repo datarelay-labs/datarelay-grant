@@ -4,6 +4,14 @@ import path from 'node:path';
 const fixture=()=>JSON.parse(fs.readFileSync(path.resolve('../.e2e/fixture.json'),'utf8'));
 async function login(page:Page,name:string){await page.goto('/requests');await page.getByLabel('Username',{exact:true}).fill(name);await page.getByLabel('Password',{exact:true}).fill(fixture().password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByRole('heading',{name:'Requests',exact:true})).toBeVisible();}
 
+// Only test-only isolated SMTP MIME is decoded here. Long capability URLs
+// are quoted-printable-folded by Python's real mail transport.
+function decodeFixtureMime(message:string):string{
+ return message.replace(/=\r?\n/g,'').replace(
+  /=([0-9A-F]{2})/gi,(_text,hex:string)=>String.fromCharCode(parseInt(hex,16)),
+ );
+}
+
 // P0-2C: disposable installed Chromium, exact live Grant RequestDetail.
 // Creation is through the existing requester Review → Confirm UI, not an
 // injected backend write. No protected external execution or mail recipient.
@@ -1401,4 +1409,183 @@ test('P0-2E approved grant scope differs from requested action and external exec
     await requester.close();
     await approver.close();
   }
+});
+
+// P0-2B: actual original issued-email URL and code from isolated SMTP, not
+// a mocked client adapter, borrowed human session, or an invented token.
+test('P0-2B issued email link opens no-login PIN, explicit Confirm, then rejects replay', async ({browser,request}) => {
+ const f=fixture();
+ const requester=await browser.newContext({viewport:{width:1280,height:800}});
+ const mailboxReader=await browser.newContext({viewport:{width:375,height:812}});
+ const replayReader=await browser.newContext({viewport:{width:320,height:720}});
+ try {
+  const rp=await requester.newPage();
+  const page=await mailboxReader.newPage();
+  const errors:string[]=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  await login(rp,'requester');
+  await rp.getByRole('button',{name:'New request',exact:true}).click();
+  await rp.getByLabel('Approval profile',{exact:true}).selectOption(f.profile_id);
+  const title='P0-2B issued-link human decision '+crypto.randomUUID().slice(0,8);
+  const target='isolated-mail-approval-target';
+  await rp.getByLabel('Request title',{exact:true}).fill(title);
+  await rp.getByLabel('Target',{exact:true}).fill(target);
+  await rp.getByRole('button',{name:'Review request',exact:true}).click();
+  await rp.getByRole('button',{name:'Confirm create request',exact:true}).click();
+  await expect(rp.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
+  const id=rp.url().split('/').pop()!;
+  await expect.poll(async()=>{
+    const delivered=await(await request.get(f.receiver)).json();
+    return delivered.mail.some((message:string)=>
+      message.includes(title)&&message.includes('Four-digit confirmation PIN:'));
+  }).toBeTruthy();
+  const delivered=await(await request.get(f.receiver)).json();
+  const message=(delivered.mail as string[]).find(m=>
+    m.includes(title)&&m.includes('Four-digit confirmation PIN:'))!;
+  // The *actual SMTP message* may quote-printable-fold a long issued URL
+  // with =CRLF. Decode the transport encoding before extracting its exact
+  // opaque token; a shortened token must never be "fixed" or invented.
+  const mailText=decodeFixtureMime(message);
+  const link=mailText.match(/Approve:\s*(http:\/\/127\.0\.0\.1:\d+\/api\/v1\/decision-intents\/[a-zA-Z0-9_-]+)/)?.[1];
+  const pin=mailText.match(/Four-digit confirmation PIN:\s*(\d{4})/)?.[1];
+  expect(link).toBeTruthy();
+  expect(link!.split('/').pop()).toMatch(/^[a-zA-Z0-9_-]{32,100}$/);
+  expect(pin).toMatch(/^\d{4}$/);
+  const headers={authorization:'Bearer '+f.token};
+  const serverRow=async()=> (await(await request.get('/api/v1/requests/'+id,{headers})).json());
+  expect((await serverRow()).state).toBe('AWAITING');
+  expect((await serverRow()).execution_state).toBe('NOT_STARTED');
+
+  const rawApi=await request.get(link!,{headers:{Accept:'application/json'}});
+  if(rawApi.status()!==200){
+    const response=await rawApi.json().catch(()=>({}));
+    throw new Error('ISSUED_LINK_PREFLIGHT_HTTP_'+rawApi.status()+
+      '_'+String(response?.error?.code ?? 'UNKNOWN'));
+  }
+  expect(rawApi.status()).toBe(200);
+  const preview=await rawApi.json();
+  expect(preview.details_visible).toBe(false);
+  expect(preview.pin_required).toBe(true);
+  expect(JSON.stringify(preview)).not.toContain(target);
+  const head=await request.head(link!,{headers:{Accept:'text/html'}});
+  expect(head.status()).toBe(204);
+  expect((await serverRow()).state).toBe('AWAITING');
+
+  const mutating:string[]=[];
+  page.on('request',req=>{
+    if(req.method()!=='GET'&&req.method()!=='HEAD'&&req.url().includes('/api/v1/decision-intents/')){
+      mutating.push(req.url());
+    }
+  });
+  const navigation=await page.goto(link!);
+  expect(navigation?.status()).toBe(200);
+  expect(navigation?.headers()['content-type']).toContain('text/html');
+  expect(navigation?.headers()['cache-control']).toBe('no-store');
+  expect(navigation?.headers()['referrer-policy']).toBe('no-referrer');
+  await expect(page.getByRole('heading',{name:'Approve request',exact:true})).toBeVisible();
+  await expect(page.getByLabel('Four-digit code from the email')).toBeVisible();
+  await expect(page.getByRole('button',{name:'Verify code'})).toBeDisabled();
+  await expect(page.getByText(target)).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Confirm Approve'})).toHaveCount(0);
+  expect(mutating).toEqual([]);
+  expect((await serverRow()).state).toBe('AWAITING');
+
+  await page.getByLabel('Four-digit code from the email').fill(pin!);
+  await page.getByRole('button',{name:'Verify code'}).click();
+  await expect(page.getByLabel('Verified request summary')).toContainText(title);
+  await expect(page.getByLabel('Verified request summary')).toContainText(target);
+  await expect(page.getByRole('button',{name:'Confirm Approve'})).toBeVisible();
+  expect((await serverRow()).state).toBe('AWAITING');
+  expect((await serverRow()).execution_state).toBe('NOT_STARTED');
+  expect(mutating.filter(url=>url.endsWith('/verify'))).toHaveLength(1);
+  expect(mutating.filter(url=>url.endsWith('/confirm'))).toHaveLength(0);
+
+  await page.getByRole('button',{name:'Confirm Approve'}).click();
+  await expect(page.getByText('Your decision was recorded.',{exact:false})).toBeVisible();
+  await expect.poll(async()=> (await serverRow()).state).toBe('APPROVED');
+  expect((await serverRow()).execution_state).toBe('NOT_STARTED');
+  expect(mutating.filter(url=>url.endsWith('/confirm'))).toHaveLength(1);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+  expect(errors).toEqual([]);
+
+  const repeat=await replayReader.newPage();
+  await repeat.goto(link!);
+  await expect(repeat.getByText('This approval link is not available.',{exact:false})).toBeVisible();
+  await expect(repeat.getByLabel('Four-digit code from the email')).toHaveCount(0);
+  await expect(repeat.getByRole('button',{name:'Confirm Approve'})).toHaveCount(0);
+  expect((await serverRow()).state).toBe('APPROVED');
+ }finally{
+  await requester.close();
+  await mailboxReader.close();
+  await replayReader.close();
+ }
+});
+
+// P0-2B: second, separately-created human email request proves the policy's
+// same-mailbox OTP and denial-reason gates on the real mounted Web surface.
+test('P0-2B issued Deny link requires same-mailbox OTP and explicit reason/Confirm',async({browser,request})=>{
+ const f=fixture();
+ const requester=await browser.newContext({viewport:{width:1280,height:800}});
+ const reader=await browser.newContext({viewport:{width:320,height:720}});
+ try{
+  const rp=await requester.newPage(),page=await reader.newPage();
+  await login(rp,'requester');
+  await rp.getByRole('button',{name:'New request',exact:true}).click();
+  await rp.getByLabel('Approval profile',{exact:true}).selectOption(f.otp_profile_id);
+  const title='P0-2B OTP Deny requirement '+crypto.randomUUID().slice(0,8);
+  await rp.getByLabel('Request title',{exact:true}).fill(title);
+  await rp.getByLabel('Target',{exact:true}).fill('fixture-otp-only-target');
+  await rp.getByRole('button',{name:'Review request',exact:true}).click();
+  await rp.getByRole('button',{name:'Confirm create request',exact:true}).click();
+  await expect(rp.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
+  const id=rp.url().split('/').pop()!;
+  await expect.poll(async()=>{
+   const received=await(await request.get(f.receiver)).json();
+   return received.mail.some((message:string)=>
+    message.includes(title)&&message.includes('Four-digit confirmation PIN:'));
+  }).toBeTruthy();
+  const received=await(await request.get(f.receiver)).json();
+  const initial=decodeFixtureMime((received.mail as string[]).find(
+   message=>message.includes(title)&&message.includes('Four-digit confirmation PIN:'))!);
+  const link=initial.match(/Deny:\s*(http:\/\/127\.0\.0\.1:\d+\/api\/v1\/decision-intents\/[a-zA-Z0-9_-]+)/)?.[1];
+  const pin=initial.match(/Four-digit confirmation PIN:\s*(\d{4})/)?.[1];
+  expect(link?.split('/').pop()).toMatch(/^[a-zA-Z0-9_-]{32,100}$/);
+  expect(pin).toMatch(/^\d{4}$/);
+
+  const headers={authorization:'Bearer '+f.token};
+  const row=async()=> (await(await request.get('/api/v1/requests/'+id,{headers})).json());
+  await page.goto(link!);
+  await expect(page.getByRole('heading',{name:'Deny request',exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Request one-time code'})).toHaveCount(0);
+  await page.getByLabel('Four-digit code from the email').fill(pin!);
+  await page.getByRole('button',{name:'Verify code'}).click();
+  await expect(page.getByRole('button',{name:'Request one-time code'})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Confirm Deny'})).toHaveCount(0);
+  expect((await row()).state).toBe('AWAITING');
+  await page.getByRole('button',{name:'Request one-time code'}).click();
+  await expect(page.getByRole('button',{name:'Code requested'})).toBeDisabled();
+  await expect.poll(async()=>{
+   const delivered=await(await request.get(f.receiver)).json();
+   return delivered.mail.some((m:string)=>m.includes('Your additional decision verification code is:'));
+  }).toBeTruthy();
+  const newest=await(await request.get(f.receiver)).json();
+  const challenge=decodeFixtureMime((newest.mail as string[]).find((m:string)=>
+   m.includes('Your additional decision verification code is:'))!);
+  const code=challenge.match(/Your additional decision verification code is:\s*(\d{6})/)?.[1];
+  expect(code).toMatch(/^\d{6}$/);
+  await page.getByLabel('Six-digit email code').fill(code!);
+  await page.getByRole('button',{name:'Verify email code'}).click();
+  await expect(page.getByLabel('Reason for denial (required)')).toBeVisible();
+  await expect(page.getByRole('button',{name:'Confirm Deny'})).toBeDisabled();
+  expect((await row()).state).toBe('AWAITING');
+  await page.getByLabel('Reason for denial (required)').fill('Authorized reviewer declined the isolated test');
+  await expect(page.getByRole('button',{name:'Confirm Deny'})).toBeEnabled();
+  await page.getByRole('button',{name:'Confirm Deny'}).click();
+  await expect(page.getByText('Your decision was recorded.',{exact:false})).toBeVisible();
+  await expect.poll(async()=> (await row()).state).toBe('DENIED');
+  expect((await row()).execution_state).toBe('NOT_STARTED');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+ }finally{
+  await requester.close();await reader.close();
+ }
 });

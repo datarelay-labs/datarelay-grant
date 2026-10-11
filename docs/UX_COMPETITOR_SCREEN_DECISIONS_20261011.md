@@ -275,3 +275,76 @@ explicitly refresh the saved group to re-enable the review action. This
 is fixture UI verification, not real two-human or mailbox/E2E. Public
 emailed-PIN capability routing **P0-2B remains the higher-priority owner-
 security-gated task**, not silently approved by this independent UI slice.
+
+### P0-2B issued-email public PIN page — owner-approved mounted UI, gated backend publication
+
+**Owner authorization:** Explicitly approved the public-email decision link
+authentication/approval routing change on 2026-10-12. The formerly platform-
+denied exact `web/src/app.tsx` operation was legitimately retried using the
+same dev-atlas Remote Desktop Commander tool, and **allowed** in this session.
+No alternate-host/tool workaround was used.
+
+**Actual source, large bundle 1:** The **identical issued URL** at
+`/api/v1/decision-intents/<opaque>` now has a dedicated branch in the real
+`App` before private session/bootstrap, loading the minimal
+`PublicEmailDecisionLanding`. It rejects malformed/extra path/fragment/query
+tokens, renders no private details or capability value, and makes a
+**read-only JSON preflight only after mount** to load the server-chosen
+Approve/Hold/Deny outcome/assurance. It reuses the existing
+`EmailDecisionPortal`, `email_decision_adapter` and
+`email_decision_flow`. A recipient must deliberately enter the exact four-
+digit PIN, independently request/verify OTP when required, or submit a fresh
+TOTP against an authenticated **exact eligible** recipient session, and
+separately review and Confirm. A request GET, email scanner visit, unsupported
+route, initial render and malformed token never auto-approve, auto-send OTP,
+log in, grant execution or reveal the action target before PIN. PIN and
+same-mailbox OTP prove mailbox access only, never an independently
+authenticated human. The final consumer remains the external effect authority.
+
+**Security and bundle 2:** Existing backend nonce/seat/action/policy/expiry,
+Origin, single-use, replay, rate-limit and session-fresh-MFA checks remain
+authoritative and unchanged. The public client bypasses the private App
+session loader intentionally; therefore MFA POST now explicitly validates the
+current authenticated same-origin session and captures its server CSRF **only
+after the human submits fresh MFA**, while the backend separately enforces the
+recipient identity. Wrong/absent session cannot POST MFA; the client also
+checks that the returned verified person matches the authenticated user.
+PIN/OTP do not trigger a session GET. A separate SSR test guards inert
+initial render.
+
+**Actual browser evidence:** Two independent disposable Chromium browser
+journeys, each using **actual sealed outgoing email delivered through the
+installed loopback SMTP worker**, parse its MIME quoted-printable wrapping
+(no constructed/fake capability token). Browser A: original Approve URL,
+JSON/HEAD inert preflight, PIN, verified request scope, request still pending
+before separate Confirm, then server-approved with execution `NOT_STARTED`,
+and link replay rejected. Browser B: a separate, unambiguous OTP-specific
+test-only policy/action and email Deny link, PIN, explicit same-mailbox OTP
+request/delivery/verification, mandatory denial reason and Confirm, server
+DENIED with execution `NOT_STARTED`, 320px viewport. The fixture policy has
+a distinct `test.otp.operation` action to preserve backend
+`POLICY_MATCH_CONFLICT` fail-closed semantics rather than weakening the
+matcher. These are real installed disposable UI/backend/mail journeys,
+**not** two independently operated real humans/two real mailboxes,
+production SMTP or live external execution.
+
+**Original owner-protected backend source:** The already-uncommitted
+`grant/domain_routes.py` content-negotiation patch is preserved byte-exact
+with original diff SHA256
+`92446619249a0cb3e79a7785de23be033d16ff6dfa3791ea42f68f2ddbd1cc6e`.
+It is required to serve `text/html` for the original emailed URL while
+retaining `application/json` preflight, inert HEAD, global no-store,
+no-referrer and CSP response headers. Its original untracked backend tests
+remain unmodified. **Do not claim a clean, remote-checkout-installed full
+P0-2B** while the protected server patch remains outside Git: the committed
+frontend alone cannot change the remote server's JSON-only GET handler.
+Publish the existing exact backend patch only under the distinct preserved-
+source Work Packet constraint; do not silently stage, overwrite, restore or
+replace it. Retain the deliberately RED G12 patch, original inbox stash and
+all original protected file hashes.
+
+**Remaining gates:** independent actual human/mailbox identities, native
+Control/Stellar effects, CI governance-floor migration/provenance and owner
+release approval remain separate. OTP is NOT independent MFA; fresh MFA
+browser/manual acceptance against the exact recipient is separate from the
+automated adapter/backend assurance checks.

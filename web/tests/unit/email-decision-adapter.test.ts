@@ -60,6 +60,11 @@ const mfaVerified = {
   fresh_mfa_verified: true, actor_assurance: 'EMAIL_LINK_PIN_PLUS_MFA',
   verified_person_id: 'eligible-recipient-user', mfa: true, execution_allowed: false,
 };
+const mfaSession = {
+  state: 'authenticated',
+  csrf: 'a'.repeat(64),
+  user: { id: 'eligible-recipient-user', role: 'member' },
+};
 function recorded(outcome: BackendOutcome, assurance = 'EMAIL_LINK_PIN') {
   return {
     recorded: true, decision: outcome, state: outcome,
@@ -192,22 +197,64 @@ describe('G10A-5 original backend API adapter (unmounted)', () => {
     const calls = transport(
       { body: preview('EMAIL_PIN_PLUS_MFA') },
       { body: pinVerified('EMAIL_PIN_PLUS_MFA') },
+      { body: mfaSession },
       { body: mfaVerified },
       { body: recorded('APPROVED', 'EMAIL_LINK_PIN_PLUS_MFA') },
     );
-    setCsrf('synthetic-csrf-same-origin');
+    setCsrf('');
     const { adapter } = await loadEmailDecisionIntent(token);
     await adapter.verifyPin('9999');
     await expect(adapter.confirm(context, {})).rejects.toThrow(ApiError);
     const proof = await adapter.verifyFreshMfa(context, '000123');
     expect(proof.assurance).toBe('MFA_VERIFIED');
-    expect(calls[2]?.url).toMatch(/\/mfa\/verify$/);
-    expect(body(calls, 2)).toEqual({ confirmation_token: context, code: '000123' });
-    const h = calls[2]?.options.headers as Record<string, string>;
-    expect(h['X-CSRF-Token']).toBe('synthetic-csrf-same-origin');
+    expect(calls[2]?.url).toBe('/api/v1/auth/session');
+    expect(calls[2]?.options.method).toBe('GET');
+    expect(calls[3]?.url).toMatch(/\/mfa\/verify$/);
+    expect(body(calls, 3)).toEqual({ confirmation_token: context, code: '000123' });
+    const h = calls[3]?.options.headers as Record<string, string>;
+    expect(h['X-CSRF-Token']).toBe(mfaSession.csrf);
     expect((await adapter.confirm(context, {})).recorded).toBe(true);
-    expect(body(calls, 3)).toEqual({ confirmation_token: context, reason: '' });
-    expect(calls).toHaveLength(4);
+    expect(body(calls, 4)).toEqual({ confirmation_token: context, reason: '' });
+    expect(calls).toHaveLength(5);
+  });
+
+  it('never queries identity before explicit fresh MFA submission and fails closed for absent session', async () => {
+    const calls = transport(
+      { body: preview('EMAIL_PIN_PLUS_MFA') },
+      { body: pinVerified('EMAIL_PIN_PLUS_MFA') },
+      { body: { error: { code: 'AUTHENTICATION_REQUIRED' } }, status: 401 },
+    );
+    const { adapter } = await loadEmailDecisionIntent(token);
+    await adapter.verifyPin('1234');
+    expect(calls).toHaveLength(2); // public GET then deliberate PIN only
+    await expect(adapter.verifyFreshMfa(context, '123456')).rejects.toThrow(ApiError);
+    expect(calls.map(x => x.url)).toEqual([
+      '/api/v1/decision-intents/' + token,
+      '/api/v1/decision-intents/' + token + '/verify',
+      '/api/v1/auth/session',
+    ]);
+    await expect(adapter.confirm(context, {})).rejects.toThrow(ApiError);
+  });
+
+  it('rejects fake authenticated sessions rather than issuing fresh MFA POST', async () => {
+    for (const invalidSession of [
+      { ...mfaSession, state: 'mfa_required' },
+      { ...mfaSession, user: null },
+      { ...mfaSession, csrf: '' },
+      { ...mfaSession, csrf: 'wrong' },
+    ]) {
+      const calls = transport(
+        { body: preview('EMAIL_PIN_PLUS_MFA') },
+        { body: pinVerified('EMAIL_PIN_PLUS_MFA') },
+        { body: invalidSession },
+      );
+      const { adapter } = await loadEmailDecisionIntent(token);
+      await adapter.verifyPin('1234');
+      await expect(adapter.verifyFreshMfa(context, '123456')).rejects.toThrow(ApiError);
+      expect(calls).toHaveLength(3);
+      expect(calls[2]?.url).toBe('/api/v1/auth/session');
+      vi.unstubAllGlobals();
+    }
   });
 
   it('fails closed on a public preview that leaks private request details or says execution is allowed', async () => {
@@ -279,7 +326,8 @@ describe('G10A-5 original backend API adapter (unmounted)', () => {
     for (const mode of ['EMAIL_PIN_PLUS_OTP', 'EMAIL_PIN_PLUS_MFA'] as const) {
       const replies: Reply[] = [
         { body: preview(mode) }, { body: pinVerified(mode) },
-        ...(mode === 'EMAIL_PIN_PLUS_OTP' ? [{ body: otpQueued }] : []),
+        ...(mode === 'EMAIL_PIN_PLUS_OTP'
+          ? [{ body: otpQueued }] : [{ body: mfaSession }]),
         { body: { ...(mode === 'EMAIL_PIN_PLUS_OTP' ? otpVerified : mfaVerified), execution_allowed: true } },
       ];
       const calls = transport(...replies);
@@ -292,7 +340,7 @@ describe('G10A-5 original backend API adapter (unmounted)', () => {
         await expect(adapter.verifyFreshMfa(context, '654321')).rejects.toThrow(ApiError);
       }
       await expect(adapter.confirm(context, {})).rejects.toThrow(ApiError);
-      expect(calls).toHaveLength(mode === 'EMAIL_PIN_PLUS_OTP' ? 4 : 3);
+      expect(calls).toHaveLength(4);
       vi.unstubAllGlobals();
     }
   });
@@ -324,7 +372,8 @@ describe('G10A-5 original backend API adapter (unmounted)', () => {
       const calls = transport(
         { body: preview('EMAIL_PIN_PLUS_MFA') },
         { body: pinVerified('EMAIL_PIN_PLUS_MFA') },
-        { body: mfaVerified },
+        { body: mfaSession },
+      { body: mfaVerified },
         { body: {
           ...recorded('APPROVED', 'EMAIL_LINK_PIN_PLUS_MFA'),
           verified_person_id: person,
@@ -335,7 +384,7 @@ describe('G10A-5 original backend API adapter (unmounted)', () => {
       const verified = await adapter.verifyFreshMfa(context, '123456');
       expect(verified.assurance).toBe('MFA_VERIFIED');
       await expect(adapter.confirm(context, {})).rejects.toThrow(ApiError);
-      expect(calls).toHaveLength(4);
+      expect(calls).toHaveLength(5);
       vi.unstubAllGlobals();
     }
   });

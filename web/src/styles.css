@@ -487,3 +487,31 @@ pre {
 }
 .grant-grant-scope h3 { margin-top: 0; }
 .grant-grant-scope p { overflow-wrap: anywhere; }
+
+/* Public issued email decision link — deliberate, compact human task. */
+.grant-email-decision-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 4vw, 48px);
+}
+.grant-email-decision-frame {
+  width: 100%;
+  max-width: 540px;
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+.grant-email-decision-brand {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.grant-email-decision-brand small,
+.grant-email-decision-help { opacity: .78; }
+.grant-email-decision-frame input,
+.grant-email-decision-frame textarea { max-width: 100%; }
+.grant-email-decision-frame .grant-card { min-width: 0; }

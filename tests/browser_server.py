@@ -124,6 +124,19 @@ def main():
         )
         app.state.core.transition_profile(admin, profile["id"], "TESTING")
         profile = app.state.core.transition_profile(admin, profile["id"], "ACTIVE")
+        otp_profile = app.state.core.create_profile(
+            admin,
+            Profile(
+                name="Isolated same-email OTP decision approval",
+                integration_id=integration["id"],
+                approver_id=users["approver"]["id"],
+                action_kind="test.otp.operation",
+                verification_mode="EMAIL_PIN_PLUS_OTP",
+                denial_reason_required=True,
+            ),
+        )
+        app.state.core.transition_profile(admin, otp_profile["id"], "TESTING")
+        otp_profile = app.state.core.transition_profile(admin, otp_profile["id"], "ACTIVE")
         token = app.state.auth.issue_token(
             admin,
             integration["id"],
@@ -137,6 +150,7 @@ def main():
                     "password": password,
                     "users": users,
                     "profile_id": profile["id"],
+                    "otp_profile_id": otp_profile["id"],
                     "integration_id": integration["id"],
                     "token": token["token"],
                     "receiver": url,

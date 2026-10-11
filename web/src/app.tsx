@@ -21,6 +21,7 @@ import { Notifications } from './notifications';
 import { Operations, operatorPresets } from './operations';
 import { Profiles } from './policies';
 import { NewRequest, RequestDetail, RequestList } from './requests';
+import { PublicEmailDecisionLanding, parseEmailDecisionLandingToken } from './email_decision_landing';
 import type { Session } from './types';
 
 const AUTH_RESOURCES = [
@@ -56,6 +57,18 @@ const AUTH_RESOURCES = [
 ] as const;
 
 export function App() {
+  // The original emailed capability URL is a public human-decision route.
+  // It must be selected before any private session bootstrap or login UI.
+  if (location.pathname.startsWith('/api/v1/decision-intents/')) {
+    const token = parseEmailDecisionLandingToken(
+      location.pathname + location.search + location.hash,
+    );
+    return <PublicEmailDecisionLanding key={token ?? 'unavailable'} token={token ?? ''} />;
+  }
+  return <AuthenticatedGrantApp />;
+}
+
+function AuthenticatedGrantApp() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [path, setPath] = useState(location.pathname === '/' ? '/home' : location.pathname);

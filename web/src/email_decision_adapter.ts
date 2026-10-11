@@ -7,7 +7,7 @@
  * APPROVED/HELD/DENIED to the presentation's APPROVE/HOLD/DENY choices.
  * The backend remains the only approval and protected-execution authority.
  */
-import { ApiError, api } from './api';
+import { ApiError, api, setCsrf } from './api';
 import {
   canConfirmEmailDecision, initialStageForProof, isFourDigitPin, isSixDigitCode,
   stageAfterStepUp,
@@ -156,6 +156,7 @@ export async function loadEmailDecisionIntent(token: string): Promise<LoadedEmai
   let confirmationAttempted = false;
   // Proof of the *specific* signed-in recipient, never inferred from mailbox possession.
   let mfaVerifiedPersonId: string | null = null;
+  let mfaAuthenticatedUserId: string | null = null;
 
   const adapter: EmailDecisionAdapter = {
     async verifyPin(pin) {
@@ -205,8 +206,23 @@ export async function loadEmailDecisionIntent(token: string): Promise<LoadedEmai
       const proof = matchingContext(context, active);
       if (initialStageForProof(proof, preflight.choice) !== 'mfa' ||
           !isSixDigitCode(code)) throw new ApiError(0, 'FRESH_MFA_NOT_READY');
-      // The same-origin API carries the current signed-in human's CSRF header.
-      // An absent/wrong recipient session must be rejected by the server.
+      // Public email navigation bypasses the private App bootstrap by design.
+      // Only AFTER a human explicitly submits a fresh MFA code, load the
+      // existing authenticated session's CSRF from the same-origin server.
+      // PIN-only and same-mailbox OTP never need this session lookup.
+      setCsrf('');
+      const session = object(await api<unknown>('/auth/session'));
+      const user = object(session.user);
+      if (session.state !== 'authenticated' ||
+          typeof user.id !== 'string' || !user.id.trim() || user.id.length > 100 ||
+          typeof session.csrf !== 'string' ||
+          !/^[a-f0-9]{64}$/i.test(session.csrf)) {
+        throw new ApiError(401, 'FRESH_MFA_LOGIN_REQUIRED');
+      }
+      mfaAuthenticatedUserId = user.id;
+      setCsrf(session.csrf);
+      // The backend independently rejects the wrong recipient, stale MFA or
+      // unauthenticated human; client session lookup does not grant authority.
       const response = object(await api<unknown>(
         path + '/mfa/verify', 'POST', { confirmation_token: context, code },
       ));
@@ -215,7 +231,8 @@ export async function loadEmailDecisionIntent(token: string): Promise<LoadedEmai
           response.actor_assurance !== 'EMAIL_LINK_PIN_PLUS_MFA' ||
           typeof response.verified_person_id !== 'string' ||
           !response.verified_person_id ||
-          response.verified_person_id.length > 100) return invalid();
+          response.verified_person_id.length > 100 ||
+          response.verified_person_id !== mfaAuthenticatedUserId) return invalid();
       const verified: EmailDecisionProof = { ...proof, assurance: 'MFA_VERIFIED' };
       if (stageAfterStepUp(proof, verified, preflight.choice) !== 'ready') return invalid();
       mfaVerifiedPersonId = response.verified_person_id as string;
@@ -253,6 +270,7 @@ export async function loadEmailDecisionIntent(token: string): Promise<LoadedEmai
           )) return invalid();
       active = null;
       mfaVerifiedPersonId = null;
+      mfaAuthenticatedUserId = null;
       return { recorded: true, outcome: preflight.choice };
     },
   };
