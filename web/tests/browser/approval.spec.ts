@@ -1224,6 +1224,36 @@ test('P0 Approver group directory distinguishes saved IDs from enabled account c
   await expect(row).toBeVisible();
   await expect(row.getByText('1 / 1 currently enabled accounts',{exact:false})).toBeVisible();
   await expect(page.getByText('Saved membership is not proof of current decision eligibility',{exact:false})).toBeVisible();
+  // Keycloak-inspired faceted discovery: all controls use only currently
+  // loaded admin-scoped GET rows; changing view must never edit a group.
+  const facet=page.getByLabel('Filter saved groups',{exact:true});
+  await expect(facet).toHaveValue('all');
+  const mutations:string[]=[];
+  page.on('request',r=>{
+   if(r.method()!=='GET'&&r.url().includes('/api/v1/approver-groups')) mutations.push(r.url());
+  });
+  await facet.selectOption('disabled');
+  await expect(row).toHaveCount(0);
+  await facet.selectOption('attention');
+  await expect(row).toHaveCount(0);
+  await facet.selectOption('unverified');
+  await expect(row).toHaveCount(0);
+  await facet.selectOption('enabled');
+  await expect(row).toBeVisible();
+  await page.getByLabel('Search approver groups',{exact:true}).fill(name);
+  await expect(row).toBeVisible();
+  await facet.selectOption('disabled');
+  await expect(row).toHaveCount(0);
+  await facet.selectOption('all');
+  await expect(row).toBeVisible();
+  await page.setViewportSize({width:375,height:812});
+  await expect(facet).toBeVisible();
+  await expect(facet).toHaveValue('all');
+  await facet.selectOption('enabled');
+  await expect(row).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+  await page.setViewportSize({width:1280,height:800});
+  expect(mutations).toEqual([]);
   // A successfully issued group creation still requires explicit original
   // group-list reconciliation before the next security-sensitive edit.
   await expect(row.getByRole('button',{name:'Review group',exact:true})).toBeDisabled();

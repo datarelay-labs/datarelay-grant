@@ -233,3 +233,45 @@ state override and no production/real-mailbox credential. Missing original
 rev72 emailed PIN landing remains deliberately RED and untouched; this
 separate read-only UI does **not** remove the required owner authorization
 for public email-link auth-boundary changes.
+
+### P0-2F source adoption — Keycloak-style group directory facets
+
+**Ranking:** The original ranked #5 Keycloak Admin UI 26.5.7 user/group
+list and permission-filtered membership pattern is independently useful as
+a **read-only admin directory facet** before any gated backend group CAS or
+Foundation role-authority work. P0-1 source evidence is the existing pinned,
+Apache-2.0 `rea-agents@6.3.0` seven-file AST analysis of
+`UserGroups.tsx`, `GroupPickerDialog.tsx` and `GroupsSection.tsx`; no
+additional REA run and no upstream source or UI artwork was copied. This
+is a product-owned design choice, not a claim of Keycloak live login.
+
+**Observed mounted Grant gap:** `Administration → Approver groups` already
+showed the saved group name, Enabled/Disabled, member count and current
+account truth (`rev70`). Operators still had to scan every row to find
+incomplete/missing/disabled member accounts or groups with unknown account
+projection, with no status facet independent from group name search.
+
+**Actual, narrow implementation:** Add a native accessible **Filter saved
+groups** select in `ApproverGroupDirectory` with All, Enabled, Disabled,
+Member account review required, Account status unverified. Filtering is
+purely over the **already-loaded, current administrator-scoped group and
+account GET** and combines with the original name search; results remain
+sorted and show x of y saved groups. It reuses the existing
+`assessSavedGroupAccountCoverage` with its intentional distinctions:
+known unavailable/duplicate/empty member IDs → attention; missing account
+projection → unverified (not a guessed zero); disabled saved group →
+disabled, never silently reactivated or counted as available. A malformed
+member set keeps its attention classification even when account GET is
+unavailable. Loading/error states still do not invent an empty directory
+or verified member seats. State is per currently mounted admin UI and no
+policy, stored membership, server request, approval, credential or role
+was changed. Native select remains keyboard-operable on mobile.
+
+**Acceptance:** seven RED-first focused facets, existing source-truth and
+list-to-detail tests; installed disposable Chromium administrator actually
+creates a test-only saved group through **Review → Confirm**, selects each
+facet and combines a name search without a new POST/PUT, and must still
+explicitly refresh the saved group to re-enable the review action. This
+is fixture UI verification, not real two-human or mailbox/E2E. Public
+emailed-PIN capability routing **P0-2B remains the higher-priority owner-
+security-gated task**, not silently approved by this independent UI slice.

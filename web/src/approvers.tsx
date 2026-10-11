@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, TextField, type AccountProjection } from '@datarelay-labs/foundation';
 import { api } from './api';
-import { Form, useTask, when } from './common';
+import { Form, Select, useTask, when } from './common';
 import type { ApproverGroup } from './types';
 import {
-  ApproverGroupAccountCoverage,createApproverDirectoryReadScope,
+  ApproverGroupAccountCoverage,assessSavedGroupAccountCoverage,createApproverDirectoryReadScope,
   readCurrentApproverDirectory,type GroupAccountProjection,
 } from './approver_group_directory_truth';
 import {
@@ -30,21 +30,31 @@ export function prepareApproverGroupUpdate(
   return { name, member_ids: [...members], expected_updated_at: baseline.updated_at };
 }
 
-/** Task-first, role-scoped discovery over the existing saved group list.
- * This does not grant access to any group or modify membership.
+export type ApproverGroupView = 'all' | 'enabled' | 'disabled' | 'attention' | 'unverified';
+
+/** A client-only facet over the exact already-authorized saved group/accounts
+ * GET, not a new policy, query, or decision-eligibility source. Member
+ * issues, unchecked account status and disabled saved groups remain distinct.
  */
 export function filterApproverGroups(
   rows: readonly ApproverGroup[], search: string,
+  view: ApproverGroupView = 'all',
+  accounts: readonly GroupAccountProjection[] | null = null,
 ): ApproverGroup[] {
   const q = search.trim().toLocaleLowerCase();
-  return rows.filter((group) => group.name.toLocaleLowerCase().includes(q))
-    .sort((left, right) => left.name.localeCompare(right.name)
-      || left.id.localeCompare(right.id));
+  return rows.filter(group => {
+    if (!group.name.toLocaleLowerCase().includes(q)) return false;
+    if (view === 'all') return true;
+    if (view === 'enabled') return group.enabled === true;
+    if (view === 'disabled') return group.enabled === false;
+    return assessSavedGroupAccountCoverage(group, accounts).status === view;
+  }).sort((left, right) => left.name.localeCompare(right.name)
+    || left.id.localeCompare(right.id));
 }
 
 export function ApproverGroupDirectory({
-  groups,accounts=null,loaded=true,error='',search,busy,
-  onSearchChange,onOpen,onCreate,
+  groups,accounts=null,loaded=true,error='',search,busy,view='all',
+  onSearchChange,onViewChange=()=>undefined,onOpen,onCreate,
 }: {
   groups: readonly ApproverGroup[];
   accounts?: readonly GroupAccountProjection[]|null;
@@ -52,11 +62,13 @@ export function ApproverGroupDirectory({
   error?: string;
   search: string;
   busy: boolean;
+  view?: ApproverGroupView;
   onSearchChange: (next: string) => void;
+  onViewChange?: (next: ApproverGroupView) => void;
   onOpen: (group: ApproverGroup) => void;
   onCreate: () => void;
 }) {
-  const matches=loaded?filterApproverGroups(groups,search):[];
+  const matches=loaded?filterApproverGroups(groups,search,view,accounts):[];
   return (
     <Card
       title="Approver groups"
@@ -67,6 +79,14 @@ export function ApproverGroupDirectory({
         label="Search approver groups" value={search}
         onChange={(event) => onSearchChange(event.target.value)}
       />
+      <Select label="Filter saved groups" value={view}
+        onChange={(next)=>onViewChange(next as ApproverGroupView)}>
+        <option value="all">All saved groups</option>
+        <option value="enabled">Enabled saved groups</option>
+        <option value="disabled">Disabled saved groups</option>
+        <option value="attention">Member account review required</option>
+        <option value="unverified">Account status unverified</option>
+      </Select>
       {!loaded&&<p role="status">Loading current saved approver groups and
         account lookup. No missing groups or eligible reviewer claims yet.</p>}
       {error&&<Alert tone="critical" title="Unable to load saved approver groups">
@@ -117,6 +137,7 @@ export function Approvers() {
   const [editing, setEditing] = useState('');
   const [view, setView] = useState<'list' | 'editor'>('list');
   const [search, setSearch] = useState('');
+  const [groupView, setGroupView] = useState<ApproverGroupView>('all');
   const [editingBaseline, setEditingBaseline] = useState<ApproverGroup | null>(null);
   const [name, setName] = useState('');
   const [members, setMembers] = useState<string[]>([]);
@@ -296,9 +317,10 @@ export function Approvers() {
       <ApproverGroupDirectory
         groups={groups} accounts={accountInventory}
         loaded={directoryLoaded} error={directoryError}
-        search={search}
+        search={search} view={groupView}
         busy={task.busy||saveGuard.current.blocked()||!directoryLoaded}
-        onSearchChange={setSearch} onOpen={edit} onCreate={startCreate}
+        onSearchChange={setSearch} onViewChange={setGroupView}
+        onOpen={edit} onCreate={startCreate}
       />
     ) : (
       <>
