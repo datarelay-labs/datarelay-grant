@@ -17,6 +17,33 @@ a denied effect through an alternate tool/host/file. Reuse Work Packet #67
 and preserve the original G12 RED, Inbox RED stash and staged source.
 Source/UI unit PASS is not installed Browser/Full User E2E, CI or release.
 
+**P0-UI rev68 — Operations exceptions task-first current-source worklist (2026-10-11):**
+The mounted administrator `Operations → Exceptions to resolve` formerly
+displayed five NOC-like metric cards without visible per-case next steps.
+It now uses one read-only task worklist/table with **Delivery failed**,
+**Approved, not consumed**, **Execution unknown**, **Execution failed** and
+**Approval expired**, each with its exact current server-projected count,
+an evidence-first operator instruction and an **Open [exception] queue**
+button to the existing server-role-checked request worklist.
+Invalid, missing, negative or non-integer counts render **Unavailable**,
+never fabricated zero/healthy/success. Zero remains an explicit
+**No matching requests** result, not an execution assurance statement.
+The result never infers rank or grants retry, resend, approval, or
+external execution; transport acceptance and executor-reported failures
+are distinguished from independently verified business effects.
+
+Actual mounted `web/src/operations.tsx` consumes new presentation-only
+`web/src/operations_exception_worklist.tsx`. New eight RED-first
+deterministic tests validate the five exact queue identities, counts,
+lack of side effects, safe unknowns and escaping. The native browser
+scenario opens `Execution unknown` using keyboard Enter and verifies
+the real exact `/operations/queue/execution_unknown` route and server
+filter `ops_execution_unknown`, without performing any business action.
+This task is a Grant consumer UI enhancement, NOT Engineering System
+governance, real two-person/email acceptance, independent external
+execution, backend CAS or release. The existing draft PR #100
+governance policy conflict remains separate and must not be bypassed.
+
 **P0-UI rev67 — mounted Notifications Delivery Health current filters (2026-10-11):**
 The administrator `Notifications → Delivery Health` page previously
 wrapped role-scoped list GETs in one `useTask.busy`: a newly selected

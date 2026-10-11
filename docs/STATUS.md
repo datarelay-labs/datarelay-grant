@@ -5,6 +5,24 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## G7 mounted Operations task-first exception worklist (2026-10-11)
+
+The administrator Operations surface now presents exact server-backed
+exception categories as one accessible read-only worklist rather than
+a grid of indistinguishable dashboard counters. Each row distinguishes
+its exception state, affected request count and the next evidence
+inspection task, then opens the existing role-scoped request queue.
+Unknown or malformed counts are **Unavailable**, not zero or healthy.
+No new authorization, approval, delivery replay, automatic repair or
+external executor effect is performed. Reported executor status still
+does not prove an external business effect; the original server
+remains the authority for request identity and state.
+
+This is implemented and unit-tested mounted product UI, not actual
+independent customer, mailbox, cross-product or release acceptance.
+Current exact HEAD qualification receipts remain in ACTIVE Work
+Packet #67 rather than this self-referential source document.
+
 ## B4 mounted Delivery Health selected-filter evidence (2026-10-11)
 
 The administrator notification delivery worklist now shows the

@@ -3,6 +3,7 @@ import { Alert, Button, Card, StatusBadge } from '@datarelay-labs/foundation';
 import { api } from './api';
 import { useTask, when } from './common';
 import type { Filters } from './request_inbox';
+import {OperationsExceptionWorklist} from './operations_exception_worklist';
 
 type Counts = {
   total: number;
@@ -171,13 +172,6 @@ const overview: Metric[] = [
   { key: 'held', title: 'Held', description: 'Explicitly held decisions requiring review', queue: 'held' },
   { key: 'latency', title: 'Approval latency', description: 'Mean and median time to a final decision', queue: 'decided' },
 ];
-const exceptions: Metric[] = [
-  { key: 'delivery_failed', title: 'Delivery failed', description: 'Requests with failed SMTP or HTTP callback', queue: 'delivery_failed' },
-  { key: 'approved_unused', title: 'Approved, not consumed', description: 'Approved execution grants still unused', queue: 'approved_unused' },
-  { key: 'execution_unknown', title: 'Execution unknown', description: 'Executor reconciliation required', queue: 'execution_unknown' },
-  { key: 'execution_failed', title: 'Execution failed', description: 'Executor reported failure', queue: 'execution_failed' },
-  { key: 'expired', title: 'Approval expired', description: 'Requests now in expired state', queue: 'expired' },
-];
 const states: Metric[] = [
   { key: 'total', title: 'All requests', description: 'All recorded requests', queue: 'all' },
   { key: 'approved', title: 'Approved', description: 'Current approved state', queue: 'approved' },
@@ -233,7 +227,8 @@ export function Operations({ navigate }: { navigate: (next: string) => void }) {
       Requests are in protected recovery mode. Reconcile restored external operations before resuming.
     </Alert>}
     {section('Approval work', overview, 'Actionable approval work and a measured decision latency, not an NOC-style chart.')}
-    {section('Exceptions to resolve', exceptions, 'No exception card retries an action or grants an approval.')}
+    <OperationsExceptionWorklist counts={snapshot?.counts??null}
+      onOpen={key=>navigate('/operations/queue/'+key)}/>
     {snapshot && <DecisionEmailSecurityPanel summary={snapshot.decision_email_security} />}
     {section('Request and delivery states', states, 'Each count represents distinct requests, never the number of delivery attempts.')}
     <Card title="Integration delivery health" description="Last callback is HTTP transport acceptance only, not target execution or receipt verification.">

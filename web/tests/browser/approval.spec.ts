@@ -1097,3 +1097,28 @@ test('B4 delivery health binds newest FAILED filter ahead of old PENDING GET',as
   await context.close();
  }
 });
+
+// G7 synthetic operator workflow on the real mounted admin surface.
+// The task-first table only opens the exact role-scoped request queue;
+// it never approves, resends email or starts an external execution.
+test('G7 Operations exceptions open exact role-scoped reconciliation queue',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ try{
+  await login(page,'admin');
+  await page.goto('/operations');
+  await expect(page.getByRole('heading',{name:'Operational work and exceptions',exact:true})).toBeVisible();
+  const table=page.getByRole('table',{name:'Approval and execution exceptions'});
+  await expect(table).toBeVisible();
+  await expect(table.getByRole('row')).toHaveCount(6); // five exception classes plus headers
+  await expect(table.getByText('not independently verified',{exact:false}).first()).toBeVisible();
+  const source=table.getByRole('button',{name:'Open Execution unknown queue',exact:true});
+  await expect(source).toBeEnabled();
+  await source.focus();
+  await expect(source).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/operations\/queue\/execution_unknown$/);
+  await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('ops_execution_unknown');
+  await expect(page.getByRole('button',{name:'Approve',exact:true})).toHaveCount(0);
+ }finally{await context.close();}
+});
