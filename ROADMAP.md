@@ -218,6 +218,27 @@ server CAS, B5 native Control/Stellar external effect and restore,
 B6 independent human acceptance/CI/provenance/smoke/owner release
 all remain open; source-only PASS is not GA.
 
+**P0-UI rev61 — B1 synthetic mobile/keyboard Inbox viewport validation (2026-10-11):**
+Added a real Playwright browser scenario in existing
+`web/tests/browser/approval.spec.ts` using only the isolated loopback
+fixture to create an actual requester-owned approval and independently
+sign in with the fixture approver. The same role-scoped
+`My approvals` worklist was exercised at **320 px** and **375 px**
+viewport widths with immutable action kind + exact target, real
+server-projected 0/1 seat count, no *document-level* horizontal
+overflow (internal table scroll remains permitted), and keyboard
+`Enter` on the focused **On hold** task shortcut showing the
+`aria-pressed` state and matching `Work view=held`.
+Focused synthetic Chromium test **1/1 PASS** (both widths inside
+one scenario) using previously installed private Playwright runtime,
+no login/password UI source changes. This is a product-mounted
+responsive/keyboard fixture check, **NOT two independently operated
+real people**, genuine two-mailbox decision URL E2E, owner-approved
+Browser 28/28, installed frozen HEAD/CI or release. Prior rev60
+official API483/483, Web551/551 and Static PASS source evidence
+remains valid; no product/runtime source changed in this bounded
+test-only rev61 slice.
+
 **Owner replacement decision:** 2026-10-10. **One current roadmap, six major
 delivery bundles (B1–B6), retaining M1–M8 technical scope.** This file supersedes all former sequencing prose in
 ROADMAP.md and the former body of [coordination Issue #37](https://github.com/datarelay-labs/datarelay-grant/issues/37).

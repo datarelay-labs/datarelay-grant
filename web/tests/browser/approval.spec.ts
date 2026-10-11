@@ -819,3 +819,47 @@ test('G12 a queue preset survives Clear filters outside the Home deep link',asyn
   await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('ops_pending');
  }finally{await context.close();}
 });
+
+// B1 responsive/keyboard SOURCE qualification on loopback disposable fixture.
+// Two viewport sizes are tested; this is not two independent real people.
+test('B1 approver Inbox task-first mobile 320/375 and keyboard queue controls',async({browser})=>{
+ const f=fixture();
+ const requester=await browser.newContext();
+ const sender=await requester.newPage();
+ await login(sender,'requester');
+ const session=await(await requester.request.get('/api/v1/auth/session')).json();
+ const title='B1 responsive '+crypto.randomUUID().slice(0,8);
+ const create=await requester.request.post('/api/v1/requests',{
+  headers:{'x-csrf-token':session.csrf},
+  data:{external_id:crypto.randomUUID(),profile_id:f.profile_id,title,
+    action:{kind:'test.operation',target:'mobile-review-target',parameters:{}}},
+ });
+ expect(create.status()).toBe(202);
+ for(const width of [320,375]){
+  const context=await browser.newContext({viewport:{width,height:812}});
+  const page=await context.newPage();
+  try{
+   await login(page,'approver');
+   await page.goto('/approvals');
+   await expect(page.getByRole('button',{name:title,exact:true})).toBeVisible();
+   const row=page.getByRole('row').filter({
+    has:page.getByRole('button',{name:title,exact:true}),
+   });
+   await expect(row.getByText('test.operation',{exact:true})).toBeVisible();
+   await expect(row.getByText('mobile-review-target',{exact:true})).toBeVisible();
+   await expect(row.getByText('0 / 1 approved',{exact:true})).toBeVisible();
+   // Internal worklist scrolling is acceptable; page shell overflow is not.
+   const dimension=await page.evaluate(()=>({
+    viewport:window.innerWidth,document:document.documentElement.scrollWidth,
+   }));
+   expect(dimension.document,JSON.stringify({width,...dimension}))
+     .toBeLessThanOrEqual(dimension.viewport);
+   const held=page.getByRole('button',{name:'On hold',exact:true});
+   await held.focus();
+   await page.keyboard.press('Enter');
+   await expect(held).toHaveAttribute('aria-pressed','true');
+   await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('held');
+  }finally{await context.close();}
+ }
+ await requester.close();
+});
