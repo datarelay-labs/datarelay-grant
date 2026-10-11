@@ -16,7 +16,9 @@ for(const pass of [1,2]){
   await rp.getByLabel('Request title',{exact:true}).fill('Browser request '+pass);
   await rp.getByLabel('Target',{exact:true}).fill('isolated-test-target');
   await rp.getByLabel('Reason',{exact:true}).fill('Two-user end-to-end verification; no external production action.');
-  await rp.getByRole('button',{name:'Submit request',exact:true}).click();
+  await rp.getByRole('button',{name:'Review request',exact:true}).click();
+  await expect(rp.getByRole('button',{name:'Confirm create request',exact:true})).toBeVisible();
+  await rp.getByRole('button',{name:'Confirm create request',exact:true}).click();
   await expect(rp.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
   const url=rp.url();const id=url.split('/').pop()!;
   await expect.poll(async()=>{const r=await request.get(f.receiver);return (await r.json()).mail.some((m:string)=>m.includes(id));}).toBeTruthy();
@@ -81,7 +83,10 @@ test('Foundation member account action reaches personal security, not Administra
 test('Foundation administration and mobile approval page are real adapters',async({browser})=>{
  const context=await browser.newContext({viewport:{width:390,height:844}});const page=await context.newPage();await login(page,'admin');
  await page.goto('/system');await expect(page.getByText('System Health',{exact:true})).toBeVisible();await expect(page.getByText('User Management',{exact:true})).toBeVisible();await page.getByRole('button',{name:'View System Health',exact:true}).click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
- await page.goto('/integrations');await expect(page.locator('strong').filter({hasText:/^Isolated DataRelay fixture$/})).toBeVisible();await page.getByRole('button',{name:'Test connection',exact:true}).click();await expect(page.getByText('Test event accepted by the HTTP receiver. This is not approval or execution.')).toBeVisible();
+ await page.goto('/integrations');await expect(page.locator('strong').filter({hasText:/^Isolated DataRelay fixture$/})).toBeVisible();await page.getByRole('button',{name:'Review connection test',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Confirm connection test',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Confirm connection test',exact:true}).click();
+ await expect(page.getByText('Diagnostic transport accepted by the receiver.',{exact:false})).toBeVisible();
  await page.goto('/notifications');await expect(page.getByRole('heading',{name:'Notifications',exact:true,level:2})).toBeVisible();
  await page.goto('/profiles');await expect(page.getByRole('heading',{name:'Approval policies',exact:true,level:2})).toBeVisible();
  await page.goto('/security');await expect(page.getByText('Active sessions',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Set up MFA',exact:true})).toBeVisible();
@@ -118,6 +123,7 @@ test('G9 configuration preview shows manual migration tasks without an Apply act
  try{
   await login(page,'admin');
   await page.goto('/integrations');
+  await page.getByRole('button',{name:'Diagnostics',exact:true}).click();
   await page.getByRole('button',{name:'Preview safe export',exact:true}).click();
   await expect(page.getByText('No automatic import or execution',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Preview import conflicts',exact:true}).click();
@@ -145,6 +151,7 @@ test('G9 v2 imports explicitly mapped settings as disabled Drafts via the real a
   for(const policy of bundle.policies)policy.config.name='Browser imported '+policy.config.name;
   for(const template of bundle.templates)template.name='Browser imported '+template.name;
   await page.goto('/integrations');
+  await page.getByRole('button',{name:'Diagnostics',exact:true}).click();
   await page.getByTestId('grant-v2-json-file').setInputFiles({
    name:'isolated-v2-bundle.json',mimeType:'application/json',
    buffer:Buffer.from(JSON.stringify(bundle)),
@@ -180,7 +187,9 @@ test('requester cancels and creates a newly approved replacement through the UI'
  await page.getByLabel('Approval profile',{exact:true}).selectOption(f.profile_id);
  await page.getByLabel('Request title',{exact:true}).fill('Replace cancelled operation');
  await page.getByLabel('Target',{exact:true}).fill('old-test-target');
- await page.getByRole('button',{name:'Submit request',exact:true}).click();
+ await page.getByRole('button',{name:'Review request',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Confirm create request',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Confirm create request',exact:true}).click();
  await expect(page.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
  const oldId=page.url().split('/').pop()!;
  await page.getByRole('button',{name:'Cancel request',exact:true}).click();
@@ -188,7 +197,9 @@ test('requester cancels and creates a newly approved replacement through the UI'
  await page.getByRole('button',{name:'Create replacement request',exact:true}).click();
  await expect(page.getByLabel('Target',{exact:true})).toHaveValue('old-test-target');
  await page.getByLabel('Target',{exact:true}).fill('new-test-target');
- await page.getByRole('button',{name:'Submit request',exact:true}).click();
+ await page.getByRole('button',{name:'Review request',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Confirm create request',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Confirm create request',exact:true}).click();
  await expect(page.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
  const newId=page.url().split('/').pop()!;expect(newId).not.toBe(oldId);
  const headers={authorization:'Bearer '+f.token};
@@ -213,22 +224,34 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  await page.getByRole('button',{name:'Create account',exact:true}).click();
  await expect(page.getByText('Account created. Share credentials through an approved secure channel.')).toBeVisible();
  await page.goto('/integrations');
+ // Registration stores the exact installation-approved receiver only after
+ // explicit Review -> Confirm. A successful POST still needs Refresh.
+ const tasks=page.getByRole('navigation',{name:'Integration tasks'});
+ await tasks.getByRole('button',{name:'Add connection',exact:true}).click();
  await page.getByLabel('Integration name',{exact:true}).fill('Configured through browser');
+ await page.getByLabel('Decision verification minimum',{exact:true}).selectOption('EMAIL_PIN');
  await page.getByLabel('Registered callback URL',{exact:true}).fill(f.receiver);
- await page.getByRole('button',{name:'Create integration',exact:true}).click();
- await expect(page.getByText('Integration created. Assign a profile and use scoped credentials.')).toBeVisible();
+ await page.getByRole('button',{name:'Review connection registration',exact:true}).click();
+ await page.getByRole('button',{name:'Confirm create connection',exact:true}).click();
+ await expect(page.getByText('Registration acknowledged by the server.',{exact:false})).toBeVisible();
+ await page.getByRole('button',{name:'Refresh saved connections',exact:true}).click();
+ await tasks.getByRole('button',{name:'Credential tools',exact:true}).click();
  await page.getByLabel('Token integration',{exact:true}).selectOption({label:'Configured through browser'});
+ await page.getByRole('button',{name:'Review scoped credential',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Confirm create credential',exact:true})).toBeVisible();
  const minted=page.waitForResponse(r=>r.url().endsWith('/api/v1/integrations/tokens')&&r.request().method()==='POST');
- await page.getByRole('button',{name:'Create scoped token',exact:true}).click();
+ await page.getByRole('button',{name:'Confirm create credential',exact:true}).click();
  const credential=await(await minted).json();
  await page.getByRole('button',{name:'Hide credential',exact:true}).click();
- await page.getByLabel('Inspect credential integration',{exact:true}).selectOption({label:'Configured through browser'});
- await page.getByRole('button',{name:'Revoke credential',exact:true}).click();
+ // The same token ID is inspected only from a fresh, role-scoped saved list.
+ await page.getByRole('button',{name:'Refresh issued credentials',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Review revoke',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Review revoke',exact:true}).click();
  await page.getByRole('button',{name:'Keep credential',exact:true}).click();
  expect((await request.get('/api/v1/requests',{headers:{authorization:'Bearer '+credential.token}})).status()).toBe(200);
- await page.getByRole('button',{name:'Revoke credential',exact:true}).click();
+ await page.getByRole('button',{name:'Review revoke',exact:true}).click();
  await page.getByRole('button',{name:'Confirm revoke',exact:true}).click();
- await expect(page.getByText('Credential revoked. Other credentials remain unchanged.')).toBeVisible();
+ await expect(page.getByText('Server acknowledged credential revocation.',{exact:false})).toBeVisible();
  expect((await request.get('/api/v1/requests',{headers:{authorization:'Bearer '+credential.token}})).status()).toBe(401);
  await page.goto('/notifications');
  await page.getByRole('button',{name:'Create template set',exact:true}).click();
@@ -254,6 +277,9 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  await page.getByRole('button',{name:'Create draft',exact:true}).click();
  await expect(page.getByText('Draft saved. It is not live until it passes Testing and is explicitly activated.')).toBeVisible();
  await page.getByRole('button',{name:'Test policy',exact:true}).click();
+ // Lifecycle transition is still a non-activating Review -> Confirm.
+ await expect(page.getByRole('button',{name:'Confirm testing',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Confirm testing',exact:true}).click();
  await expect(page.getByText('Policy moved to Testing. Use isolated test before activation.')).toBeVisible();
  await page.getByRole('button',{name:'Preview & Test',exact:true}).click();
  await page.getByRole('button',{name:'Run isolated test',exact:true}).click();
@@ -289,7 +315,7 @@ test('G4 administrator confirms escalation and reassignment in the browser',asyn
  let current=await(await request.get('/api/v1/requests/'+original.id,{headers})).json();
  expect(current.timeline.some((item:any)=>item.action==='request.escalation_configured')).toBe(false);
  await page.getByRole('button',{name:'Confirm routing change',exact:true}).click();
- await expect(page.getByText('Approval routing updated and recorded in the request audit trail.')).toBeVisible();
+ await expect(page.getByText('Approval routing recorded. Changes to assigned reviewers do not execute the requested action.')).toBeVisible();
  current=await(await request.get('/api/v1/requests/'+original.id,{headers})).json();
  expect(current.timeline.some((item:any)=>item.action==='request.escalation_configured')).toBe(true);
  expect(current.state).toBe('AWAITING');
@@ -303,7 +329,7 @@ test('G4 administrator confirms escalation and reassignment in the browser',asyn
  await page.getByRole('button',{name:'Review reassignment',exact:true}).click();
  await expect(page.getByText('Confirm approver reassignment',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Confirm routing change',exact:true}).click();
- await expect(page.getByText('Approval routing updated and recorded in the request audit trail.')).toBeVisible();
+ await expect(page.getByText('Approval routing recorded. Changes to assigned reviewers do not execute the requested action.')).toBeVisible();
  current=await(await request.get('/api/v1/requests/'+original.id,{headers})).json();
  expect(current.approval_plan.members).toEqual([substitute]);
  expect(current.timeline.some((item:any)=>item.action==='request.reassigned')).toBe(true);
@@ -323,7 +349,7 @@ test('G4 approver schedules, exercises and revokes own delegation without implic
  const before=await(await page.request.get('/api/v1/delegations')).json();
  expect(before.some((item:any)=>item.substitute_id===substitute)).toBe(false);
  await page.getByRole('button',{name:'Confirm delegation change',exact:true}).click();
- await expect(page.getByText('Delegation change recorded in the audit trail.')).toBeVisible();
+ await expect(page.getByText('Delegation change confirmed by the server.',{exact:false})).toBeVisible();
  const during=await(await page.request.get('/api/v1/delegations')).json();
  const delegation=during.find((item:any)=>item.substitute_id===substitute);
  expect(delegation).toBeTruthy();
@@ -345,10 +371,14 @@ test('G4 approver schedules, exercises and revokes own delegation without implic
  expect(beforeDecision.state).toBe('AWAITING');
  await substituteContext.close();
 
- await page.getByRole('button',{name:'Revoke',exact:true}).click();
- await expect(page.getByText('Confirm delegation revocation',{exact:true})).toBeVisible();
+ // Explicit current-list reconciliation after a possibly committed
+ // delegation POST is required before a separate revocation review.
+ await page.getByRole('button',{name:'Refresh delegations',exact:true}).click();
+ await expect(page.getByText('Current delegation records refreshed.',{exact:false})).toBeVisible();
+ await page.getByRole('button',{name:'Review revoke',exact:true}).click();
+ await expect(page.getByText('Revoke a delegation',{exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Confirm delegation change',exact:true}).click();
- await expect(page.getByText('Delegation change recorded in the audit trail.')).toBeVisible();
+ await expect(page.getByText('Delegation change confirmed by the server.',{exact:false})).toBeVisible();
  const after=await(await page.request.get('/api/v1/delegations')).json();
  expect(after.find((item:any)=>item.id===delegation.id).revoked_at).not.toBeNull();
  await context.close();
@@ -362,7 +392,7 @@ test('G4 delegated substitute finds and approves request through My approvals',a
  await owner.getByLabel('Substitute approver',{exact:true}).selectOption({label:'stranger'});
  await owner.getByRole('button',{name:'Review delegation',exact:true}).click();
  await owner.getByRole('button',{name:'Confirm delegation change',exact:true}).click();
- await expect(owner.getByText('Delegation change recorded in the audit trail.')).toBeVisible();
+ await expect(owner.getByText('Delegation change confirmed by the server.',{exact:false})).toBeVisible();
 
  const title='Delegated browser work queue';
  const created=await request.post('/api/v1/requests',{headers,data:{
@@ -393,7 +423,9 @@ test('G5 two-user request for information pauses approval until response',async(
  await rp.getByLabel('Approval profile',{exact:true}).selectOption(f.profile_id);
  await rp.getByLabel('Request title',{exact:true}).fill('G5 collaboration browser request');
  await rp.getByLabel('Target',{exact:true}).fill('isolated-target-for-info');
- await rp.getByRole('button',{name:'Submit request',exact:true}).click();
+ await rp.getByRole('button',{name:'Review request',exact:true}).click();
+ await expect(rp.getByRole('button',{name:'Confirm create request',exact:true})).toBeVisible();
+ await rp.getByRole('button',{name:'Confirm create request',exact:true}).click();
  await expect(rp.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
  const id=rp.url().split('/').pop()!;
  const headers={authorization:'Bearer '+f.token};
@@ -403,6 +435,7 @@ test('G5 two-user request for information pauses approval until response',async(
  await expect(ap.getByRole('button',{name:'Approve',exact:true})).toBeVisible();
  await ap.getByLabel('Message purpose',{exact:true}).selectOption('REQUEST_INFO');
  await ap.getByLabel('Message (up to 2000 characters; no credentials)',{exact:true}).fill('Can you confirm the change reference?');
+ await ap.getByRole('button',{name:'Review message',exact:true}).click();
  await ap.getByRole('button',{name:'Confirm message',exact:true}).click();
  await expect(ap.getByText('Waiting for requester information',{exact:true})).toBeVisible();
  await expect(ap.getByRole('button',{name:'Approve',exact:true})).toHaveCount(0);
@@ -415,6 +448,7 @@ test('G5 two-user request for information pauses approval until response',async(
  await expect(rp.getByText('Waiting for requester information',{exact:true})).toBeVisible();
  await rp.getByLabel('Message purpose',{exact:true}).selectOption('INFO_RESPONSE');
  await rp.getByLabel('Message (up to 2000 characters; no credentials)',{exact:true}).fill('Change reference: CRQ-1001');
+ await rp.getByRole('button',{name:'Review message',exact:true}).click();
  await rp.getByRole('button',{name:'Confirm message',exact:true}).click();
  await expect(rp.getByText('Provide requested information',{exact:true})).toBeVisible();
  await ap.getByRole('button',{name:'Refresh',exact:true}).click();
@@ -550,7 +584,9 @@ test('G1 browser policy selectors create a matching request and keep latest draf
  }
  await rp.getByLabel('Request title',{exact:true}).fill('Selector matched browser request');
  await rp.getByLabel('Target',{exact:true}).fill('safe-selector-test');
- await rp.getByRole('button',{name:'Submit request',exact:true}).click();
+ await rp.getByRole('button',{name:'Review request',exact:true}).click();
+ await expect(rp.getByRole('button',{name:'Confirm create request',exact:true})).toBeVisible();
+ await rp.getByRole('button',{name:'Confirm create request',exact:true}).click();
  await expect(rp.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
  const id=rp.url().split('/').pop()!;
  const actual=await(await adminContext.request.get('/api/v1/requests/'+id)).json();
@@ -620,12 +656,14 @@ test('G8 integration health and safe export are visible without revealing creden
  const page=await context.newPage();
  await login(page,'admin');
  await page.goto('/integrations');
+ await page.getByRole('button',{name:'Credential tools',exact:true}).click();
  await page.getByLabel('Credential purpose',{exact:true}).selectOption('executor');
  await expect(page.getByRole('checkbox',{name:'request:create',exact:true})).not.toBeChecked();
  await expect(page.getByRole('checkbox',{name:'request:read',exact:true})).toBeChecked();
  await expect(page.getByRole('checkbox',{name:'grant:consume',exact:true})).toBeChecked();
  await expect(page.getByRole('checkbox',{name:'result:write',exact:true})).toBeChecked();
  await expect(page.getByText('Mixed integration credential',{exact:true})).toHaveCount(0);
+ await page.getByRole('button',{name:'Diagnostics',exact:true}).click();
  await expect(page.getByText('Integration health and activity',{exact:true})).toBeVisible();
  await page.getByLabel('Inspect integration health',{exact:true}).selectOption({label:'Isolated DataRelay fixture'});
  await expect(page.getByText('Credential roles',{exact:true})).toBeVisible();
@@ -724,6 +762,7 @@ test('G9 safe configuration import preview is a nonmutating conflict report',asy
  const context=await browser.newContext(),page=await context.newPage();
  await login(page,'admin');
  await page.goto('/integrations');
+ await page.getByRole('button',{name:'Diagnostics',exact:true}).click();
  const before=await(await context.request.get('/api/v1/integrations/configuration-export')).json();
  await page.getByRole('button',{name:'Preview safe export',exact:true}).click();
  await page.getByRole('button',{name:'Preview import conflicts',exact:true}).click();

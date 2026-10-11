@@ -41,7 +41,55 @@ case "${1:-all}" in
     if [[ -n "${GRANT_BROWSER_LIBRARY_PATH:-}" ]]; then
       export LD_LIBRARY_PATH="$GRANT_BROWSER_LIBRARY_PATH${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
     fi
-    npm --prefix web run test:browser
+    # Each disposable Playwright webServer uses an independent ephemeral
+    # database. Reusing one server for every authenticated scenario exceeds
+    # the real 15-per-user/300s login limit near the end of this suite.
+    # Preserve that security limit: partition the complete discovered test
+    # list into bounded, separately started fixture servers. Every test
+    # must still PASS; never retry a failing scenario as a qualification.
+    mkdir -p "$ROOT/.dev"
+    batch_dir="$(mktemp -d "$ROOT/.dev/grant-browser-batches-XXXXXX")"
+    trap 'rm -rf -- "$batch_dir"' EXIT
+    npm --prefix web run test:browser -- --list > "$batch_dir/collected.txt"
+    sed -n '/^  .* › /s/^  //p' "$batch_dir/collected.txt" > "$batch_dir/all-tests.txt"
+    expected="$(sed -n 's/^Total: \([0-9][0-9]*\) tests* in .*/\1/p' "$batch_dir/collected.txt" | tail -1)"
+    discovered="$(wc -l < "$batch_dir/all-tests.txt" | tr -d ' ')"
+    if [[ -z "$expected" || "$expected" -eq 0 || "$discovered" -ne "$expected" ]]; then
+      printf 'BROWSER_DISCOVERY_INVALID expected=%s actual=%s\n' "$expected" "$discovered" >&2
+      exit 2
+    fi
+    # Eight scenarios per fixture keeps ordinary login attempts well under
+    # the enforced per-user window. All URLs and credentials stay in the
+    # local disposable browser fixture; never modify live auth limits.
+    split -l 8 -d -a 2 "$batch_dir/all-tests.txt" "$batch_dir/batch-"
+    evidence_dir="$(mktemp -d "$ROOT/.dev/grant-browser-evidence-XXXXXX")"
+    verified=0
+    batches=0
+    for test_list in "$batch_dir"/batch-[0-9][0-9]; do
+      batch_count="$(wc -l < "$test_list" | tr -d ' ')"
+      printf 'BROWSER_BATCH_START=%s tests=%s isolated_backend=YES\n' "$batches" "$batch_count"
+      npm --prefix web run test:browser -- --test-list "$test_list"
+      # The Playwright JSON report is overwritten by the next standalone
+      # run. Retain every batch's actual evidence rather than claiming the
+      # final batch's JSON qualifies the entire browser suite.
+      python3 - "$ROOT/web/test-results/browser-results.json" "$batch_count" <<'PYREPORT'
+import json
+import sys
+from pathlib import Path
+report = json.loads(Path(sys.argv[1]).read_text())
+stats = report.get("stats") or {}
+expected = int(sys.argv[2])
+assert stats.get("expected") == expected, (stats, expected)
+assert stats.get("unexpected") == 0 and stats.get("skipped") == 0
+assert stats.get("flaky") == 0 and not report.get("errors")
+print(f"BROWSER_BATCH_VERIFIED={expected}/{expected}")
+PYREPORT
+      cp "$ROOT/web/test-results/browser-results.json" "$evidence_dir/batch-$batches.json"
+      verified=$((verified + batch_count))
+      batches=$((batches + 1))
+    done
+    test "$verified" -eq "$expected"
+    printf 'BROWSER_NATIVE_FULL_PASS=%s/%s batches=%s evidence=%s\n' "$verified" "$expected" "$batches" "$evidence_dir"
     ;;
   all) bash scripts/checks.sh static; bash scripts/checks.sh api; bash scripts/checks.sh web; bash scripts/checks.sh browser ;;
   *) printf 'Usage: bash scripts/checks.sh setup|setup-api|setup-web|api|web|static|browser|all\n' >&2; exit 2 ;;

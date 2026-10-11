@@ -309,6 +309,43 @@ constraints; client-side current-GET review is **not atomic
 two-administrator CAS**, still a separate B4 server/release gate.
 Existing request snapshots are never silently rewritten.
 
+**P0-UI rev64 — official full synthetic browser 31/31 qualified on mounted Grant source (2026-10-11):**
+The single-file Playwright scenario suite previously exercised obsolete
+immediate `Submit request`, integration registration/credential issuance,
+connection test, delegation/revoke, collaboration and policy Testing
+buttons, and missed current Integrations `Credential tools` /
+`Diagnostics` tabs. Updated only the official
+`web/tests/browser/approval.spec.ts` to actual already-mounted
+**Review → explicit Confirm → saved-state Refresh** journeys; no
+backend auth/approval or external business execution changes.
+The repaired synthetic browser suite reached **30/31 PASS on one
+disposable backend**, but the final login was correctly denied
+`RATE LIMITED` after repeated admin logins in a shared DB.
+The official browser command now discovers every test automatically,
+partitions the complete list into **8/8/8/7** independent
+disposable webServer/DB batches and verifies each Playwright JSON
+result against its exact expected test count, with **zero failures,
+skips or flaky tests**. The current backend per-user
+**15 login attempts / 300 seconds** limit remains **UNCHANGED**;
+no rate-limit overrides, extra privileges or real accounts.
+Each batch's result file is retained separately under ignored
+`.dev/grant-browser-evidence-*`, avoiding a misleading final-only
+JSON report. Source files:
+`scripts/checks.sh` and `web/tests/browser/approval.spec.ts`.
+Official native `bash scripts/checks.sh browser` **31/31 PASS in
+4 isolated fixture batches**, evidence verified **31 distinct
+test identities**, same dev worktree/compiled candidate HEAD.
+Official native Web **573/573 PASS (70 suites)** with TypeScript/
+Vite build PASS; native Static PASS after intentionally RED G12
+path-only backup and exact restoration. These are true UI-driven
+**synthetic loopback fixture** journeys with separate authenticated
+browser contexts, **NOT** independently operated two real users,
+two real inboxes, Control/Stellar native effects, customer acceptance,
+same-HEAD release freeze, changed-HEAD CI or production release.
+B1 full independent-person E2E, B2 emailed PIN public route owner
+approval, B3 shared Foundation consumer E2E, B4 server atomic
+two-admin CAS, B5 native effects/recovery and B6 owner gates remain OPEN.
+
 **Owner replacement decision:** 2026-10-10. **One current roadmap, six major
 delivery bundles (B1–B6), retaining M1–M8 technical scope.** This file supersedes all former sequencing prose in
 ROADMAP.md and the former body of [coordination Issue #37](https://github.com/datarelay-labs/datarelay-grant/issues/37).
