@@ -252,7 +252,16 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  </Card>}
  {row.predecessor_id && <RevisionComparison requestId={row.id} />}
  <RequestCollaboration row={row} user={user} onRecorded={(updated) => { setRow(updated); setReviewed(null); }} />
- {user.role === 'admin' && actionable && <RequestAdminControls row={row} onReload={load} />}
+ {user.role === 'admin' && actionable && <RequestAdminControls
+   row={row} onReload={load}
+   onRecorded={(updated) => { setRow(updated); setReviewed(null); setPendingResend(null); }}
+   onReadbackUnavailable={() => {
+     setRow(null);
+     setReviewed(null);
+     setPendingResend(null);
+     task.setNotice('Approval routing was recorded, but current request details could not be refreshed. Use Refresh before another routing change. This did not execute the requested action.');
+   }}
+ />}
  <RequestExecutionReport row={row} />
  <RequestEvidence
    row={row}
