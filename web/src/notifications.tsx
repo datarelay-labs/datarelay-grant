@@ -14,6 +14,12 @@ import {
   hasUnsavedTemplateChanges, NotificationPreviewActions,
   NotificationRequestLink, templateDraftSignature,
 } from './notification_preview';
+import {
+  BrandingChangeConfirmation, prepareBrandingReview,
+  isCurrentBrandingReview, createBrandingSaveGuard,
+  submitReviewedBrandingSave, type BrandingReview,
+  type BrandingDraft,
+} from './notification_branding_review';
 import type {
   NotificationBranding,
   NotificationDelivery,
@@ -321,6 +327,10 @@ export function Notifications() {
     logo_asset: '/assets/datarelay-grant-icon.svg',
   });
   const [view, setView] = useState<NotificationView>('templates');
+  const activeViewRef=useRef<NotificationView>('templates');
+  const [reviewedBranding,setReviewedBranding]=useState<BrandingReview|null>(null);
+  const [brandingNeedsRefresh,setBrandingNeedsRefresh]=useState(false);
+  const brandingSaveGuard=useRef(createBrandingSaveGuard());
   const [templateView, setTemplateView] = useState<TemplateView>('list');
   const [savedSignature, setSavedSignature] = useState<string | null>(null);
   const previewGeneration = useRef(0);
@@ -349,6 +359,21 @@ export function Notifications() {
   const sampleInputsKey = JSON.stringify([
     sampleTitle, sampleTarget, sampleReason, decisionState, executionState,
   ]);
+
+  const brandingDraft:BrandingDraft={
+    brand_name:brandName,sender_display_name:senderName,
+  };
+  function switchSection(next:NotificationView){
+    activeViewRef.current=next;
+    setReviewedBranding(null);
+    setView(next);
+  }
+  function editBrandName(value:string){
+    setBrandName(value);setReviewedBranding(null);
+  }
+  function editSenderName(value:string){
+    setSenderName(value);setReviewedBranding(null);
+  }
 
   function invalidatePreview() {
     previewGeneration.current += 1;
@@ -540,14 +565,55 @@ export function Notifications() {
     task.setNotice('Saved template refreshed. Review a fresh preview before any new test email.');
   }
 
-  async function saveBranding() {
-    const updated = await api<NotificationBranding>('/notification-branding', 'PUT', {
-      brand_name: brandName,
-      sender_display_name: senderName,
-    });
-    setBranding(updated);
-    invalidatePreview();
-    task.setNotice('Notification branding updated for future request snapshots.');
+  function reviewBranding(){
+    if(brandingSaveGuard.current.blocked())return;
+    try{
+      setReviewedBranding(prepareBrandingReview(branding,brandingDraft));
+    }catch{
+      setReviewedBranding(null);
+      task.setNotice('Choose different, non-empty single-line branding and sender names (up to 100 characters each). Refresh saved branding if another administrator changed it.');
+    }
+  }
+
+  async function confirmBranding(){
+    const intent=reviewedBranding;
+    if(!intent||!isCurrentBrandingReview(intent,branding,brandingDraft)
+      ||activeViewRef.current!=='branding'){
+      setReviewedBranding(null);
+      throw Error('BRANDING_CURRENT_CHANGED');
+    }
+    if(brandingSaveGuard.current.blocked())return;
+    setReviewedBranding(null);
+    setBrandingNeedsRefresh(true);
+    try{
+      const result=await submitReviewedBrandingSave(intent,
+        brandingSaveGuard.current,
+        ()=>api<NotificationBranding>('/notification-branding'),
+        (exact)=>api<NotificationBranding>('/notification-branding','PUT',exact),
+        ()=>activeViewRef.current==='branding');
+      if(!result||activeViewRef.current!=='branding')return;
+      setBranding(result);
+      setBrandName(result.brand_name);
+      setSenderName(result.sender_display_name);
+      invalidatePreview();
+      task.setNotice('Server acknowledged branding change for future notification snapshots. Explicitly refresh saved branding before reviewing another change. No email was sent.');
+    }finally{
+      if(!brandingSaveGuard.current.blocked())setBrandingNeedsRefresh(false);
+    }
+  }
+
+  async function refreshBranding(){
+    if(activeViewRef.current!=='branding')return;
+    const current=await api<NotificationBranding>('/notification-branding');
+    if(!current||!current.brand_name?.trim()||!current.sender_display_name?.trim()
+      ||!current.logo_asset?.trim())throw Error('BRANDING_SAVED_STATE_UNAVAILABLE');
+    if(activeViewRef.current!=='branding')return;
+    setBranding(current);
+    setBrandName(current.brand_name);
+    setSenderName(current.sender_display_name);
+    setReviewedBranding(null);
+    if(brandingSaveGuard.current.readSucceeded())setBrandingNeedsRefresh(false);
+    task.setNotice('Current role-scoped saved branding refreshed. Review again before any separate change.');
   }
 
   return (
@@ -568,21 +634,21 @@ export function Notifications() {
         <button
           type="button"
           aria-current={view === 'templates' ? 'page' : undefined}
-          onClick={() => setView('templates')}
+          onClick={() => switchSection('templates')}
         >
           Template Sets
         </button>
         <button
           type="button"
           aria-current={view === 'delivery' ? 'page' : undefined}
-          onClick={() => setView('delivery')}
+          onClick={() => switchSection('delivery')}
         >
           Delivery Health
         </button>
         <button
           type="button"
           aria-current={view === 'branding' ? 'page' : undefined}
-          onClick={() => setView('branding')}
+          onClick={() => switchSection('branding')}
         >
           Branding
         </button>
@@ -836,25 +902,42 @@ export function Notifications() {
           description="System-owned product identity applies to future notification snapshots; templates can change text but not approval authority."
         >
           <Form
-            busy={task.busy}
-            onSubmit={() => void task.run(saveBranding)}
-            label="Save branding"
+            busy={task.busy||brandingSaveGuard.current.blocked()}
+            onSubmit={reviewBranding}
+            label="Review branding"
           >
             <TextField
               label="Brand name"
               required
               maxLength={100}
               value={brandName}
-              onChange={(change) => setBrandName(change.target.value)}
+              onChange={(change) => editBrandName(change.target.value)}
             />
             <TextField
               label="Sender display name"
               required
               maxLength={100}
               value={senderName}
-              onChange={(change) => setSenderName(change.target.value)}
+              onChange={(change) => editSenderName(change.target.value)}
             />
           </Form>
+          <BrandingChangeConfirmation reviewed={reviewedBranding}
+            valid={isCurrentBrandingReview(reviewedBranding,branding,brandingDraft)}
+            busy={task.busy||brandingSaveGuard.current.blocked()}
+            onBack={()=>setReviewedBranding(null)}
+            onConfirm={()=>{void task.run(confirmBranding);}}/>
+          {brandingSaveGuard.current.blocked()&&
+            <Alert tone="warning" title="Reconcile notification branding update">
+              {brandingNeedsRefresh
+                ? 'A branding PUT may have committed. Never retry it automatically.'
+                : 'A previous branding update requires a fresh saved-state check.'}
+              {' '}Inspect the saved sender identity before any new change.
+              This client review does not provide backend multi-admin CAS.
+              <Button variant="secondary" disabled={task.busy}
+                onClick={()=>{void task.run(refreshBranding);}}>
+                Refresh saved branding
+              </Button>
+            </Alert>}
           <p>
             System logo: <code>{branding.logo_asset}</code>
           </p>

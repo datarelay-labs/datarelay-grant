@@ -239,6 +239,40 @@ official API483/483, Web551/551 and Static PASS source evidence
 remains valid; no product/runtime source changed in this bounded
 test-only rev61 slice.
 
+**P0 mounted Notifications Branding exact Review→Confirm (rev62, 2026-10-11):**
+The actual `Notifications → Branding` page previously submitted admin
+`PUT /notification-branding` immediately from Save without showing
+the current versus proposed future sender identity, one-shot protection
+or post-write reconciliation. New
+`web/src/notification_branding_review.tsx` and actual mounted
+`web/src/notifications.tsx` now require a read-only snapshot of exact
+saved brand/sender/logo, valid different single-line draft and an
+explicit final **Confirm branding change** before at most one admin
+PUT. A synchronous in-process guard blocks duplicate Confirm, one
+fresh role-scoped saved branding GET verifies the reviewed source
+before PUT, and the exact returned brand, sender and unchanged system
+logo are verified before success display. Ambiguous or acknowledged
+PUT stays latched until an explicit successful saved-state Refresh;
+leaving the Branding task cannot silently unlock it. This affects
+future notification snapshots only; it does not send mail, change
+existing human decisions or grant external execution. The existing
+backend still owns administrator permission and input validation.
+**Not server-side two-administrator atomic CAS**; lost-update
+protection is still a separate B4 backend gate.
+
+New 10 RED missing-module → GREEN unit cases, neighboring preview
+and test-send 16 cases PASS. Official native Web **561/561 PASS
+(69 test suites)** with TypeScript/Vite production build PASS,
+native Static PASS after protected G12 RED path-only stash/restore
+SHA-exact. A focused **real mounted synthetic loopback Chromium
+Branding scenario 1/1 PASS** verified no change on Review and the
+exact change only after Confirm and explicit saved Refresh. This
+uses an isolated disposable administrator fixture, not production
+credentials, real SMTP or independently operated two-person E2E.
+B2 emailed PIN landing, B3 shared Foundation role/mobile,
+B4 server template/policy CAS, B5 external Control/Stellar effects
+and B6 release/CI/user acceptance remain open.
+
 **Owner replacement decision:** 2026-10-10. **One current roadmap, six major
 delivery bundles (B1–B6), retaining M1–M8 technical scope.** This file supersedes all former sequencing prose in
 ROADMAP.md and the former body of [coordination Issue #37](https://github.com/datarelay-labs/datarelay-grant/issues/37).

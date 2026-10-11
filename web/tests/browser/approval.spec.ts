@@ -863,3 +863,38 @@ test('B1 approver Inbox task-first mobile 320/375 and keyboard queue controls',a
  }
  await requester.close();
 });
+
+// B4 synthetic installed browser UI guard only; isolated administrator
+// fixture and temporary database, no customer mailbox or real SMTP.
+test('B4 branding remains unchanged during Review and changes only after Confirm',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ try{
+  await login(page,'admin');
+  await page.goto('/notifications');
+  await page.getByRole('button',{name:'Branding',exact:true}).click();
+  const beforeResponse=await context.request.get('/api/v1/notification-branding');
+  expect(beforeResponse.status()).toBe(200);
+  const before=await beforeResponse.json();
+  await expect(page.getByLabel('Brand name',{exact:true})).toHaveValue(before.brand_name);
+  const newBrand='Isolated Grant '+crypto.randomUUID().slice(0,8);
+  const newSender='Test Security Review';
+  await page.getByLabel('Brand name',{exact:true}).fill(newBrand);
+  await page.getByLabel('Sender display name',{exact:true}).fill(newSender);
+  await page.getByRole('button',{name:'Review branding',exact:true}).click();
+  await expect(page.getByText('Review notification branding',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Confirm branding change',exact:true})).toBeVisible();
+  const duringReview=await context.request.get('/api/v1/notification-branding');
+  expect((await duringReview.json()).brand_name).toBe(before.brand_name);
+  await page.getByRole('button',{name:'Confirm branding change',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Refresh saved branding',exact:true})).toBeVisible();
+  await expect.poll(async()=>{
+   const response=await context.request.get('/api/v1/notification-branding');
+   return (await response.json()).brand_name;
+  }).toBe(newBrand);
+  await page.getByRole('button',{name:'Refresh saved branding',exact:true}).click();
+  await expect(page.getByLabel('Brand name',{exact:true})).toHaveValue(newBrand);
+  await expect(page.getByLabel('Sender display name',{exact:true})).toHaveValue(newSender);
+  await expect(page.getByRole('button',{name:'Confirm branding change',exact:true})).toHaveCount(0);
+ }finally{await context.close();}
+});
