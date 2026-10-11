@@ -167,3 +167,28 @@ floor or G12 intentionally RED source.
   Inbox stash object `03cf0142b688baa17892e48785ff01803fa81c0e`
   remains present. No current CI/merge/release, native Control/Stellar or
   human mailbox acceptance is inferred.
+
+### P0-2D selected: Teleport-style reviewer deadline parity (read-only)
+
+- **Source:** Teleport 18.x [reviewer expiry and access review screenshot](https://goteleport.com/docs/identity-governance/access-lists/reviewing-access-requests/)
+  demonstrates a deadline with the pending task; this is a documented
+  vendor-published journey, not a live vendor UI session or cloned design.
+- **Observed Grant gap:** the shipped Inbox correctly shows the role-scoped
+  server `overdue` flag, expired-without-decision and approved-grant expiry
+  distinctions, but Request Detail displayed only a date under "Approval
+  deadline". Moving from Inbox to Detail therefore hid the reviewer's
+  already available urgency/historical outcome evidence.
+- **Accepted safe source scope:** reuse **exact** existing
+  `InboxDeadlineTruth` in `RequestDetailOverview`, preserving original
+  server response and `State` semantics. No client clock-based overdue,
+  new API/GET, mutable route, new approval/execute action, permission
+  elevation or copied proprietary UI. The same configured policy deadline
+  applies across the queue and detail.
+- **RED→GREEN:** focused RequestDetail component tests prove a pending
+  server-flagged escalation, expired previous approval (not overdue), and
+  unavailable timestamp fail-closed. Browser visits the **real mounted
+  RequestDetail** with a role-scoped logged-in fixture user and confirms
+  current deadline anatomy while original human Review→Confirm remains.
+- **Separate gates:** issued email PIN Web auth boundary B2, backend
+  overdue state correctness and real two-human E2E are not replaced or
+  silently completed by this read-only UI parity.

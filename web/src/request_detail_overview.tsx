@@ -2,6 +2,7 @@ import { Card } from '@datarelay-labs/foundation';
 import { when } from './common';
 import { RequestActionSummary } from './request_action_summary';
 import { RequestStageSummary } from './request_stage_summary';
+import { InboxDeadlineTruth } from './request_inbox_deadline_truth';
 import { approvalProgressLabel, approvalWaitingLabel } from './request_evidence';
 import type { RequestRow } from './types';
 
@@ -37,7 +38,7 @@ export function RequestDetailOverview({
         )}
         <dl className="grant-facts">
           <dt>External ID</dt><dd>{row.external_id}</dd>
-          <dt>Approval deadline</dt><dd>{when(row.deadline)}</dd>
+          <dt>Approval deadline</dt><dd><InboxDeadlineTruth row={row} /></dd>
           <dt>Approval progress</dt><dd>{approvalProgressLabel(row)}</dd>
           <dt>Waiting on</dt><dd>{approvalWaitingLabel(row)}</dd>
         </dl>

@@ -1285,3 +1285,39 @@ test('P0 Entra-style selected approval context stays tied to exact Inbox view',a
   expect(mutations).toEqual([]);
  }finally{await context.close();}
 });
+
+// P0-2D: real installed browser navigation on disposable fixtures only.
+// A new approval request is pending by server truth; the detail must present
+// the same server-authored deadline and never synthesize "overdue" from clock.
+test('P0-2D role-scoped RequestDetail deadline truth and separate human confirm', async ({browser}) => {
+  const requester = await browser.newContext({viewport: {width: 1280, height: 800}});
+  const approver = await browser.newContext({viewport: {width: 1280, height: 800}});
+  try {
+    const rp = await requester.newPage();
+    const ap = await approver.newPage();
+    await login(rp, 'requester');
+    await rp.getByRole('button', {name: 'New request', exact: true}).click();
+    await rp.getByLabel('Approval profile', {exact: true}).selectOption(fixture().profile_id);
+    await rp.getByLabel('Request title', {exact: true}).fill('P0-2D deadline review parity');
+    await rp.getByLabel('Target', {exact: true}).fill('isolated-review-deadline');
+    await rp.getByRole('button', {name: 'Review request', exact: true}).click();
+    await rp.getByRole('button', {name: 'Confirm create request', exact: true}).click();
+    await expect(rp.getByText('Exact action requiring approval', {exact: true})).toBeVisible();
+    const detailUrl = rp.url();
+    await login(ap, 'approver');
+    await ap.goto(detailUrl);
+    const serverDeadline = ap.getByLabel('Decision deadline and authoritative approval status');
+    await expect(serverDeadline).toBeVisible();
+    await expect(serverDeadline).not.toContainText('Decision deadline unavailable');
+    await expect(serverDeadline).not.toContainText('Escalation due');
+    await expect(ap.getByText('Approval deadline', {exact: true})).toBeVisible();
+    await expect(ap.getByText('isolated-review-deadline', {exact: true}).first()).toBeVisible();
+    await ap.getByRole('button', {name: 'Approve', exact: true}).click();
+    await expect(ap.getByRole('button', {name: 'Confirm approved', exact: true})).toBeVisible();
+    await expect(ap.getByText('AWAITING', {exact: true}).first()).toBeVisible();
+    await expect(ap.getByRole('button', {name: 'Execute', exact: true})).toHaveCount(0);
+  } finally {
+    await requester.close();
+    await approver.close();
+  }
+});
