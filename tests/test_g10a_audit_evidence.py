@@ -162,8 +162,19 @@ def test_extra_otp_evidence_is_mailbox_only_not_independent_mfa(env):
     assert final_vote["details"]["actor_assurance"] == "EMAIL_LINK_PIN_PLUS_OTP"
     assert final_vote["details"].get("verified_person_id") is None
     content = json.dumps(chain)
-    for secret in (token, pin, otp, record["payload"]):
+    # High-entropy capability tokens and sealed payloads must never occur
+    # anywhere. A random 4-digit PIN or 6-digit OTP can, however, appear
+    # coincidentally inside an event timestamp or UUID (e.g. 123.230085),
+    # which is NOT a disclosure. Inspect the complete JSON string value of
+    # each short code and reject secret-bearing event-detail fields instead.
+    for secret in (token, record["payload"]):
         assert secret not in content
+    for short_code in (pin, otp):
+        assert json.dumps(short_code) not in content
+    for event in chain["events"]:
+        assert not ({"pin", "otp", "code", "confirmation_token",
+                     "pin_digest", "otp_digest", "payload", "_decision_pin"}
+                    & set(event["details"]))
     assert "otp_digest" not in content and "token_digest" not in content
     assert "pin_digest" not in content and '"payload":' not in content
 
