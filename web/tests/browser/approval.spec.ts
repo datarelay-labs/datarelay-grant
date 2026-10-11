@@ -4,6 +4,50 @@ import path from 'node:path';
 const fixture=()=>JSON.parse(fs.readFileSync(path.resolve('../.e2e/fixture.json'),'utf8'));
 async function login(page:Page,name:string){await page.goto('/requests');await page.getByLabel('Username',{exact:true}).fill(name);await page.getByLabel('Password',{exact:true}).fill(fixture().password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByRole('heading',{name:'Requests',exact:true})).toBeVisible();}
 
+// P0-2C: disposable installed Chromium, exact live Grant RequestDetail.
+// Creation is through the existing requester Review → Confirm UI, not an
+// injected backend write. No protected external execution or mail recipient.
+test('P0-2C task-first activity stays collapsed, keyboard accessible and does not conceal human decision', async ({browser}) => {
+ const f = fixture();
+ const requester = await browser.newContext({viewport:{width:1280,height:800}});
+ const approver = await browser.newContext({viewport:{width:1280,height:800}});
+ try {
+  const rp = await requester.newPage();
+  const ap = await approver.newPage();
+  await login(rp,'requester');
+  await rp.getByRole('button',{name:'New request',exact:true}).click();
+  await rp.getByLabel('Approval profile',{exact:true}).selectOption(f.profile_id);
+  await rp.getByLabel('Request title',{exact:true}).fill('Decision-first activity regression');
+  await rp.getByLabel('Target',{exact:true}).fill('isolated-test-target');
+  await rp.getByLabel('Reason',{exact:true}).fill('Synthetic role-scoped UI disclosure test');
+  await rp.getByRole('button',{name:'Review request',exact:true}).click();
+  await rp.getByRole('button',{name:'Confirm create request',exact:true}).click();
+  await expect(rp.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
+  const url = rp.url();
+  await login(ap,'approver');
+  await ap.goto(url);
+  await expect(ap.getByRole('button',{name:'Approve',exact:true})).toBeVisible();
+  await expect(ap.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
+  const activity = ap.locator('details.grant-activity-disclosure');
+  await expect(activity).toBeVisible();
+  await expect(activity).not.toHaveAttribute('open','');
+  await expect(activity.locator(':scope > summary')).toContainText('Activity & supporting evidence');
+  await expect(activity.getByText('Reviewer decisions',{exact:true})).toBeHidden();
+  await activity.locator(':scope > summary').focus();
+  await activity.locator(':scope > summary').press('Enter');
+  await expect(activity).toHaveAttribute('open','');
+  await expect(activity.getByText('Reviewer decisions',{exact:true})).toBeVisible();
+  await expect(activity.getByText('Request timeline',{exact:true})).toBeVisible();
+  await expect(ap.getByRole('button',{name:'Approve',exact:true})).toBeVisible();
+  await activity.locator(':scope > summary').press('Space');
+  await expect(activity).not.toHaveAttribute('open','');
+  await expect(activity.getByText('Reviewer decisions',{exact:true})).toBeHidden();
+ } finally {
+  await requester.close();
+  await approver.close();
+ }
+});
+
 // Each pass logs in independently. No borrowed cookie or mocked auth is used.
 for(const pass of [1,2]){
  test(`two-user approve / hold / deny / cancel and real transports - pass ${pass}`,async({browser,request})=>{

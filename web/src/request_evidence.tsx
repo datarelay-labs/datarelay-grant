@@ -46,8 +46,26 @@ export function RequestEvidence({
   // role-scoped approval progress. Archived votes may refer to superseded
   // approval seats and cannot establish a current approval threshold.
   const progress = row.approval_progress;
+  // These are only current role-scoped arrays from this RequestDetail GET.
+  // Omitted projections are unknown, never a factual zero or global count.
+  const votesLabel = row.decisions === undefined
+    ? 'Reviewer vote count unavailable'
+    : `${votes.length} reviewer vote${votes.length === 1 ? '' : 's'}`;
+  const deliveriesLabel = row.deliveries === undefined
+    ? 'Delivery count unavailable'
+    : `${row.deliveries.length} delivery attempt${row.deliveries.length === 1 ? '' : 's'}`;
+  const timelineLabel = row.timeline === undefined
+    ? 'Timeline count unavailable'
+    : `${row.timeline.length} timeline event${row.timeline.length === 1 ? '' : 's'}`;
   return (
-    <>
+    <details className="grant-activity-disclosure">
+      <summary>
+        <strong>Activity & supporting evidence</strong>
+        <span>{votesLabel} · {deliveriesLabel} · {timelineLabel}</span>
+      </summary>
+      <div className="grant-stack grant-activity-content">
+        <p>Recorded decisions, notification attempts and request timeline.
+          Expand these details when you need audit context; they never approve or execute an action.</p>
       <Card title="Reviewer decisions" description="Current seat votes, not a complete chronological history. Email PIN alone is not proof of the person. A vote is not itself authorization to execute. See Request timeline for prior changes.">
         <p>
           {progress ? (
@@ -76,12 +94,12 @@ export function RequestEvidence({
               </li>;
             })}
           </ul>
-        ) : <p>No reviewer decisions recorded.</p>}
+        ) : <p>{row.decisions === undefined ? 'Reviewer vote list unavailable.' : 'No reviewer decisions recorded.'}</p>}
       </Card>
       <Card title="Delivery history" description="Transport acceptance does not prove external execution. Review before resending any notification; a reviewed resend never approves or executes the requested action.">
         {resendConfirmation}
         <details>
-          <summary>Delivery attempts · {row.deliveries?.length ?? 0}</summary>
+          <summary>Delivery attempts · {row.deliveries?.length ?? 'unavailable'}</summary>
           {row.deliveries?.map((delivery) => (
             <div className="grant-delivery" key={delivery.id}>
               <div>
@@ -107,7 +125,7 @@ export function RequestEvidence({
       </Card>
       <Card title="Request timeline" description="An auditable record of request decisions and delivery/interaction events.">
         <details>
-          <summary>Recorded events · {row.timeline?.length ?? 0}</summary>
+          <summary>Recorded events · {row.timeline?.length ?? 'unavailable'}</summary>
           {row.timeline?.map((event) => (
             <div className="grant-timeline" key={event.id}>
               <strong>{event.action}</strong>
@@ -120,6 +138,7 @@ export function RequestEvidence({
           ))}
         </details>
       </Card>
-    </>
+      </div>
+    </details>
   );
 }

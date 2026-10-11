@@ -39,6 +39,39 @@ function markup(row: RequestRow, isAdmin: boolean, busy = false, blockedResendId
   }));
 }
 
+describe('P0-2C decision-first request activity disclosure', () => {
+  it('collapses secondary reviewer/transport/audit context behind one native summary', () => {
+    const html = markup(request(), false);
+    expect(html).toContain('<details class="grant-activity-disclosure">');
+    expect(html).toContain('Activity &amp; supporting evidence');
+    expect(html).toContain('Reviewer vote count unavailable');
+    expect(html).toContain('3 delivery attempts');
+    expect(html).toContain('1 timeline event');
+    expect(html).not.toContain('<details class="grant-activity-disclosure" open');
+    expect(html.indexOf('Activity &amp; supporting evidence')).toBeLessThan(html.indexOf('Reviewer decisions'));
+    expect(html.indexOf('dr-card__title\">Reviewer decisions')).toBeLessThan(html.indexOf('dr-card__title\">Delivery history'));
+    expect(html.indexOf('dr-card__title\">Delivery history')).toBeLessThan(html.indexOf('dr-card__title\">Request timeline'));
+  });
+
+  it('does not manufacture zero events when the role-scoped server omits a list', () => {
+    const html = markup(request({ deliveries: undefined, timeline: undefined, decisions: undefined }), false);
+    expect(html).toContain('Reviewer vote count unavailable');
+    expect(html).toContain('Delivery count unavailable');
+    expect(html).toContain('Timeline count unavailable');
+    expect(html).not.toContain('0 delivery attempts');
+    expect(html).not.toContain('0 timeline events');
+  });
+
+  it('keeps the existing admin resend/confirmation and audit evidence inside disclosure', () => {
+    const html = markup(request({ decisions: [] }), true);
+    expect(html).toContain('0 reviewer votes');
+    expect(html).toContain('Review resend email');
+    expect(html).toContain('Event evidence');
+    expect(html).toContain('Recorded events · 1');
+    expect(html).toContain('Transport acceptance does not prove external execution.');
+  });
+});
+
 describe('Grant progressive evidence and resend boundary', () => {
   it('provides collapsed delivery attempts and recorded events with nested audit JSON', () => {
     const html = markup(request(), false);

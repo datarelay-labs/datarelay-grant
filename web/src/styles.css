@@ -449,3 +449,29 @@ pre {
 @media (max-width: 900px) {
   .grant-inbox-master-detail.has-preview { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Grant request task view: secondary history stays discoverable but does not
+   compete visually with the human decision. Native summary supports keyboard. */
+.grant-activity-disclosure {
+  min-width: 0;
+  border: 1px solid var(--dr-border-default);
+  border-radius: var(--dr-radius-control);
+  background: var(--dr-surface-input);
+}
+.grant-activity-disclosure > summary {
+  cursor: pointer;
+  padding: var(--dr-space-4);
+  overflow-wrap: anywhere;
+}
+.grant-activity-disclosure > summary strong,
+.grant-activity-disclosure > summary span { display: block; }
+.grant-activity-disclosure > summary span {
+  margin-top: .3rem;
+  font-size: .85rem;
+  color: var(--dr-text-secondary);
+}
+.grant-activity-disclosure > summary:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.grant-activity-content { padding: 0 var(--dr-space-4) var(--dr-space-4); }
