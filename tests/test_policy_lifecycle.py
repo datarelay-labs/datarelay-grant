@@ -87,7 +87,11 @@ def test_policy_lifecycle_versioned_edit_and_isolated_test(env):
 
     edited = admin.put(
         f"/api/v1/profiles/{policy["id"]}",
-        json=policy_payload(env, deadline_seconds=120),
+        json=policy_payload(
+            env, deadline_seconds=120,
+            expected_version_id=active.json()["version_id"],
+            expected_updated_at=active.json()["updated_at"],
+        ),
     )
     assert edited.status_code == 200, edited.text
     draft_v2 = edited.json()

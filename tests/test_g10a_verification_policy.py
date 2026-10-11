@@ -377,6 +377,8 @@ def test_strong_integration_minimum_blocks_lower_policy_and_inflight_relaxation(
     ).status_code == 403
     env.core.update_profile(
         env.admin, policy["id"], ProfileUpdate(
+            expected_version_id=policy["version_id"],
+            expected_updated_at=policy["updated_at"],
             name="Verification floor",
             integration_id=env.integration["id"],
             approver_id=env.users["approver"]["id"],

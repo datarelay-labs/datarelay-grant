@@ -176,6 +176,7 @@ class EmailTemplate(Input):
 
 class EmailTemplateUpdate(EmailTemplate):
     enabled: bool = True
+    expected_updated_at: float = Field(ge=0, allow_inf_nan=False)
 
 
 NotificationEvent = Literal[
@@ -227,6 +228,7 @@ class NotificationTemplateSet(Input):
 
 class NotificationTemplateSetUpdate(NotificationTemplateSet):
     enabled: bool = True
+    expected_updated_at: float = Field(ge=0, allow_inf_nan=False)
 
 
 class NotificationSample(Input):
@@ -320,6 +322,8 @@ class Profile(Input):
 
 class ProfileUpdate(Profile):
     enabled: bool = True
+    expected_version_id: str = Field(min_length=1, max_length=100)
+    expected_updated_at: float = Field(ge=0, allow_inf_nan=False)
 
 
 class Token(Input):

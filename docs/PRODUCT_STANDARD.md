@@ -223,6 +223,37 @@ policy matching.
 
 A policy-preview function must show which policy would match a sample request and why.
 
+### Administrator policy and notification template save concurrency
+
+An edit to an existing approval policy MUST include both
+`expected_version_id` and `expected_updated_at` from the exact
+administrator-visible `GET /api/v1/profiles` row. The server verifies both
+inside the same write transaction before changing the draft/latest version,
+email approval verification tier (including denial reason, OTP/fresh MFA),
+policy selectors or outbound notification selection. A stale submitted
+revision returns HTTP **409 `POLICY_STALE`** with no mutation or successful
+update audit; missing required preconditions return 422. Editing an active
+version creates a **new Draft version**, never changes historical request
+snapshots or silently activates it.
+
+An edit to an existing nine-event Notification Template Set MUST include
+`expected_updated_at` from the administrator's
+`GET /api/v1/notification-template-sets` result. The legacy
+`PUT /api/v1/email-templates/{id}` path must supply the same field from
+`GET /api/v1/email-templates`. Both paths enforce the authoritative row's
+revision in the same SQLite write transaction. Concurrent stale edits return
+HTTP **409 `EMAIL_TEMPLATE_STALE`**, without replacing any of the nine event
+messages, altering enabled state, or recording a successful update audit.
+Missing preconditions return 422. Revision timestamps advance monotonically
+even if two saves share the same clock tick. An administrator must **Refresh,
+review the new saved revision, then explicitly save again**; no automatic
+retry/replay or full-template overwrite from an old browser state is allowed.
+
+Existing create-only operations remain unaffected. Saving a policy or email
+template never issues a protected business execution, human decision, or
+unreviewed test email. This source concurrency contract does not substitute
+for independent full user/mailbox acceptance or production release.
+
 ## 7. Approval plans
 
 Product 1.0 supports:

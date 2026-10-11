@@ -39,6 +39,17 @@ def activate(admin, policy_id):
     return response.json()
 
 
+def update_template_with_fresh_revision(admin, template_id, payload):
+    current = next(
+        row for row in admin.get("/api/v1/email-templates").json()
+        if row["id"] == template_id
+    )
+    return admin.put(
+        f"/api/v1/email-templates/{template_id}",
+        json={**payload, "expected_updated_at": current["updated_at"]},
+    )
+
+
 def test_admin_manages_policy_and_mail_template_with_request_snapshot(env):
     admin = env.human("admin")
     assert admin.post("/api/v1/profiles/" + env.profile["id"] + "/disable").status_code == 200
@@ -78,9 +89,7 @@ def test_admin_manages_policy_and_mail_template_with_request_snapshot(env):
         reminder_body_template="UPDATED REMINDER {{request_title}}",
         enabled=True,
     )
-    response = admin.put(
-        f"/api/v1/email-templates/{template['id']}", json=updated_template
-    )
+    response = update_template_with_fresh_revision(admin, template["id"], updated_template)
     assert response.status_code == 200, response.text
 
     with env.db.transaction() as conn:
@@ -133,6 +142,10 @@ def test_policy_update_affects_only_new_requests_and_template_disable_is_safe(en
         "/api/v1/requests",
         json=env.intake(external_id="policy-old", profile_id=policy["id"]),
     ).json()
+    active_policy = next(
+        row for row in admin.get("/api/v1/profiles").json()
+        if row["id"] == policy["id"]
+    )
     response = admin.put(
         f"/api/v1/profiles/{policy['id']}",
         json=policy_payload(
@@ -141,6 +154,8 @@ def test_policy_update_affects_only_new_requests_and_template_disable_is_safe(en
             approver_id=env.users["stranger"]["id"],
             deadline_seconds=120,
             enabled=True,
+            expected_version_id=active_policy["version_id"],
+            expected_updated_at=active_policy["updated_at"],
         ),
     )
     assert response.status_code == 200, response.text
@@ -156,9 +171,8 @@ def test_policy_update_affects_only_new_requests_and_template_disable_is_safe(en
     assert second.json()["approver_id"] == env.users["stranger"]["id"]
     assert second.json()["deadline"] - second.json()["created_at"] <= 121
 
-    in_use = admin.put(
-        f"/api/v1/email-templates/{template['id']}",
-        json=template_payload(enabled=False),
+    in_use = update_template_with_fresh_revision(
+        admin, template["id"], template_payload(enabled=False),
     )
     assert in_use.status_code == 409
     assert in_use.json()["error"]["code"] == "EMAIL_TEMPLATE_IN_USE"
@@ -166,9 +180,8 @@ def test_policy_update_affects_only_new_requests_and_template_disable_is_safe(en
     disabled_policy = admin.post(f"/api/v1/profiles/{policy['id']}/disable")
     assert disabled_policy.status_code == 200
     assert disabled_policy.json()["lifecycle"] == "DISABLED"
-    disabled_template = admin.put(
-        f"/api/v1/email-templates/{template['id']}",
-        json=template_payload(enabled=False),
+    disabled_template = update_template_with_fresh_revision(
+        admin, template["id"], template_payload(enabled=False),
     )
     assert disabled_template.status_code == 200
     assert disabled_template.json()["enabled"] is False

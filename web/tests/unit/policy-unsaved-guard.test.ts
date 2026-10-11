@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   isPolicyEditorUnchanged,
   policyEditorPayload,
+  policyReviewedSavePayload,
   PolicyUnsavedNotice,
   PolicyLifecycleConfirmation,
   type PolicyEditorDraft,
@@ -13,7 +14,7 @@ import { readDecisionSecurity } from '../../src/policy_decision_security';
 import type { Profile } from '../../src/types';
 
 const saved: Profile = {
-  id: 'profile-a', version_id: 'profile-v2', version: 2,
+  id: 'profile-a', version_id: 'profile-v2', version: 2, updated_at: 12345,
   name: 'Review production changes', lifecycle: 'TESTING', enabled: false,
   active_version: null, active_version_id: null,
   integration_id: 'integration-a', approver_id: 'reviewer-a',
@@ -104,10 +105,31 @@ describe('G1 saved policy vs in-memory draft lifecycle guard', () => {
     } })).toBe(false);
     expect(same(draft, { ...saved, verification_mode: undefined })).toBe(false);
     expect(same(draft, { ...saved, version_id: 'profile-v3' })).toBe(false);
+    expect(same(draft, { ...saved, updated_at: 12346 })).toBe(false);
     expect(same(draft, { ...saved, active_version: 1 })).toBe(false);
     expect(same(draft, { ...saved, lifecycle: 'ACTIVE' })).toBe(false);
     expect(same(draft, null)).toBe(false);
     expect(same(draft, saved, null)).toBe(false);
+  });
+
+  it('sends exact reviewed policy version/updated_at with existing-edit PUT and never with create', () => {
+    const update = policyReviewedSavePayload(draft, saved.id, saved);
+    expect(update).toMatchObject({
+      expected_version_id: 'profile-v2',
+      expected_updated_at: 12345,
+      denial_reason_required: true,
+      verification_mode: 'EMAIL_PIN_PLUS_MFA',
+    });
+    const created = policyReviewedSavePayload(draft, '', null);
+    expect(created).not.toHaveProperty('expected_version_id');
+    expect(created).not.toHaveProperty('expected_updated_at');
+    expect(() => policyReviewedSavePayload(draft, saved.id, null))
+      .toThrow('POLICY_SAVE_VERSION_REQUIRED');
+    expect(() => policyReviewedSavePayload(draft, 'other-id', saved))
+      .toThrow('POLICY_SAVE_VERSION_REQUIRED');
+    expect(() => policyReviewedSavePayload(draft, saved.id, {
+      ...saved, updated_at: undefined,
+    })).toThrow('POLICY_SAVE_VERSION_REQUIRED');
   });
 
   it('blocks an already staged confirmation until the editor returns to saved state', () => {

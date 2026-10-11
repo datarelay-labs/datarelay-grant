@@ -189,6 +189,27 @@ export function policyEditorPayload(draft: PolicyEditorDraft) {
   };
 }
 
+/**
+ * Exact existing-policy version from the reviewed administrator snapshot.
+ * New policy creation stays versionless; update MUST fail closed without
+ * a trusted saved version and let the server atomically compare the tuple.
+ */
+export function policyReviewedSavePayload(
+  draft: PolicyEditorDraft, editingId: string, baseline: Profile | null,
+) {
+  const body = policyEditorPayload(draft);
+  if (!editingId) return body;
+  if (!baseline || baseline.id !== editingId
+    || !baseline.version_id || !Number.isFinite(baseline.updated_at)) {
+    throw Error('POLICY_SAVE_VERSION_REQUIRED');
+  }
+  return {
+    ...body,
+    expected_version_id: baseline.version_id,
+    expected_updated_at: baseline.updated_at,
+  };
+}
+
 function savedPolicyDraft(row: Profile): PolicyEditorDraft {
   return {
     name: row.name,
@@ -222,6 +243,9 @@ export function isPolicyEditorUnchanged(
       current.id !== baseline.id ||
       current.version_id !== baseline.version_id ||
       current.version !== baseline.version ||
+      !Number.isFinite(current.updated_at) ||
+      !Number.isFinite(baseline.updated_at) ||
+      current.updated_at !== baseline.updated_at ||
       current.lifecycle !== baseline.lifecycle ||
       (current.active_version ?? null) !== (baseline.active_version ?? null) ||
       (current.active_version_id ?? null) !== (baseline.active_version_id ?? null)) {
@@ -440,7 +464,7 @@ export function Profiles() {
   }
 
   async function save() {
-    const body = policyEditorPayload(editorDraft);
+    const body = policyReviewedSavePayload(editorDraft, editing, editingBaseline);
     const saved = await api<Profile>(
       editing ? '/profiles/' + editing : '/profiles',
       editing ? 'PUT' : 'POST',

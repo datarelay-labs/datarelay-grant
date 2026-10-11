@@ -90,7 +90,7 @@ describe('P0 notification template-set exact source Review→Confirm',()=>{
       async()=>{events.push('GET');return [saved];},
       async(mode,id,payload)=>{events.push('PUT');
         expect(mode).toBe('update');expect(id).toBe('set-A');
-        expect(payload).toEqual(draft);return receipt;
+        expect(payload).toEqual({...draft,expected_updated_at:12346});return receipt;
       },()=>true);
     expect(output).toEqual(receipt);
     expect(events).toEqual(['GET','PUT']);

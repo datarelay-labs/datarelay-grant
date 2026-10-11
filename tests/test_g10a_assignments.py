@@ -149,6 +149,8 @@ def test_required_deny_reason_is_snapshotted_to_request(env):
         env.admin,
         required["id"],
         ProfileUpdate(
+            expected_version_id=active["version_id"],
+            expected_updated_at=active["updated_at"],
             name="Required explanation",
             integration_id=env.integration["id"],
             approver_id=env.users["approver"]["id"],

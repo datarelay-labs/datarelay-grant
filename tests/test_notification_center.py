@@ -123,7 +123,8 @@ def test_template_set_safe_variables_preview_snapshot_and_event_delivery(env):
     }
     update = admin.put(
         f"/api/v1/notification-template-sets/{template_set["id"]}",
-        json={**updated, "enabled": True},
+        json={**updated, "enabled": True,
+              "expected_updated_at": template_set["updated_at"]},
     )
     assert update.status_code == 200, update.text
 

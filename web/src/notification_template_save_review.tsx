@@ -95,6 +95,7 @@ export function isCurrentTemplateSaveReview(
 }
 export type TemplateSavePayload={
   name:string;templates:NotificationTemplateSet['templates'];enabled?:boolean;
+  expected_updated_at?:number;
 };
 /** Synchronous one-shot. A potentially committed save is kept latched
  * until explicit role-scoped refresh for its original reviewed identity.
@@ -165,7 +166,10 @@ export async function submitReviewedTemplateSave<T extends NotificationTemplateS
     const payload:TemplateSavePayload={
       name:intent.draft.name,
       templates:cloned(intent.draft).templates,
-      ...(intent.mode==='update'?{enabled:intent.draft.enabled}:{}),
+      ...(intent.mode==='update'?{
+        enabled:intent.draft.enabled,
+        expected_updated_at:intent.savedUpdatedAt!,
+      }:{}),
     };
     guard.markPostStarted();
     return verifyTemplateSaveReceipt(intent,
@@ -201,8 +205,9 @@ export function NotificationTemplateSaveConfirmation({
       </section>)}
     </details>
     <p>Server user permissions, complete event-variable validation and
-      saved enabled-policy constraints remain authoritative. A fresh GET
-      guards stale source but does not replace atomic two-admin CAS.</p>
+      saved enabled-policy constraints remain authoritative. The reviewed
+      revision is checked atomically by the server; another administrator's
+      save requires an explicit Refresh and new Review.</p>
     {!valid&&<p role="alert">Template selection, saved version or proposed
       event message changed. Return to edit and review the current set.</p>}
     <div className="grant-actions">

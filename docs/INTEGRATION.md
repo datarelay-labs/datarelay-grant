@@ -42,6 +42,21 @@ This metadata and the example below are local development contract evidence,
 not proof that one real DataRelay execution boundary or a deployed Stellar
 receiver has completed acceptance.
 
+## Administrator save preconditions
+
+Pre-release clients must read the role-scoped current policy/template list
+before editing. `PUT /api/v1/profiles/{id}` requires the exact
+`expected_version_id` and `expected_updated_at` from the selected
+`GET /api/v1/profiles` row. `PUT /api/v1/notification-template-sets/{id}`
+requires `expected_updated_at` from its saved list row; the legacy
+`PUT /api/v1/email-templates/{id}` requires the equivalent value from its
+own list. Required fields missing: HTTP 422; concurrent stale revision:
+HTTP 409 (`POLICY_STALE` or `EMAIL_TEMPLATE_STALE`). The caller must
+refresh and explicitly review rather than automatically repeating a write.
+No successful audit entry or partial write may be recorded for rejected
+stale requests. This contract is an admin configuration control, not an
+external integration token, decision or execution grant.
+
 ## Request and decision
 
 `POST /api/v1/requests` persists a request and returns HTTP 202 with a stable request

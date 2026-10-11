@@ -399,23 +399,27 @@ class Core:
         templates = {key: value.model_dump() for key, value in body.templates.items()}
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
-            if not conn.execute(
-                "SELECT id FROM email_templates WHERE id=?", (ident,)
-            ).fetchone():
+            current = conn.execute(
+                "SELECT updated_at FROM email_templates WHERE id=?", (ident,)
+            ).fetchone()
+            if not current:
                 raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
+            if current["updated_at"] != body.expected_updated_at:
+                raise GrantError("EMAIL_TEMPLATE_STALE", 409)
             if not body.enabled and conn.execute(
                 """SELECT 1 FROM profile_versions
                    WHERE email_template_id=? AND lifecycle='ACTIVE' LIMIT 1""",
                 (ident,),
             ).fetchone():
                 raise GrantError("EMAIL_TEMPLATE_IN_USE", 409)
+            updated_at = max(time.time(), math.nextafter(current["updated_at"], math.inf))
             try:
-                conn.execute(
+                changed = conn.execute(
                     """UPDATE email_templates
                        SET name=?,subject_template=?,body_template=?,
                            reminder_subject_template=?,reminder_body_template=?,
                            event_templates=?,enabled=?,updated_at=?
-                       WHERE id=?""",
+                       WHERE id=? AND updated_at=?""",
                     (
                         body.name,
                         templates["requested"]["subject"],
@@ -424,12 +428,15 @@ class Core:
                         templates["reminder"]["body"],
                         json_text(templates),
                         int(body.enabled),
-                        time.time(),
+                        updated_at,
                         ident,
+                        body.expected_updated_at,
                     ),
                 )
             except sqlite3.IntegrityError as exc:
                 raise GrantError("EMAIL_TEMPLATE_NAME_EXISTS", 409) from exc
+            if changed.rowcount != 1:
+                raise GrantError("EMAIL_TEMPLATE_STALE", 409)
             audit(
                 conn,
                 None,
@@ -486,7 +493,8 @@ class Core:
             actor,
             ident,
             NotificationTemplateSetUpdate(
-                name=body.name, templates=templates, enabled=body.enabled
+                name=body.name, templates=templates, enabled=body.enabled,
+                expected_updated_at=body.expected_updated_at,
             ),
         )
         return {"id": ident, **body.model_dump()}
@@ -1059,17 +1067,21 @@ class Core:
             require_current_authority(conn, actor)
             if not conn.execute("SELECT id FROM profiles WHERE id=?", (ident,)).fetchone():
                 raise GrantError("PROFILE_NOT_FOUND", 404)
-            self._validate_profile_refs(conn, body)
             current = latest_version(conn, ident)
+            if (current["id"] != body.expected_version_id
+                    or current["updated_at"] != body.expected_updated_at):
+                raise GrantError("POLICY_STALE", 409)
+            self._validate_profile_refs(conn, body)
             active = active_version(conn, ident)
             if current["lifecycle"] in ("DRAFT", "TESTING"):
-                conn.execute(
+                updated_at = max(time.time(), math.nextafter(current["updated_at"], math.inf))
+                changed = conn.execute(
                     """UPDATE profile_versions
                        SET name=?,integration_id=?,approver_id=?,approval_mode=?,approver_group_id=?,approvals_required=?,action_kind=?,email_template_id=?,
                            deadline_seconds=?,reminder_seconds=?,max_reminders=?,grant_seconds=?,
                            tenant_selector=?,environment=?,severity=?,risk_level=?,
                            lifecycle='DRAFT',updated_at=?,activated_at=NULL,disabled_at=NULL
-                       WHERE id=?""",
+                       WHERE id=? AND updated_at=?""",
                     (
                         body.name,
                         body.integration_id,
@@ -1087,10 +1099,13 @@ class Core:
                         body.environment,
                         body.severity,
                         body.risk_level,
-                        time.time(),
+                        updated_at,
                         current["id"],
+                        body.expected_updated_at,
                     ),
                 )
+                if changed.rowcount != 1:
+                    raise GrantError("POLICY_STALE", 409)
                 version_id = current["id"]
                 version = current["version"]
             else:

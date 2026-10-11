@@ -5,6 +5,25 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## B4 administrator policy / template server revision CAS (2026-10-12)
+
+The candidate now requires exact optimistic-concurrency preconditions on
+policy updates (`expected_version_id`, `expected_updated_at`) and both
+notification-template update interfaces (`expected_updated_at`). The
+server rejects stale edits within the existing serialized SQLite write
+transaction with 409, does not write a successful audit event, and preserves
+current policy verification/denial fields and the complete nine-event
+notification set. The mounted policies editor and reviewed template-save
+flow send the exact revision they originally reviewed. The pre-release
+API intentionally rejects older unversioned update clients with HTTP 422;
+administrators must refresh and explicitly review again after 409.
+
+B4 source/tests can be validated without real SMTP. It does not prove
+independent two-human/two-inbox E2E, native DataRelay Control/Stellar
+execution, actual mailbox receipt, protected G12 RED, or release/CI approval.
+Exact changed-HEAD qualification and authoritative acceptance belong in
+the ACTIVE Work Packet #67 and Roadmap Issue #37.
+
 ## Competitor official-screen evidence → mounted Inbox preview (2026-10-11)
 
 The new owner P0 ordering puts official **screen and task-flow** analysis

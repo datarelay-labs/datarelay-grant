@@ -109,6 +109,8 @@ def test_human_idempotency_uses_active_version_integration_while_draft_changes_t
         env.admin,
         env.profile["id"],
         ProfileUpdate(
+            expected_version_id=env.profile["version_id"],
+            expected_updated_at=env.profile["updated_at"],
             name=env.profile["name"],
             integration_id=secondary["id"],
             approver_id=env.profile["approver_id"],

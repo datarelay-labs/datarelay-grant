@@ -660,8 +660,16 @@ test('G1 browser policy selectors create a matching request and keep latest draf
  expect(actual.source.risk_level).toBe('critical');
  expect(actual.profile_id).toBe(policy.id);
 
+ const policiesBeforeSave=await(await adminContext.request.get('/api/v1/profiles',{headers})).json();
+ const policyForUpdate=policiesBeforeSave.find((row:{id:string})=>row.id===policy.id);
+ expect(policyForUpdate?.version_id).toBeTruthy();
+ expect(Number.isFinite(policyForUpdate?.updated_at)).toBe(true);
  const updated=await adminContext.request.put('/api/v1/profiles/'+policy.id,{
-   headers,data:{...policyInput,name:'Browser selector draft v2'},
+   headers,data:{
+     ...policyInput,name:'Browser selector draft v2',
+     expected_version_id:policyForUpdate.version_id,
+     expected_updated_at:policyForUpdate.updated_at,
+   },
  });
  expect(updated.status()).toBe(200);expect((await updated.json()).version).toBe(2);
  await ap.goto('/profiles');
