@@ -17,6 +17,40 @@ a denied effect through an alternate tool/host/file. Reuse Work Packet #67
 and preserve the original G12 RED, Inbox RED stash and staged source.
 Source/UI unit PASS is not installed Browser/Full User E2E, CI or release.
 
+**P0-UI rev66 — mounted Audit evidence task-first applied-query truth (2026-10-11):**
+The actual administrator `Audit evidence explorer` previously reused
+`useTask.busy` for list and evidence-chain reads; a newer role-scoped
+search was silently skipped while an older request was pending,
+leaving a blank or stale page after changing filter/page. It also
+offered CSV/JSON export of **the prior applied query** while an
+administrator was editing new, unsubmitted filters. The mounted
+`web/src/audit_explorer.tsx` now uses
+`web/src/audit_worklist_current_query.tsx` latest-only
+exact-query/per-page selection and validated server `total`,
+`limit=50`, `offset`, `has_more` and event identity.
+Newer query B starts even while A is pending; old A results/errors
+cannot replace B. The first render after a filter change hides the
+previous query's results, including before a new effect starts;
+out-of-range empty pages after concurrent history changes are
+accepted rather than inventing rows. It labels **Applied search**
+versus edited-but-unapplied fields, disables both exports until
+saved current-query readback and explicit Search, and lets the
+administrator inspect, switch or close one exact request's
+role-scoped evidence chain without a skipped read.
+
+Backend RBAC and audit append-only records, metadata sanitization,
+bounded exports, current execution/evidence authority and external
+actions are unchanged. Synthetic RED-first tests validate stale
+cross-/same-query results/errors, source page contract, export
+eligibility, escaping and selected filter identity. Browser
+regressions exercise actual administrator audit search, two
+export formats, request evidence open/close, disabled stale export,
+and delayed A GET superseded by B without a fabricated backend
+response. These are synthetic read-only fixture checks, **not**
+proof of real two-human email E2E, customer external execution,
+changed-HEAD CI or owner release. The G12 intentionally RED
+candidate patch and protected Inbox stash must remain separate.
+
 **P0 mounted Integrations exact-current diagnostics + issuance-scope parity (rev55, 2026-10-11):**
 Read-only `Integration Diagnostics` previously used one shared
 `useTask.busy`-serialized asynchronous selector. An older GET for A could

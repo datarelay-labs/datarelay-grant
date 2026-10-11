@@ -727,6 +727,9 @@ test('G9 admin audit search, CSV/JSON download and request evidence chain',async
  await login(page,'admin');await page.goto('/audit');
  await expect(page.getByText('Audit evidence explorer',{exact:true})).toBeVisible();
  await page.getByLabel('Request ID',{exact:true}).fill(item.id);
+ // A typed but unapplied filter never silently exports the prior query.
+ await expect(page.getByText('Filter edits not yet applied.',{exact:false})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Export CSV',exact:true})).toBeDisabled();
  // Wait for this exact filtered API response, not stale rows from the initial audit page.
  const filtered=page.waitForResponse(response=>{
   const url=new URL(response.url());
@@ -741,9 +744,13 @@ test('G9 admin audit search, CSV/JSON download and request evidence chain',async
  expect(scopedPage.items.some((event:{action:string})=>event.action==='request.created')).toBe(true);
  // The UI must render the filtered result, not just return correct API data.
  await expect(page.getByRole('cell',{name:'request.created',exact:true})).toHaveCount(1);
+ await expect(page.getByText('Applied search',{exact:false})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Export CSV',exact:true})).toBeEnabled();
  await page.getByRole('button',{name:'Inspect request evidence',exact:true}).first().click();
  await expect(page.getByText('Request-to-result evidence chain',{exact:true})).toBeVisible();
  await expect(page.getByText(item.action_hash,{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Close selected request evidence',exact:true}).click();
+ await expect(page.getByText('Request-to-result evidence chain',{exact:true})).toHaveCount(0);
  for(const format of ['json','csv'] as const){
    const pending=page.waitForEvent('download');
    await page.getByRole('button',{name:format==='csv'?'Export CSV':'Export JSON',exact:true}).click();
@@ -993,4 +1000,54 @@ test('B4 full notification template set create and update require exact Review t
   await page.getByRole('button',{name:'Refresh saved template set',exact:true}).click();
   await expect(page.getByRole('button',{name:'Confirm template set update',exact:true})).toHaveCount(0);
  }finally{await context.close();}
+});
+
+// B5 synthetic administrator UI. The browser delays A's real backend GET
+// without forging a response; a later B selection must win and an unsearched
+// draft must not export a stale applied result.
+test('B5 audit explorer keeps exact B query while delayed old A response arrives',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ let markASeen!:()=>void;
+ const aSeen=new Promise<void>(resolve=>{markASeen=resolve;});
+ let releaseA!:()=>void;
+ const aMayContinue=new Promise<void>(resolve=>{releaseA=resolve;});
+ const idA='b5-synthetic-old-filter-A';
+ const idB='b5-synthetic-current-filter-B';
+ try{
+  await login(page,'admin');
+  await page.goto('/audit');
+  await expect(page.getByText('Applied search',{exact:false})).toBeVisible();
+  await page.route('**/api/v1/admin/audit/search?*',async route=>{
+   const target=new URL(route.request().url()).searchParams.get('request_id');
+   if(target===idA){
+    markASeen();
+    await aMayContinue;
+   }
+   await route.continue();
+  });
+  await page.getByLabel('Request ID',{exact:true}).fill(idA);
+  await expect(page.getByRole('button',{name:'Export CSV',exact:true})).toBeDisabled();
+  await page.getByRole('button',{name:'Search evidence',exact:true}).click();
+  await aSeen;
+  await page.getByLabel('Request ID',{exact:true}).fill(idB);
+  await expect(page.getByRole('button',{name:'Export CSV',exact:true})).toBeDisabled();
+  await page.getByRole('button',{name:'Search evidence',exact:true}).click();
+  await expect(page.getByText('Request ID: '+idB,{exact:false})).toBeVisible();
+  await expect(page.getByText('No matching audit events.',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Export CSV',exact:true})).toBeEnabled();
+  const lateResponse=page.waitForResponse(r=>{
+   const url=new URL(r.url());
+   return url.pathname==='/api/v1/admin/audit/search'
+     &&url.searchParams.get('request_id')===idA;
+  });
+  releaseA();
+  await lateResponse;
+  await expect(page.getByText('Request ID: '+idB,{exact:false})).toBeVisible();
+  await expect(page.getByText('No matching audit events.',{exact:true})).toBeVisible();
+  await expect(page.getByText('Request ID: '+idA,{exact:false})).toHaveCount(0);
+ }finally{
+  releaseA();
+  await context.close();
+ }
 });

@@ -5,6 +5,23 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## B5 mounted Audit evidence worklist, exact applied-query read (2026-10-11)
+
+The administrator `Audit evidence explorer` now independently fetches the
+latest exact saved search/offset even when an earlier query remains in flight.
+Its server-returned page budget and event identity are verified before
+presentation. Unapplied draft filter edits are explicitly distinguished
+from the active search and block exports of the old search until the user
+selects **Search evidence**; CSV/JSON still come only from the authenticated
+bounded export endpoint. A selected request evidence chain may be closed or
+replaced without silently reusing an old request's history.
+
+This is a read-only UI fidelity and usability change, not a new
+administrative permission, audit-data mutation, independent execution proof
+or real-user/mailbox acceptance. Exact Web/Static and isolated browser
+qualification receipts belong in the current Work Packet; this status
+records the source contract, not production readiness.
+
 ## G11 pure consumer pre-consume snapshot validation (2026-10-10)
 
 A current Grant request readback made **before** a new execution commitment
