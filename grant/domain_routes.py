@@ -3,6 +3,7 @@
 from typing import Literal
 
 from fastapi import Query, Request, Response
+from fastapi.responses import FileResponse
 
 from .integration_diagnostics import configuration_manifest, diagnostics
 from .models import (
@@ -51,7 +52,22 @@ def register_domain(app, actor, human, reader):
             raise GrantError("DECISION_ORIGIN_REQUIRED", 403)
 
     @app.get("/api/v1/decision-intents/{token}")
-    def preview_decision_link(token: str):
+    def preview_decision_link(token: str, request: Request):
+        # Preserve the *identical issued capability URL* for older emails
+        # and JSON clients. Actual browser navigations send text/html first;
+        # they receive ONLY the inert compiled client shell, with no token
+        # lookup, decision state, PIN check, OTP send or side effect.
+        # The client explicitly performs the existing JSON preflight using
+        # Accept: application/json, and server POSTs remain the sole authority.
+        if request.headers.get("accept", "").lower().startswith("text/html"):
+            from .errors import GrantError
+            index = core.settings.web_root.resolve() / "index.html"
+            if not index.is_file():
+                raise GrantError("FRONTEND_NOT_BUILT", 503)
+            return FileResponse(
+                index, media_type="text/html",
+                headers={"Vary": "Accept"},
+            )
         from .decision_links import DecisionLinks
         return DecisionLinks(core.db, core.settings).preview(token)
 
