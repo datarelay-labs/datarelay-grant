@@ -1,5 +1,93 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## NEXT_CHAT_START — resume EXACTLY P0-1 competitor UI analysis first (2026-10-11 owner instruction)
+
+**Entry lane:** `datarelay-labs/datarelay-grant` on
+`dev-atlas`, branch `feat/grant-g10a-g0-integrated-candidate`,
+reuse **ACTIVE Work Packet #67**, roadmap **Issue #37** and Draft **PR #100**.
+Read the latest `NEXT_CHAT_START` handoff on Issue #37, this top
+section and the current screen-evidence file. Do **not** redo full repo/
+worktree research or begin by resuming the uncommitted email PIN UI
+experiment. At handoff, **P0-1 research is the first runnable task,
+not a new planning discussion or P0-2 source implementation.**
+
+**ROADMAP 1 / P0-1 — actually analyze competitor UIs and their workflows:**
+1. Choose the most valuable remaining *screen families* for Grant:
+   approval Inbox / selected request detail, requester new request,
+   email decision PIN/OTP, approver/group/policy Administration and
+   notification/evidence views. For each, start from the already
+   captured exact official screenshot and workflow links in
+   `docs/UX_COMPETITOR_SCREEN_DECISIONS_20261011.md`; gather any missing
+   first-party visual evidence rather than re-summarizing feature docs.
+   Record visual hierarchy, navigation, role, primary/secondary actions,
+   selection and review-confirm transitions, mobile/keyboard behavior,
+   and what Grant lacks at the exact current HEAD.
+2. **Actively use REA where it adds evidence**: prioritize an actual
+   licensed/open-source UI target such as Windmill, Keycloak or a
+   precisely licensed Teleport OSS subset. Confirm an immutable tag/
+   commit, original license and analysis rights *before* retrieving
+   source. Reuse the pinned Keycloak 26.5.7 / REA 6.3.0 17-file
+   historical run but **do not count it as a new run**. When a new
+   target is lawful and materially useful, run the **cached
+   `rea-agents@6.3.0` read-only, isolated JavaScript-source** analysis,
+   capturing exact CLI, target SHA, selected TSX paths, evidence,
+   success/error, and no proprietary source copy. The previous
+   general native REA doctor exited 1 because Hopper/Ghidra are not
+   available; that is *not* proof JS AST analysis is unavailable.
+   If the exact run is blocked by installation/authorization/tool
+   policy, report the exact reason and continue official screenshot
+   analysis rather than bypassing it. REA is an active task, not a
+   ceremonial recommendation.
+3. **P0-1 deliverable:** evidence-backed `candidate → vendor screen
+   steps → current Grant gap → expected operator benefit → allowed
+   implementation file(s) → license/REA evidence → risk/acceptance
+   test` table. Distinguish vendor-published screenshots, authenticated
+   live observation, actual REA static evidence and unknown claims.
+   Prioritize the best 3–5 adoptable differences and identify
+   already implemented/deferred features explicitly.
+
+**ROADMAP 2 / P0-2 — immediately implement the selected differences:**
+Only after P0-1 evidence/selection is recorded, implement the
+highest-ranked *unimplemented* accepted feature directly in **mounted
+Grant UI** with RED→GREEN deterministic tests, official Web/API/Static
+as relevant, installed disposable-browser scenario, and GitHub
+commit/push + Issue #37/Work Packet #67 evidence. Then continue the
+next selected UI target in the same workstream while safely runnable;
+do not stop at research/status. Never clone proprietary vendor source
+or silently downgrade server authority, OTP/MFA, approval, execution,
+governance or release controls.
+
+**Preserve currently unfinished prior work:** The earlier rev72
+email landing is **IN PROGRESS / NOT COMMITTED** and must remain
+untouched until P0-1 selects it in ROADMAP 2:
+- `grant/domain_routes.py`: staged? **NO**, unstaged browser
+  `Accept: text/html` response negotiation for the existing issued
+  token, while `Accept: application/json` stays the old API; focused
+  local `tests/test_g10a_email_human_landing.py` + existing
+  `tests/test_g10a_email_decisions.py` exercised 14/14 PASS
+  in the prior chat, **not yet full qualification**.
+- Untracked `tests/test_g10a_email_human_landing.py`, and untracked
+  deliberately **RED** `web/tests/unit/email-decision-public-landing.test.ts`
+  because `web/src/email_decision_landing.tsx` has **not** been
+  implemented/mounted. Do not report a usable emailed PIN page.
+- Original independent G12 intentionally RED test
+  `tests/test_candidate_builder_integrity.py` **unstaged**,
+  SHA256 of its git diff
+  `cd7252633d96b424aa4e8f24ae08a8660f9663828b5fdffc0285ce9a73e68d4f`.
+  Original Inbox RED stash object:
+  `03cf0142b688baa17892e48785ff01803fa81c0e`.
+- Previous last qualified/committed rev71 product source:
+  `6b92069a4e2a65ba4156e1efa4203915c903dc16`,
+  official native Web 632/632, Static PASS and synthetic isolated
+  Chromium 37/37 (NOT independent real users/inboxes/CI/release).
+  Exact HEAD may advance **only by documented safe handoff changes**.
+
+**Release is still gated:** PR #100 remains Draft and governance-floor
+fails (`main` epoch26 vs feature epoch14). Do not merge, bypass
+governance or weaken Grant `persistent_state=true` /
+`runbook_required=true`. Live two-person/two-mailbox E2E and
+Control/Stellar native-effect verification remain unqualified.
+
 **CURRENT OWNER P0 EXECUTION ORDER (2026-10-11, latest approved):**
 **1. COMPETITOR ACTUAL UI/UX ANALYSIS FIRST → 2. SELECT GRANT ADOPTION TARGETS AND IMPLEMENT SECOND.**
 This *replaces* the previous implementation-first priority without deleting
