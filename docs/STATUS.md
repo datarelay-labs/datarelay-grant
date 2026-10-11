@@ -5,6 +5,20 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## B3 Foundation Administration mail-test reviewed task (2026-10-11)
+
+The Grant consumer's shared Foundation Administration hub now
+requires an explicit read-only recipient/subject review before
+attempting one existing administrator SMTP test email. The UI
+deliberately does not allow third-party recipients, silently retry
+an uncertain transport outcome, claim independently verified mailbox
+receipt or run a protected external action. The Grant backend
+remains authoritative over current administrator role, email
+address, sender configuration, recipient and mail-test rate limits.
+This is narrower than full Foundation consumer/multi-role adoption;
+its synthetic fixture browser evidence does not qualify actual
+separate customer actors or email accounts.
+
 ## G7 mounted Operations task-first exception worklist (2026-10-11)
 
 The administrator Operations surface now presents exact server-backed

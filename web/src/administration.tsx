@@ -4,6 +4,7 @@ import {
   AdministrationHub,
   createStandardAdministrationTasks,
   AuditList,
+  Alert,
   Button,
   Card,
   MfaEnrollmentPanel,
@@ -22,6 +23,12 @@ import {
   type SystemInfoProjection,
 } from '@datarelay-labs/foundation';
 import { api } from './api';
+import {
+  AdministrationMailReviewConfirmation,createAdministrationMailReview,
+  isCurrentAdministrationMailReview,createAdministrationMailAttemptGuard,
+  submitReviewedAdministrationMailTest,
+  type AdministrationMailReview,type AdministrationMailReceipt,
+} from './administration_mail_test_review';
 import {
   accountsAdapter,
   authAdapter,
@@ -48,6 +55,10 @@ export function Administration({ user }: { user: User }) {
   const [health, setHealth] = useState<HealthProjection>();
   const [info, setInfo] = useState<SystemInfoProjection>();
   const [section, setSection] = useState<AdminSection>(null);
+  const sectionRef=useRef<AdminSection>(null);
+  const [reviewedMail,setReviewedMail]=useState<AdministrationMailReview|null>(null);
+  const [mailAttempted,setMailAttempted]=useState(false);
+  const mailTestGuard=useRef(createAdministrationMailAttemptGuard());
   const selectedDetailRef = useRef<HTMLDivElement>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -134,7 +145,42 @@ export function Administration({ user }: { user: User }) {
       'grant.smtp.test': 'mail',
       'core.backup-import': 'lifecycle',
     };
-    setSection(next[selected.id] ?? null);
+    const destination=next[selected.id]??null;
+    sectionRef.current=destination;
+    setReviewedMail(null);
+    setSection(destination);
+  }
+
+  function reviewMailTest(){
+    if(mailTestGuard.current.blocked())return;
+    try{
+      setReviewedMail(createAdministrationMailReview(user));
+    }catch{
+      setReviewedMail(null);
+      task.setNotice('A current, administrator-owned mailbox is required before testing email delivery.');
+    }
+  }
+
+  async function confirmMailTest(){
+    const intent=reviewedMail;
+    if(!intent||sectionRef.current!=='mail'
+      ||!isCurrentAdministrationMailReview(intent,user)){
+      setReviewedMail(null);
+      throw Error('MAIL_TEST_REVIEW_CHANGED');
+    }
+    if(mailTestGuard.current.blocked())return;
+    setReviewedMail(null);
+    const receipt=await submitReviewedAdministrationMailTest(
+      intent,mailTestGuard.current,user,
+      ()=>{
+        setMailAttempted(true);
+        return api<AdministrationMailReceipt>('/admin/mail-test','POST');
+      },
+      ()=>sectionRef.current==='mail',
+    );
+    if(receipt&&sectionRef.current==='mail'){
+      task.setNotice('SMTP transport accepted one administrator test email (event '+receipt.event_id+'). Inbox receipt is not independently verified. Do not automatically repeat this action.');
+    }
   }
 
   return (
@@ -248,18 +294,29 @@ export function Administration({ user }: { user: User }) {
           description="Transport acceptance does not prove inbox receipt and this test never authorizes execution."
         >
           <Button
-            disabled={task.busy}
-            onClick={() =>
-              void task.run(async () => {
-                await api('/admin/mail-test', 'POST');
-                task.setNotice(
-                  'SMTP accepted the test message for your account. Verify actual receipt separately.',
-                );
-              })
-            }
+            disabled={task.busy||mailTestGuard.current.blocked()}
+            onClick={reviewMailTest}
           >
-            Send test email to me
+            Review mail test to me
           </Button>
+          <AdministrationMailReviewConfirmation
+            reviewed={reviewedMail}
+            busy={task.busy||mailTestGuard.current.blocked()}
+            valid={Boolean(sectionRef.current==='mail'
+              &&isCurrentAdministrationMailReview(reviewedMail,user))}
+            onBack={()=>setReviewedMail(null)}
+            onConfirm={()=>{void task.run(confirmMailTest);}}
+          />
+          {mailTestGuard.current.blocked()&&<Alert tone="warning"
+            title="Review prior mail test before any separate attempt">
+            {mailAttempted
+              ? 'An SMTP test email may have been accepted; an uncertain result must not be retried automatically.'
+              : 'A mail test is currently being verified.'}
+            {' '}Inspect the recipient's actual mailbox and administrative
+            audit evidence before scheduling any separate test. This
+            client does not prove inbox receipt or grant an approval.
+            Another test requires fresh explicit operator review.
+          </Alert>}
         </Card>
       ) : null}
 

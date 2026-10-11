@@ -17,6 +17,37 @@ a denied effect through an alternate tool/host/file. Reuse Work Packet #67
 and preserve the original G12 RED, Inbox RED stash and staged source.
 Source/UI unit PASS is not installed Browser/Full User E2E, CI or release.
 
+**P0-UI rev69 — mounted Foundation Administration mail-test Review→Confirm (2026-10-11):**
+The Grant consumer's real `Administration → Mail & Notifications →
+Mail delivery test` previously immediately issued the existing
+administrator-only `POST /admin/mail-test` from one button click.
+A synthetic recipient in an isolated test would receive mail without
+a final human review of the operation. Mounted
+`web/src/administration.tsx` now offers an explicit **Review mail test
+to me → Confirm mail test to me** flow through a new product-owned,
+`web/src/administration_mail_test_review.tsx` helper. It freezes
+the currently authenticated administrator's **own** account ID,
+username and exact email address and shows the existing fixed
+test-mail subject, not an arbitrary recipient or new credential.
+A synchronous one-shot guard prevents same-render duplicate submits,
+rejects stale task/role/recipient drift and verifies the server's
+`{smtp_accepted:true,event_id}` response without inferring a
+received mailbox message or permission to approve/execute. Any
+ambiguous or accepted mail-test POST remains latched for the current
+mounted page until the operator separately reopens/reviews the
+administration task; no automatic resend.
+
+The server's existing administrator RBAC, authorized recipient-only
+restriction, SMTP settings, bounded five-per-60s test-mail limiter
+and current-authority validation remain **UNCHANGED**. Eight new
+RED-first→GREEN deterministic tests and existing Foundation consumer
+tests validate the guard and shared task grouping. A targeted
+real-mounted synthetic Chromium administrator journey confirms **no
+local fixture mail after Review** and exactly one message to the
+disposable administrator mailbox after explicit Confirm. This is
+NOT live customer SMTP delivery, independent mailbox receipt,
+general account-role rollout, server multi-admin CAS or release.
+
 **P0-UI rev68 — Operations exceptions task-first current-source worklist (2026-10-11):**
 The mounted administrator `Operations → Exceptions to resolve` formerly
 displayed five NOC-like metric cards without visible per-case next steps.

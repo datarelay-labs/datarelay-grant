@@ -1122,3 +1122,31 @@ test('G7 Operations exceptions open exact role-scoped reconciliation queue',asyn
   await expect(page.getByRole('button',{name:'Approve',exact:true})).toHaveCount(0);
  }finally{await context.close();}
 });
+
+// B3 actual Foundation Administration consumer, synthetic local SMTP only.
+// Review is read-only. Confirm sends exactly one existing admin-only test
+// notification to the fixture administrator, not a real mailbox/approval.
+test('B3 Administration mail-test requires exact Review then one Confirm',async({browser})=>{
+ const f=fixture();
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ try{
+  await login(page,'admin');
+  await page.goto('/system');
+  await page.getByRole('button',{name:'Manage Mail delivery test',exact:true}).click();
+  await expect(page.getByText('Mail delivery test',{exact:true}).first()).toBeVisible();
+  const before=await(await context.request.get(f.receiver)).json();
+  const previous=before.mail.length;
+  await page.getByRole('button',{name:'Review mail test to me',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Confirm mail test to me',exact:true})).toBeVisible();
+  const unchanged=await(await context.request.get(f.receiver)).json();
+  expect(unchanged.mail).toHaveLength(previous);
+  await page.getByRole('button',{name:'Confirm mail test to me',exact:true}).click();
+  await expect(page.getByText('SMTP transport accepted one administrator test email',{exact:false})).toBeVisible();
+  await expect.poll(async()=>(
+    await(await context.request.get(f.receiver)).json()
+  ).mail.length).toBe(previous+1);
+  await expect(page.getByRole('button',{name:'Review mail test to me',exact:true})).toBeDisabled();
+  await expect(page.getByRole('button',{name:'Confirm mail test to me',exact:true})).toHaveCount(0);
+ }finally{await context.close();}
+});
