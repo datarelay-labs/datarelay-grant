@@ -1031,6 +1031,14 @@ test('B4 full notification template set create and update require exact Review t
   expect((await before.json()).some((item:any)=>item.name===title)).toBe(false);
   await page.getByRole('button',{name:'Confirm template set creation',exact:true}).click();
   await expect(page.getByRole('button',{name:'Refresh saved template set',exact:true})).toBeVisible();
+  // The view can enter its reconciliation state before the actual POST is
+  // durably reflected in a subsequent GET. Poll the AUTHORITY, not a timer.
+  await expect.poll(async()=>{
+   const response=await context.request.get('/api/v1/notification-template-sets');
+   expect(response.status()).toBe(200);
+   const found=(await response.json()).find((item:any)=>item.name===title);
+   return found?.templates?.requested?.subject;
+  }).toBe('[Fixture] {{request_title}}');
   const after=await context.request.get('/api/v1/notification-template-sets');
   const created=(await after.json()).find((item:any)=>item.name===title);
   expect(created).toBeTruthy();
@@ -1046,6 +1054,12 @@ test('B4 full notification template set create and update require exact Review t
   expect(unchanged.templates.requested.subject).toBe('[Fixture] {{request_title}}');
   await page.getByRole('button',{name:'Confirm template set update',exact:true}).click();
   await expect(page.getByRole('button',{name:'Refresh saved template set',exact:true})).toBeVisible();
+  await expect.poll(async()=>{
+   const response=await context.request.get('/api/v1/notification-template-sets');
+   expect(response.status()).toBe(200);
+   const found=(await response.json()).find((item:any)=>item.id===created.id);
+   return found?.templates?.requested?.subject;
+  }).toBe('[Fixture updated] {{request_title}}');
   const afterUpdate=await context.request.get('/api/v1/notification-template-sets');
   const updated=(await afterUpdate.json()).find((item:any)=>item.id===created.id);
   expect(updated.templates.requested.subject).toBe('[Fixture updated] {{request_title}}');
