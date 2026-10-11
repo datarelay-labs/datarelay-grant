@@ -58,6 +58,8 @@ describe('P0-2C decision-first request activity disclosure', () => {
     expect(html).toContain('Reviewer vote count unavailable');
     expect(html).toContain('Delivery count unavailable');
     expect(html).toContain('Timeline count unavailable');
+    expect(html).not.toContain('0 recorded votes');
+    expect(html).toContain('Reviewer vote list unavailable.');
     expect(html).not.toContain('0 delivery attempts');
     expect(html).not.toContain('0 timeline events');
   });

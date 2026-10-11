@@ -73,7 +73,9 @@ export function RequestEvidence({
           ) : (
             <>
               <strong>Approval progress unavailable</strong>
-              {' · '}{votes.length} recorded vote{votes.length === 1 ? '' : 's'} (not verified quorum)
+              {' · '}{row.decisions === undefined
+                ? 'Recorded vote count unavailable'
+                : `${votes.length} recorded vote${votes.length === 1 ? '' : 's'} (not verified quorum)`}
             </>
           )}
           {' · '}{row.approval_plan?.mode ?? 'Approval plan unavailable'}
