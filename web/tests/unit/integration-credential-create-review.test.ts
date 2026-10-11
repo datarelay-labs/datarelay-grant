@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   prepareCredentialIssueReview, isCurrentCredentialIssueReview,
   CredentialIssueConfirmation, OneTimeCredentialSecret,
+  copyVisibleCredentialSecret,
   createCredentialIssueGuard, submitReviewedCredentialIssue,
   verifyCredentialIssueReceipt,
 } from '../../src/integration_credential_create_review';
@@ -178,6 +179,41 @@ describe('P0 task-first reviewed scoped credential creation', () => {
     expect(html).toContain('Hide credential');
     expect(html).not.toContain('localStorage');
   });
+  it('one-time token shows an explicit Copy credential action only with a raw receipt',()=>{
+    const visible=renderToStaticMarkup(createElement(OneTimeCredentialSecret,{
+      raw:payload.token,tokenId:payload.id,onHide:()=>undefined,
+    }));
+    expect(visible).toContain('Copy credential');
+    expect(visible).toContain('Hide credential');
+    expect(visible).toContain('Clipboard contents may remain after hiding');
+    const hidden=renderToStaticMarkup(createElement(OneTimeCredentialSecret,{
+      raw:'',tokenId:'',onHide:()=>undefined,
+    }));
+    expect(hidden).not.toContain('Copy credential');
+    expect(hidden).not.toContain(payload.token);
+  });
+
+  it('only explicitly requested Copy submits the raw value to the injected clipboard writer',async()=>{
+    const copied:string[]=[];
+    const write=async(raw:string)=>{copied.push(raw)};
+    expect(copied).toEqual([]);
+    await copyVisibleCredentialSecret(payload.token,write);
+    expect(copied).toEqual([payload.token]);
+  });
+
+  it('never tries to copy a hidden or unavailable secret',async()=>{
+    let writes=0;
+    await expect(copyVisibleCredentialSecret('',async()=>{writes++}))
+      .rejects.toThrow('CREDENTIAL_SECRET_UNAVAILABLE');
+    expect(writes).toBe(0);
+  });
+
+  it('does not claim a clipboard copy succeeded when writing fails',async()=>{
+    const failure=new Error('CLIPBOARD_PERMISSION_DENIED');
+    await expect(copyVisibleCredentialSecret(payload.token,
+      async()=>{throw failure;})).rejects.toBe(failure);
+  });
+
   it('escapes untrusted integration names/scopes in review rather than rendering markup', () => {
     const html=confirmation({...source,name:'<script>alert(1)</script>'});
     expect(html).toContain('&lt;script&gt;');

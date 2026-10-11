@@ -1,3 +1,4 @@
+import {useState} from 'react';
 import { Alert, Button } from '@datarelay-labs/foundation';
 import type { Integration } from './types';
 
@@ -169,18 +170,63 @@ export function CredentialIssueConfirmation({
   </Alert>;
 }
 
+/** This function has no side effect unless invoked by the user's explicit
+ * Copy click. It never writes to logs, telemetry or persistent browser
+ * storage. In particular, failure must never be reported as copied.
+ */
+export async function copyVisibleCredentialSecret(
+  raw:string, write:(secret:string)=>Promise<void>,
+):Promise<void>{
+  if(!raw)throw new Error('CREDENTIAL_SECRET_UNAVAILABLE');
+  await write(raw);
+}
+
 /** Raw secret is held only in short-lived component memory after an exact
  * server receipt; never sent to analytics, localStorage or errorText.
+ * The operating-system clipboard can outlive this React component and is
+ * controlled by the user, not by Grant after the copy.
  */
 export function OneTimeCredentialSecret({
   raw,tokenId,onHide,
 }:{raw:string;tokenId:string;onHide:()=>void}){
+  const [copyFeedback,setCopyFeedback]=useState<{
+    tokenId:string;status:'copied'|'unavailable';
+  }|null>(null);
+  async function copy(){
+    try{
+      // No automatic copy, and no fallback to legacy clipboard commands.
+      // Clipboard permission and secure-context requirements are enforced by
+      // the browser; Grant never stores a second copy of the token.
+      if(typeof navigator==='undefined'||!navigator.clipboard?.writeText)
+        throw new Error('CLIPBOARD_UNAVAILABLE');
+      await copyVisibleCredentialSecret(raw,
+        (secret)=>navigator.clipboard.writeText(secret));
+      setCopyFeedback({tokenId,status:'copied'});
+    }catch{
+      // Avoid logging exceptions: some browser errors include sensitive
+      // context, and no failed copy should display the secret as feedback.
+      setCopyFeedback({tokenId,status:'unavailable'});
+    }
+  }
   if(!raw)return null;
+  const feedback=copyFeedback?.tokenId===tokenId?copyFeedback.status:null;
   return <Alert tone="warning" title="Store this credential securely — Shown once">
     <p>Credential ID: <code>{tokenId}</code>. The raw secret cannot be
       recovered from credential history. Leaving Credential tools or
       hiding it clears this browser view.</p>
     <p className="grant-mono">{raw}</p>
-    <Button variant="secondary" onClick={onHide}>Hide credential</Button>
+    <p>Clipboard contents may remain after hiding. Copy only when needed,
+      store in an approved secret manager, and clear the system clipboard
+      through your device's approved process.</p>
+    <div className="grant-actions">
+      <Button variant="secondary" onClick={()=>{void copy();}}>
+        Copy credential
+      </Button>
+      <Button variant="secondary" onClick={onHide}>Hide credential</Button>
+    </div>
+    {feedback&&<p role="status">{feedback==='copied'
+      ? 'Credential copied by browser permission. Clipboard contents are not controlled by Grant.'
+      : 'Clipboard copy was not available or not permitted. Select the visible credential manually if authorized.'}
+    </p>}
   </Alert>;
 }

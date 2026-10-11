@@ -346,6 +346,44 @@ B1 full independent-person E2E, B2 emailed PIN public route owner
 approval, B3 shared Foundation consumer E2E, B4 server atomic
 two-admin CAS, B5 native effects/recovery and B6 owner gates remain OPEN.
 
+**P0-UI rev65 — explicit one-time scoped credential copy (2026-10-11):**
+In the actual `Integrations → Credential tools → Create scoped integration
+credential` issuance receipt, the ephemeral raw secret was visible
+but not easily copyable. New **Copy credential** control performs
+clipboard writing **only on the user's click**, guarded by current
+raw token presence and browser permission. Copy feedback is shown
+only after the clipboard API actually succeeds, with generic
+permission/unavailable text (no sensitive error logs). The saved
+credential list, revocation workflow and review state never receive
+or persist the raw secret. The one-time **Hide credential** continues
+to remove it from React's rendered view, and the UI explicitly warns
+that the operating-system clipboard may persist after hiding:
+the user must store in an approved secret manager and clear it
+using their device controls. Clipboard is never auto-cleared,
+silently written to browser storage, or copied automatically.
+Exact changed mounted component:
+`web/src/integration_credential_create_review.tsx`,
+with four deliberate RED→GREEN copy helper/UI unit scenarios in
+`web/tests/unit/integration-credential-create-review.test.ts`
+and a focused disposable-browser secret-copy/Hide assertion in
+`web/tests/browser/approval.spec.ts`.
+Official native Web **577/577 PASS (70 suites)** with TypeScript/Vite
+production build PASS; native Static PASS after original G12
+intentionally RED test path-only backup and exact restoration.
+Focused real mounted synthetic Chromium issue/revoke/COPY scenario
+**1/1 PASS** after rebuilding frontend; same rendered secret was
+read from granted disposable context clipboard and removed from
+view on Hide. A previous Chromium trial used the old web/dist
+asset and was correctly not counted as successful. The rev64
+**31/31 full native synthetic browser** evidence remains the prior
+exact rev64 baseline; this rev65 clipboard-specific test is not
+misrepresented as new same-HEAD 31/31 or full real-user E2E.
+No real machine secrets, OS install, authorization or token
+issuance/revocation backend code changed. B1 two-human/two-mailbox,
+B2 public issued-link PIN auth route (owner approval), B3 shared
+Foundation, B4 two-admin CAS, B5 native effects and B6 CI/release
+remain open.
+
 **Owner replacement decision:** 2026-10-10. **One current roadmap, six major
 delivery bundles (B1–B6), retaining M1–M8 technical scope.** This file supersedes all former sequencing prose in
 ROADMAP.md and the former body of [coordination Issue #37](https://github.com/datarelay-labs/datarelay-grant/issues/37).

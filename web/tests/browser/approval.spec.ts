@@ -215,7 +215,13 @@ test('requester cancels and creates a newly approved replacement through the UI'
 });
 
 test('administrator configures accounts/profile and explicitly revokes a scoped credential',async({browser,request})=>{
- const f=fixture();const context=await browser.newContext();const page=await context.newPage();
+ // Synthetic one-time bearer credential: clipboard permission exists only in
+ // this disposable Chromium context, never on a real administrator account.
+ const f=fixture();
+ const context=await browser.newContext({
+  permissions:['clipboard-read','clipboard-write'],
+ });
+ const page=await context.newPage();
  await login(page,'admin');await page.goto('/system');
  await page.getByRole('button',{name:'Manage User Management',exact:true}).click();
  await page.getByLabel('New username',{exact:true}).fill('browser-member');
@@ -242,7 +248,13 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  const minted=page.waitForResponse(r=>r.url().endsWith('/api/v1/integrations/tokens')&&r.request().method()==='POST');
  await page.getByRole('button',{name:'Confirm create credential',exact:true}).click();
  const credential=await(await minted).json();
+ await expect(page.getByRole('button',{name:'Copy credential',exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Copy credential',exact:true}).click();
+ await expect(page.getByText('Credential copied by browser permission.',{exact:false})).toBeVisible();
+ expect(await page.evaluate(()=>navigator.clipboard.readText())).toBe(credential.token);
  await page.getByRole('button',{name:'Hide credential',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Copy credential',exact:true})).toHaveCount(0);
+ await expect(page.getByText(credential.token,{exact:true})).toHaveCount(0);
  // The same token ID is inspected only from a fresh, role-scoped saved list.
  await page.getByRole('button',{name:'Refresh issued credentials',exact:true}).click();
  await expect(page.getByRole('button',{name:'Review revoke',exact:true})).toBeVisible();
