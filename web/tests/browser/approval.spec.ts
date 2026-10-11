@@ -1150,3 +1150,44 @@ test('B3 Administration mail-test requires exact Review then one Confirm',async(
   await expect(page.getByRole('button',{name:'Confirm mail test to me',exact:true})).toHaveCount(0);
  }finally{await context.close();}
 });
+
+// P0 Grant Group Directory truth, backed by disposable administrator-scoped
+// group/account GETs only. No real users, privileges, or policy changes.
+test('P0 Approver group directory distinguishes saved IDs from enabled account coverage',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ try{
+  await login(page,'admin');
+  const accountsResponse=await context.request.get('/api/v1/admin/users');
+  expect(accountsResponse.status()).toBe(200);
+  const accounts=await accountsResponse.json();
+  const member=accounts.find((account:{id:string;status:string})=>
+    account.status==='enabled'&&Boolean(account.id));
+  expect(member).toBeTruthy();
+  const name='Fixture approver group '+crypto.randomUUID().slice(0,8);
+  // Synthetic admin creates only a disposable group through the current
+  // actual Review -> Confirm UI. No direct API POST or CSRF bypass.
+  await page.goto('/approvers');
+  await page.getByRole('button',{name:'Create approver group',exact:true}).click();
+  await page.getByLabel('Group name',{exact:true}).fill(name);
+  await page.locator('label.grant-checkbox').filter({
+   hasText:member.displayName,
+  }).locator('input[type="checkbox"]').check();
+  await page.getByRole('button',{name:'Review group creation',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Confirm save group',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Confirm save group',exact:true}).click();
+  const row=page.getByRole('row').filter({hasText:name});
+  await expect(row).toBeVisible();
+  await expect(row.getByText('1 / 1 currently enabled accounts',{exact:false})).toBeVisible();
+  await expect(page.getByText('Saved membership is not proof of current decision eligibility',{exact:false})).toBeVisible();
+  // A successfully issued group creation still requires explicit original
+  // group-list reconciliation before the next security-sensitive edit.
+  await expect(row.getByRole('button',{name:'Review group',exact:true})).toBeDisabled();
+  await page.getByRole('button',{name:'Refresh saved groups',exact:true}).click();
+  await expect(row.getByRole('button',{name:'Review group',exact:true})).toBeEnabled();
+  await row.getByRole('button',{name:'Review group',exact:true}).click();
+  await expect(page.getByText('Edit approver group',{exact:false})).toBeVisible();
+  await expect(page.getByLabel('Group name',{exact:true})).toHaveValue(name);
+  await expect(page.getByText('Saved group membership: 1 member(s)',{exact:false})).toBeVisible();
+ }finally{await context.close();}
+});

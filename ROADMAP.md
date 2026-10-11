@@ -17,6 +17,45 @@ a denied effect through an alternate tool/host/file. Reuse Work Packet #67
 and preserve the original G12 RED, Inbox RED stash and staged source.
 Source/UI unit PASS is not installed Browser/Full User E2E, CI or release.
 
+**P0-UI rev70 — mounted Approver Groups directory saved-vs-enabled truth (2026-10-11):**
+The original `Administration → Approver groups` list showed only
+`group.member_ids.length`, although an administrator needs to
+recognize whether those saved IDs still correspond to currently
+enabled accounts before editing a group for future approval
+policies. Initial `useTask` loading could also show **No approver
+groups** before the first role-scoped GET, misleading operators
+about whether groups exist. Added read-only
+`web/src/approver_group_directory_truth.tsx` and wired it to
+the existing mounted `web/src/approvers.tsx`.
+The list now shows both saved IDs and latest administrator-scoped
+active-account lookup coverage, distinct disabled groups,
+absent/disabled member warnings, repeated or empty saved member
+identities, and explicit **Account status not checked** for missing
+account evidence. It labels this as **account coverage rather than
+approval eligibility or quorum**. The unverified loading/error state
+no longer fabricates an empty group directory. No actual membership
+or approval authority, server group editor, versioned CAS, external
+execution or historical request plan is changed.
+
+**A real installed synthetic Chromium run exposed a backend parity
+defect**: SQLite's `GET /approver-groups` returns `enabled=0/1`
+number while create/update receipts and frontend `ApproverGroup`
+type use `false/true`. The initial overly strict list validator
+rejected a successfully saved group as unavailable after Confirm.
+Confirmed this exact response schema from the isolated browser
+network fixture, added intentional RED test for numeric `enabled=1`
+and `enabled=0`, and normalized **only exact boolean or 0/1
+values** in the read-only UI adapter, rejecting unrelated strings or
+numbers. The real group test creates a disposable group using
+current `Review group creation → Confirm save group` UI, explicitly
+`Refresh saved groups` after the privileged POST, then verifies
+the accurate `1 / 1 currently enabled accounts` row and exact
+group editor. No unauthorized direct API POST or CSRF bypass is used.
+New source tests and full Web/Static/browser evidence must be
+qualified before marking this mounted candidate ready for
+independent human and release gates; fixture groups are not
+real customer group deployment.
+
 **P0-UI rev69 — mounted Foundation Administration mail-test Review→Confirm (2026-10-11):**
 The Grant consumer's real `Administration → Mail & Notifications →
 Mail delivery test` previously immediately issued the existing

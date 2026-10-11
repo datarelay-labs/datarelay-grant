@@ -4,6 +4,10 @@ import { api } from './api';
 import { Form, useTask, when } from './common';
 import type { ApproverGroup } from './types';
 import {
+  ApproverGroupAccountCoverage,createApproverDirectoryReadScope,
+  readCurrentApproverDirectory,type GroupAccountProjection,
+} from './approver_group_directory_truth';
+import {
   ApproverGroupSaveConfirmation,
   createApproverGroupSaveGuard,
   isCurrentApproverGroupReview,
@@ -39,16 +43,20 @@ export function filterApproverGroups(
 }
 
 export function ApproverGroupDirectory({
-  groups, search, busy, onSearchChange, onOpen, onCreate,
+  groups,accounts=null,loaded=true,error='',search,busy,
+  onSearchChange,onOpen,onCreate,
 }: {
   groups: readonly ApproverGroup[];
+  accounts?: readonly GroupAccountProjection[]|null;
+  loaded?: boolean;
+  error?: string;
   search: string;
   busy: boolean;
   onSearchChange: (next: string) => void;
   onOpen: (group: ApproverGroup) => void;
   onCreate: () => void;
 }) {
-  const matches = filterApproverGroups(groups, search);
+  const matches=loaded?filterApproverGroups(groups,search):[];
   return (
     <Card
       title="Approver groups"
@@ -59,8 +67,14 @@ export function ApproverGroupDirectory({
         label="Search approver groups" value={search}
         onChange={(event) => onSearchChange(event.target.value)}
       />
-      <p>{matches.length} of {groups.length} groups</p>
-      <div className="grant-table-scroll">
+      {!loaded&&<p role="status">Loading current saved approver groups and
+        account lookup. No missing groups or eligible reviewer claims yet.</p>}
+      {error&&<Alert tone="critical" title="Unable to load saved approver groups">
+        {error}
+      </Alert>}
+      {loaded&&<p>{matches.length} of {groups.length} groups.
+        Saved membership is not proof of current decision eligibility.</p>}
+      {loaded&&<div className="grant-table-scroll">
         <table className="grant-table">
           <thead>
             <tr><th>Group</th><th>Status</th><th>Members</th><th>Updated</th><th>Action</th></tr>
@@ -70,7 +84,10 @@ export function ApproverGroupDirectory({
               <tr key={group.id}>
                 <td>{group.name}</td>
                 <td>{group.enabled ? 'Enabled' : 'Disabled'}</td>
-                <td>{group.member_ids.length} member{group.member_ids.length === 1 ? '' : 's'}</td>
+                <td>{group.member_ids.length} member{group.member_ids.length===1?'':'s'}
+                  {' '}saved IDs
+                  <ApproverGroupAccountCoverage group={group} accounts={accounts}/>
+                </td>
                 <td>{when(group.updated_at)}</td>
                 <td>
                   <Button variant="secondary" disabled={busy} onClick={() => onOpen(group)}>
@@ -81,8 +98,8 @@ export function ApproverGroupDirectory({
             ))}
           </tbody>
         </table>
-      </div>
-      {!matches.length && (
+      </div>}
+      {loaded&&!error&&!matches.length&&(
         <p>{groups.length ? 'No groups match your search.' :
           'No approver groups. Create a group to configure reusable approvers.'}</p>
       )}
@@ -93,6 +110,10 @@ export function ApproverGroupDirectory({
 export function Approvers() {
   const [groups, setGroups] = useState<ApproverGroup[]>([]);
   const [users, setUsers] = useState<AccountProjection[]>([]);
+  const [accountInventory,setAccountInventory]=useState<AccountProjection[]|null>(null);
+  const [directoryLoaded,setDirectoryLoaded]=useState(false);
+  const [directoryError,setDirectoryError]=useState('');
+  const directoryRead=useRef(createApproverDirectoryReadScope());
   const [editing, setEditing] = useState('');
   const [view, setView] = useState<'list' | 'editor'>('list');
   const [search, setSearch] = useState('');
@@ -105,16 +126,34 @@ export function Approvers() {
   const saveGuard = useRef(createApproverGroupSaveGuard());
   const task = useTask();
 
-  async function load() {
-    const [groupRows, accounts] = await Promise.all([
-      api<ApproverGroup[]>('/approver-groups'),
-      api<AccountProjection[]>('/admin/users'),
-    ]);
-    setGroups(groupRows);
-    setUsers(accounts.filter((user) => user.status === 'enabled'));
+  async function load():Promise<boolean> {
+    setDirectoryLoaded(false);
+    setDirectoryError('');
+    try{
+      return await readCurrentApproverDirectory(directoryRead.current,
+        async()=>{
+          const [groupRows,accountRows]=await Promise.all([
+            api<ApproverGroup[]>('/approver-groups'),
+            api<AccountProjection[]>('/admin/users'),
+          ]);
+          return {groups:groupRows,accounts:accountRows};
+        },
+        result=>{
+          setGroups(result.groups);
+          setAccountInventory(result.accounts);
+          setUsers(result.accounts.filter(user=>user.status==='enabled'));
+          setDirectoryLoaded(true);
+        },
+      );
+    }catch(error){
+      setAccountInventory(null);
+      setDirectoryLoaded(false);
+      setDirectoryError('The current role-scoped group or account list could not be verified.');
+      throw error;
+    }
   }
 
-  useEffect(() => { void task.run(load); }, []);
+  useEffect(() => { void task.run(async()=>{await load();}); }, []);
 
   function edit(group: ApproverGroup) {
     if (saveGuard.current.blocked()) return;
@@ -221,7 +260,8 @@ export function Approvers() {
   }
 
   async function refreshGroups() {
-    await load();
+    const current=await load();
+    if(!current)throw new Error('APPROVER_DIRECTORY_NOT_CURRENT');
     if (!saveGuard.current.readSucceeded()) {
       throw new Error('APPROVER_GROUP_SAVE_STILL_IN_FLIGHT');
     }
@@ -254,7 +294,10 @@ export function Approvers() {
     )}
     {view === 'list' ? (
       <ApproverGroupDirectory
-        groups={groups} search={search} busy={task.busy || saveGuard.current.blocked()}
+        groups={groups} accounts={accountInventory}
+        loaded={directoryLoaded} error={directoryError}
+        search={search}
+        busy={task.busy||saveGuard.current.blocked()||!directoryLoaded}
         onSearchChange={setSearch} onOpen={edit} onCreate={startCreate}
       />
     ) : (

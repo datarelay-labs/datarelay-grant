@@ -5,6 +5,29 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## B1 Approver Group directory saved member/account coverage (2026-10-11)
+
+The administrator's mounted reusable approver group directory now
+shows both the saved membership IDs and whether each corresponds
+to a currently enabled account returned by the administrator's
+role-scoped account list. Missing/disabled account projections
+and duplicate/invalid saved IDs display explicit warnings instead
+of being treated as verified approval seats. Disabled group state
+and unknown account-lookup state remain distinct; the group list
+does not invent a zero-group result before the initial saved read
+finishes. This is read-only evidence for operator review, never a
+replacement for backend policy-member eligibility or a new human
+approval decision.
+
+A synthetic Chromium creation/refetch scenario identified and
+reproduced the actual stored API projection discrepancy:
+`GET /approver-groups` provides the SQLite 0/1 `enabled` flag
+rather than the boolean used by create/update receipts. The
+read-only list normalizes exactly boolean or 0/1 before rendering,
+rejecting unknown flags, while the existing backend role, group
+membership, versioned update/409 CAS and request snapshots remain
+unchanged. The isolated fixture is not real customer acceptance.
+
 ## B3 Foundation Administration mail-test reviewed task (2026-10-11)
 
 The Grant consumer's shared Foundation Administration hub now
