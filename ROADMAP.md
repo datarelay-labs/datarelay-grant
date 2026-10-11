@@ -129,6 +129,47 @@ intentionally RED G12 test path-only stashed/restored SHA-exact.
 No real PUT, actual mail, Control/Stellar effect, browser/mobile two-person
 E2E, full CI/provenance or release gate claimed.
 
+**P0-UI rev59 — mounted B1 Inbox task-first worklist + source-truth (2026-10-11):**
+The actual `My approvals / Inbox` `web/src/request_inbox.tsx` no
+longer serializes role-scoped GETs behind `useTask.busy` (which could
+silently skip a new filter B while old A was in flight), or lets a
+late earlier filter/page/Refresh result or error render under the
+newly selected queue. New
+`web/src/request_inbox_task_worklist.tsx` supplies query-identity
+monotonic latest-only read, first-render scoped projection hiding,
+and read-only task-first immutable `action.kind` + `action.target`
+summary. Missing/invalid server-projected approval progress now shows
+**Approval progress unavailable** rather than fabricating 0/1 seats;
+genuine server count, waiting group and reviewer identities are
+rendered only when valid. No new approval/decision POST, role expansion,
+overdue reinterpretation, or backend status/permission change.
+This is a real mounted Inbox source edit on the **same previously
+platform-denied path**, freshly retried successfully; separate
+`grant/core.py` overdue truth and genuine human inbox E2E remain OPEN.
+
+New 9 RED missing-module → GREEN focused cases, existing role/quick-view
+8 PASS; official native `bash scripts/checks.sh web`
+**545/545 PASS (67 suites)** with TypeScript/Vite build PASS and native
+`bash scripts/checks.sh static` PASS with original deliberately RED G12
+path-only preserved/restored SHA-exact. Official synthetic browser attempt
+was initially runnable but **28/28 Chromium launch FAILED before scenarios**
+because the developer host lacks system `libatk-1.0.so.0` and other runtime
+libraries; this was **environment**, not application scenario evidence.
+Existing private user-local cached Playwright runtime was verified with
+`ldd` for all missing libraries and used through the supported
+`GRANT_BROWSER_LIBRARY_PATH` native mechanism (not a denied safety
+workaround). Targeted loopback-only Chromium B1/G12 group initially had
+**3 PASS / 1 FAILED** because its G6 collaboration step still expected
+an obsolete direct `Confirm message`. Updated the exact synthetic
+`web/tests/browser/approval.spec.ts` scenario to exercise the already
+mounted `Review message → Confirm message`, then reran only that failed
+G6 browser scenario: **1/1 PASS**. Thus all four affected scenarios have
+individual passing evidence, **not** one 4/4 single-run qualification.
+These are disposable fixture sessions, NOT two independently operated
+real human/mailbox same-installed-HEAD full E2E and NOT browser
+full 28/28 acceptance or GA. CI/hash/provenance/smoke and owner release
+still require separately authorized terminal gates.
+
 **Owner replacement decision:** 2026-10-10. **One current roadmap, six major
 delivery bundles (B1–B6), retaining M1–M8 technical scope.** This file supersedes all former sequencing prose in
 ROADMAP.md and the former body of [coordination Issue #37](https://github.com/datarelay-labs/datarelay-grant/issues/37).

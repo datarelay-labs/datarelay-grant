@@ -1,6 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Button, Card, TextField, type AccountProjection } from '@datarelay-labs/foundation';
-import { api } from './api';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Button, Card, TextField, type AccountProjection } from '@datarelay-labs/foundation';
+import { api, errorText } from './api';
+import {
+  createInboxReadScope, readCurrentInbox, currentInboxProjection,
+  InboxActionTarget, InboxApprovalProgress,
+} from './request_inbox_task_worklist';
 import { Select, State, useTask, when } from './common';
 import type { ApproverGroup, Integration, Profile, RequestRow, User } from './types';
 
@@ -77,15 +81,6 @@ const viewOptions: { value: string; label: string }[] = [
   { value: 'ops_delivery_failed', label: 'Any delivery failed' },
   { value: 'ops_decided', label: 'All human-decided requests' },
 ];
-const labels: Record<string, string> = {
-  APPROVERS: 'Waiting on approvers',
-  REQUESTER_INFO: 'Waiting on requester information',
-  REQUESTER_REVISION: 'Changes requested — new request required',
-  EXECUTOR: 'Approved — awaiting execution',
-  EXECUTION_RESULT: 'Awaiting execution result',
-  CLOSED: 'Decision closed',
-};
-
 function encodeParameter(value: string | number): string {
   // api.ts accepts a conservative path alphabet. Percent-encode reserved
   // punctuation as well as whitespace, rather than allowing '+' from URLSearchParams.
@@ -151,7 +146,18 @@ export function RequestList({
     () => countAdvancedFilters(initial()) > 0,
   );
   const [offset, setOffset] = useState(0);
-  const [rows, setRows] = useState<RequestRow[]>([]);
+  const [savedRows, setSavedRows] =
+    useState<{key:string;rows:RequestRow[]}|null>(null);
+  const [listBusy,setListBusy]=useState(false);
+  const [listError,setListError]=useState('');
+  const readScope=useRef(createInboxReadScope());
+  // Query identity is computed during render. An old filter/page projection
+  // is hidden BEFORE the effect can request the new role-scoped worklist.
+  const currentQuery=(()=>{
+    try{return queryFor(applied,offset);}catch{return '';}
+  })();
+  const rows=currentInboxProjection(savedRows,currentQuery);
+  const currentLoaded=Boolean(currentQuery&&savedRows?.key===currentQuery);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [accounts, setAccounts] = useState<AccountProjection[]>([]);
   const [groups, setGroups] = useState<ApproverGroup[]>([]);
@@ -162,11 +168,27 @@ export function RequestList({
   function edit(field: keyof Filters, value: string) {
     setDraft((current) => ({ ...current, [field]: value }));
   }
-  async function load() {
-    setRows(await api<RequestRow[]>(queryFor(applied, offset)));
+  async function load(query=currentQuery) {
+    // Unlike useTask.busy, this guard must permit a new selection GET
+    // while an older view remains pending, then discard its result/error.
+    readScope.current.select(query);
+    setListError('');
+    if(!query){setListBusy(false);setSavedRows(null);return;}
+    setListBusy(true);
+    try{
+      const accepted=await readCurrentInbox(readScope.current,query,
+        ()=>api<RequestRow[]>(query),
+        fresh=>setSavedRows({key:query,rows:fresh}));
+      if(accepted)setListBusy(false);
+    }catch(error){
+      if(readScope.current.isSelected(query)){
+        setListBusy(false);
+        setListError(errorText(error));
+      }
+    }
   }
 
-  useEffect(() => { void task.run(load); }, [applied, offset]);
+  useEffect(() => {void load(currentQuery);}, [currentQuery]);
   useEffect(() => {
     void (async () => {
       // Identity lookups are optional UI labels. They never broaden the role scope
@@ -234,10 +256,13 @@ export function RequestList({
 
   return <div className="grant-stack">
     {task.feedback}
+    {listError&&<Alert tone="critical" title="Unable to refresh current worklist">
+      {listError}
+    </Alert>}
     <Card title={heading} description="Search and filters apply to all role-visible records on the server, before pagination. Decisions, notifications and execution remain separate."
       actions={<div className="grant-actions">
         <Button onClick={() => navigate('/requests/new')}>New request</Button>
-        <Button variant="secondary" disabled={task.busy} onClick={() => void task.run(load)}>Refresh</Button>
+        <Button variant="secondary" disabled={listBusy} onClick={() => void load(currentQuery)}>Refresh</Button>
       </div>}>
       {mode === 'approvals' && <>
         <nav className="grant-actions" aria-label="Approval task views">
@@ -323,27 +348,24 @@ export function RequestList({
         </tr></thead>
         <tbody>{rows.map((row) => <tr key={row.id}>
           <td><Button variant="ghost" onClick={() => navigate('/requests/' + row.id)}>{row.title}</Button>
-            <small>{row.external_id}{row.viewer_delegated_for ? ' · Delegated to you' : ''}</small></td>
+            <small>{row.external_id}{row.viewer_delegated_for ? ' · Delegated to you' : ''}</small>
+            <InboxActionTarget row={row}/></td>
           <td><State value={row.state} />{row.collaboration_state !== 'OPEN' &&
             <small>{row.collaboration_state.replaceAll('_', ' ')}</small>}</td>
-          <td>
-            <strong>{row.approval_progress?.approved_count ?? 0} / {row.approval_progress?.required_count ?? 1} approved</strong>
-            <small>{labels[row.approval_progress?.waiting_on ?? ''] ?? 'Waiting for response'}</small>
-            {!!row.approval_progress?.waiting_approvers.length &&
-              <small>{row.approval_progress.group_name ? row.approval_progress.group_name + ' · ' : ''}
-                {row.approval_progress.waiting_approvers.map((person) => person.username).join(', ')}
-              </small>}
-          </td>
+          <td><InboxApprovalProgress row={row}/></td>
           <td><State value={row.delivery_state} /></td>
           <td><State value={row.execution_state} /></td>
           <td>{when(row.deadline)}{row.escalation?.fired_at && <small>Escalated</small>}</td>
         </tr>)}</tbody>
       </table></div>
-      {!rows.length && <p>No matching requests. Try clearing filters or creating a new request.</p>}
+      {!rows.length&&!listError&&
+        (listBusy||!currentLoaded
+          ? <p role="status">Loading this exact role-visible worklist…</p>
+          : <p>No matching requests. Try clearing filters or creating a new request.</p>)}
       <div className="grant-actions">
-        <Button variant="secondary" disabled={!offset || task.busy} onClick={() => setOffset(Math.max(0, offset - 50))}>Previous page</Button>
+        <Button variant="secondary" disabled={!offset || listBusy} onClick={() => setOffset(Math.max(0, offset - 50))}>Previous page</Button>
         <span>Page {Math.floor(offset / 50) + 1} · {rows.length} loaded</span>
-        <Button variant="secondary" disabled={rows.length < 50 || task.busy} onClick={() => setOffset(offset + 50)}>Next page</Button>
+        <Button variant="secondary" disabled={rows.length < 50 || listBusy} onClick={() => setOffset(offset + 50)}>Next page</Button>
       </div>
     </Card>
   </div>;

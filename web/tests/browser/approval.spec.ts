@@ -497,6 +497,10 @@ test('G6 approver inbox needs/held/recent views reflect decisions',async({browse
  await page.goto('/requests/'+ask.id);
  await page.getByLabel('Message purpose',{exact:true}).selectOption('REQUEST_INFO');
  await page.getByLabel('Message (up to 2000 characters; no credentials)',{exact:true}).fill('What is the ticket?');
+ // Current product requires read-only reviewed content before a human submits
+ // a role-scoped collaboration message; the review itself has no POST.
+ await page.getByRole('button',{name:'Review message',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Confirm message',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Confirm message',exact:true}).click();
  await page.goto('/approvals');
  await expect(page.getByRole('button',{name:'G6 ask work',exact:true})).toHaveCount(0);
