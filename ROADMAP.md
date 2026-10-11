@@ -1,7 +1,7 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
-**Owner replacement decision:** 2026-10-10. **One current roadmap, eight major
-execution bundles.** This file supersedes all former sequencing prose in
+**Owner replacement decision:** 2026-10-10. **One current roadmap, six major
+delivery bundles (B1–B6), retaining M1–M8 technical scope.** This file supersedes all former sequencing prose in
 ROADMAP.md and the former body of [coordination Issue #37](https://github.com/datarelay-labs/datarelay-grant/issues/37).
 Old requirements/decisions are preserved through prior Git commits and existing
 issue/PR discussions, NOT maintained as a second competing active roadmap.
@@ -30,7 +30,7 @@ existing WPs and PRs. A source-only PASS is not installed user acceptance.
 
 | Bundle (execution order) | Outcome / retained detailed M1–M8 scope | Existing WP and bounded exit evidence | Observed state / next action |
 | --- | --- | --- | --- |
-| **B1 — Approval Workspace (FIRST)** | Requester New request → read-only review → one server create; approver Inbox task/action/deadline → explicit Hold/Approve/Deny/Cancel; current assigned seats, delivery vs reported effect, comment/linked replacement, truthful deadline. **M1 + M5 approval UI** | **#67** and existing M1 packets; exact mounted-source RED→GREEN + official Web/Static, then two independent authorized people and desktop/keyboard/mobile scenario same installed HEAD in B6 | **IN PROGRESS, SOURCE PARTIAL:** Requester New request Review→Confirm and RequestDetail/reviewer confirmation/evidence shipped, Web 230/230 at source checkpoint. **IMPLEMENTED THIS BATCH:** read-only fresh policy/predecessor verification before one request-create POST, and RequestDetail admin email/webhook resend Review→Confirm with exact current delivery and suppressed accidental repeats (source Web **237/237 → 247/247 PASS**, Static PASS). **Additional source:** RequestDetail reviewed admin escalation/reassignment routing no longer misreports successful POST when optional GET fails; reassign directly uses server-projected RequestRow, escalation refresh has a separate failure indicator and stale actions are hidden. New Web **256/256 PASS**, TypeScript/Vite/Static PASS. **BLOCKED:** Inbox exact prior denied source, M1 backend overdue truth and installed same-HEAD human E2E, so B1 is NOT finished |
+| **B1 — Approval Workspace (FIRST)** | Requester New request → read-only review → one server create; approver Inbox task/action/deadline → explicit Hold/Approve/Deny/Cancel; current assigned seats, delivery vs reported effect, comment/linked replacement, truthful deadline. **M1 + M5 approval UI** | **#67** and existing M1 packets; exact mounted-source RED→GREEN + official Web/Static, then two independent authorized people and desktop/keyboard/mobile scenario same installed HEAD in B6 | **IN PROGRESS, SOURCE PARTIAL:** Requester New request Review→Confirm and RequestDetail/reviewer confirmation/evidence shipped, Web 230/230 at source checkpoint. **IMPLEMENTED THIS BATCH:** read-only fresh policy/predecessor verification before one request-create POST, and RequestDetail admin email/webhook resend Review→Confirm with exact current delivery and suppressed accidental repeats (source Web **237/237 → 247/247 PASS**, Static PASS). **Additional source:** RequestDetail reviewed admin escalation/reassignment routing no longer misreports successful POST when optional GET fails; reassign directly uses server-projected RequestRow, escalation refresh has a separate failure indicator and stale actions are hidden. Rev32 Web **256/256 PASS**. **New independent B1 source (rev34):** RequestDetail Approve/Hold/Deny/Cancel now synchronously claims exactly one reviewed POST; ambiguous submit or successful POST with failed readback requires explicit role-scoped Refresh before another decision. New RED→GREEN 6 cases, native Web **262/262 PASS**, TypeScript/Vite/Static PASS. **BLOCKED:** Inbox exact prior denied source, M1 backend overdue truth and installed same-HEAD human E2E, so B1 is NOT finished |
 | **B2 — Email approval (no-login human decision)** | Issued link actually lands on PIN entry, optional OTP/fresh TOTP, selected human action and separate final confirmation, expiry/replay/auditable recipient attribution. **M4** | **#67/#70–#73/#78**; exact issued-link GET non-mutating and two unrelated real mailboxes/personas twice, policy verification-floor checks | **WAITING EXACT SAFETY GATE:** portal/adapter exists but actual issued URL/API landing is not mounted; earlier app.tsx route mutation blocked; no alternative-route workaround |
 | **B3 — Shared Identity & Administration** | Foundation shared Login/Sidebar/Administration parity with Control, grouped navigation, member/admin capability truth, desktop + 320/375 first viewport, accessible keyboard. **M2** | **#57/#75/#67**, shared Foundation B2; role-true task actions and two-account same-version interactive review | **WAITING EXACT SAFETY GATE:** previous app/Admin/styles/mobile/browser edits blocked; shared Foundation remains owner, not Grant-specific CSS duplication |
 | **B4 — Policies, approver groups & Notifications** | Policy lifecycle, groups, safe edit/conflict/CAS, full template sets, preview, branding and delivery worklist/send confirmation. **M3** | **#38/#64–#66/#80/#67**; two independent admin sessions must demonstrate atomic 409 stale-save without losing Deny/MFA/template changes, native non-sending previews, authorized test delivery only | **SOURCE PARTIAL:** policy Clone→Draft and Draft→Testing confirmation and failed-delivery resend review done; **P0 BLOCKED:** server policy/template CAS. Rev29 separate test-email-preview task was scoped but **not started** and is deferred here, with no real SMTP sent |
@@ -70,6 +70,21 @@ execute the requested business action. Focused regression 9/9, native Web
 B1 source; actual installed two-human browser/E2E and historically denied
 Inbox/backend actions remain **UNQUALIFIED**, so B1 stays SOURCE PARTIAL.
 
+**B1 human decision one-shot checkpoint, October 11 (rev34):**
+The mounted RequestDetail human Approve/Hold/Deny/Cancel confirmation now
+claims its reviewed actor/request/revision/action before any await or React
+rerender, preventing a same-render double submit. A failed/ambiguous POST
+remains latched; a successful POST with failed/lagging readback also blocks
+another decision until a successful role-scoped request Refresh. A confirmed
+POST with a qualified fresh GET permits another explicit review where the
+server allows it (for example a Held request). The backend still checks
+seats/roles/revisions; no actual external execution or mail was sent.
+Focused new tests RED missing helper -> GREEN 6/6; official native Web
+**262/262 PASS**, TypeScript/Vite build PASS, Static PASS with G12 RED
+path-only preserved/restored SHA-exact. B1 is **SOURCE_PARTIAL**, not
+installed two-person browser/mailbox qualification. Inbox/core exact source
+platform denials remain untouched; the Inbox RED stash is retained.
+
 **Execution rule:** Start B1 NOW, implement its independently safe work,
 and do not claim B1 complete until the approved Inbox/backend UI and actual
 user gate pass. A previously denied exact file/effect stays denied—do not
@@ -85,7 +100,7 @@ under these six delivery units.
 
 ## P0-UI-1 — OWNER FIRST: implement competitor-informed Grant UI (2026-10-11)
 
-**STATE=IMPLEMENTATION_FIRST / PRIORITY=TOP_P0_UI_PRODUCT_DELIVERY / EXISTING_WP=#67 rev32.**
+**STATE=IMPLEMENTATION_FIRST / PRIORITY=TOP_P0_UI_PRODUCT_DELIVERY / EXISTING_WP=#67 rev33 (rev34 source checkpoint).**
 **Owner decision:** the competitor documentation and licensed Keycloak REA
 analysis have been completed; further survey or optional reverse engineering
 must NOT displace real user-facing Grant UI implementation. Reuse the existing

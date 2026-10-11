@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, TextField } from '@datarelay-labs/foundation';
 import { api } from './api';
 import { RequestAdminControls } from './request_admin';
@@ -12,6 +12,7 @@ import { RequestDeliveryResendConfirmation, createRequestDeliveryResendReview, c
 import { RequestStageSummary } from './request_stage_summary';
 import { RequestExecutionReport } from './request_execution_report';
 import { recordDecisionThenRead } from './request_decision_receipt';
+import { createDecisionAttemptGuard } from './request_decision_attempt';
 import { prepareRequestCreationReview, isCurrentRequestCreationReview, submitReviewedRequestCreationWithFreshRead, RequestCreationConfirmation, type NewRequestDraft, type RequestCreationReview } from './request_creation_review';
 import { RequestDecisionConfirmation, prepareRequestDecisionReview, isCurrentRequestDecisionReview, type RequestDecisionReview, type RequestDecisionChoice } from './request_decision_review';
 import { Form, Select, State, TextArea, useTask, when } from './common';
@@ -137,22 +138,29 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  const [row, setRow] = useState<RequestRow | null>(null);
  const [reason, setReason] = useState('');
  const [reviewed, setReviewed] = useState<RequestDecisionReview | null>(null);
+ const decisionGuard = useRef(createDecisionAttemptGuard());
+ const [decisionMustRefresh, setDecisionMustRefresh] = useState(false);
  const [pendingResend, setPendingResend] = useState<RequestDeliveryResendIntent | null>(null);
  const [resendAttempted, setResendAttempted] = useState<string[]>([]);
  const task = useTask();
  async function load() {
   setReviewed(null);
   setPendingResend(null);
-  setRow(await api<RequestRow>('/requests/' + encodeURIComponent(id)));
+  const current = await api<RequestRow>('/requests/' + encodeURIComponent(id));
+  if (current.id !== id) throw new Error('REQUEST_READ_ID_MISMATCH');
+  setRow(current);
+  if (decisionGuard.current.readSucceeded()) setDecisionMustRefresh(false);
  }
  useEffect(() => {
+  decisionGuard.current = createDecisionAttemptGuard();
+  setDecisionMustRefresh(false);
   setRow(null);
   setPendingResend(null);
   setResendAttempted([]);
   void task.run(load);
  }, [id]);
  function chooseForReview(choice: RequestDecisionChoice) {
-  if (!row) return;
+  if (!row || decisionGuard.current.blocked()) return;
   setReviewed(prepareRequestDecisionReview(
     row, user, choice, reason, Date.now() / 1000,
   ));
@@ -164,8 +172,13 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
     setReviewed(null);
     return;
   }
+  // Claim before any await or React rerender; both cancellation and decisions
+  // must remain one-shot even on a double click or an ambiguous POST.
+  if (!decisionGuard.current.claim()) return;
   // The reviewed values, not mutable form state, are the only POST payload.
   const selected = reviewed;
+  setReviewed(null);
+  setDecisionMustRefresh(true);
   let outcome: { row: RequestRow; refreshed: boolean };
   try {
     outcome = await recordDecisionThenRead(
@@ -178,13 +191,14 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
       ),
       () => api<RequestRow>('/requests/' + encodeURIComponent(selected.requestId)),
     );
+    decisionGuard.current.complete(outcome.refreshed);
   } catch (error) {
-    // An ambiguous POST must never be automatically repeated with old review.
-    setReviewed(null);
+    // A failed or ambiguous POST cannot be retried until an explicit fresh GET.
+    decisionGuard.current.complete(false);
     throw error;
   }
   setRow(outcome.row);
-  setReviewed(null);
+  setDecisionMustRefresh(decisionGuard.current.blocked());
   setReason('');
   task.setNotice(outcome.refreshed
     ? 'Recorded. Delivery and execution are tracked separately.'
@@ -230,7 +244,8 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  <Card title={row.title} description={row.reason || 'No additional reason supplied.'}><RequestStageSummary row={row}/>{row.viewer_delegated_for && <p>You are acting as the recorded substitute for an assigned approver. Both identities remain auditable.</p>}<dl className="grant-facts"><dt>External ID</dt><dd>{row.external_id}</dd><dt>Approval deadline</dt><dd>{when(row.deadline)}</dd><dt>Execution validity</dt><dd>{when(row.grant_until)}</dd><dt>Decision by / at</dt><dd>{row.decision_actor ?? 'Not decided'} / {when(row.decision_at)}</dd><dt>Revision</dt><dd>{row.revision}</dd><dt>Approval progress</dt><dd>{approvalProgressLabel(row)}</dd><dt>Waiting on</dt><dd>{approvalWaitingLabel(row)}</dd></dl></Card>
  {row.escalation && <Card title="Escalation status"><dl className="grant-facts"><dt>Escalation target</dt><dd>{row.escalation.target_group_id ? 'Approver group' : 'Approver'} · {row.escalation.target_members.length} member(s)</dd><dt>Escalation due</dt><dd>{when(row.escalation.due_at)}</dd><dt>Applied at</dt><dd>{when(row.escalation.fired_at)}</dd></dl><p>Escalation changes only who may decide; it never executes the requested action.</p></Card>}
  <RequestActionSummary row={row} canReplace={Boolean(canReplace)} navigate={navigate} />
- {(canDecide || canCancel) && <Card title="Explicit decision">
+ {decisionMustRefresh && <Alert tone="warning" title="Refresh required before another decision">A human decision or cancellation was attempted. A possible server write is never repeated automatically. Use Refresh to load the current request before reviewing another action.</Alert>}
+ {(canDecide || canCancel) && !decisionMustRefresh && <Card title="Explicit decision">
   <TextArea label="Decision or cancellation reason (maximum 2000 characters)"
     value={reason} onChange={(value) => { setReason(value); setReviewed(null); }} />
   {reason.length > 2000 && <Alert tone="warning" title="Reason is too long">
