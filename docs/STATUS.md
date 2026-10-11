@@ -5,6 +5,20 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## B4 mounted Delivery Health selected-filter evidence (2026-10-11)
+
+The administrator notification delivery worklist now shows the
+exact applied state/event/request filter and only the corresponding
+latest saved-page response, even while older GETs are unresolved.
+A draft filter change is visibly unapplied and disables privileged
+resend review until the operator explicitly applies the new filter
+and receives a fresh role-scoped server page. Page and delivery
+metadata are validated before presentation; previous out-of-order
+GET results/errors cannot appear under the new selection.
+This is a read-only UI improvement around an existing reviewed
+resend operation, not a change to resend authorization, actual SMTP
+receipt proof or execution authority.
+
 ## B5 mounted Audit evidence worklist, exact applied-query read (2026-10-11)
 
 The administrator `Audit evidence explorer` now independently fetches the

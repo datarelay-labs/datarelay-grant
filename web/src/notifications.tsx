@@ -5,7 +5,13 @@ import {
   Card,
   TextField,
 } from '@datarelay-labs/foundation';
-import { api } from './api';
+import { api, errorText } from './api';
+import {
+  createDeliveryQueryReadScope,readCurrentDeliveryWorklist,
+  currentDeliveryPageProjection,deliveryDraftHasChanges,
+  canReviewCurrentDelivery,DeliveryAppliedSearchSummary,
+  type ScopedDeliveryPage,type DeliverySearchFilters,
+} from './notification_delivery_current_worklist';
 import { NotificationResendConfirmation, createNotificationResendReview, canConfirmNotificationResend, submitReviewedNotificationResend, type NotificationResendIntent } from './notification_resend_review';
 import { createDeliveryHealthGuard } from './notification_delivery_guard';
 import { Form, Select, TextArea, useTask, when } from './common';
@@ -102,19 +108,9 @@ function eventLabel(value: NotificationEvent): string {
     .replace(/(^|\s)\S/g, (character) => character.toUpperCase());
 }
 
-type DeliveryState = 'ALL' | 'PENDING' | 'SENDING' | 'FAILED' | 'DELIVERED' | 'SUPERSEDED';
-type DeliveryFilter = {
-  state: DeliveryState;
-  event: 'ALL' | NotificationEvent;
-  requestId: string;
-};
-type DeliveryHistoryPage = {
-  deliveries: NotificationDelivery[];
-  total: number;
-  offset: number;
-  limit: number;
-  has_more: boolean;
-};
+type DeliveryState=DeliverySearchFilters['state'];
+type DeliveryFilter=DeliverySearchFilters;
+type DeliveryHistoryPage=ScopedDeliveryPage;
 const defaultDeliveryFilters: DeliveryFilter = { state: 'ALL', event: 'ALL', requestId: '' };
 const DELIVERY_PAGE_LIMIT = 50;
 const deliveryStates: DeliveryState[] = ['ALL', 'PENDING', 'SENDING', 'FAILED', 'DELIVERED', 'SUPERSEDED'];
@@ -155,64 +151,99 @@ export function NotificationDeliveryHealth() {
   const [draft, setDraft] = useState<DeliveryFilter>(defaultDeliveryFilters);
   const [applied, setApplied] = useState<DeliveryFilter>(defaultDeliveryFilters);
   const [offset, setOffset] = useState(0);
-  const [page, setPage] = useState<DeliveryHistoryPage | null>(null);
-  const [pendingResend, setPendingResend] = useState<NotificationResendIntent | null>(null);
-  const deliveryGate = useRef(createDeliveryHealthGuard());
-  const task = useTask();
+  const [storedPage,setStoredPage]=useState<{
+    key:string;value:DeliveryHistoryPage;
+  }|null>(null);
+  const [listBusy,setListBusy]=useState(false);
+  const [listError,setListError]=useState('');
+  const [pendingResend,setPendingResend]=useState<NotificationResendIntent|null>(null);
+  const readScope=useRef(createDeliveryQueryReadScope());
+  const deliveryGate=useRef(createDeliveryHealthGuard());
+  const task=useTask();
+  const currentQuery=notificationDeliveryQuery(applied,offset);
+  const page=currentDeliveryPageProjection(storedPage,currentQuery);
+  const draftDirty=deliveryDraftHasChanges(draft,applied);
+  const reviewAllowed=canReviewCurrentDelivery(storedPage,currentQuery,
+    draftDirty,listBusy,task.busy);
 
-  async function loadPage(): Promise<boolean> {
-    const token = deliveryGate.current.beginRead();
-    try {
-      const next = await api<DeliveryHistoryPage>(notificationDeliveryQuery(applied, offset));
-      if (!deliveryGate.current.readCurrent(token)) return false;
-      setPage(next);
-      return true;
-    } catch (error) {
-      // A superseded GET cannot overwrite the current filter/page view.
-      if (deliveryGate.current.readCurrent(token)) throw error;
+  async function loadPage(
+    query:string=currentQuery,requestedOffset:number=offset,
+  ):Promise<boolean>{
+    readScope.current.select(query);
+    const generation=deliveryGate.current.beginRead();
+    setListBusy(true);setListError('');
+    try{
+      let adopted=false;
+      // GET B must start while older role-scoped GET A is still pending.
+      // Both scoped read and the original resend guard must agree before
+      // any previously fetched delivery can be displayed.
+      const accepted=await readCurrentDeliveryWorklist(
+        readScope.current,query,requestedOffset,
+        ()=>api<DeliveryHistoryPage>(query),
+        fresh=>{
+          if(deliveryGate.current.readCurrent(generation)){
+            setStoredPage({key:query,value:fresh});
+            adopted=true;
+          }
+        },
+      );
+      if(accepted&&adopted)setListBusy(false);
+      return accepted&&adopted;
+    }catch(error){
+      if(readScope.current.isSelected(query)
+        &&deliveryGate.current.readCurrent(generation)){
+        setListBusy(false);setListError(errorText(error));
+      }
       return false;
     }
   }
-
-  async function refreshPage() {
-    const accepted = await loadPage();
-    // Auto-refresh after a resend never calls this. Only a deliberate
-    // operator Refresh may unlock an uncertain previous notification POST.
-    if (accepted) deliveryGate.current.readSucceeded();
+  async function refreshPage(){
+    const accepted=await loadPage(currentQuery,offset);
+    // An automatic read after resend does NOT unlock prior effect.
+    // Only this explicit current saved-state Refresh can do so.
+    if(accepted)deliveryGate.current.readSucceeded();
   }
+  useEffect(()=>{void loadPage(currentQuery,offset);},[applied,offset]);
 
-  function changePage(nextOffset: number) {
+  function changePage(nextOffset:number){
+    const nextQuery=notificationDeliveryQuery(applied,nextOffset);
+    readScope.current.select(nextQuery);
     deliveryGate.current.invalidateRead();
-    setPendingResend(null);
-    setPage(null);
+    setPendingResend(null);setStoredPage(null);setListError('');
     setOffset(nextOffset);
   }
-  useEffect(() => { void task.run(async () => { await loadPage(); }); }, [applied, offset]);
-
-  function apply() {
+  function apply(){
+    const updated={...draft};
+    const nextQuery=notificationDeliveryQuery(updated,0);
+    readScope.current.select(nextQuery);
     deliveryGate.current.invalidateRead();
-    setPendingResend(null);
-    setOffset(0);
-    setPage(null);
-    setApplied({ ...draft });
+    setPendingResend(null);setStoredPage(null);setListError('');
+    setOffset(0);setApplied(updated);
   }
-  function clear() {
+  function clear(){
+    const cleared={...defaultDeliveryFilters};
+    const nextQuery=notificationDeliveryQuery(cleared,0);
+    readScope.current.select(nextQuery);
     deliveryGate.current.invalidateRead();
-    setPendingResend(null);
-    setDraft({ ...defaultDeliveryFilters });
-    setPage(null);
-    setOffset(0);
-    setApplied({ ...defaultDeliveryFilters });
+    setPendingResend(null);setStoredPage(null);setListError('');
+    setDraft(cleared);setOffset(0);setApplied(cleared);
   }
-  function reviewResend(record: NotificationDelivery) {
-    if (deliveryGate.current.blocked(record.id)) return;
+  function editDeliveryDraft(next:DeliveryFilter){
+    setDraft(next);setPendingResend(null);
+  }
+  function reviewResend(record:NotificationDelivery){
+    if(!reviewAllowed||deliveryGate.current.blocked(record.id))return;
     setPendingResend(createNotificationResendReview(record));
   }
 
   async function confirmResend() {
-    const intent = pendingResend;
-    if (!intent) return;
-    const source = page?.deliveries.find((item) => item.id === intent.deliveryId);
+    const intent=pendingResend;
+    if(!intent)return;
+    if(!reviewAllowed){
+      setPendingResend(null);
+      throw new Error('DELIVERY_FILTER_CHANGED_REVIEW_REQUIRED');
+    }
+    const source=page?.deliveries.find(item=>item.id===intent.deliveryId);
     if (!canConfirmNotificationResend(intent, source)) {
       setPendingResend(null);
       throw new Error('DELIVERY_CHANGED_REVIEW_REQUIRED');
@@ -221,7 +252,8 @@ export function NotificationDeliveryHealth() {
     // not enough to prevent two same-render resend POSTs.
     if (!deliveryGate.current.claimResend(intent.deliveryId)) return;
     setPendingResend(null);
-    setPage(null);
+    readScope.current.select('');
+    setStoredPage(null);
     try {
       await submitReviewedNotificationResend(
         intent, source,
@@ -244,18 +276,18 @@ export function NotificationDeliveryHealth() {
     <Card title="Delivery Health"
       description="Search stored email delivery events. Resend is a separate explicit notification-only operation; transport acceptance never proves inbox receipt."
       actions={<Button variant="secondary" disabled={task.busy}
-        onClick={() => void task.run(refreshPage)}>Refresh</Button>}>
+        onClick={()=>{void task.run(refreshPage);}}>Refresh</Button>}>
       <section className="grant-stack" aria-label="Filter delivery health">
         <div className="grant-grid">
           <Select label="Delivery state" required={false} value={draft.state}
-            onChange={(state) => setDraft({ ...draft, state: state as DeliveryState })}>
+            onChange={(state)=>editDeliveryDraft({...draft,state:state as DeliveryState})}>
             {deliveryStates.map((state) => <option value={state} key={state}>
               {state === 'ALL' ? 'All states' : state}
             </option>)}
           </Select>
           <Select label="Notification event" required={false} value={draft.event}
-            onChange={(event) => setDraft({
-              ...draft, event: event as DeliveryFilter['event'],
+            onChange={(event)=>editDeliveryDraft({
+              ...draft,event:event as DeliveryFilter['event'],
             })}>
             <option value="ALL">All events</option>
             {events.map((event) => <option key={event} value={event}>
@@ -264,8 +296,8 @@ export function NotificationDeliveryHealth() {
           </Select>
           <TextField label="Exact request ID" required={false} value={draft.requestId}
             placeholder="Optional request ID"
-            onChange={(event) => setDraft({
-              ...draft, requestId: event.target.value.slice(0, 100),
+            onChange={(event)=>editDeliveryDraft({
+              ...draft,requestId:event.target.value.slice(0,100),
             })} />
         </div>
         <div className="grant-actions">
@@ -273,14 +305,21 @@ export function NotificationDeliveryHealth() {
           <Button variant="ghost" disabled={task.busy} onClick={clear}>Clear filters</Button>
         </div>
       </section>
+      <DeliveryAppliedSearchSummary applied={applied} draft={draft}
+        offset={offset} page={page}/>
+      {listError&&<Alert tone="critical" title="Unable to load current delivery history">
+        {listError}
+      </Alert>}
       <NotificationResendConfirmation
         intent={pendingResend}
         source={page?.deliveries.find((item) => item.id === pendingResend?.deliveryId)}
-        busy={task.busy}
+        busy={task.busy||listBusy||draftDirty}
         onCancel={() => setPendingResend(null)}
         onConfirm={() => void task.run(confirmResend)}
       />
-      <p aria-live="polite">{deliveryPageLabel(page)}</p>
+      <p aria-live="polite">{page?deliveryPageLabel(page)
+        :listError?'Delivery page unavailable'
+        :'Loading current administrator-scoped delivery history…'}</p>
       <p>Receipt is not independently confirmed by this delivery ledger.</p>
       <div className="grant-table-scroll">
         <table className="grant-table">
@@ -300,8 +339,8 @@ export function NotificationDeliveryHealth() {
             <td>{item.state === 'FAILED' ? (
               deliveryGate.current.blocked(item.id)
                 ? <small role="status">Resend attempted. Refresh before another review.</small>
-                : <Button variant="secondary" disabled={task.busy}
-                    onClick={() => reviewResend(item)}>Review resend</Button>
+                : <Button variant="secondary" disabled={!reviewAllowed}
+                    onClick={()=>reviewResend(item)}>Review resend</Button>
             ) : null}</td>
           </tr>)}</tbody>
         </table>

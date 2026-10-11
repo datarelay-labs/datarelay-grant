@@ -1051,3 +1051,49 @@ test('B5 audit explorer keeps exact B query while delayed old A response arrives
   await context.close();
  }
 });
+
+// B4 synthetic delivery-health browser read, no SMTP resend POST. A slow
+// legitimate saved A response is delayed only by the browser test harness.
+test('B4 delivery health binds newest FAILED filter ahead of old PENDING GET',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ let markOld!:()=>void;
+ const oldReadSeen=new Promise<void>(resolve=>{markOld=resolve});
+ let releaseOld!:()=>void;
+ const oldCanContinue=new Promise<void>(resolve=>{releaseOld=resolve});
+ try{
+  await login(page,'admin');
+  await page.goto('/notifications');
+  await page.getByRole('button',{name:'Delivery Health',exact:true}).click();
+  await expect(page.getByText('Applied delivery filters',{exact:false})).toBeVisible();
+  await page.route('**/api/v1/notification-deliveries?*',async route=>{
+   if(new URL(route.request().url()).searchParams.get('state')==='PENDING'){
+     markOld();
+     await oldCanContinue;
+   }
+   await route.continue();
+  });
+  await page.getByLabel('Delivery state',{exact:true}).selectOption('PENDING');
+  await expect(page.getByText('Filter edits not yet applied.',{exact:false})).toBeVisible();
+  await page.getByRole('button',{name:'Apply filters',exact:true}).click();
+  await oldReadSeen;
+  await page.getByLabel('Delivery state',{exact:true}).selectOption('FAILED');
+  await page.getByRole('button',{name:'Apply filters',exact:true}).click();
+  const applied=page.getByRole('region',{name:'Applied delivery health search'});
+  await expect(applied).toContainText('FAILED');
+  await expect(applied).not.toContainText('Filter edits not yet applied.');
+  const oldResponse=page.waitForResponse(response=>{
+   const url=new URL(response.url());
+   return url.pathname==='/api/v1/notification-deliveries'
+     &&url.searchParams.get('state')==='PENDING';
+  });
+  releaseOld();
+  await oldResponse;
+  await expect(applied).toContainText('FAILED');
+  await expect(applied).not.toContainText('PENDING');
+  await expect(page.getByText('Receipt is not independently confirmed by this delivery ledger.')).toBeVisible();
+ }finally{
+  releaseOld();
+  await context.close();
+ }
+});

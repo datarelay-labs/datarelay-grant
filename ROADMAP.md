@@ -17,6 +17,38 @@ a denied effect through an alternate tool/host/file. Reuse Work Packet #67
 and preserve the original G12 RED, Inbox RED stash and staged source.
 Source/UI unit PASS is not installed Browser/Full User E2E, CI or release.
 
+**P0-UI rev67 — mounted Notifications Delivery Health current filters (2026-10-11):**
+The administrator `Notifications → Delivery Health` page previously
+wrapped role-scoped list GETs in one `useTask.busy`: a newly selected
+filter/page could be skipped while a prior GET was pending, and
+the old result could be confused with the current selected view.
+Its resend review was still visible on a previously applied delivery
+row even after the operator edited a new but unapplied state, event
+or request filter. Mounted `web/src/notifications.tsx` now uses
+`web/src/notification_delivery_current_worklist.tsx` to bind the
+exact current selected filters/page to each role-scoped GET. The
+server-projected `limit=50`, `offset`, count and delivery identity
+are checked before rendering, and stale cross-/same-selection results
+and network errors are discarded. The first render after applying
+another filter hides the previous page; **Applied delivery filters**
+are shown separately from unsubmitted edits. A privileged email resend
+can be **reviewed only for the current fully loaded saved selection
+with no unapplied filter edits**, and editing filters cancels any
+unconfirmed resend preview. Existing server-side administrator RBAC,
+same-render one-shot resend claim, server resend endpoint, explicit
+post-effect reconciliation, and transport-vs-inbox-vs-execution
+distinctions are **UNCHANGED**.
+
+New nine RED→GREEN isolated worklist tests cover stale A/B,
+out-of-order reads, invalid pages, unsubmitted source identity
+and resend-review eligibility. Focused real mounted disposable
+Chromium browser delays an actual PENDING GET while FAILED becomes
+the selected saved state: later arrival of PENDING cannot replace
+FAILED. No actual email resend POST or protected external operation
+is performed by this test. This is UI correctness/source evidence
+only, not independently operated human/mailbox E2E, backend atomic
+CAS, changed-HEAD CI or owner release.
+
 **P0-UI rev66 — mounted Audit evidence task-first applied-query truth (2026-10-11):**
 The actual administrator `Audit evidence explorer` previously reused
 `useTask.busy` for list and evidence-chain reads; a newer role-scoped
