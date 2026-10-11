@@ -5,6 +5,28 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## Competitor official-screen evidence → mounted Inbox preview (2026-10-11)
+
+The new owner P0 ordering puts official **screen and task-flow** analysis
+ahead of selecting and shipping real UI. `docs/UX_COMPETITOR_SCREEN_DECISIONS_20261011.md`
+records the Entra selected-detail-pane and Teleport/ServiceNow/StrongDM/
+Jira/Windmill documentation, already verified Keycloak static REA pilot,
+and the selected Grant-only adaptation. This source does not claim a
+new REA run or an independently authenticated vendor UI walkthrough.
+
+The mounted Grant `RequestList` now supports role-scoped preview of
+a *selected* request without leaving the approval queue. The small
+context panel shows exact action kind/target, decision deadline,
+approval-seat progress, transport status and **reported rather than
+verified** external execution; sensitive action parameters and
+additional privileged reads are omitted. It is hidden immediately
+when the saved request ID no longer occurs in the selected server
+query/page, or while its current GET is pending. This read-only
+preview does not add an approval route or create an executable grant:
+all human decisions still require existing RequestDetail final
+Review→Confirm. Real two-person/mailbox acceptance, user feedback,
+current-HEAD CI and protected business execution are separate gates.
+
 ## B1 Approver Group directory saved member/account coverage (2026-10-11)
 
 The administrator's mounted reusable approver group directory now

@@ -428,3 +428,24 @@ pre {
 
   .grant-action-summary { grid-template-columns: 1fr; }
 }
+
+
+/* Grant-only task-list selected context (not a Foundation shell override).
+   Collapse the preview below the queue on narrow/keyboard viewports. */
+.grant-inbox-master-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--dr-space-4);
+  align-items: start;
+}
+.grant-inbox-master-detail.has-preview {
+  grid-template-columns: minmax(0, 1.65fr) minmax(18rem, 1fr);
+}
+.grant-inbox-master-detail > .grant-table-scroll { min-width: 0; }
+.grant-inbox-focus { min-width: 0; }
+.grant-inbox-context { min-width: 0; }
+.grant-inbox-context .grant-facts { grid-template-columns: minmax(7rem, auto) minmax(0, 1fr); }
+.grant-inbox-context .grant-facts dd { min-width: 0; }
+@media (max-width: 900px) {
+  .grant-inbox-master-detail.has-preview { grid-template-columns: minmax(0, 1fr); }
+}

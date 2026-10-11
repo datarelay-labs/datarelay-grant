@@ -1,21 +1,105 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
-**CURRENT OWNER TOP PRIORITY — P0-UI-APPLICATION-FIRST (2026-10-11).**
-Apply the completed, licensed/documented competitor UI/UX findings directly
-to Grant's mounted product pages **before** unrelated maintenance, repeated
-competitor research or another offline prototype. Use Jira Service
-Management, Teleport, Microsoft Entra, ServiceNow, StrongDM and Keycloak as
-interaction-pattern references without copying proprietary source or
-misrepresenting unobserved vendor screenshots. Keep the **existing B1–B6
-six-bundle roadmap**: UX-01 task-first requester/approver work first, then
-UX-02 human email PIN landing, UX-03 Foundation Administration/login,
-UX-04 policy/group/notification configuration, and UX-05 evidence,
-reported external execution and real installed user acceptance.
-Continue independent safe mounted-UI work whenever an exact protected
-Inbox/core/app/Admin/browser/Git effect is platform denied; never reroute
-a denied effect through an alternate tool/host/file. Reuse Work Packet #67
-and preserve the original G12 RED, Inbox RED stash and staged source.
-Source/UI unit PASS is not installed Browser/Full User E2E, CI or release.
+**CURRENT OWNER P0 EXECUTION ORDER (2026-10-11, latest approved):**
+**1. COMPETITOR ACTUAL UI/UX ANALYSIS FIRST → 2. SELECT GRANT ADOPTION TARGETS AND IMPLEMENT SECOND.**
+This *replaces* the previous implementation-first priority without deleting
+completed code, historic competitive research or the six B1–B6 bundles.
+No new Work Packet or parallel project.
+
+**P0-1 · COMPETITOR SCREEN AND USER JOURNEY RESEARCH (highest priority).**
+Use dated *official* vendor-published **screenshots/illustrations, docs,
+demo journeys** and licensed source when available. Inspect Teleport,
+Jira Service Management, Microsoft Entra My Access, ServiceNow, StrongDM,
+Keycloak and Windmill for queue → request detail → final approval,
+time/context visibility, policy editor, user/group admin, notification
+workflow, and history/evidence. Record **actual visual anatomy and
+interaction steps** for a meaningful product gap—not feature-label
+inventories. Mark each result `VENDOR_PUBLISHED_SCREEN` vs
+`INDEPENDENTLY_OBSERVED_UI`; documented illustrations are **not**
+authenticated, hands-on vendor execution. Use the already completed
+six-vendor source-gap corpus but deepen screen-level observations.
+
+**REA IS INCLUDED AS AN EXECUTION OPTION, NOT EXCLUDED BY THE ROADMAP.**
+For each prioritized UI target, assess whether **REA (Reverse Engineer
+Anything), using web/CDP inspection or static JavaScript analysis**, would
+provide verifiable details beyond official screenshots/documents.
+If **yes**, verify: a specific pinned artifact/release and vendor license,
+the right to inspect it, installed REA/provider availability, supported
+host/runtime, exact target boundary, and source/artifact provenance.
+Then actually run a **read-only isolated REA pilot** and record commands,
+target, versions, evidence/confidence, limitations and findings. If
+unavailable, not useful, unlicensed, or authorization denied, explicitly
+record `REA_NOT_RUN` and the exact reason; **do not pretend REA ran**,
+use arbitrary npx latest/proprietary binary decompilation, copy vendor
+proprietary UI/source/assets, bypass tool safety, or re-enable Cursor.
+For open source (e.g. Keycloak), check the exact source license
+(usually Apache-2.0) first; for closed enterprise vendor screens, use
+permitted public UI observation, not REA decompilation without rights.
+This is a real conditional execution gate, not an indefinite research
+loop.
+
+**P0-2 · COMPETITOR-INSPIRED REAL GRANT UI PRODUCT ADOPTION.**
+Compare identified UI patterns **against the currently mounted
+Grant HEAD**, select high-impact gaps in one evidence-backed priority
+table with owner, affected source, accepted/declined/deferred status,
+and concrete test. Then implement selected improvements on the
+existing product routes: reviewer/task list→detail preview, user
+email PIN human landing, role-safe Foundation administration, policy
+configuration, notifications, and request/audit evidence. Separate
+authorization and actual execution, maintain privacy and explicit
+Review→Confirm. Per coherent change: new RED→GREEN tests → official
+Web/API/Static as relevant → real isolated browser → verify protected
+G12 RED + original Inbox stash → GitHub Issue #37 / Work Packet #67.
+**Competitor UI analysis is not finished until the selected patterns
+have been ranked, implemented and verified**, but a source-only PASS
+is not two genuine human/mailbox E2E, native Control/Stellar effect,
+CI, provenance, owner release or product GA.
+
+**Owner approvals:** Proceed with this research/REA-when-justified/UI
+delivery ordering. Previous approvals do not override tool safety,
+governance epoch, actual authorization, production, or release gates.
+Draft PR #100 governance conflicts must preserve Grant
+`persistent_state=true`, `runbook_required=true`. Continue other
+independent UI work if a protected effect is not executable.
+Preserve all previous rev70 code/history, original G12 intentionally
+RED patch, Inbox stash and existing branch/Work Packet.
+
+**P0-1 SCREEN ANALYSIS COMPLETED FOR FIRST P0-2 UI SLICE; P0-2A MOUNTED (2026-10-11):**
+Per the owner's new priority, *first* inspected official published
+Teleport review/request screenshots, Entra My Access request/approval
+**selected-right-detail pane** screenshot, and Jira/ServiceNow/StrongDM/
+Windmill documented screen/task anatomy. Recorded evidence/provenance,
+actual UI gaps, selective REA disposition and priority selection in
+`docs/UX_COMPETITOR_SCREEN_DECISIONS_20261011.md`. Reused the
+**already genuinely executed Keycloak 26.5.7 / REA 6.3.0 Apache-2.0
+17-file static pilot** in `docs/UX_REA_KEYCLOAK_20261010.md`; this
+pass did not run a new REA analysis on unauthenticated proprietary
+vendors or falsely claim live vendor UI sessions.
+
+**P0-2A SELECTED / IMPLEMENTED ON MOUNTED Grant Inbox:** following
+Entra's selected request summary and ServiceNow's task-detail area,
+`web/src/request_inbox.tsx` has a list-row **Preview request** action
+with a two-column desktop / stacked mobile read-only request-context
+region. It presents current **role-scoped** title, requester reference,
+immutable action kind+target, submitted time and human deadline,
+approval seat counts, and *separate* callback transport vs executor
+**reported, not independently verified** state. It never shows raw
+action parameters, sends a new administrative GET, casts email
+delivery as verified inbox receipt or adds inline approval. The
+current exact applied query and selected request ID must match one
+**freshly loaded** server worklist row; changing filters or page, a
+pending refresh or a missing selected request hides the preview
+synchronously. Operators choose **Open full request** to access the
+separate existing protected human Review→Confirm. New helper
+`web/src/request_inbox_selected_preview.tsx`, local responsive
+`web/src/styles.css`, RED-first unit tests and actual isolated
+browser selection→filter invalidation→full-detail journey.
+This source UI change does not satisfy two real users/mailboxes,
+current-head native CI, Keycloak live vendor access, server two-admin
+CAS, real Control/Stellar effects or release. The **next** selected
+UX-02 minimal emailed PIN link landing remains open and needs full
+auth-boundary and real email acceptance; never label it shipped based
+on the existing unmounted component.
 
 **P0-UI rev70 — mounted Approver Groups directory saved-vs-enabled truth (2026-10-11):**
 The original `Administration → Approver groups` list showed only

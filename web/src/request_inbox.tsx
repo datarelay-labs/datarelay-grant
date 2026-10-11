@@ -7,6 +7,10 @@ import {
 } from './request_inbox_task_worklist';
 import { Select, State, useTask } from './common';
 import { InboxDeadlineTruth } from './request_inbox_deadline_truth';
+import {
+  currentSelectedInboxRequest,InboxSelectedRequestPreview,
+  type InboxPreviewSelection,
+} from './request_inbox_selected_preview';
 import type { ApproverGroup, Integration, Profile, RequestRow, User } from './types';
 
 type Navigate = (path: string) => void;
@@ -147,6 +151,8 @@ export function RequestList({
     () => countAdvancedFilters(initial()) > 0,
   );
   const [offset, setOffset] = useState(0);
+  const [selectedPreview,setSelectedPreview]=useState<InboxPreviewSelection|null>(null);
+  const previewRef=useRef<HTMLDivElement>(null);
   const [savedRows, setSavedRows] =
     useState<{key:string;rows:RequestRow[]}|null>(null);
   const [listBusy,setListBusy]=useState(false);
@@ -159,6 +165,14 @@ export function RequestList({
   })();
   const rows=currentInboxProjection(savedRows,currentQuery);
   const currentLoaded=Boolean(currentQuery&&savedRows?.key===currentQuery);
+  // Snapshot always comes from the *currently loaded* role-scoped queue.
+  // A changed search/page hides a stale selection during render BEFORE
+  // the next async GET can start; no extra privileged read occurs.
+  const preview=currentSelectedInboxRequest(selectedPreview,rows,currentQuery,
+    listBusy||!currentLoaded);
+  useEffect(()=>{
+    if(preview)previewRef.current?.focus({preventScroll:true});
+  },[preview?.id]);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [accounts, setAccounts] = useState<AccountProjection[]>([]);
   const [groups, setGroups] = useState<ApproverGroup[]>([]);
@@ -342,6 +356,7 @@ export function RequestList({
         <Button disabled={task.busy} onClick={apply}>Apply filters</Button>
         <Button variant="secondary" disabled={task.busy} onClick={reset}>Clear filters</Button>
       </div>
+      <div className={'grant-inbox-master-detail'+(preview?' has-preview':'')}>
       <div className="grant-table-scroll"><table className="grant-table">
         <thead><tr>
           <th>Request</th><th>Decision</th><th>Approval progress</th>
@@ -350,7 +365,14 @@ export function RequestList({
         <tbody>{rows.map((row) => <tr key={row.id}>
           <td><Button variant="ghost" onClick={() => navigate('/requests/' + row.id)}>{row.title}</Button>
             <small>{row.external_id}{row.viewer_delegated_for ? ' · Delegated to you' : ''}</small>
-            <InboxActionTarget row={row}/></td>
+            <InboxActionTarget row={row}/>
+            <Button variant="secondary"
+              aria-pressed={preview?.id===row.id}
+              disabled={listBusy}
+              onClick={()=>setSelectedPreview({query:currentQuery,requestId:row.id})}>
+              Preview request
+            </Button>
+          </td>
           <td><State value={row.state} />{row.collaboration_state !== 'OPEN' &&
             <small>{row.collaboration_state.replaceAll('_', ' ')}</small>}</td>
           <td><InboxApprovalProgress row={row}/></td>
@@ -359,6 +381,14 @@ export function RequestList({
           <td><InboxDeadlineTruth row={row}/></td>
         </tr>)}</tbody>
       </table></div>
+      {preview&&<div ref={previewRef} tabIndex={-1} className="grant-inbox-focus">
+        <InboxSelectedRequestPreview row={preview}
+          onOpen={()=>navigate('/requests/'+encodeURIComponent(preview.id))}
+          onClose={()=>{
+            setSelectedPreview(null);
+          }}/>
+      </div>}
+      </div>
       {!rows.length&&!listError&&
         (listBusy||!currentLoaded
           ? <p role="status">Loading this exact role-visible worklist…</p>

@@ -1191,3 +1191,53 @@ test('P0 Approver group directory distinguishes saved IDs from enabled account c
   await expect(page.getByText('Saved group membership: 1 member(s)',{exact:false})).toBeVisible();
  }finally{await context.close();}
 });
+
+// Official Entra/ServiceNow published selected-task detail pattern adapted
+// only to current Grant role-scoped response rows. No decision on preview.
+test('P0 Entra-style selected approval context stays tied to exact Inbox view',async({browser,request})=>{
+ const f=fixture(),headers={authorization:'Bearer '+f.token};
+ const title='Preview queue task '+crypto.randomUUID().slice(0,8);
+ const response=await request.post('/api/v1/requests',{headers,data:{
+  external_id:crypto.randomUUID(),profile_id:f.profile_id,title,
+  action:{kind:'test.operation',target:'inbox-preview-fixture',parameters:{}},
+ }});
+ expect(response.status()).toBe(202);
+ const saved=await response.json();
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ try{
+  await login(page,'approver');
+  await page.goto('/approvals');
+  const matching=page.getByRole('row').filter({hasText:title});
+  await expect(matching).toBeVisible();
+  await expect(page.getByRole('region',{name:'Selected request context'})).toHaveCount(0);
+  const mutations:string[]=[];
+  page.on('request',r=>{
+   if(r.method()!=='GET'&&r.url().includes('/api/v1/requests/')){
+    mutations.push(r.url());
+   }
+  });
+  await matching.getByRole('button',{name:'Preview request',exact:true}).click();
+  const preview=page.getByRole('region',{name:'Selected request context'});
+  await expect(preview).toBeVisible();
+  await expect(preview).toContainText(title);
+  await expect(preview).toContainText('inbox-preview-fixture');
+  await expect(preview).toContainText('Human decision deadline');
+  await expect(preview).toContainText('External execution');
+  await expect(matching.getByRole('button',{name:'Preview request'})).toHaveAttribute('aria-pressed','true');
+  expect(mutations).toEqual([]);
+  await page.getByLabel('Search requests',{exact:true}).fill('preview-no-match-xxxxxxxxxx');
+  await page.getByRole('button',{name:'Apply filters',exact:true}).click();
+  await expect(preview).toHaveCount(0);
+  await page.getByRole('button',{name:'Clear filters',exact:true}).click();
+  const row=page.getByRole('row').filter({hasText:title});
+  await expect(row).toBeVisible();
+  await row.getByRole('button',{name:'Preview request',exact:true}).click();
+  await expect(preview).toBeVisible();
+  await preview.getByRole('button',{name:'Open full request',exact:true}).click();
+  await expect(page).toHaveURL(new RegExp('/requests/'+saved.id+'$'));
+  await expect(page.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Approve',exact:true})).toBeVisible();
+  expect(mutations).toEqual([]);
+ }finally{await context.close();}
+});
