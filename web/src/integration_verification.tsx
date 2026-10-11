@@ -1,8 +1,15 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Alert, Button, Card } from '@datarelay-labs/foundation';
 import { api } from './api';
 import { Select, TextArea, useTask } from './common';
 import type { Integration } from './types';
+import {
+  IntegrationVerificationConfirmation, createIntegrationVerificationGuard,
+  prepareIntegrationVerificationReview, isCurrentIntegrationVerificationReview,
+  submitReviewedIntegrationVerification,
+  type IntegrationVerificationReview, type VerificationPayload,
+  type IntegrationVerificationReceipt,
+} from './integration_verification_review';
 
 export const VERIFICATION_MINIMUMS = [
   'EMAIL_PIN', 'EMAIL_PIN_PLUS_OTP', 'EMAIL_PIN_PLUS_MFA',
@@ -147,7 +154,7 @@ export function IntegrationMinimumEditor({
           (direction === 'lower' && !confirmedReduction)}
         onClick={onSave}
       >
-        {direction === 'lower' ? 'Confirm lower minimum' : 'Save verification minimum'}
+        {direction === 'lower' ? 'Review lower minimum' : 'Review verification minimum change'}
       </Button>
     </div>
   );
@@ -164,11 +171,17 @@ export function IntegrationVerificationManagement({
     useState<IntegrationVerificationMinimum>('EMAIL_PIN');
   const [reason, setReason] = useState('');
   const [confirmedReduction, setConfirmedReduction] = useState(false);
+  const [reviewed,setReviewed]=useState<IntegrationVerificationReview|null>(null);
+  const [reconcileRequired,setReconcileRequired]=useState(false);
+  const guard=useRef(createIntegrationVerificationGuard());
+  const selectedRef=useRef('');
   const task = useTask();
   const integration = integrations.find((item) => item.id === selectedId);
 
   function choose(id: string) {
+    selectedRef.current=id;
     setSelectedId(id);
+    setReviewed(null);
     const current = integrations.find((item) => item.id === id);
     setSelectedMode(validMinimum(current?.decision_verification_minimum)
       ? current.decision_verification_minimum : 'EMAIL_PIN');
@@ -179,24 +192,86 @@ export function IntegrationVerificationManagement({
   function chooseMinimum(mode: IntegrationVerificationMinimum) {
     setSelectedMode(mode);
     setConfirmedReduction(false);
+    setReviewed(null);
+  }
+  const candidate:VerificationPayload|null=(()=>{
+    try{
+      return prepareIntegrationVerificationChange(
+        integration,selectedMode,reason,confirmedReduction);
+    }catch{return null;}
+  })();
+
+  function reviewChange(){
+    if(guard.current.blocked())return;
+    if(!candidate){
+      task.setNotice('Select an enabled integration and a changed verification minimum, provide a valid reason, and explicitly acknowledge any reduction.');
+      setReviewed(null);
+      return;
+    }
+    try{
+      setReviewed(prepareIntegrationVerificationReview(integration,candidate));
+    }catch{
+      setReviewed(null);
+      task.setNotice('The selected verification floor is unavailable. Refresh saved integrations and review again.');
+    }
   }
 
-  async function save() {
-    const payload = prepareIntegrationVerificationChange(
-      integration, selectedMode, reason, confirmedReduction,
-    );
-    await api(
-      '/integrations/' + encodeURIComponent(integration!.id) + '/decision-verification',
-      'PUT',
-      payload,
-    );
+  async function confirmChange(){
+    const intent=reviewed;
+    if(!intent||!candidate
+      ||!isCurrentIntegrationVerificationReview(intent,integration,candidate)
+      ||selectedRef.current!==intent.integrationId){
+      setReviewed(null);
+      throw Error('VERIFICATION_REVIEW_CHANGED');
+    }
+    if(guard.current.blocked())return;
+    setReviewed(null);
+    setReconcileRequired(true);
+    try{
+      const receipt=await submitReviewedIntegrationVerification(
+        intent,guard.current,
+        ()=>api<Integration[]>('/integrations'),
+        (id,exact)=>api<IntegrationVerificationReceipt>(
+          '/integrations/'+encodeURIComponent(id)+'/decision-verification',
+          'PUT',exact),
+        ()=>selectedRef.current===intent.integrationId,
+      );
+      if(!receipt||selectedRef.current!==intent.integrationId)return;
+      // The server PUT receipt proves the selected policy update was
+      // acknowledged; an optional GET cannot turn a committed PUT into a
+      // reason for a second mutation.
+      task.setNotice('Server acknowledged verification policy change. Explicitly refresh saved integration metadata before reviewing another update; existing request snapshots remain unchanged.');
+      try {await onChanged();} catch {
+        // Keep the one-shot latch; a failed optional read is not a failed PUT.
+      }
+    }finally{
+      if(!guard.current.blocked())setReconcileRequired(false);
+    }
+  }
+
+  async function refreshAttempt(){
+    const id=guard.current.attemptedFor();
+    if(!id||selectedRef.current!==id){
+      throw Error('SELECT_ORIGINAL_VERIFICATION_INTEGRATION_FIRST');
+    }
+    const current=await api<Integration[]>('/integrations');
+    const row=current.find(item=>item.id===id);
+    if(!row||!row.enabled||!validMinimum(row.decision_verification_minimum)){
+      throw Error('VERIFICATION_SAVED_STATE_UNAVAILABLE');
+    }
+    if(selectedRef.current!==id)return;
+    // Reconcile the same selected integration with authoritative role-scoped
+    // readback, not a different connection's change or an automatic retry.
     await onChanged();
-    setReason('');
-    setConfirmedReduction(false);
-    task.setNotice(
-      'Integration verification minimum updated and audited. Existing '
-      + 'request snapshots were not overwritten.',
-    );
+    if(selectedRef.current!==id)return;
+    if(guard.current.readSucceeded(id)){
+      setReconcileRequired(false);
+      setReviewed(null);
+      setSelectedMode(row.decision_verification_minimum);
+      setReason('');
+      setConfirmedReduction(false);
+      task.setNotice('Saved verification minimum confirmed for this integration: '+row.decision_verification_minimum+'. Review again before a separate change.');
+    }
   }
 
   return (
@@ -224,15 +299,35 @@ export function IntegrationVerificationManagement({
           selectedMode={selectedMode}
           reason={reason}
           confirmedReduction={confirmedReduction}
-          busy={task.busy}
+          busy={task.busy||guard.current.blocked()}
           onMode={chooseMinimum}
-          onReason={setReason}
-          onConfirm={setConfirmedReduction}
-          onSave={() => void task.run(save)}
+          onReason={value=>{setReason(value);setReviewed(null);}}
+          onConfirm={value=>{setConfirmedReduction(value);setReviewed(null);}}
+          onSave={reviewChange}
         />
       ) : (
         <p>Select an integration to inspect its current verification minimum.</p>
       )}
+      <IntegrationVerificationConfirmation reviewed={reviewed}
+        valid={Boolean(candidate&&isCurrentIntegrationVerificationReview(
+          reviewed,integration,candidate))}
+        busy={task.busy||guard.current.blocked()}
+        onBack={()=>setReviewed(null)}
+        onConfirm={()=>{void task.run(confirmChange);}}/>
+      {guard.current.blocked()&&<Alert tone="warning"
+        title="Reconcile verification minimum change">
+        {reconcileRequired
+          ? 'A verification minimum PUT may already have committed. Do not retry automatically.'
+          : 'An earlier verification minimum update still needs a current saved-state check.'}
+        {' '}Select the originally changed integration
+        {' '}{guard.current.attemptedFor()} and refresh its saved minimum.
+        This client review does not supply server-side two-admin CAS.
+        <Button variant="secondary" disabled={task.busy||
+          selectedRef.current!==guard.current.attemptedFor()}
+          onClick={()=>void task.run(refreshAttempt)}>
+          Refresh verification minimum
+        </Button>
+      </Alert>}
     </Card>
   );
 }

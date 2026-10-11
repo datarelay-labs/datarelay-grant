@@ -110,7 +110,7 @@ describe('G10A administrator-owned integration verification minimum', () => {
     expect(html).toContain('can allow weaker verification for NEW');
     expect(html).toContain('NOT independent MFA');
     expect(html).toContain('type="checkbox"');
-    expect(html).toContain('Confirm lower minimum');
+    expect(html).toContain('Review lower minimum');
     expect(html).toContain('disabled=""');
     expect(html).not.toContain('callback_headers');
     expect(html).not.toContain('hmac_secret');
@@ -119,7 +119,7 @@ describe('G10A administrator-owned integration verification minimum', () => {
   it('renders stronger verification without the downgrade acknowledgement checkbox', () => {
     const low = { ...current, decision_verification_minimum: 'EMAIL_PIN' as const };
     const html = panel(low, 'EMAIL_PIN_PLUS_MFA');
-    expect(html).toContain('Save verification minimum');
+    expect(html).toContain('Review verification minimum change');
     expect(html).not.toContain('Confirm lower verification minimum');
     expect(html).not.toContain('type="checkbox"');
     expect(html).toContain('fresh signed-in Grant TOTP');

@@ -98,6 +98,37 @@ The accumulated local candidate must separately pass release gates.
 These safe source tasks are not replacements for blocked B1 Inbox, B2
 PIN landing, B3 Foundation shared Admin/role/mobile or B4 server CAS.
 
+**P0-UI rev58 — mounted integration verification minimum change Review→Confirm (2026-10-11):**
+Actual `Integrations → Approval verification minimum` previously immediately
+sent `PUT /integrations/{id}/decision-verification` from its editor Save,
+with no separate frozen human Review, synchronous duplicate-submit guard
+or explicit ambiguity reconciliation. Mounted
+`web/src/integration_verification.tsx` now requires the administrator
+to select a valid current enabled integration, proposed EMAIL_PIN /
+same-mailbox EMAIL_PIN_PLUS_OTP / fresh Grant TOTP MFA minimum,
+explicit downgrade acknowledgment where applicable and bounded audited
+reason; then a **read-only exact current→new Review** and separate
+**Confirm change**. New `web/src/integration_verification_review.tsx`
+freezes integration ID/name/kind/tenant/receiver origin/current minimum,
+selected new minimum and reason, performs one current role-scoped
+`GET /integrations` before at most one server-authorized PUT, uses a
+synchronous in-process one-shot guard, verifies the server
+`{integration_id, decision_verification_minimum,
+existing_snapshots_unchanged:true}` receipt and holds ambiguous or
+accepted writes pending explicit same-integration saved-state Refresh.
+A possibly committed PUT is never retried automatically if the optional
+readback fails; switching integration cannot unlock the original
+attempt. **This is client-side safety, NOT atomic two-administrator
+backend CAS.** The server is still authoritative for administrator
+permission and existing request-time snapshots; no human approval
+or external execution implied. New 10 RED missing module → GREEN,
+existing 10 adapted/passed; official native `bash scripts/checks.sh web`
+**536/536 PASS (66 suites)** with TypeScript/Vite production build
+PASS, native `bash scripts/checks.sh static` PASS with protected
+intentionally RED G12 test path-only stashed/restored SHA-exact.
+No real PUT, actual mail, Control/Stellar effect, browser/mobile two-person
+E2E, full CI/provenance or release gate claimed.
+
 **Owner replacement decision:** 2026-10-10. **One current roadmap, six major
 delivery bundles (B1–B6), retaining M1–M8 technical scope.** This file supersedes all former sequencing prose in
 ROADMAP.md and the former body of [coordination Issue #37](https://github.com/datarelay-labs/datarelay-grant/issues/37).
