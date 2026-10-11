@@ -2083,7 +2083,18 @@ class Core:
                     )
                 )
             if view == "overdue":
-                return bool(row["overdue"] or row["state"] == "EXPIRED")
+                # An expired execution grant is not an outstanding human
+                # decision. Mirror the ops_overdue authority predicate:
+                # only an undecided approval whose own decision deadline
+                # passed belongs to overdue; retain due escalated work.
+                return bool(
+                    row["overdue"]
+                    or (
+                        row["state"] == "EXPIRED"
+                        and row["decision"] is None
+                        and row["deadline"] <= now
+                    )
+                )
             if view == "escalated":
                 return bool(row["escalation"] and row["escalation"]["fired_at"] is not None)
             return True

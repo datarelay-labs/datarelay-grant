@@ -5,7 +5,8 @@ import {
   createInboxReadScope, readCurrentInbox, currentInboxProjection,
   InboxActionTarget, InboxApprovalProgress,
 } from './request_inbox_task_worklist';
-import { Select, State, useTask, when } from './common';
+import { Select, State, useTask } from './common';
+import { InboxDeadlineTruth } from './request_inbox_deadline_truth';
 import type { ApproverGroup, Integration, Profile, RequestRow, User } from './types';
 
 type Navigate = (path: string) => void;
@@ -355,7 +356,7 @@ export function RequestList({
           <td><InboxApprovalProgress row={row}/></td>
           <td><State value={row.delivery_state} /></td>
           <td><State value={row.execution_state} /></td>
-          <td>{when(row.deadline)}{row.escalation?.fired_at && <small>Escalated</small>}</td>
+          <td><InboxDeadlineTruth row={row}/></td>
         </tr>)}</tbody>
       </table></div>
       {!rows.length&&!listError&&

@@ -170,6 +170,54 @@ real human/mailbox same-installed-HEAD full E2E and NOT browser
 full 28/28 acceptance or GA. CI/hash/provenance/smoke and owner release
 still require separately authorized terminal gates.
 
+**P0-UI rev60 — B1 authoritative human-overdue truth and mounted Inbox deadline explanation (2026-10-11):**
+Actual B1 `GET /requests?view=overdue` in `grant/core.py` incorrectly
+included **every** `state=EXPIRED` request even after human APPROVED,
+misleading reviewers when a **post-approval execution grant** expired.
+The existing administrator `ops_overdue` correctly required an
+undecided human approval and a passed decision deadline. Scoped minimal
+backend fix makes the human overdue filter follow that same predicate:
+server-derived escalation overdue for `AWAITING/HELD`, OR terminal
+`EXPIRED` **with `decision is None` and `deadline<=now`**.
+It does **not** alter historical decisions, authorize new actions,
+create delayed jobs, or reclassify an external executor report.
+
+Reproduced with real API RED regression by extending the existing
+`tests/test_operations.py::test_approved_grant_expiry_is_not_misclassified_as_overdue_approval`
+to assert all admin/requester/approver human queues exclude expired
+approved grants, while a new test proves genuinely undecided expired
+approvals remain visible. Focused **RED 1 failing, 1 passing →
+GREEN 2/2**. New read-only
+`web/src/request_inbox_deadline_truth.tsx` in actual
+`web/src/request_inbox.tsx` makes source truth explicit: decision
+deadline vs server-marked due escalation, undecided expired approval
+vs approved grant expiry, separate external effect; never infer
+overdue from browser clock or claim past deadline means current
+eligibility. New 6 RED missing module → GREEN unit tests; affected
+Inbox regressions **23/23 PASS**.
+
+Official native `bash scripts/checks.sh api` **483/483 PASS**
+(1 upstream Starlette TestClient deprecation warning),
+native `bash scripts/checks.sh web` **551/551 PASS (68 suites)**
+with TypeScript/Vite production build, and native
+`bash scripts/checks.sh static` PASS. Focused existing
+loopback-only Playwright/Chromium **2/2 PASS** for approver
+held/recent/needs transitions and Home overdue drill-down with
+user-private already installed runtime libraries. Both are synthetic
+fixture evidence, **not** two independently operated real humans,
+email mailboxes, complete browser qualification or CI/production.
+During official API the deliberate G12 intentionally RED
+`tests/test_candidate_builder_integrity.py` was preserved
+by **path-only** stash then restored SHA-exact
+`cd7252633d96b424aa4e8f24ae08a8660f9663828b5fdffc0285ce9a73e68d4f`;
+protected historical Inbox RED stash
+`03cf0142b688baa17892e48785ff01803fa81c0e` unchanged.
+B1 user/installed E2E, B2 issued email PIN no-login landing,
+B3 Foundation member/Admin/mobile, B4 two-admin policy/template
+server CAS, B5 native Control/Stellar external effect and restore,
+B6 independent human acceptance/CI/provenance/smoke/owner release
+all remain open; source-only PASS is not GA.
+
 **Owner replacement decision:** 2026-10-10. **One current roadmap, six major
 delivery bundles (B1–B6), retaining M1–M8 technical scope.** This file supersedes all former sequencing prose in
 ROADMAP.md and the former body of [coordination Issue #37](https://github.com/datarelay-labs/datarelay-grant/issues/37).

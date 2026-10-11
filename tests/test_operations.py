@@ -192,6 +192,33 @@ def test_approved_grant_expiry_is_not_misclassified_as_overdue_approval(env):
     assert queue.status_code == 200
     assert queue.json() == []
 
+    # The approver and requester's non-admin overdue worklist must agree
+    # that a grant whose approval was already decided is NOT unapproved work.
+    for actor in ("approver", "requester", "admin"):
+        human_view = env.human(actor).get(
+            "/api/v1/requests", params={"view": "overdue"}
+        )
+        assert human_view.status_code == 200
+        assert row["id"] not in {item["id"] for item in human_view.json()}
+
+
+def test_true_unapproved_expired_request_remains_in_human_overdue_queue(env):
+    pending = create(env, title="Human decision expired before approval")
+    with env.db.transaction() as conn:
+        conn.execute(
+            "UPDATE requests SET deadline=? WHERE id=?",
+            (time.time() - 5, pending["id"]),
+        )
+    for actor in ("approver", "requester"):
+        listing = env.human(actor).get(
+            "/api/v1/requests", params={"view": "overdue"}
+        )
+        assert listing.status_code == 200
+        rows = [item for item in listing.json() if item["id"] == pending["id"]]
+        assert len(rows) == 1
+        assert rows[0]["state"] == "EXPIRED"
+        assert rows[0]["decision"] is None
+
 
 def test_integration_callback_accepted_is_transport_only(env):
     requester = env.human("requester")
