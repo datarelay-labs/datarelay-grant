@@ -475,3 +475,15 @@ pre {
   outline-offset: 2px;
 }
 .grant-activity-content { padding: 0 var(--dr-space-4) var(--dr-space-4); }
+
+/* Requested action vs approved execution-grant validity: current role-scoped
+   evidence only, no active-grant clock calculation or executable controls. */
+.grant-grant-scope {
+  min-width: 0;
+  margin-block: var(--dr-space-3);
+  padding: var(--dr-space-3) var(--dr-space-4);
+  border-inline-start: 3px solid var(--dr-border-default);
+  background: var(--dr-surface-input);
+}
+.grant-grant-scope h3 { margin-top: 0; }
+.grant-grant-scope p { overflow-wrap: anywhere; }

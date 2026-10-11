@@ -192,3 +192,44 @@ floor or G12 intentionally RED source.
 - **Separate gates:** issued email PIN Web auth boundary B2, backend
   overdue state correctness and real two-human E2E are not replaced or
   silently completed by this read-only UI parity.
+
+### P0-2E implemented: bounded grant scope without claiming execution
+
+**Selected original rank 4 (read-only subset):** Teleport reviewer target/expiry
+and StrongDM [Access Workflow Requests details](https://docs.strongdm.com/admin/access/access-workflows)
+show the business value of distinguishing what was asked from what is
+actually approved and when it can be used. These are vendor-published
+screen/task observations (no authenticated vendor account, no source copy).
+The remaining enterprise access policy editor/role elevation is **not** in scope.
+
+**Actual Grant gap:** `RequestDetailOverview` already showed the requested
+immutable operation/target and technical `grant_until` in a collapsed metadata
+bucket, but offered no clear, separate explanation of the currently
+server-recorded approved grant and its time boundary. That made an approved
+request easy to mistake for completed external execution.
+
+**Product-owned safe implementation:** `web/src/request_grant_scope.tsx`
+read-only section is mounted in the **real Request Detail**, immediately
+following the three separate state columns. It reuses the single existing
+role-scoped `RequestRow` (no new GET, POST, storage, credential or role
+boundary). `APPROVED` plus matching decision `APPROVED` shows immutable
+action kind/target and **server-recorded** `grant_until`. A missing/invalid
+end returns **validity unavailable**, never an invented date. Server state
+`EXPIRED` with previous decision `APPROVED` is a **historical expired grant**,
+not an overdue human approval or re-execution permission. Denied/held/
+cancelled/pending states show **no current execution grant**, even if stale
+`grant_until` is present. No browser clock is used to claim grant validity,
+no UI may authorize/execute or verify an external effect, and final consumer
+API revalidates validity and action fingerprint at execution commitment.
+The original raw technical metadata/approved-grant deadline is now displayed
+in this dedicated purpose-bound area rather than buried in technical fields.
+
+**RED→GREEN and safety:** seven missing-component cases were first RED,
+then all focused related unit cases passed; actual isolated Chromium uses
+different disposable requester/approver browser contexts, reviews the
+pending state before final Confirm and checks the approved bounded
+server state and 375px viewport after the real UI approval. No synthetic
+state override and no production/real-mailbox credential. Missing original
+rev72 emailed PIN landing remains deliberately RED and untouched; this
+separate read-only UI does **not** remove the required owner authorization
+for public email-link auth-boundary changes.

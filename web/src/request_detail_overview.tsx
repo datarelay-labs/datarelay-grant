@@ -2,6 +2,7 @@ import { Card } from '@datarelay-labs/foundation';
 import { when } from './common';
 import { RequestActionSummary } from './request_action_summary';
 import { RequestStageSummary } from './request_stage_summary';
+import { RequestGrantScope } from './request_grant_scope';
 import { InboxDeadlineTruth } from './request_inbox_deadline_truth';
 import { approvalProgressLabel, approvalWaitingLabel } from './request_evidence';
 import type { RequestRow } from './types';
@@ -32,6 +33,7 @@ export function RequestDetailOverview({
         description="Current server-projected approval progress and assignment. Approval, delivery and external execution remain separate."
       >
         <RequestStageSummary row={row} />
+        <RequestGrantScope row={row} />
         {row.viewer_delegated_for && (
           <p>You are acting as the recorded substitute for an assigned
             approver. Both identities remain auditable.</p>
@@ -46,7 +48,6 @@ export function RequestDetailOverview({
           <summary>Technical request metadata</summary>
           <dl className="grant-facts">
             <dt>Request ID</dt><dd><code>{row.id}</code></dd>
-            <dt>Execution validity</dt><dd>{when(row.grant_until)}</dd>
             <dt>Decision by / at</dt>
             <dd>{row.decision_actor ?? 'Not decided'} / {when(row.decision_at)}</dd>
             <dt>Revision</dt><dd>{row.revision}</dd>

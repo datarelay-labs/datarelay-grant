@@ -1321,3 +1321,54 @@ test('P0-2D role-scoped RequestDetail deadline truth and separate human confirm'
     await approver.close();
   }
 });
+
+// P0-2E: actual mounted RequestDetail, no mock grant/approval API.
+// Distinct disposable requester and approver sessions, not real-user E2E.
+test('P0-2E approved grant scope differs from requested action and external execution', async ({browser}) => {
+  const requester = await browser.newContext({viewport:{width:1280,height:800}});
+  const approver = await browser.newContext({viewport:{width:375,height:812}});
+  try {
+    const rp=await requester.newPage();
+    const ap=await approver.newPage();
+    const errors:string[]=[];
+    rp.on('pageerror',(error)=>errors.push(error.message));
+    ap.on('pageerror',(error)=>errors.push(error.message));
+    await login(rp,'requester');
+    await rp.getByRole('button',{name:'New request',exact:true}).click();
+    await rp.getByLabel('Approval profile',{exact:true}).selectOption(fixture().profile_id);
+    await rp.getByLabel('Request title',{exact:true}).fill('P0-2E grant scope preview');
+    await rp.getByLabel('Target',{exact:true}).fill('isolated-grant-scope-target');
+    await rp.getByRole('button',{name:'Review request',exact:true}).click();
+    await rp.getByRole('button',{name:'Confirm create request',exact:true}).click();
+    // The reviewed POST and route navigation complete asynchronously.
+    await expect(rp.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
+    const detailUrl=rp.url();
+    const initialScope=rp.getByRole('region',{name:'Execution grant scope and validity'});
+    await expect(initialScope).toContainText('No current execution grant recorded');
+    await expect(initialScope).not.toContainText('Grant expires');
+    await login(ap,'approver');
+    await ap.goto(detailUrl);
+    const scope=ap.getByRole('region',{name:'Execution grant scope and validity'});
+    await expect(scope).toContainText('No current execution grant recorded');
+    await expect(ap.getByText('Exact action requiring approval',{exact:true})).toBeVisible();
+    await ap.getByRole('button',{name:'Approve',exact:true}).click();
+    // Selecting a response is never equivalent to a recorded human decision.
+    await expect(scope).toContainText('No current execution grant recorded');
+    await expect(ap.getByRole('button',{name:'Confirm approved',exact:true})).toBeVisible();
+    await ap.getByRole('button',{name:'Confirm approved',exact:true}).click();
+    await expect(scope).toContainText('Granted for this immutable action');
+    await expect(scope).toContainText('Authorized operation');
+    await expect(scope).toContainText('Authorized target');
+    await expect(scope).toContainText('isolated-grant-scope-target');
+    await expect(scope).toContainText('Grant expires (server recorded)');
+    await expect(scope).toContainText('Connected systems execute separately');
+    await expect(scope).not.toContainText('Verified execution');
+    await expect(ap.getByRole('button',{name:'Execute',exact:true})).toHaveCount(0);
+    await expect(ap.getByText('NOT STARTED',{exact:true}).first()).toBeVisible();
+    expect(errors).toEqual([]);
+    expect(await ap.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+  } finally {
+    await requester.close();
+    await approver.close();
+  }
+});
