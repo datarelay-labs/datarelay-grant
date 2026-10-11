@@ -235,11 +235,14 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  await page.getByLabel('Template set name',{exact:true}).fill('Browser approval notifications');
  await page.getByLabel('Event subject',{exact:true}).fill('[Browser] {{request_title}}');
  await page.getByLabel('Event body',{exact:true}).fill('Approve {{action_kind}} on {{target}}.\n{{request_url}}');
- await page.getByRole('button',{name:'Create template set',exact:true}).click();
- await expect(page.getByText('Notification template set created.')).toBeVisible();
+ await page.getByRole('button',{name:'Review template set creation',exact:true}).click();
+ await expect(page.getByText('Review notification template set',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Confirm template set creation',exact:true}).click();
+ await page.getByRole('button',{name:'Refresh saved template set',exact:true}).click();
  await page.getByRole('button',{name:'Preview rendered message',exact:true}).click();
  await expect(page.getByText('[Browser] Sample approval request',{exact:true})).toBeVisible();
- await page.getByRole('button',{name:'Send test to me',exact:true}).click();
+ await page.getByRole('button',{name:'Review: Send test to me',exact:true}).click();
+ await page.getByRole('button',{name:'Confirm send test email',exact:true}).click();
  await expect(page.getByText(/Transport accepted: true.*Inbox receipt confirmed: false/)).toBeVisible();
  await page.goto('/profiles');
  await page.getByRole('button',{name:'Create policy',exact:true}).click();
@@ -896,5 +899,47 @@ test('B4 branding remains unchanged during Review and changes only after Confirm
   await expect(page.getByLabel('Brand name',{exact:true})).toHaveValue(newBrand);
   await expect(page.getByLabel('Sender display name',{exact:true})).toHaveValue(newSender);
   await expect(page.getByRole('button',{name:'Confirm branding change',exact:true})).toHaveCount(0);
+ }finally{await context.close();}
+});
+
+// Independent B4 task-first UI regression on the disposable loopback app.
+// Review-only must not issue a create or update POST/PUT.
+test('B4 full notification template set create and update require exact Review then Confirm',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ try{
+  await login(page,'admin');
+  await page.goto('/notifications');
+  const title='Isolated template '+crypto.randomUUID().slice(0,8);
+  await page.getByRole('button',{name:'Create template set',exact:true}).click();
+  await page.getByLabel('Template set name',{exact:true}).fill(title);
+  await page.getByLabel('Event subject',{exact:true}).fill('[Fixture] {{request_title}}');
+  await page.getByRole('button',{name:'Review template set creation',exact:true}).click();
+  await expect(page.getByText('Review notification template set',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Confirm template set creation',exact:true})).toBeVisible();
+  const before=await context.request.get('/api/v1/notification-template-sets');
+  expect((await before.json()).some((item:any)=>item.name===title)).toBe(false);
+  await page.getByRole('button',{name:'Confirm template set creation',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Refresh saved template set',exact:true})).toBeVisible();
+  const after=await context.request.get('/api/v1/notification-template-sets');
+  const created=(await after.json()).find((item:any)=>item.name===title);
+  expect(created).toBeTruthy();
+  expect(created.templates.requested.subject).toBe('[Fixture] {{request_title}}');
+  await page.getByRole('button',{name:'Refresh saved template set',exact:true}).click();
+  await expect(page.getByLabel('Event subject',{exact:true}))
+    .toHaveValue('[Fixture] {{request_title}}');
+  await page.getByLabel('Event subject',{exact:true}).fill('[Fixture updated] {{request_title}}');
+  await page.getByRole('button',{name:'Review template set update',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Confirm template set update',exact:true})).toBeVisible();
+  const beforeUpdate=await context.request.get('/api/v1/notification-template-sets');
+  const unchanged=(await beforeUpdate.json()).find((item:any)=>item.id===created.id);
+  expect(unchanged.templates.requested.subject).toBe('[Fixture] {{request_title}}');
+  await page.getByRole('button',{name:'Confirm template set update',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Refresh saved template set',exact:true})).toBeVisible();
+  const afterUpdate=await context.request.get('/api/v1/notification-template-sets');
+  const updated=(await afterUpdate.json()).find((item:any)=>item.id===created.id);
+  expect(updated.templates.requested.subject).toBe('[Fixture updated] {{request_title}}');
+  await page.getByRole('button',{name:'Refresh saved template set',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Confirm template set update',exact:true})).toHaveCount(0);
  }finally{await context.close();}
 });

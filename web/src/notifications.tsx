@@ -15,6 +15,12 @@ import {
   NotificationRequestLink, templateDraftSignature,
 } from './notification_preview';
 import {
+  NotificationTemplateSaveConfirmation,
+  prepareTemplateSaveReview, isCurrentTemplateSaveReview,
+  createTemplateSaveGuard,submitReviewedTemplateSave,
+  type TemplateSaveReview,type TemplateSaveMode,
+} from './notification_template_save_review';
+import {
   BrandingChangeConfirmation, prepareBrandingReview,
   isCurrentBrandingReview, createBrandingSaveGuard,
   submitReviewedBrandingSave, type BrandingReview,
@@ -332,6 +338,12 @@ export function Notifications() {
   const [brandingNeedsRefresh,setBrandingNeedsRefresh]=useState(false);
   const brandingSaveGuard=useRef(createBrandingSaveGuard());
   const [templateView, setTemplateView] = useState<TemplateView>('list');
+  const templateViewRef=useRef<TemplateView>('list');
+  const selectedTemplateRef=useRef('');
+  const [reviewedTemplateSave,setReviewedTemplateSave]=
+    useState<TemplateSaveReview|null>(null);
+  const templateSaveGuard=useRef(createTemplateSaveGuard());
+  const [templateNeedsRefresh,setTemplateNeedsRefresh]=useState(false);
   const [savedSignature, setSavedSignature] = useState<string | null>(null);
   const previewGeneration = useRef(0);
   const [brandName, setBrandName] = useState('DataRelay Grant');
@@ -363,9 +375,14 @@ export function Notifications() {
   const brandingDraft:BrandingDraft={
     brand_name:brandName,sender_display_name:senderName,
   };
+  const templateDraft={name,enabled,templates:draftTemplates};
+  const currentTemplate=editing
+    ?sets.find(row=>row.id===editing)??null:null;
+
   function switchSection(next:NotificationView){
     activeViewRef.current=next;
     setReviewedBranding(null);
+    setReviewedTemplateSave(null);
     setView(next);
   }
   function editBrandName(value:string){
@@ -379,6 +396,7 @@ export function Notifications() {
     previewGeneration.current += 1;
     setPreview(null);
     setReviewedTestSend(null);
+    setReviewedTemplateSave(null);
   }
 
   const load = async () => {
@@ -411,10 +429,14 @@ export function Notifications() {
 
   function startCreate() {
     resetEditor();
+    templateViewRef.current='editor';
+    selectedTemplateRef.current='';
     setTemplateView('editor');
   }
 
   function edit(row: NotificationTemplateSet) {
+    templateViewRef.current='editor';
+    selectedTemplateRef.current=row.id;
     setEditing(row.id);
     setSavedSignature(templateDraftSignature(row));
     setName(row.name);
@@ -433,30 +455,99 @@ export function Notifications() {
     invalidatePreview();
   }
 
-  async function save() {
-    const payload = {
-      name,
-      templates: draftTemplates,
-      ...(editing ? { enabled } : {}),
-    };
-    const saved = await api<NotificationTemplateSet>(
-      editing ? '/notification-template-sets/' + editing : '/notification-template-sets',
-      editing ? 'PUT' : 'POST',
-      payload,
-    );
-    const wasEditing = Boolean(editing);
-    setEditing(saved.id);
-    setName(saved.name);
-    setEnabled(saved.enabled);
-    setDraftTemplates(structuredClone(saved.templates));
-    setSavedSignature(templateDraftSignature(saved));
+  function reviewTemplateSave(){
+    if(templateSaveGuard.current.blocked())return;
+    if(editing && (!currentTemplate
+      ||savedSignature!==templateDraftSignature(currentTemplate))){
+      setReviewedTemplateSave(null);
+      task.setNotice('Saved template set changed since opening the editor. Return to the list and inspect the current saved version.');
+      return;
+    }
+    try{
+      setReviewedTemplateSave(prepareTemplateSaveReview(
+        editing?'update':'create',currentTemplate,templateDraft));
+      task.setNotice('');
+    }catch{
+      setReviewedTemplateSave(null);
+      task.setNotice('Provide a changed, complete, valid nine-event template set with non-empty safe subjects and bodies, and review the saved identity.');
+    }
+  }
+
+  async function confirmTemplateSave(){
+    const intent=reviewedTemplateSave;
+    if(!intent||!isCurrentTemplateSaveReview(intent,currentTemplate,templateDraft)
+      ||activeViewRef.current!=='templates'
+      ||templateViewRef.current!=='editor'
+      ||selectedTemplateRef.current!==intent.savedId){
+      setReviewedTemplateSave(null);
+      throw Error('TEMPLATE_SAVE_SOURCE_CHANGED');
+    }
+    if(templateSaveGuard.current.blocked())return;
+    setReviewedTemplateSave(null);
+    setTemplateNeedsRefresh(true);
+    try{
+      const output=await submitReviewedTemplateSave(
+        intent,templateSaveGuard.current,
+        ()=>api<NotificationTemplateSet[]>('/notification-template-sets'),
+        (mode:TemplateSaveMode,id,payload)=>api<NotificationTemplateSet>(
+          mode==='update'?'/notification-template-sets/'+encodeURIComponent(id)
+            :'/notification-template-sets',
+          mode==='update'?'PUT':'POST',payload),
+        ()=>activeViewRef.current==='templates'
+          &&templateViewRef.current==='editor'
+          &&selectedTemplateRef.current===intent.savedId);
+      if(!output||activeViewRef.current!=='templates'
+        ||templateViewRef.current!=='editor'
+        ||selectedTemplateRef.current!==intent.savedId)return;
+      selectedTemplateRef.current=output.id;
+      setEditing(output.id);
+      setName(output.name);
+      setEnabled(output.enabled);
+      setDraftTemplates(structuredClone(output.templates));
+      setSavedSignature(templateDraftSignature(output));
+      setSets(current=>current.some(row=>row.id===output.id)
+        ?current.map(row=>row.id===output.id?output:row)
+        :[...current,output].sort((a,b)=>a.name.localeCompare(b.name)));
+      invalidatePreview();
+      task.setNotice('Server acknowledged exact template set save. Review the saved set with an explicit Refresh before editing or preview/test-sending any separate change. No email was sent.');
+    }finally{
+      if(!templateSaveGuard.current.blocked())setTemplateNeedsRefresh(false);
+    }
+  }
+
+  async function refreshTemplateSave(){
+    if(!templateSaveGuard.current.blocked()
+      ||activeViewRef.current!=='templates'||templateViewRef.current!=='editor'){
+      throw Error('TEMPLATE_SAVE_REFRESH_UNAVAILABLE');
+    }
+    const attempted=templateSaveGuard.current.attemptedFor();
+    const latest=await api<NotificationTemplateSet[]>('/notification-template-sets');
+    if(!Array.isArray(latest))throw Error('TEMPLATE_LIST_INVALID');
+    if(activeViewRef.current!=='templates'||templateViewRef.current!=='editor')return;
+    const target=attempted.startsWith('create:')
+      ?latest.find(row=>row.name.trim().toLowerCase()===attempted.slice(7))
+      :latest.find(row=>row.id===attempted);
+    if(!target){
+      setSets(latest);
+      throw Error('TEMPLATE_SAVE_OUTCOME_UNVERIFIED_NO_RETRY');
+    }
+    if(selectedTemplateRef.current && selectedTemplateRef.current!==target.id)
+      throw Error('SELECT_ORIGINAL_TEMPLATE_SET_FIRST');
+    selectedTemplateRef.current=target.id;
+    setSets(latest);
+    setEditing(target.id);
+    setName(target.name);
+    setEnabled(target.enabled);
+    setDraftTemplates(structuredClone(target.templates));
+    setSavedSignature(templateDraftSignature(target));
     invalidatePreview();
-    await load();
-    task.setNotice(
-      wasEditing
-        ? 'Notification template set updated. Existing requests keep their snapshot.'
-        : 'Notification template set created.',
-    );
+    if(templateSaveGuard.current.readSucceeded(attempted))setTemplateNeedsRefresh(false);
+    task.setNotice('The originally attempted template set was refreshed from the current administrator-scoped server list. Review again for a separate change.');
+  }
+  function leaveTemplateEditor(){
+    templateViewRef.current='list';
+    setReviewedTemplateSave(null);
+    setTemplateView('list');
   }
 
   function sample(): NotificationTestSendSample {
@@ -711,7 +802,7 @@ export function Notifications() {
         <>
           <section className="grant-detail-header" aria-label="Notification template workspace">
             <div>
-              <Button variant="ghost" onClick={() => setTemplateView('list')}>
+              <Button variant="ghost" onClick={leaveTemplateEditor}>
                 ← Back to template sets
               </Button>
               <p className="grant-eyebrow">Notification template set</p>
@@ -728,9 +819,9 @@ export function Notifications() {
             description="All Grant events stay in one coherent set; editing never rewrites existing request snapshots."
           >
             <Form
-              busy={task.busy}
-              onSubmit={() => void task.run(save)}
-              label={editing ? 'Save template set' : 'Create template set'}
+              busy={task.busy||templateSaveGuard.current.blocked()}
+              onSubmit={reviewTemplateSave}
+              label={editing ? 'Review template set update' : 'Review template set creation'}
             >
               <TextField
                 label="Template set name"
@@ -791,6 +882,26 @@ export function Notifications() {
                 </label>
               ) : null}
             </Form>
+            <NotificationTemplateSaveConfirmation
+              reviewed={reviewedTemplateSave}
+              valid={isCurrentTemplateSaveReview(
+                reviewedTemplateSave,currentTemplate,templateDraft)}
+              busy={task.busy||templateSaveGuard.current.blocked()}
+              onBack={()=>setReviewedTemplateSave(null)}
+              onConfirm={()=>{void task.run(confirmTemplateSave);}}
+            />
+            {templateSaveGuard.current.blocked()&&<Alert tone="warning"
+              title="Reconcile saved template set">
+              {templateNeedsRefresh
+                ? 'A template create/update POST or PUT may already have committed. Never retry it automatically.'
+                : 'The prior template save still needs an explicit saved-state read.'}
+              {' '}Return to the originally attempted set and refresh its metadata.
+              Another administrator could have changed it; this is not atomic backend CAS.
+              <Button variant="secondary" disabled={task.busy}
+                onClick={()=>{void task.run(refreshTemplateSave);}}>
+                Refresh saved template set
+              </Button>
+            </Alert>}
 
             <details className="grant-safe-variables">
               <summary>Safe variables</summary>

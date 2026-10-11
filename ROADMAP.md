@@ -273,6 +273,42 @@ B2 emailed PIN landing, B3 shared Foundation role/mobile,
 B4 server template/policy CAS, B5 external Control/Stellar effects
 and B6 release/CI/user acceptance remain open.
 
+**P0 mounted Notifications Template Sets full nine-event Review→Confirm (rev63, 2026-10-11):**
+The actual `Notifications → Template Sets` create/update editor previously
+immediately POSTed/PUT the entire saved event family upon Form submit.
+It now uses the product's task-first list→details→**review exact
+source/set version, status, changed events and all nine future
+subject/body texts→explicit final Confirm** workflow. A new
+`web/src/notification_template_save_review.tsx` snapshots complete
+nine-event content and exact selected saved ID/`updated_at`/version
+fingerprint; a new set checks a duplicate case-insensitive name on
+the current role-scoped list before creating it. After fresh saved
+GET, at most one server-authorized POST or PUT can start; a
+synchronous attempt guard rejects same-render double-clicks and
+retains ambiguous/acknowledged effects until operator-triggered
+Refresh of the originally reviewed saved set. Server response must
+match exact returned ID, enabled/name and complete event content
+before UI success. The mounted `web/src/notifications.tsx`
+direct receipt projection does not turn an optional GET failure
+into a second save. The original `web/tests/browser/approval.spec.ts`
+older create/test-send fixture path was aligned to already-shipped
+reviewed UI; a new isolated B4 browser case verifies **no server
+create/update on Review**, exact write only on Confirm followed
+by fresh saved metadata reconciliation.
+
+New **12 RED missing-module → GREEN** unit cases, focused Notifications
+**28/28 PASS**; official native Web **573/573 PASS (70 test files)**,
+TypeScript/Vite build PASS and Static PASS with G12 intentionally RED
+path-only preserved/restored SHA exact. Both Branding and Template
+Set synthetic real-mounted Chromium UI paths **2/2 PASS in a
+single focused run**; no real customer mail, SMTP outside
+disposable fixture, native Control/Stellar execution or full
+independent two-human/two-mailbox E2E. The backend remains final
+authority over allowed variables, role and enabled-policy
+constraints; client-side current-GET review is **not atomic
+two-administrator CAS**, still a separate B4 server/release gate.
+Existing request snapshots are never silently rewritten.
+
 **Owner replacement decision:** 2026-10-10. **One current roadmap, six major
 delivery bundles (B1–B6), retaining M1–M8 technical scope.** This file supersedes all former sequencing prose in
 ROADMAP.md and the former body of [coordination Issue #37](https://github.com/datarelay-labs/datarelay-grant/issues/37).
