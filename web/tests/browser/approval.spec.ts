@@ -279,8 +279,11 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  await page.getByLabel('New username',{exact:true}).fill('browser-member');
  await page.getByLabel('New user email',{exact:true}).fill('browser-member@example.invalid');
  await page.getByLabel('Initial password',{exact:true}).fill(f.password);
- await page.getByRole('button',{name:'Create account',exact:true}).click();
- await expect(page.getByText('Account created. Share credentials through an approved secure channel.')).toBeVisible();
+ await page.getByRole('button',{name:'Review account creation',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Review before creating account',exact:true})).toBeVisible();
+ await expect(page.getByText('Provided privately; never displayed in review.',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Confirm create account',exact:true}).click();
+ await expect(page.getByText('Grant acknowledged the new account. Provide the initial credential through an approved private channel; no email or business execution was sent.',{exact:true})).toBeVisible();
  await page.goto('/integrations');
  // Registration stores the exact installation-approved receiver only after
  // explicit Review -> Confirm. A successful POST still needs Refresh.
