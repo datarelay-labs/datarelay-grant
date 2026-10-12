@@ -768,6 +768,16 @@ The primary approver view prioritizes work that needs action:
 - Delegated to me
 - Recently decided
 
+The approver-specific overdue view is limited to the viewer's currently
+assigned approval seats, including a presently authorized substitute. It uses
+the same server-derived escalation/expired-undecided predicate as Operations;
+requests visible only because the viewer submitted them do not become
+approval tasks. The separate requester-visible historical overdue view stays
+available for follow-up, and the administrative Operations overdue total
+continues to cover all requests. Home's assigned-overdue count and its Inbox
+destination must agree, and a grant that expired **after APPROVED** is not an
+outstanding human approval.
+
 ### 11.3 Requester view
 
 Requesters can see:

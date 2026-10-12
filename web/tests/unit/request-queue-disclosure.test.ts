@@ -85,6 +85,22 @@ describe('Grant request queue progressive disclosure', () => {
 });
 
 
+describe('Grant approval overdue deep-link compatibility', () => {
+  it('normalizes a legacy general overdue preset to an assigned-only approval view', () => {
+    const html = renderToStaticMarkup(createElement(RequestList, {
+      user: viewer, mode: 'approvals', navigate: () => undefined,
+      preset: { view: 'overdue' },
+    }));
+    expect(html).toMatch(/<option(?=[^>]*value="approval_overdue")(?=[^>]*selected="")[^>]*>/);
+    expect(html).not.toContain('<option value="overdue"');
+    const query = new URL(queryFor({
+      ...emptyFilters(), view: 'approval_overdue',
+    }, 0), 'http://testserver');
+    expect(query.searchParams.get('view')).toBe('approval_overdue');
+  });
+});
+
+
 describe('Grant server-scoped request date filters use UTC calendar days', () => {
   it('preserves UTC day boundaries even for a reviewer in Asia/Seoul', () => {
     const previous = process.env.TZ;
@@ -118,21 +134,22 @@ describe('Grant server-scoped request date filters use UTC calendar days', () =>
 
 
 describe('Grant approval task-first quick views', () => {
-  it('renders four purpose-labeled queue shortcuts only for approvers', () => {
+  it('renders five purpose-labeled queue shortcuts only for approvers', () => {
     const memberApproval = renderToStaticMarkup(createElement(RequestList, {
       user: viewer, mode: 'approvals', navigate: () => undefined,
     }));
     expect(memberApproval).toContain('aria-label="Approval task views"');
-    for (const label of ['Needs my decision', 'On hold', 'Delegated to me', 'Recently decided']) {
+    for (const label of ['Needs my decision', 'Overdue approvals', 'On hold', 'Delegated to me', 'Recently decided']) {
       expect(memberApproval).toContain(label);
     }
     expect(memberApproval).toContain('aria-pressed="true"');
-    expect(memberApproval).not.toContain('Overdue quick action');
+    expect(memberApproval).toContain('value="approval_overdue"');
+    expect(memberApproval).not.toContain('<option value="overdue"');
     expect(display('member')).not.toContain('aria-label="Approval task views"');
   });
 
   it('clears hidden restrictive filters and keeps server-scoped view in every shortcut', () => {
-    const allowed = ['needs', 'held', 'delegated', 'recent'] as const;
+    const allowed = ['needs', 'approval_overdue', 'held', 'delegated', 'recent'] as const;
     for (const view of allowed) {
       const filters = approvalQuickViewFilters(view);
       expect(filters.view).toBe(view);

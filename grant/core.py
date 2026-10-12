@@ -1943,7 +1943,7 @@ class Core:
     ) -> list[dict]:
         """Stream role-visible rows and page *after* all server-side filters."""
         allowed_views = {
-            "all", "needs", "overdue", "held", "delegated",
+            "all", "needs", "overdue", "approval_overdue", "held", "delegated",
             "recent", "requester", "escalated",
             "ops_pending", "ops_overdue", "ops_approved_unused",
             "ops_execution_unknown", "ops_execution_failed",
@@ -2097,17 +2097,20 @@ class Core:
                         for item in row["decisions"]
                     )
                 )
-            if view == "overdue":
-                # An expired execution grant is not an outstanding human
-                # decision. Mirror the ops_overdue authority predicate:
-                # only an undecided approval whose own decision deadline
-                # passed belongs to overdue; retain due escalated work.
+            if view in ("overdue", "approval_overdue"):
+                # The general historical overdue view remains visible to
+                # requesters, but an approver task queue must match Home's
+                # currently assigned seat projection (including delegates).
+                # Neither view counts a grant expired AFTER approval.
                 return bool(
-                    row["overdue"]
-                    or (
-                        row["state"] == "EXPIRED"
-                        and row["decision"] is None
-                        and row["deadline"] <= now
+                    (view == "overdue" or assigned)
+                    and (
+                        row["overdue"]
+                        or (
+                            row["state"] == "EXPIRED"
+                            and row["decision"] is None
+                            and row["deadline"] <= now
+                        )
                     )
                 )
             if view == "escalated":

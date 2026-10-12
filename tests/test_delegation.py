@@ -125,6 +125,40 @@ def test_delegate_sees_assigned_request_in_primary_inbox(env):
     assert detail.json()["viewer_can_decide"] is True
 
 
+def test_current_delegate_keeps_only_assigned_expired_approval_work(env):
+    profile = active_group_profile(env)
+    row = create(env, profile)
+    now = time.time()
+    env.core.create_delegation(
+        Principal(env.users["approver"]["id"], "human", "member"),
+        Delegation(
+            substitute_id=env.users["stranger"]["id"],
+            starts_at=now - 1,
+            ends_at=now + 60,
+        ),
+    )
+    with env.db.transaction() as conn:
+        conn.execute(
+            "UPDATE requests SET deadline=? WHERE id=?",
+            (now - 5, row["id"]),
+        )
+
+    delegated = env.human("stranger").get(
+        "/api/v1/requests", params={"view": "approval_overdue"}
+    )
+    assert delegated.status_code == 200, delegated.text
+    matches = [item for item in delegated.json() if item["id"] == row["id"]]
+    assert len(matches) == 1
+    assert matches[0]["state"] == "EXPIRED"
+    assert matches[0]["viewer_assigned"] is True
+    assert matches[0]["viewer_delegated_for"] == env.users["approver"]["id"]
+    requester = env.human("requester").get(
+        "/api/v1/requests", params={"view": "approval_overdue"}
+    )
+    assert requester.status_code == 200, requester.text
+    assert row["id"] not in {item["id"] for item in requester.json()}
+
+
 def test_delegate_matches_relevant_older_delegation_when_newer_one_is_unrelated(env):
     profile = active_group_profile(env)
     now = time.time()

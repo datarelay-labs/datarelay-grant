@@ -39,13 +39,14 @@ const initialFilters = (mode: InboxMode): Filters => ({
   approver_id: '', group_id: '', integration_id: '', action_kind: '',
   created_after: '', created_before: '', delivery_state: '', execution_state: '',
 });
-// Task-first shortcuts follow the existing role-scoped server queue views.
-// Switching must clear previously hidden restrictive filters, not imply any
-// decision, load all tenants, or claim an overdue expiry bug is fixed.
-export type ApprovalQuickView = 'needs' | 'held' | 'delegated' | 'recent';
+// Task-first shortcuts use role-scoped server queues, including assigned-only
+// overdue work. Switching clears stale filters without granting a decision,
+// expanding tenant visibility or computing overdue with the browser clock.
+export type ApprovalQuickView = 'needs' | 'approval_overdue' | 'held' | 'delegated' | 'recent';
 
 const approvalQuickViews: readonly { value: ApprovalQuickView; label: string }[] = [
   { value: 'needs', label: 'Needs my decision' },
+  { value: 'approval_overdue', label: 'Overdue approvals' },
   { value: 'held', label: 'On hold' },
   { value: 'delegated', label: 'Delegated to me' },
   { value: 'recent', label: 'Recently decided' },
@@ -73,6 +74,7 @@ const viewOptions: { value: string; label: string }[] = [
   { value: 'needs', label: 'Needs my decision' },
   { value: 'held', label: 'Held approvals' },
   { value: 'overdue', label: 'Overdue or expired' },
+  { value: 'approval_overdue', label: 'My overdue approvals' },
   { value: 'delegated', label: 'Delegated to me' },
   { value: 'recent', label: 'Recently decided' },
   { value: 'requester', label: 'My submitted requests' },
@@ -135,6 +137,11 @@ export function RequestList({
 }: { user: User; mode: InboxMode; navigate: Navigate; preset?: Partial<Filters> }) {
   const initial = (): Filters => {
     const defaults = { ...initialFilters(mode), ...preset };
+    // The legacy deep-link and presets refer to general overdue history.
+    // The Approvals workspace must ask for ONLY currently assigned seats.
+    if (mode === 'approvals' && defaults.view === 'overdue') {
+      defaults.view = 'approval_overdue';
+    }
     // The App router already resolves pathname independently of search params.
     // Only this allowlisted deep link may override the approval queue's default.
     if (
@@ -142,7 +149,7 @@ export function RequestList({
       window.location.pathname === '/approvals' &&
       new URLSearchParams(window.location.search).get('view') === 'overdue'
     ) {
-      defaults.view = 'overdue';
+      defaults.view = 'approval_overdue';
     }
     return defaults;
   };
@@ -264,8 +271,9 @@ export function RequestList({
   const viewChoices = mode === 'requester'
     ? viewOptions.filter((item) => item.value === 'requester')
     : mode === 'approvals'
-      ? viewOptions.filter((item) => ['needs', 'held', 'overdue', 'delegated', 'recent'].includes(item.value))
-      : viewOptions.filter((item) => admin || !item.value.startsWith('ops_'));
+      ? viewOptions.filter((item) => ['needs', 'held', 'approval_overdue', 'delegated', 'recent'].includes(item.value))
+      : viewOptions.filter((item) => item.value !== 'approval_overdue' &&
+          (admin || !item.value.startsWith('ops_')));
   const heading = mode === 'approvals'
     ? 'Your approval queue'
     : mode === 'requester' ? 'My submitted requests' : 'Approval requests';

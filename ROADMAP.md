@@ -1,5 +1,26 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-12 B1-B assigned-only approval overdue parity — source checkpoint
+
+A verified gap caused Home's assigned-overdue action to open the general
+requester-visible `view=overdue` queue, so a requester-only expired approval
+could appear in the **Your approval queue** even though Home did not count it.
+The new additive, server-filtered `approval_overdue` view requires the
+existing current approval seat (`viewer_assigned`), including active
+substitutes, while reusing the already-implemented escalation-due or
+expired-undecided predicate **after** existing `_visible` authorization.
+`view=overdue` historical requester follow-up and admin `ops_overdue`
+retain their prior semantics. The legacy `/approvals?view=overdue` deep link
+now resolves to `approval_overdue`; the Inbox has a dedicated Overdue action.
+The Home overdue counter now excludes an already-APPROVED grant whose
+execution grant later expired. No client-clock deadline or added decision
+endpoint, privileged read or external effect. RED-first targeted API
+regression reproduced 422 then GREEN 3/3, active-delegate API 1/1,
+Web focused 20/20, TS noEmit and changed-path Ruff/diff hygiene PASS.
+**B1-B source fix implemented; full API/Web/Chromium, real two-human/mailbox
+E2E, native effects, CI and release remain intentionally unqualified.**
+
+
 ## 2026-10-12 B1 mobile Request Inbox — source implementation checkpoint
 
 The last wide six-column current Request Inbox list now presents exact

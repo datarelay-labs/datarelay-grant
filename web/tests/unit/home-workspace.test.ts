@@ -51,6 +51,10 @@ describe('Grant Home task-first projection', () => {
     const rows = [
       sample('overdue', { viewer_assigned: true, overdue: true, deadline: 500 }),
       sample('expired', { viewer_assigned: true, state: 'EXPIRED', deadline: 200 }),
+      sample('approved-grant-expired', {
+        viewer_assigned: true, state: 'EXPIRED', deadline: 100,
+        decision: 'APPROVED',
+      }),
       sample('unassigned-expired', { overdue: true, state: 'EXPIRED' }),
     ];
     const snapshot = projectHomeWorkspace(rows, 'unrelated', false, 900);

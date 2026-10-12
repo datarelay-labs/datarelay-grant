@@ -1,5 +1,22 @@
 # Grant 1.0 implementation status
 
+## B1 approval overdue Home-to-Inbox parity (source-only, 2026-10-12)
+
+Home's assigned-only overdue shortcut previously opened the general
+requester-visible overdue API queue, causing a real scope/count mismatch.
+The additive `approval_overdue` API view now filters authoritative server
+`viewer_assigned` seats, including current delegates, while preserving
+requester-visible overdue history and administrator `ops_overdue`.
+The original `/approvals?view=overdue` link maps to the new scoped queue;
+a fifth quick task view surfaces Overdue approvals. Home no longer counts
+an approved-then-expired execution grant as a late human decision. No new
+permission, external execution path or approval mutation was introduced.
+Focused RED-before/GREEN-after API plus delegate regression and 20 focused
+Web assertions, TypeScript noEmit, changed-path Ruff and diff hygiene
+PASS. Owner-deferred full official test suite, independent real-human
+mailboxes, native Control/Stellar effects, CI and release remain OPEN.
+
+
 ## B1 Request Inbox narrow mobile task list (source-only, 2026-10-12)
 
 At <=600px the original six-column Request Inbox table is replaced by

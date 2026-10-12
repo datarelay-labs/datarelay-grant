@@ -220,6 +220,31 @@ def test_true_unapproved_expired_request_remains_in_human_overdue_queue(env):
         assert rows[0]["decision"] is None
 
 
+def test_approver_overdue_queue_does_not_include_requester_only_work(env):
+    """A role-scoped approval queue must match Home's assigned overdue count."""
+    row = create(env, title="Expired approval still visible to requester")
+    with env.db.transaction() as conn:
+        conn.execute(
+            "UPDATE requests SET deadline=? WHERE id=?",
+            (time.time() - 5, row["id"]),
+        )
+
+    def queue(actor, view):
+        response = env.human(actor).get(
+            "/api/v1/requests", params={"view": view}
+        )
+        assert response.status_code == 200, response.text
+        return {item["id"] for item in response.json()}
+
+    # Historic requester and operator queues retain their existing meanings.
+    assert row["id"] in queue("requester", "overdue")
+    assert row["id"] in queue("admin", "ops_overdue")
+    # The distinct approval-task queue is bound to the actual current seat.
+    assert row["id"] in queue("approver", "approval_overdue")
+    assert row["id"] not in queue("requester", "approval_overdue")
+    assert row["id"] not in queue("admin", "approval_overdue")
+
+
 def test_integration_callback_accepted_is_transport_only(env):
     requester = env.human("requester")
     row = create(env, title="Callback delivery", client=requester)

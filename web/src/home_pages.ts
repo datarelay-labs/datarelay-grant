@@ -65,7 +65,8 @@ export function projectHomeWorkspace(
 
   const overdue = assigned.filter((row) =>
     row.overdue === true ||
-    (row.state === 'EXPIRED' && row.deadline <= nowSeconds),
+    (row.state === 'EXPIRED' && row.decision === null &&
+      row.deadline <= nowSeconds),
   ).sort(byDeadline);
 
   const needsResponse = own.filter((row) =>
