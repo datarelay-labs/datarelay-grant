@@ -1593,7 +1593,9 @@ class Core:
                     raise GrantError("IDEMPOTENCY_CONFLICT", 409)
                 return self._project(conn, existing)
 
-            if str(body.source.get("event_type", "")).startswith("grant."):
+            from .feedback_guard import is_grant_feedback
+
+            if is_grant_feedback(body.source):
                 raise GrantError("OUTCOME_FEEDBACK_LOOP", 422)
 
             selected_profile = conn.execute(

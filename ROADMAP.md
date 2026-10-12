@@ -1,5 +1,19 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-12 — M6 native-feedback-loop ingress guard hardening
+
+Grant's actual request-creation boundary now rejects uppercase/whitespace-
+modified first-party `Grant.*` event types, explicit original Grant result
+IDs, declared DataRelay Grant origin and nested/wrapped copies of the same
+first-party response. Bounded nested traversal fails closed on unusually
+large/deep source envelopes without loosening an external integration's
+current scope, tenant, request idempotency, approval or MFA checks. Native
+source regression was initially RED (seven accepted feedback variants),
+then **8/8 GREEN**, with the existing identity and product consumer-guard
+unit tests green. This closes a Grant-owned ingress guard gap only: it is
+**not** Stellar deployed receiver proof or DataRelay Control durable effects.
+
+
 ## 2026-10-12 — PF-11 Grant-native notification destination visibility
 
 The accepted private Foundation RC41 `NotificationDeliveryPanel` is now backed by
