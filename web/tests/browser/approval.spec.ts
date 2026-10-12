@@ -135,7 +135,7 @@ test('Foundation member account action reaches personal security, not Administra
 test('Foundation administration and mobile approval page are real adapters',async({browser})=>{
  const context=await browser.newContext({viewport:{width:390,height:844}});const page=await context.newPage();await login(page,'admin');
  await page.goto('/system');await expect(page.getByText('System Health',{exact:true})).toBeVisible();await expect(page.getByText('User Management',{exact:true})).toBeVisible();await page.getByRole('button',{name:'View System Health',exact:true}).click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
- await page.goto('/integrations');await expect(page.locator('strong').filter({hasText:/^Isolated DataRelay fixture$/})).toBeVisible();await page.getByRole('button',{name:'Review connection test',exact:true}).click();
+ await page.goto('/integrations');await expect(page.getByRole('list',{name:'Registered connections mobile list'}).getByText('Isolated DataRelay fixture',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Review connection test',exact:true}).click();
  await expect(page.getByRole('button',{name:'Confirm connection test',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Confirm connection test',exact:true}).click();
  await expect(page.getByText('Diagnostic transport accepted by the receiver.',{exact:false})).toBeVisible();
