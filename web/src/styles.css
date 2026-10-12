@@ -584,3 +584,24 @@ pre {
   .grant-policy-mobile-facts dd small { display: block; overflow-wrap: anywhere; }
   .grant-policy-mobile-card .grant-row-actions { flex-wrap: wrap; }
 }
+
+/* Foundation RC41 adds a page finder beside Grant's existing theme action.
+   On compact viewports give the page title its own first row instead of
+   allowing the new action buttons to shrink the real H1 to zero width.
+   Only presentation changes; every role/route still uses the shared shell. */
+@media (max-width: 600px) {
+  .dr-product-shell .dr-shell__header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "menu title" "search theme";
+    align-items: center;
+  }
+  .dr-product-shell .dr-shell__menu-button { grid-area: menu; }
+  .dr-product-shell .dr-shell__page-heading { grid-area: title; min-width: 0; }
+  .dr-product-shell .dr-shell__quick-nav { grid-area: search; }
+  .dr-product-shell .dr-shell__header-actions {
+    grid-area: theme;
+    min-width: 0;
+    justify-self: end;
+  }
+}

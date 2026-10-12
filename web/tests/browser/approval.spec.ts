@@ -964,6 +964,16 @@ test('B1 approver Inbox task-first mobile 320/375 and keyboard queue controls',a
   const page=await context.newPage();
   try{
    await login(page,'approver');
+   // RC41 quick navigation must not squeeze the real page H1 offscreen,
+   // and a member cannot search pages requiring administrator capability.
+   await expect(page.getByRole('heading',{name:'Requests',exact:true})).toBeVisible();
+   await page.getByRole('button',{name:'Search product navigation'}).click();
+   const quickSearch=page.getByRole('search',{name:'Product navigation search'});
+   await expect(quickSearch).toBeVisible();
+   await quickSearch.getByRole('searchbox',{name:'Search pages'}).fill('Audit');
+   await expect(quickSearch.getByText('No matching pages',{exact:true})).toBeVisible();
+   await page.keyboard.press('Escape');
+   await expect(quickSearch).toHaveCount(0);
    await page.goto('/approvals');
    await expect(page.getByRole('button',{name:title,exact:true})).toBeVisible();
    await expect(page.locator('.grant-inbox-desktop-list')).toBeHidden();
