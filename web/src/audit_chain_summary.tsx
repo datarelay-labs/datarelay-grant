@@ -1,4 +1,5 @@
 import { Alert, Button, Card } from '@datarelay-labs/foundation';
+import './audit-mobile.css';
 import { when } from './common';
 
 export type AuditEvent = {
@@ -35,7 +36,8 @@ export function AuditEventTable({
   onInspect: (requestId: string) => void;
 }) {
   return (
-    <div className="grant-table-scroll">
+    <>
+    <div className="grant-table-scroll grant-audit-desktop-list">
       <table className="grant-table">
         <thead><tr>
           <th>Time</th><th>Event</th><th>Recorded actor</th>
@@ -62,6 +64,33 @@ export function AuditEventTable({
         </tbody>
       </table>
     </div>
+    {/* The same validated, administrator-scoped saved audit rows. Mobile
+        presentation never broadens history or triggers a new GET/export. */}
+    <ul className="grant-audit-mobile-list" aria-label="Audit events mobile list">
+      {items.map((item) => (
+        <li key={item.id} className="grant-audit-mobile-card">
+          <div className="grant-audit-mobile-heading">
+            <strong>{item.action}</strong>
+            <small>{when(item.at)}</small>
+          </div>
+          <dl className="grant-audit-mobile-facts">
+            <div><dt>Recorded actor</dt><dd>{item.actor || 'Unavailable'}</dd></div>
+            <div><dt>Request</dt><dd>{item.request_id ?? 'System event'}</dd></div>
+          </dl>
+          {item.request_id ? (
+            <Button variant="secondary" disabled={busy}
+              onClick={() => onInspect(item.request_id!)}>
+              Inspect request evidence
+            </Button>
+          ) : null}
+          <details className="grant-audit-mobile-metadata">
+            <summary>View safe metadata</summary>
+            <pre>{JSON.stringify(item.details, null, 2)}</pre>
+          </details>
+        </li>
+      ))}
+    </ul>
+    </>
   );
 }
 

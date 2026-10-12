@@ -1,5 +1,18 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## B5 audit evidence narrow worklist UI — source implementation checkpoint (2026-10-12)
+
+Original vendor analysis selected task-first, progressive historical evidence
+disclosure. After shipping B3 Administration and B4 Notifications mobile cards,
+the authorized Grant Audit Explorer event results also use <=600px event
+cards without horizontal audit-table scanning. They reuse the precise current
+saved, role-scoped 50-row page and same request-chain inspector, timestamp,
+recorded actor and sanitized JSON detail. Desktop table remains intact.
+No changed search/export bounds, new API, extra history authorization or
+claim of independently confirmed execution. This is source implementation,
+not current-HEAD user/QA acceptance (testing deferred by owner).
+
+
 ## 2026-10-12 B4 additional Notifications 320/375 implementation-first UI
 
 After the separate B3 Administration mobile source checkpoint, the remaining

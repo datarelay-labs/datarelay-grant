@@ -972,6 +972,19 @@ actual receiving path; echo fixtures are never completion evidence.
 
 ## 16. Audit and evidence standard
 
+Audit event lists must remain legible on narrow mobile viewports without
+changing the administrator's role-scoped saved query or bounded export.
+Grant may show each already-authorized event as a read-only compact card
+instead of the desktop table, with exact recorded time, action and actor
+and a separately disclosed sanitized metadata section. A request-chain
+inspection action must remain tied to the original explicit request ID;
+system-only events cannot be promoted to a request and no approval or
+independently verified execution may be inferred from an event view.
+Changing viewport must never fetch additional audit history or bypass
+the original authenticated filtering, backend RBAC and 1,000-row export
+bounds. Browser and actual-user qualification remain separate gates.
+
+
 The audit trail links:
 
 `request -> matched policy/version -> approval plan -> human decisions/comments ->

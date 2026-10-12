@@ -1,5 +1,20 @@
 # Grant 1.0 implementation status
 
+## B5 mobile audit event evidence cards (source only, 2026-10-12)
+
+The existing Audit Explorer's authenticated administrator-scoped saved page
+now has a task-first mobile event-card presentation at widths <=600px.
+The desktop event table remains unchanged. Both views consume the identical
+already validated event array and preserve the same request evidence-chain
+inspector callback, safe metadata disclosure and bounded search/export state.
+No new history API, wider audit scope, extra audit field, impersonation or
+external verification claim was introduced. A system event still has no
+request-chain inspection action; expanding sanitized metadata never
+approves or executes a business request. Source-only TypeScript noEmit
+compilation passed. Owner explicitly deferred formal browser/API/unit
+tests, genuine two-user E2E, governance qualification and release checks.
+
+
 ## B4 task-first mobile delivery and template inventories (source only, 2026-10-12)
 
 The Grant Notifications workspace now projects the same already-loaded
