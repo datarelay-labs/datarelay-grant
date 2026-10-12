@@ -1,5 +1,21 @@
 # Grant 1.0 implementation status
 
+## B5 Operations mobile delivery/verification observation (source only, 2026-10-12)
+
+The Grant Operations view now offers <=600px task-first cards for the
+existing administrator-only email-decision issuance/OTP/fresh-MFA aggregate
+counters and integration callback-health observations. The desktop tables
+remain unchanged. Cards use the identical loaded server summary and retain
+the original integration diagnostic navigation; there is no added API,
+account exposure, PIN value, recipient identity, credential or outbound
+effect. An active email issuance does NOT prove its human identity, a
+same-mailbox OTP is not independent MFA, and HTTP callback acceptance
+does not independently verify business execution. Unknown/missing counters
+remain explicitly unavailable rather than a fabricated healthy zero.
+Source-only TypeScript noEmit compilation passed; the owner's deferred
+API, browser, real independent-person and release tests remain OPEN.
+
+
 ## B5 mobile audit event evidence cards (source only, 2026-10-12)
 
 The existing Audit Explorer's authenticated administrator-scoped saved page

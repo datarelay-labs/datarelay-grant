@@ -921,6 +921,18 @@ policy lifecycle, action binding, or transactional authorization.
 
 ## 14. Operational dashboard
 
+Mobile operational summaries must preserve the same administrator-only
+backend observations, not derive new permissions or incident severity
+from viewport/UI transformations. Compact email decision counters must
+distinguish issuance/link/OTP activity from independent named-person
+verification or MFA; absent data stays unavailable. Integration status
+cards may expose the existing exact diagnostic navigation, but callback
+HTTP transport acceptance is never independent confirmation of a
+protected business action. Desktop tables and mobile cards are alternate
+presentations of one role-scoped saved summary, not separate data queries
+or new execution/diagnostic endpoints.
+
+
 Grant includes a small operational dashboard, not a BI product.
 
 Required operational indicators:

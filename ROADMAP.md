@@ -1,5 +1,18 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## B5 operations mobile source checkpoint (2026-10-12)
+
+The remaining desktop-only Operations email-decision verification table
+and integration callback-health table now have narrow read-only cards
+using the same administrator-scoped loaded server summary and exact
+integration diagnostics route. The Foundation UI and backend authority,
+OTP/MFA, outbox status, execution grants and stored callback data are
+unchanged. At <=600px the original wide tables are hidden from keyboard
+and assistive technology and cards retain the state/unknown meaning.
+This is source-only with type compilation; testing/real-user, native
+Control/Stellar effects and CI/owner release are explicitly deferred.
+
+
 ## B5 audit evidence narrow worklist UI — source implementation checkpoint (2026-10-12)
 
 Original vendor analysis selected task-first, progressive historical evidence

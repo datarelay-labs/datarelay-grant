@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Alert, Button, Card, StatusBadge } from '@datarelay-labs/foundation';
 import { api } from './api';
+import './operations-mobile.css';
 import { useTask, when } from './common';
 import type { Filters } from './request_inbox';
 import {OperationsExceptionWorklist} from './operations_exception_worklist';
@@ -91,7 +92,8 @@ export function DecisionEmailSecurityPanel({ summary }: {
 }) {
   return <Card title="Email approval verification"
     description="Administrator-only issuance and challenge state, not a mailbox delivery or authenticated-user report.">
-    {summary ? <div className="grant-table-scroll">
+    {summary ? <>
+    <div className="grant-table-scroll grant-operations-desktop-table">
       <table className="grant-table" aria-label="Email decision verification lifecycle">
         <thead><tr>
           <th scope="col">Stage</th><th scope="col">Status</th>
@@ -103,7 +105,23 @@ export function DecisionEmailSecurityPanel({ summary }: {
           <td>{row.meaning}</td>
         </tr>)}</tbody>
       </table>
-    </div> : <Alert tone="warning" title="Counters unavailable">
+    </div>
+    <ul className="grant-operations-mobile-list"
+      aria-label="Email decision verification mobile list">
+      {emailSecurityRows.map((row) => (
+        <li className="grant-operations-mobile-card" key={row.key}>
+          <div className="grant-operations-mobile-heading">
+            <strong>{row.stage}</strong>
+            <span>{row.status}</span>
+          </div>
+          <p className="grant-operations-mobile-count">
+            {securityCount(summary[row.key])} current record(s)
+          </p>
+          <p>{row.meaning}</p>
+        </li>
+      ))}
+    </ul>
+    </> : <Alert tone="warning" title="Counters unavailable">
       This server did not provide email-decision security counters. No zero or healthy state is assumed.
     </Alert>}
     <p>A link and four-digit code in one email demonstrates mailbox access;
@@ -232,7 +250,7 @@ export function Operations({ navigate }: { navigate: (next: string) => void }) {
     {snapshot && <DecisionEmailSecurityPanel summary={snapshot.decision_email_security} />}
     {section('Request and delivery states', states, 'Each count represents distinct requests, never the number of delivery attempts.')}
     <Card title="Integration delivery health" description="Last callback is HTTP transport acceptance only, not target execution or receipt verification.">
-      <div className="grant-table-scroll"><table className="grant-table">
+      <div className="grant-table-scroll grant-operations-desktop-table"><table className="grant-table">
         <thead><tr>
           <th>Integration</th><th>Transport observation</th><th>Requests</th>
           <th>Last request</th><th>Last accepted callback</th><th>Callback failures</th>
@@ -252,6 +270,35 @@ export function Operations({ navigate }: { navigate: (next: string) => void }) {
           <td>{integration.failed_callback_events}</td>
         </tr>)}</tbody>
       </table></div>
+      {/* The same saved operator projection is displayed at mobile widths,
+          without converting callback transport into verified execution. */}
+      <ul className="grant-operations-mobile-list"
+        aria-label="Integration delivery health mobile list">
+        {snapshot?.integrations.map((integration) => (
+          <li key={integration.id} className="grant-operations-mobile-card">
+            <div className="grant-operations-mobile-heading">
+              <Button variant="ghost"
+                onClick={() => navigate('/operations/integration/' + integration.id)}>
+                {integration.name}
+              </Button>
+              <StatusBadge tone={
+                integration.health === 'degraded' ? 'critical'
+                  : integration.health === 'transport_accepted' ? 'success' : 'neutral'
+              }>{integration.health.replaceAll('_', ' ')}</StatusBadge>
+            </div>
+            <p className="grant-operations-mobile-kind">{integration.kind}</p>
+            <dl className="grant-operations-mobile-facts">
+              <div><dt>Requests</dt><dd>{integration.request_count}</dd></div>
+              <div><dt>Last request</dt><dd>{when(integration.last_request_at)}</dd></div>
+              <div><dt>Last accepted callback</dt>
+                <dd>{when(integration.last_callback_accepted_at)}</dd>
+              </div>
+              <div><dt>Callback failures</dt><dd>{integration.failed_callback_events}</dd></div>
+            </dl>
+            <p>Transport observation only; connected execution is not independently verified.</p>
+          </li>
+        ))}
+      </ul>
       {snapshot && !snapshot.integrations.length && <p>No registered integrations.</p>}
     </Card>
   </div>;
