@@ -914,13 +914,13 @@ test('G12 Home overdue drilldown opens an actual filtered approval queue',async(
   await page.goto('/home');
   const filtered=page.waitForResponse(response=>{
    const url=new URL(response.url());
-   return url.pathname==='/api/v1/requests' && url.searchParams.get('view')==='overdue';
+   return url.pathname==='/api/v1/requests' && url.searchParams.get('view')==='approval_overdue';
   });
   await page.getByRole('region',{name:'My work at a glance'}).getByRole('button',{name:/Overdue/}).click();
   const response=await filtered;
   expect(response.status()).toBe(200);
   await expect(page).toHaveURL(/\/approvals\?view=overdue$/);
-  await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('overdue');
+  await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('approval_overdue');
   await page.getByRole('button',{name:'Clear filters',exact:true}).click();
   await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('needs');
   await expect(page).toHaveURL(/\/approvals$/);
@@ -966,9 +966,11 @@ test('B1 approver Inbox task-first mobile 320/375 and keyboard queue controls',a
    await login(page,'approver');
    await page.goto('/approvals');
    await expect(page.getByRole('button',{name:title,exact:true})).toBeVisible();
-   const row=page.getByRole('row').filter({
-    has:page.getByRole('button',{name:title,exact:true}),
-   });
+   await expect(page.locator('.grant-inbox-desktop-list')).toBeHidden();
+   const row=page.getByRole('list',{name:'Current request worklist mobile list'})
+    .getByRole('listitem').filter({
+     has:page.getByRole('button',{name:title,exact:true}),
+    });
    await expect(row.getByText('test.operation',{exact:true})).toBeVisible();
    await expect(row.getByText('mobile-review-target',{exact:true})).toBeVisible();
    await expect(row.getByText('0 / 1 approved',{exact:true})).toBeVisible();
@@ -1283,7 +1285,11 @@ test('P0 Approver group directory distinguishes saved IDs from enabled account c
   await expect(facet).toBeVisible();
   await expect(facet).toHaveValue('all');
   await facet.selectOption('enabled');
-  await expect(row).toBeVisible();
+  await expect(row).toBeHidden();
+  const mobileRow=page.getByRole('list',{name:'Approver groups mobile list'})
+   .getByRole('listitem').filter({hasText:name});
+  await expect(mobileRow).toBeVisible();
+  await expect(mobileRow.getByText('1 / 1 currently enabled accounts',{exact:false})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
   await page.setViewportSize({width:1280,height:800});
   expect(mutations).toEqual([]);
