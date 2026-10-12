@@ -1,7 +1,7 @@
 engineering_system:
   version: 1.7.0
   mode: adopted
-  baseline: 72abaec3ffa4f2e7519ee8067f4b8795acd506ad
+  baseline: 1e12573f5d24f93d5498dea3580f2a87bcb518d6
   ci_mode: native
   native_ci_workflows:
   - .github/workflows/grant-checks.yml
