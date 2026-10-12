@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOL = ROOT / "tools/user_acceptance_contract.py"
@@ -41,15 +42,19 @@ def perfect_self_claims(tmp_path):
     git("config", "user.name", "Isolated CI Fixture")
     git("config", "user.email", "fixture@example.invalid")
     (repo / "docs").mkdir()
+    (repo / ".engineering").mkdir()
+    profile_path = repo / ".engineering/execution-profile.yaml"
+    profile_path.write_bytes((ROOT / ".engineering/execution-profile.yaml").read_bytes())
     contracts = {
         "SURFACE_RECONCILIATION": "docs/SURFACE_RECONCILIATION.md",
         "FULL_USER_E2E": "docs/FULL_USER_E2E.md",
     }
     for name, rel in contracts.items():
         (repo / rel).write_text("Isolated "+name+" acceptance contract\n")
-    git("add", "docs")
+    git("add", "docs", ".engineering/execution-profile.yaml")
     git("commit", "-qm", "Create isolated acceptance contract fixture")
     head = git("rev-parse", "HEAD")
+    runtime = yaml.safe_load(profile_path.read_text())["runtime"]["primary"]
     files = {}
     for gate, rel in contracts.items():
         digest = hashlib.sha256((repo / rel).read_bytes()).hexdigest()
@@ -63,9 +68,10 @@ def perfect_self_claims(tmp_path):
             "contract_dirty": False,
             "final_status": "PASS",
             "head_unchanged": True,
-            "executor": "CHATGPT",
-            "final_auditor": "CHATGPT",
-            "chatgpt_direct_persona_execution": True,
+            "executor": "EXECUTION_PROFILE",
+            "runtime": runtime,
+            "final_auditor": "EXECUTION_PROFILE",
+            "direct_persona_execution": True,
             "actual_user_surface": True,
             "scripted_user_substitution": False,
             "finding_accumulation_complete": True,
@@ -140,6 +146,17 @@ def test_wrong_git_candidate_is_not_structurally_valid(perfect_self_claims):
     result = invoke("validate-gate", "--root", str(repo), "--evidence", str(path))
     assert result.returncode == 3
     assert "CANDIDATE_HEAD_NOT_CURRENT" in result.stdout
+
+
+def test_claimed_runtime_must_match_committed_execution_profile(perfect_self_claims):
+    repo, files = perfect_self_claims
+    path = files["FULL_USER_E2E"]
+    data = json.loads(path.read_text())
+    data["runtime"] = "UNREVIEWED_RUNTIME"
+    path.write_text(json.dumps(data))
+    result = invoke("validate-gate", "--root", str(repo), "--evidence", str(path))
+    assert result.returncode == 3
+    assert "EXECUTION_PROFILE_RUNTIME_MISMATCH" in result.stdout
 
 
 def test_modified_contract_blocks_even_when_dirty_flag_is_truthful(perfect_self_claims):
