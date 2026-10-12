@@ -1,5 +1,23 @@
 # Grant 1.0 implementation status
 
+## B1 delegation / G8 credentials mobile worklists (source-only, 2026-10-12)
+
+Existing Grant Delegations and Integration Credentials desktop-only lists
+now have <=600px task-first card views, using the identical existing
+server-scoped rows and preserved desktop tables. Delegations show original
+approver/substitute, schedule window, revoked/expired/current status, with
+Review revoke offered only where the existing current-user/admin role
+permits. Historical delegations remain read-only. Credential cards expose
+only already returned opaque issued IDs, scope metadata, creation time
+and enabled/revoked status; no raw token/secret, new API, extra credential
+enumeration or revocation route was introduced. Their existing Inspect
+metadata and Review revoke callbacks and one-shot guards remain unchanged.
+
+TypeScript noEmit compilation confirms source shape only. Formal UI, browser,
+API, real two-person/mailbox and release tests remain **DEFERRED by owner**;
+this commit is not installed customer acceptance or external effect proof.
+
+
 ## B3 approver group mobile directory source checkpoint (2026-10-12)
 
 The mounted Approver groups list now displays task-first one-group-per-card

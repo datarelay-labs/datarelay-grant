@@ -1,0 +1,80 @@
+/* Role-scoped Grant delegation timeline. The desktop table and narrow cards
+ * use the exact same server records and original Review revoke callback. */
+.grant-delegation-mobile-list { display: none; }
+
+@media (max-width: 600px) {
+  .grant-delegation-desktop-list { display: none; }
+
+  .grant-delegation-mobile-list {
+    display: grid;
+    min-width: 0;
+    list-style: none;
+    padding: 0;
+    margin: var(--dr-space-4) 0;
+    gap: var(--dr-space-3);
+  }
+
+  .grant-delegation-mobile-card {
+    display: grid;
+    min-width: 0;
+    gap: var(--dr-space-3);
+    padding: var(--dr-space-4);
+    border: 1px solid var(--dr-border-default);
+    border-radius: var(--dr-radius-card);
+    overflow-wrap: anywhere;
+  }
+
+  .grant-delegation-mobile-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--dr-space-2);
+  }
+
+  .grant-delegation-mobile-heading strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .grant-delegation-mobile-status {
+    color: var(--dr-text-secondary);
+    font-size: var(--dr-font-size-sm);
+    font-weight: var(--dr-font-weight-strong);
+  }
+
+  .grant-delegation-mobile-facts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--dr-space-3);
+    min-width: 0;
+    margin: 0;
+  }
+
+  .grant-delegation-mobile-facts > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--dr-space-1);
+    min-width: 0;
+  }
+
+  .grant-delegation-mobile-facts dt {
+    font-size: var(--dr-font-size-sm);
+    color: var(--dr-text-secondary);
+    font-weight: var(--dr-font-weight-strong);
+  }
+
+  .grant-delegation-mobile-facts dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .grant-delegation-mobile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .grant-delegation-mobile-actions button { width: 100%; min-width: 0; }
+}

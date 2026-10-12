@@ -1,5 +1,6 @@
 import { Alert, Button } from '@datarelay-labs/foundation';
 import { when } from './common';
+import './integration-credentials-mobile.css';
 
 export type CredentialMetadata = {
   id: string;
@@ -80,7 +81,8 @@ export function CredentialWorklist({
 }){
   const {active,history}=partition(rows);
   const items=(set:readonly CredentialMetadata[],action:boolean)=>(
-    <div className="grant-table-scroll">
+    <>
+    <div className="grant-table-scroll grant-credential-desktop-list">
       <table className="grant-table">
         <thead><tr><th>Issued ID</th><th>Scopes</th>
           <th>Issued</th><th>Status</th><th>Action</th></tr></thead>
@@ -104,6 +106,34 @@ export function CredentialWorklist({
         </tbody>
       </table>
     </div>
+    {/* Narrow task cards contain only already-authorized opaque issued IDs
+        and scopes; no secret material, new lookup or revocation endpoint. */}
+    <ul className="grant-credential-mobile-list"
+      aria-label={action ? 'Active integration credentials mobile list'
+        : 'Revoked integration credentials mobile list'}>
+      {set.map((row) => (
+        <li key={row.id} className="grant-credential-mobile-card">
+          <div className="grant-credential-mobile-heading">
+            <strong>{row.enabled ? 'Enabled' : 'Revoked'} credential</strong>
+            <small>{when(row.created_at)}</small>
+          </div>
+          <dl className="grant-credential-mobile-facts">
+            <div><dt>Issued ID</dt><dd><code>{row.id}</code></dd></div>
+            <div><dt>Granted scopes</dt>
+              <dd>{row.scopes.join(', ') || 'No reported scopes'}</dd></div>
+          </dl>
+          <div className="grant-credential-mobile-actions">
+            {onSelect ? <Button variant="secondary" disabled={busy}
+              onClick={()=>onSelect(row)}>
+              {selectedId===row.id ? 'Selected' : 'Inspect metadata'}
+            </Button> : null}
+            {action ? <Button variant="secondary" disabled={busy}
+              onClick={()=>onReviewRevoke(row)}>Review revoke</Button> : null}
+          </div>
+        </li>
+      ))}
+    </ul>
+    </>
   );
   return <div className="grant-stack">
     <h4>Active credentials</h4>

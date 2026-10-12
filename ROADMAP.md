@@ -1,5 +1,18 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-12 B1 Delegations / G8 Credentials mobile source
+
+Two additional wide desktop tables were adapted into product-owned mobile
+task cards: active/scheduled and historical Delegations, plus active and
+revoked integration Credential metadata. They retain the same existing
+role-scoped row lists, statuses, window/scope evidence, original revoke
+eligibility and mandatory Review -> Confirm callback; desktop tables remain
+unchanged. No extra credential or role authority, backend read/write,
+external executor, secret exposure, or imported Foundation code. Source
+TypeScript compile passed; the owner explicitly deferred full native
+tests, independent two-user mailbox E2E, CI and release qualification.
+
+
 ## B3 mobile Approver groups directory — implementation-first (2026-10-12)
 
 A remaining desktop-only five-column Approver groups list now has a mobile

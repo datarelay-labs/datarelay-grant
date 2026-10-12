@@ -1,5 +1,6 @@
 import { Button, Card } from '@datarelay-labs/foundation';
 import { when } from './common';
+import './delegation-mobile.css';
 import type { DelegationRow, DirectoryMember } from './delegation_review';
 import type { User } from './types';
 
@@ -39,7 +40,8 @@ export function DelegationWorklist({
   const activeCount=current.filter(row=>row.starts_at<=nowSeconds).length;
   const scheduledCount=current.length-activeCount;
   const rowsTable=(records:readonly DelegationRow[],allowActions:boolean)=>(
-    <div className="grant-table-scroll">
+    <>
+    <div className="grant-table-scroll grant-delegation-desktop-list">
       <table className="grant-table">
         <thead><tr><th>From → To</th><th>Window</th><th>Status</th>
           <th>Action</th></tr></thead>
@@ -56,6 +58,37 @@ export function DelegationWorklist({
         ))}</tbody>
       </table>
     </div>
+    {/* Mobile cards reflect exactly the same current/history partition and
+        role-scoped revoke authority. No extra delegation API call exists. */}
+    <ul className="grant-delegation-mobile-list"
+      aria-label={allowActions ? 'Current delegations mobile list'
+        : 'Previous delegations mobile list'}>
+      {records.map((row) => (
+        <li key={row.id} className="grant-delegation-mobile-card">
+          <div className="grant-delegation-mobile-heading">
+            <strong>{nameOf(row.delegator_id)} → {nameOf(row.substitute_id)}</strong>
+            <span className="grant-delegation-mobile-status">
+              {status(row,nowSeconds)}
+            </span>
+          </div>
+          <dl className="grant-delegation-mobile-facts">
+            <div><dt>Starts</dt><dd>{when(row.starts_at)}</dd></div>
+            <div><dt>Ends</dt><dd>{when(row.ends_at)}</dd></div>
+            <div><dt>Original approver</dt>
+              <dd>{nameOf(row.delegator_id)}</dd></div>
+            <div><dt>Substitute</dt>
+              <dd>{nameOf(row.substitute_id)}</dd></div>
+          </dl>
+          {allowActions&&(row.delegator_id===user.id||user.role==='admin')
+            ? <div className="grant-delegation-mobile-actions">
+                <Button variant="secondary" disabled={busy}
+                  onClick={()=>onReviewRevoke(row)}>Review revoke</Button>
+              </div>
+            : null}
+        </li>
+      ))}
+    </ul>
+    </>
   );
   return (
     <div className="grant-stack">

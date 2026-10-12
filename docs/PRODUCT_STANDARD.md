@@ -284,6 +284,20 @@ otherwise for a narrowly defined use case.
 Each step records its own state, actors, timestamps and comments/reasons.
 
 ## 8. Delegation, reassignment and escalation
+### Mobile delegation and integration credential worklists
+
+Grant may present its already authorized delegated-approver and integration
+credential **metadata** rows as task-first cards at <=600px to avoid wide
+table scanning. The same original server rows, current/history partition,
+role-based revoke eligibility, exact time window, scope and enabled status
+must be retained across desktop/mobile. Historical delegations and revoked
+credentials must not gain a mutation action. Credential cards may show
+opaque issued token identifiers and already visible scope names but must
+never display raw secrets or enable export/impersonation. Viewport changes
+cannot bypass the existing explicit revocation Review -> Confirm or
+server authorization/audit. Source-only responsive work is not acceptance
+of installed native integrations, identity or external execution.
+
 
 Real operations must not stop because one person is absent.
 
