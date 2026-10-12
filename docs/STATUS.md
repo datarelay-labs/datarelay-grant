@@ -1,5 +1,19 @@
 # Grant 1.0 implementation status
 
+## 2026-10-12 Grant consumer adoption of private Foundation RC41
+
+Grant now pins original Foundation source `46ddb60cad8eae7b1718588cd19421e61b5300e7`
+and ten independently verified `0.1.0-rc.41` npm archives instead of PF8.4.
+The current Grant-owned Web imports are installed; navigation discovery,
+administration task search, loaded-account facets/sorting and local session
+filters are mounted on their existing authorized product data. Official
+Web **670/670** unit PASS with TypeScript and Vite build PASS; latest
+Foundation strict private bundle/byte verification and exact staging PASS.
+This is **not** a release of unpublished Foundation, actual mailbox receipt,
+Control/Stellar effect or installed two-person user acceptance. See
+`docs/FOUNDATION_RC41_GRANT_ADOPTION_2026-10-12.md` for exact locks and gates.
+
+
 ## B1 approval overdue Home-to-Inbox parity (source-only, 2026-10-12)
 
 Home's assigned-only overdue shortcut previously opened the general

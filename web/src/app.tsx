@@ -15,6 +15,7 @@ import { Delegations } from './delegations';
 import { ApiError, setCsrf } from './api';
 import { useTask } from './common';
 import { authAdapter, productConfig, readSession } from './foundation.config';
+import { grantRc41NavigationDiscovery } from './foundation_rc41';
 import { Home } from './home';
 import { Integrations } from './integrations';
 import { Notifications } from './notifications';
@@ -253,6 +254,7 @@ function AuthenticatedGrantApp() {
   return (
     <ThemeRoot theme={theme}>
       <ProductShell
+        {...grantRc41NavigationDiscovery}
         product={config.product}
         navigation={config.navigation}
         capabilities={config.capabilities}

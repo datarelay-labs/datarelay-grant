@@ -31,7 +31,9 @@ def main():
     )
     args = parser.parse_args()
     cache = ROOT / ".foundation"
-    source, stage, packs = cache / "source", cache / "stage", cache / "packs"
+    # Pin cache directories by immutable commit so old reviewed stages are preserved.
+    pinned = LOCK["commit"][:12]
+    source, stage, packs = cache / f"source-{pinned}", cache / f"stage-{pinned}", cache / "packs"
     cache.mkdir(exist_ok=True)
     if not source.exists():
         run(
@@ -61,7 +63,14 @@ def main():
             source,
         )
     actual = json.loads((stage / "release-manifest.json").read_text())
-    if actual["version"] != LOCK["version"] or actual["packages"] != LOCK["packages"]:
+    # Source staging manifests describe directory content. The consumer's
+    # verified private handoff lock additionally pins packed archive bytes.
+    stage_fields = ("name", "path", "sha256")
+    locked_stage_packages = [
+        {field: package[field] for field in stage_fields}
+        for package in LOCK["packages"]
+    ]
+    if actual["version"] != LOCK["version"] or actual["packages"] != locked_stage_packages:
         raise SystemExit("Foundation staging differs from the committed package hashes")
     # Re-hash bytes, rather than trusting the staging manifest alone.
     import hashlib
@@ -87,6 +96,12 @@ def main():
             ["npm", "pack", "--ignore-scripts", "--json", "--pack-destination", str(packs)],
             stage / package["path"],
         )
+        expected_archive = package.get("archive_sha256")
+        if expected_archive:
+            filename = "datarelay-labs-" + package["name"].split("/")[-1] + "-" + LOCK["version"] + ".tgz"
+            actual_archive = hashlib.sha256((packs / filename).read_bytes()).hexdigest()
+            if actual_archive != expected_archive:
+                raise SystemExit("Foundation pinned npm archive mismatch: " + package["name"])
     print("FOUNDATION_PINNED_STAGE=PASS commit=" + LOCK["commit"])
 
 

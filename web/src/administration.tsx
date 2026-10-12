@@ -44,6 +44,11 @@ import {
   operationsAdapter,
   productConfig,
 } from './foundation.config';
+import {
+  grantRc41AccountDiscovery,
+  grantRc41AdministrationDiscovery,
+  grantRc41SessionDiscovery,
+} from './foundation_rc41';
 import { Form, Select, useTask } from './common';
 import type { User } from './types';
 import './administration-detail.css';
@@ -334,6 +339,7 @@ export function Administration({ user }: { user: User }) {
       {task.feedback}
       <div className="grant-admin-task-navigation" ref={taskNavigationRef} tabIndex={-1}>
       <AdministrationHub
+        {...grantRc41AdministrationDiscovery}
         productId="grant"
         showHeader={false}
         tasks={tasks}
@@ -387,7 +393,7 @@ export function Administration({ user }: { user: User }) {
           <Card title="Accounts">
             <p>Review the authoritative Grant account roster before changing access.
               Disabling an account revokes its sessions and may affect pending approval seats.</p>
-            <AccountList accounts={accounts} actions={(account) => (
+            <AccountList {...grantRc41AccountDiscovery} accounts={accounts} actions={(account) => (
               user.role === 'admin' && account.status === 'enabled' && account.id !== user.id
                 ? <Button variant="danger"
                     disabled={task.busy || accountDisableAttempts.includes(account.id)}
@@ -671,6 +677,7 @@ export function Security({
       </Card>
       <Card title="Active sessions">
         <SessionList
+          {...grantRc41SessionDiscovery}
           sessions={sessions}
           onRevoke={(id) =>
             task.run(async () => {
