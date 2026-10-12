@@ -1,5 +1,29 @@
 # Grant 1.0 implementation status
 
+## B3 mobile Administration and reviewed account operations (source-only, 2026-10-12)
+
+The product-mounted Foundation AdministrationHub remains unchanged, but Grant
+adds a selected-task workspace for <=600px first viewports: the task catalog
+is hidden only when a task is selected, the selected heading and return
+control preserve keyboard focus, and the already administrator-scoped audit
+rows are projected as compact mobile cards. The account roster keeps the
+original Foundation AccountList and its server-supplied roles/statuses;
+narrow screens stack account actions instead of overflowing horizontally.
+
+Grant's existing local-account-create API now has an explicit source-only
+Review -> Confirm panel, without showing/storing the initial password in
+the review intent; input changes invalidate the review. Existing
+administrator-only account-disable API actions have an exact saved-account
+review, fresh administrator-scoped readback, and separate one-shot Confirm.
+Known ambiguous POSTs remain latched until independent reconciliation;
+neither flow mutates approval state, invokes a new privileged backend
+endpoint or silently executes an external action. Server authentication,
+RBAC and audit continue to own authorization. Current source-only sanity:
+TypeScript no-emit compilation PASS; full unit/API/browser/human E2E tests
+are **DEFERRED by explicit owner direction**, and this is NOT release-ready
+or independent two-admin acceptance.
+
+
 ## B4 P0-2G task-first mobile policy cards (2026-10-12)
 
 The real mounted Approval policies workspace now presents saved policy

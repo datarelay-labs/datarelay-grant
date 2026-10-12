@@ -1,5 +1,28 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## B3 Administration mobile/account lifecycle source implementation checkpoint (2026-10-12)
+
+The next unimplemented Keycloak/ServiceNow-style Administration task-detail
+slice was selected after the already-shipped six-vendor UX Gap Matrix and
+completed P0-2G mobile policy list. Source includes Grant-owned 320/375px
+selected-task/detail navigation and keyboard focus return, narrow account
+cards and role-scoped audit event cards, and explicit Review -> Confirm
+for the existing Grant account creation and account disablement APIs.
+Initial credentials are never displayed in the review intent; the system
+does not enable a second POST after an uncertain first attempt. Shared
+Foundation packages and backend role rules are unchanged; no new auth or
+external execution path is installed. This checkpoint is **source-only**,
+with TypeScript static compilation but no formal full test or real
+user/browser/mailbox acceptance (owner deferred testing). Do not conflate
+new source with qualified, customer-accepted features.
+
+Remaining B1-B6 work: test-qualified genuine human/SMTP acceptance, native
+Control/Stellar effects, Foundation consumer package distribution/ownership,
+appropriate product API reconciliation and CI/provenance/owner release.
+Existing formerly completed source P0-2A/B/C/D/E/F, B4 CAS and B5
+protected restore must not be reimplemented.
+
+
 ## 2026-10-12 current UI source status / remaining acceptance (supersedes stale row notes below)
 
 P0-1 competitor actual first-party screens, pinned/license-permitted

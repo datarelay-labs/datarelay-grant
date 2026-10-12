@@ -24,6 +24,15 @@ import {
 } from '@datarelay-labs/foundation';
 import { api } from './api';
 import {
+  createAccountCreationReview,
+  isCurrentAccountCreateReview,
+  type AccountCreateReview,
+} from './admin_account_create_review';
+import {
+  createAccountDisableReview, isCurrentAccountDisableReview,
+  type AccountDisableReview,
+} from './admin_account_disable_review';
+import {
   AdministrationMailReviewConfirmation,createAdministrationMailReview,
   isCurrentAdministrationMailReview,createAdministrationMailAttemptGuard,
   submitReviewedAdministrationMailTest,
@@ -40,6 +49,14 @@ import type { User } from './types';
 import './administration-detail.css';
 
 type AdminSection = 'health' | 'accounts' | 'audit' | 'mail' | 'lifecycle' | null;
+
+const administrationSectionLabels: Record<Exclude<AdminSection, null>, string> = {
+  health: 'System Health',
+  accounts: 'User Management',
+  audit: 'Audit',
+  mail: 'Mail delivery test',
+  lifecycle: 'Backup & Import',
+};
 
 function availability(user: User, capability: string): CapabilityAvailability {
   const capabilities = productConfig(user).capabilities as Record<string, boolean | CapabilityAvailability>;
@@ -60,6 +77,15 @@ export function Administration({ user }: { user: User }) {
   const [mailAttempted,setMailAttempted]=useState(false);
   const mailTestGuard=useRef(createAdministrationMailAttemptGuard());
   const selectedDetailRef = useRef<HTMLDivElement>(null);
+  const accountReviewRef = useRef<HTMLDivElement>(null);
+  const taskNavigationRef = useRef<HTMLDivElement>(null);
+  const [reviewedAccount, setReviewedAccount] = useState<AccountDisableReview | null>(null);
+  const [reviewedCreation, setReviewedCreation] = useState<AccountCreateReview | null>(null);
+  const createAttemptGate = useRef(false);
+  const [accountCreateAttempted, setAccountCreateAttempted] = useState(false);
+  const focusNavigationAfterClose = useRef(false);
+  const attemptedAccountIds = useRef(new Set<string>());
+  const [accountDisableAttempts, setAccountDisableAttempts] = useState<readonly string[]>([]);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -132,9 +158,16 @@ export function Administration({ user }: { user: User }) {
   // the hub and moves keyboard focus to the selected detail rather than
   // leaving the person looking at the original card after pressing Manage.
   useEffect(() => {
-    if (!section) return;
-    selectedDetailRef.current?.focus({ preventScroll: true });
-    selectedDetailRef.current?.scrollIntoView({ block: 'start' });
+    if (section) {
+      selectedDetailRef.current?.focus({ preventScroll: true });
+      selectedDetailRef.current?.scrollIntoView({ block: 'start' });
+      return;
+    }
+    if (focusNavigationAfterClose.current) {
+      focusNavigationAfterClose.current = false;
+      taskNavigationRef.current?.focus({ preventScroll: true });
+      taskNavigationRef.current?.scrollIntoView({ block: 'start' });
+    }
   }, [section]);
 
   function openTask(selected: AdministrationHubTask) {
@@ -148,8 +181,121 @@ export function Administration({ user }: { user: User }) {
     const destination=next[selected.id]??null;
     sectionRef.current=destination;
     setReviewedMail(null);
+    setReviewedAccount(null);
+    setReviewedCreation(null);
+    if (destination !== 'accounts') setPassword('');
     setSection(destination);
   }
+
+  function returnToAdministrationTasks() {
+    sectionRef.current = null;
+    setReviewedMail(null);
+    setReviewedAccount(null);
+    setReviewedCreation(null);
+    setPassword('');
+    focusNavigationAfterClose.current = true;
+    setSection(null);
+  }
+
+  async function confirmAccountDisable() {
+    const intent = reviewedAccount;
+    if (!intent || sectionRef.current !== 'accounts' ||
+        !isCurrentAccountDisableReview(intent, user, accounts)) {
+      setReviewedAccount(null);
+      throw Error('ACCOUNT_DISABLE_REVIEW_CHANGED');
+    }
+    if (attemptedAccountIds.current.has(intent.accountId)) return;
+
+    // Claim the exact identity before async read. After an ambiguous POST
+    // there is deliberately no automatic retry or reset of the claim.
+    attemptedAccountIds.current.add(intent.accountId);
+    setAccountDisableAttempts((ids) => [...ids, intent.accountId]);
+    setReviewedAccount(null);
+    let fresh: readonly AccountProjection[];
+    try {
+      fresh = await accountsAdapter.list();
+    } catch {
+      task.setNotice('Current account status could not be verified. No disable request was sent. Refresh and review again.');
+      return;
+    }
+    if (sectionRef.current !== 'accounts' ||
+        !isCurrentAccountDisableReview(intent, user, fresh)) {
+      task.setNotice('Selected account, role or status changed. No disable request was sent. Refresh the account directory.');
+      return;
+    }
+    let receipt: { id: string; enabled: boolean };
+    try {
+      receipt = await api<{ id: string; enabled: boolean }>(
+        '/admin/users/' + encodeURIComponent(intent.accountId) + '/disable', 'POST',
+      );
+    } catch {
+      task.setNotice('An account disable may have reached the server. Inspect actual account and audit records before planning another action; no automatic retry is allowed.');
+      return;
+    }
+    if (receipt.id !== intent.accountId || receipt.enabled !== false) {
+      task.setNotice('The account disable response could not be verified. Inspect the current directory and audit.');
+      return;
+    }
+    try {
+      await load();
+      task.setNotice('Account disable acknowledged by Grant. Existing sessions were revoked; inspect pending human approval assignments separately.');
+    } catch {
+      task.setNotice('Grant acknowledged the disable, but the updated account directory could not be read. Inspect saved state and audit before another action.');
+    }
+  }
+
+  async function confirmAccountCreation() {
+    const intent = reviewedCreation;
+    if (!intent || sectionRef.current !== 'accounts' ||
+        !isCurrentAccountCreateReview(intent, user, name, email, role, password)) {
+      setReviewedCreation(null);
+      throw Error('ACCOUNT_CREATE_REVIEW_CHANGED');
+    }
+    if (createAttemptGate.current) return;
+    // A possibly accepted POST must not be repeated in the same rendered task.
+    createAttemptGate.current = true;
+    setAccountCreateAttempted(true);
+    setReviewedCreation(null);
+    // An initial credential never persists in the visible editor after an
+    // attempted privileged POST (even if its result is ambiguous).
+    const submittedCredential = password;
+    setPassword('');
+    let receipt: { id: string; username: string; email: string; role: string };
+    try {
+      receipt = await api<typeof receipt>('/admin/users', 'POST', {
+        username: intent.username,
+        email: intent.email,
+        role: intent.role,
+        password: submittedCredential,
+      });
+    } catch {
+      task.setNotice('Account creation may have reached the server. Do not retry automatically. Review the current account roster and audit before any new action.');
+      return;
+    }
+    if (!receipt.id ||
+        receipt.username !== intent.username ||
+        receipt.email !== intent.email || receipt.role !== intent.role) {
+      task.setNotice('Account creation receipt did not match the reviewed identity. Inspect the current account roster and audit.');
+      return;
+    }
+    // A verified creation receipt is not proof that a follow-up roster read
+    // succeeded; keep both outcomes separate for an administrator.
+    setPassword('');
+    setName('');
+    setEmail('');
+    try {
+      await load();
+      task.setNotice('Grant acknowledged the new account. Provide the initial credential through an approved private channel; no email or business execution was sent.');
+    } catch {
+      task.setNotice('Grant acknowledged account creation but the current roster could not be loaded. Refresh and inspect before another action.');
+    }
+  }
+
+  useEffect(() => {
+    if (!reviewedAccount && !reviewedCreation) return;
+    accountReviewRef.current?.focus({ preventScroll: true });
+    accountReviewRef.current?.scrollIntoView({ block: 'start' });
+  }, [reviewedAccount, reviewedCreation]);
 
   function reviewMailTest(){
     if(mailTestGuard.current.blocked())return;
@@ -184,8 +330,9 @@ export function Administration({ user }: { user: User }) {
   }
 
   return (
-    <div className="grant-stack">
+    <div className={'grant-stack grant-admin-workspace' + (section ? ' grant-admin-workspace--detail' : '')}>
       {task.feedback}
+      <div className="grant-admin-task-navigation" ref={taskNavigationRef} tabIndex={-1}>
       <AdministrationHub
         productId="grant"
         showHeader={false}
@@ -213,6 +360,7 @@ export function Administration({ user }: { user: User }) {
         }
         onOpen={openTask}
       />
+      </div>
 
       {section ? (
         <div
@@ -223,46 +371,96 @@ export function Administration({ user }: { user: User }) {
           data-testid="grant-admin-selected-detail"
           tabIndex={-1}
         >
+      <div className="grant-admin-selected-heading">
+        <div>
+          <p className="grant-admin-selected-eyebrow">Selected administration task</p>
+          <h2>{administrationSectionLabels[section]}</h2>
+        </div>
+        <Button variant="secondary" onClick={returnToAdministrationTasks}>
+          Back to administration tasks
+        </Button>
+      </div>
       {section === 'health' ? <SystemStatus health={health} info={info} /> : null}
 
       {section === 'accounts' ? (
         <div className="grant-stack">
           <Card title="Accounts">
-            <AccountList accounts={accounts} />
+            <p>Review the authoritative Grant account roster before changing access.
+              Disabling an account revokes its sessions and may affect pending approval seats.</p>
+            <AccountList accounts={accounts} actions={(account) => (
+              user.role === 'admin' && account.status === 'enabled' && account.id !== user.id
+                ? <Button variant="danger"
+                    disabled={task.busy || accountDisableAttempts.includes(account.id)}
+                    onClick={() => {
+                      setReviewedCreation(null);
+                      setReviewedAccount(createAccountDisableReview(account, user));
+                    }}>
+                    Review disable {account.displayName}
+                  </Button>
+                : null
+            )} />
           </Card>
+          {reviewedAccount && sectionRef.current === 'accounts' ? (
+            <div ref={accountReviewRef} tabIndex={-1} className="grant-admin-account-review">
+            <Card title="Review account disable"
+              description="Confirm the exact account. No write occurs merely by opening this review.">
+              <dl className="grant-facts">
+                <dt>Account</dt><dd>{reviewedAccount.displayName}</dd>
+                <dt>Email</dt><dd>{reviewedAccount.detail ?? 'Unavailable'}</dd>
+                <dt>Role</dt><dd>{reviewedAccount.roleValue ?? 'Unavailable'}</dd>
+                <dt>Current status</dt><dd>{reviewedAccount.status}</dd>
+              </dl>
+              <Alert tone="warning" title="Disabling an account changes access">
+                Existing sessions will be revoked and approval assignments may
+                require another administrator to reconcile. This action never
+                approves or executes a business request.
+              </Alert>
+              <div className="grant-actions">
+                <Button variant="secondary" disabled={task.busy}
+                  onClick={() => setReviewedAccount(null)}>Back to accounts</Button>
+                <Button variant="danger" disabled={task.busy}
+                  onClick={() => void task.run(confirmAccountDisable)}>
+                  Confirm disable account
+                </Button>
+              </div>
+            </Card>
+            </div>
+          ) : null}
+          {accountDisableAttempts.length > 0 ? (
+            <Alert tone="warning" title="Reconcile attempted account changes">
+              A disable request was attempted for {accountDisableAttempts.length}
+              {' '}account(s). Review current account and audit records before
+              another action. An ambiguous POST is never retried automatically.
+            </Alert>
+          ) : null}
           <Card
             title="Create local account"
-            description="Only Grant administrators may create users. No default or shared credentials are supplied."
+            description="Only Grant administrators may create users. Review the exact account and role before the one privileged POST. No default credentials are supplied."
           >
             <Form
-              busy={task.busy}
-              label="Create account"
-              onSubmit={() =>
-                void task.run(async () => {
-                  await api('/admin/users', 'POST', { username: name, email, password, role });
-                  setName('');
-                  setEmail('');
-                  setPassword('');
-                  await load();
-                  task.setNotice(
-                    'Account created. Share credentials through an approved secure channel.',
-                  );
-                })
-              }
+              busy={task.busy || accountCreateAttempted}
+              label="Review account creation"
+              onSubmit={() => {
+                if (accountCreateAttempted) return;
+                setReviewedAccount(null);
+                setReviewedCreation(
+                  createAccountCreationReview(user, name, email, role, password),
+                );
+              }}
             >
               <TextField
                 label="New username"
                 required
                 pattern="[a-zA-Z0-9_.@-]+"
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                onChange={(event) => { setName(event.target.value); setReviewedCreation(null); }}
               />
               <TextField
                 label="New user email"
                 type="email"
                 required
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) => { setEmail(event.target.value); setReviewedCreation(null); }}
               />
               <TextField
                 label="Initial password"
@@ -271,20 +469,77 @@ export function Administration({ user }: { user: User }) {
                 minLength={12}
                 required
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={(event) => { setPassword(event.target.value); setReviewedCreation(null); }}
               />
-              <Select label="New account role" value={role} onChange={setRole}>
+              <Select label="New account role" value={role}
+                onChange={(value) => { setRole(value); setReviewedCreation(null); }}>
                 <option value="member">Member</option>
                 <option value="admin">Administrator</option>
               </Select>
             </Form>
+            {reviewedCreation && sectionRef.current === 'accounts' ? (
+              <div ref={accountReviewRef} tabIndex={-1}
+                className="grant-stack grant-admin-account-review" aria-label="Review new account">
+                <h3>Review before creating account</h3>
+                <dl className="grant-facts">
+                  <dt>Username</dt><dd>{reviewedCreation.username}</dd>
+                  <dt>Email</dt><dd>{reviewedCreation.email}</dd>
+                  <dt>Role</dt><dd>{reviewedCreation.role}</dd>
+                  <dt>Initial credential</dt><dd>Provided privately; never displayed in review.</dd>
+                </dl>
+                <Alert tone="warning" title="New account credentials are sensitive">
+                  No account is created until explicit Confirm. The server
+                  authenticates the administrator and validates every field.
+                  Grant does not send the password or an approval automatically.
+                </Alert>
+                <div className="grant-actions">
+                  <Button variant="secondary" disabled={task.busy}
+                    onClick={() => setReviewedCreation(null)}>Back to editor</Button>
+                  <Button variant="primary" disabled={task.busy || createAttemptGate.current}
+                    onClick={() => void task.run(confirmAccountCreation)}>
+                    Confirm create account
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+            {accountCreateAttempted ? (
+              <Alert tone="warning" title="Reconcile the account creation attempt">
+                A create request was attempted or acknowledged. Inspect saved
+                accounts and the administrator audit before preparing a new
+                user; do not automatically repeat an ambiguous POST.
+              </Alert>
+            ) : null}
           </Card>
         </div>
       ) : null}
 
       {section === 'audit' ? (
         <Card title="Audit history">
-          <AuditList events={events} />
+          <p>Existing Grant administrator-scoped audit records. An event records
+            an action; it is not independent verification of an external effect.</p>
+          <div className="grant-admin-desktop-audit">
+            <AuditList events={events} />
+          </div>
+          <div className="grant-admin-mobile-audit">
+            {events.length === 0 ? <p>No audit records are available.</p> : (
+              <ul aria-label="Administration mobile audit history">
+                {events.map((event) => (
+                  <li key={event.id} className="grant-admin-mobile-audit-card">
+                    <div className="grant-admin-mobile-audit-heading">
+                      <strong>{event.action}</strong>
+                      <small>{event.timestamp}</small>
+                    </div>
+                    <dl className="grant-admin-mobile-audit-facts">
+                      <div><dt>Actor</dt><dd>{event.actor ?? 'Unavailable'}</dd></div>
+                      <div><dt>Outcome</dt><dd>{event.outcome ?? 'Unavailable'}</dd></div>
+                      <div><dt>Reference</dt><dd>{event.reference ?? event.id}</dd></div>
+                    </dl>
+                    {event.summary ? <p>{event.summary}</p> : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </Card>
       ) : null}
 

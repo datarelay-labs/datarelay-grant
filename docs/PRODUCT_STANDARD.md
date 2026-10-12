@@ -825,6 +825,28 @@ The Administration landing surface uses Product Foundation capability declaratio
 common administration components. Unsupported backup/restore/TLS/upgrade mutations are
 not made interactive merely to fill a settings page.
 
+On a narrow viewport (up to 600px), Grant's product-owned Administration task
+view should show the selected task separately from the Foundation task catalog,
+with a clearly labeled return action and restored keyboard focus. The shared
+Foundation component remains responsible for task hierarchy, capability
+availability and its own component semantics. Grant may lay out already loaded
+administrator-scoped account and audit projections as task-first cards on
+mobile, without increasing data scope or adding an audit API.
+
+Creating a local account and disabling a saved account are two separate
+privileged actions, each requiring a review of the exact proposed account,
+role and purpose before a distinct Confirm POST. Account creation may never
+render an initial password in the review panel or save it in the review
+intent. Changing a draft invalidates its review. Disabling the current
+administrator's own account is not offered; the server's existing
+administrator-session/target checks remain authoritative. Any ambiguous
+account-creation or disable POST stays latched for reconciliation rather
+than being automatically retried. A client-side fresh account GET checks
+for stale reviewed details, but does **not** replace an atomic server-side
+precondition or prove external identity. Requiring explicit Confirmation
+does not confer new administration permissions or automatically approve
+or execute a human-gated business action.
+
 Configuration detail:
 
 ~~~text
