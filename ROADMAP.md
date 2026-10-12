@@ -1,5 +1,30 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-12 current UI source status / remaining acceptance (supersedes stale row notes below)
+
+P0-1 competitor actual first-party screens, pinned/license-permitted
+Keycloak 26.5.7 REA and ranked adoption matrix are DONE. P0-2 selected
+source: Entra/ServiceNow Inbox preview P0-2A, progressive detail Activity
+P0-2C, Teleport deadline P0-2D, requested-versus-server-approved Grant
+scope P0-2E, Keycloak-like group facets P0-2F, Windmill-like issued-link
+PIN/OTP/fresh MFA UI and HTML backend P0-2B are COMMITTED/MOUNTED.
+B4 server-side two-admin policy/template CAS is COMMITTED. The known
+Foundation B3 member task projection contradictions for unavailable
+`core.users` and `grant.smtp.test` are fixed in the Grant consumer
+without modifying shared Foundation packages or backend roles. Previously
+recorded blocked/partial checkpoints below refer to their historical HEAD,
+not the current source; they must never trigger reimplementation of DONE UI.
+
+**Remain OPEN:** actual two independent human/real mailbox P0-2B plus
+same-HEAD role/mobile B1/B3/B4 Full User E2E, approved nonprod HTTPS/SMTP,
+native Control/Stellar business effect and recovery provenance (B5),
+Governance reconciliation and qualified PR/CI, then owner release (B6).
+External tests are not replaced by synthetic browser results. Beyond the
+explicitly selected screen patterns, possible extra enterprise workflows
+remain out of scope or require new evidence and product approval; never
+silently promise their UI was implemented.
+
+
 ## NEXT_CHAT_START — resume EXACTLY P0-1 competitor UI analysis first (2026-10-11 owner instruction)
 
 **Entry lane:** `datarelay-labs/datarelay-grant` on

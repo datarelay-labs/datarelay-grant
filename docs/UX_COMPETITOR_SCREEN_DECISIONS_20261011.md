@@ -1,5 +1,29 @@
 # Grant UI research — owner P0-1 before P0-2 (2026-10-11)
 
+## Source adoption reconciliation (2026-10-12)
+
+The first-party competitor analysis and licensed static Keycloak REA are
+finished. This is a **scope/implementation ledger**, not a claim that
+every feature offered by those vendors was cloned or that two independent
+real-user mailboxes completed E2E.
+
+| Selected reference/pattern | Grant source status | Still missing or deliberately excluded |
+| --- | --- | --- |
+| Entra/ServiceNow Inbox selected-item review | P0-2A mounted and source-qualified | Real user acceptance on same installed HEAD |
+| Windmill/ServiceNow progressive Request Detail Activity | P0-2C mounted and source-qualified | Independent user keyboard/mobile E2E |
+| Teleport reviewer deadline / StrongDM requested vs approved grant | P0-2D/E read-only, authority-bound mounted UI | Native verified external execution; vendor IAM entitlement features excluded |
+| Keycloak role/group administration | P0-2F group facets and saved-account coverage; B4 server policy/template CAS; B3 two known Foundation member-capability contradictions corrected at source | Real two-admin/browser acceptance and any separately approved future Foundation consumer integration |
+| Windmill minimal issued-email PIN Review→Confirm | P0-2B source and backend HTML/JSON routing committed; original test formatting I001 corrected with owner authorization | Two distinct actual human recipients / genuine independent mailboxes and HTTPS/SMTP installation acceptance |
+
+The unresolved **UI/functionality** backlog is limited to independently
+evidenced Grant gaps in the B1–B6 roadmap. StrongDM workflow priority and
+enterprise access lifecycle require real Grant product projections and separate
+selection; they are not implicitly implemented just because the vendor has
+them. Teleport long-lived role elevation, Jira ticket designer, StrongDM
+auto-approval and Windmill workflow execution engine remain explicitly
+out of scope, not source failures. No proprietary UI code/pixels copied.
+
+
 Research is from official vendor-published screens and workflows, not
 authenticated vendor sessions or proprietary code. No vendor UI account
 or binary was used. Published imagery does not prove current edition parity.

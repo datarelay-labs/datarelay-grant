@@ -91,14 +91,21 @@ describe('B2 Grant exact B1 Foundation consumer conformance', () => {
     expect(structuralReport(admin)).toEqual({ ok: true, findings: [] });
   });
 
-  it('detects current unavailable-Manage contradictions for the member role', () => {
+  it('keeps the member Administration task projection consistent with real unavailable capabilities', () => {
     const result = structuralReport(member);
-    // KNOWN B2 product UI gap. A platform safety denial prevents editing
-    // Administration source in this run; preserve the red finding as evidence
-    // rather than making a false product conformance PASS claim.
-    expect(result.ok).toBe(false);
-    expect(result.findings.filter((x) => x.id === 'ADMIN_CAPABILITY_CONTRADICTION'))
-      .toHaveLength(2);
+    expect(result).toEqual({ ok: true, findings: [] });
+    const composition = realComposition(member);
+    const scopedTasks = [
+      ...composition.tasks,
+      ...(composition.extensionGroups ?? []).flatMap((group) => group.tasks),
+    ];
+    for (const id of ['core.users', 'grant.smtp.test']) {
+      const task = scopedTasks.find((item) => item.id === id);
+      expect(task).toBeDefined();
+      expect(task?.availability).toBe('unavailable');
+      expect(task?.access).toBe('view');
+    }
+    expect(structuralReport(admin)).toEqual({ ok: true, findings: [] });
   });
 
   it('fails closed when the real audit callback is absent from the observed inventory', () => {

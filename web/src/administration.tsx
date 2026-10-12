@@ -71,7 +71,7 @@ export function Administration({ user }: { user: User }) {
   const tasks = useMemo(
     () => createStandardAdministrationTasks({
       'core.https': { availability: 'unavailable', access: 'view', notes: 'TLS is configured by the approved deployment reverse proxy.' },
-      'core.users': { availability: availability(user, 'users.manage'), access: 'manage', target: { kind: 'action', actionId: 'grant.accounts' }, effects: ['security_sensitive'] },
+      'core.users': { availability: availability(user, 'users.manage'), access: user.role === 'admin' ? 'manage' : 'view', target: { kind: 'action', actionId: 'grant.accounts' }, effects: ['security_sensitive'] },
       'core.password': { availability: 'unavailable', access: 'view', notes: 'Personal password and MFA changes are available under Account & security; no system-wide password policy editor exists.' },
       'core.timezone': { availability: 'unavailable', access: 'view', notes: 'Grant does not provide a system timezone configuration API.' },
       'core.network': { availability: 'unavailable', access: 'view', notes: 'Listener and proxy settings are managed by the deployment operator.' },
@@ -95,7 +95,7 @@ export function Administration({ user }: { user: User }) {
           label: 'Mail delivery test',
           description: 'Submit a non-authorizing SMTP test message to the authenticated Grant administrator.',
           availability: availability(user, 'grant.smtp.test'),
-          access: 'manage',
+          access: user.role === 'admin' ? 'manage' : 'view',
           target: { kind: 'action', actionId: 'grant.smtp.test' },
         },
         {

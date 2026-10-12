@@ -1,5 +1,28 @@
 # Grant 1.0 implementation status
 
+## B3 Foundation Administration member capability truth (2026-10-12)
+
+Grant's mounted, shared Foundation Administration task composition now
+matches the existing server-owned role capability boundary: non-admin
+accounts have unavailable User Management and Mail delivery test tasks
+with read-only (not misleading management) task metadata. This fixes the
+two previously observed `ADMIN_CAPABILITY_CONTRADICTION` consumer findings
+(`core.users`, `grant.smtp.test`). The real Grant AdministrationHub is
+tested against the pinned Foundation consumer contract, including all
+four shared groups, member- and administrator-scoped tasks and the existing
+product callback registry. A separate mounted UI regression makes sure
+a member is not offered either View or Manage shortcuts for those tasks;
+the Grant router still refuses non-admin `/system`, and the backend still
+rejects member management/mail-test APIs. No new account or SMTP authority
+is granted, and Foundation source is neither forked nor upgraded.
+
+**Source conformance is not independent full-user acceptance**: two actual
+independent human operators, externally controlled mailboxes, approved
+nonproduction HTTPS/SMTP, current-head complete CI and owner sign-off
+remain separate gates. Original previously documented member-role findings
+below are historical pre-fix evidence, not current results.
+
+
 Updated: 2026-10-10. G12 quality preflight: Issue #54; G11 external readiness: Issue #52 / Draft PR #53; G10: Issue #50 / PR #51; G9: Issue #48 / PR #49; G8: Issue #46 / PR #47; G7: Issue #44 / PR #45; G5/G6: Issue #42 / PR #43; G3/G4: Issue #40 / PR #41; G0/G1/G2: Issue #38 / PR #39; external baseline: Issue #33 / PR #34.
 Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptance.
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than

@@ -63,6 +63,8 @@ describe('Grant administration consumes the public Foundation shared Hub', () =>
     expect(html).toContain('foundation-administration-hub');
     expect(html).not.toContain('aria-label="Manage User Management"');
     expect(html).not.toContain('aria-label="Manage Mail delivery test"');
+    expect(html).not.toContain('aria-label="View User Management"');
+    expect(html).not.toContain('aria-label="View Mail delivery test"');
     expect(html).toContain('My account &amp; MFA');
     expect(html).not.toContain('Configuration preview');
   });
