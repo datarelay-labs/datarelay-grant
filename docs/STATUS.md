@@ -14,9 +14,12 @@ concurrency/restart, uncertain-operation reconciliation, stable signed outcome
 receipt, deduplication, HTTP retry, tenant/case/alert/revision binding,
 forged/stale/out-of-order outcome rejection, and feedback exclusion.
 
-Native pre-live mock-and-product integration qualification **169/169 PASS**
-across 9 focused test modules, including 15 new tests. New simulator and
-fixture source passes changed-path Ruff. This is not a two-human E2E pass.
+Native pre-live mock-and-product integration qualification **175/175 PASS**
+across 9 focused test modules, including 21 new mock tests. Independent
+Stellar persistence despite lost HTTP ACK, receiver restart/identity,
+12 simultaneous callbacks, signed event expiry, and a Control crash after
+the simulated effect but before Grant result reporting all fail closed or
+reconcile without duplicate operations. Mock source passes changed-path Ruff. This is not a two-human E2E pass.
 
 The separate optional private Foundation RC41 Python Wheel check verifies
 original source-locked bundle/Wheel SHA256, then imports the package only in

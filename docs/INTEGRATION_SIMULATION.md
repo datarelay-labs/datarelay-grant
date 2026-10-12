@@ -15,8 +15,8 @@ No external token, endpoint URL, SMTP email or customer data is committed.
 | Simulated system | Actual transport and local state | Guarded checks |
 | --- | --- | --- |
 | Grant isolated ASGI | Real Grant HTTP `127.0.0.1:<ephemeral>`, its own disposable approval DB and test-only producer/executor credentials | Host origin stays exact, scopes separated, approval required before consume, report/duplicate semantics |
-| Mock DataRelay Control | **Second product-owned SQLite** reservation, effect and checkpoint tables | Atomic first-effect CAS, 12 concurrent attempts leave exactly one *simulated* effect, restart preserves same bound route/destination, UNKNOWN denies blind replay, independent ledger readback |
-| Mock Stellar receiver | **Third product-owned SQLite**, real loopback POST, HMAC timestamp verification | Wrong secret or payload, wrong tenant, stale and same-revision conflicting event, duplicate event ID, HTTP 503 retry, exact tenant/case/alert/request/revision readback, forbidden first-party feedback ingress |
+| Mock DataRelay Control | **Second product-owned SQLite** reservation, effect and checkpoint tables | Atomic first-effect CAS, 12 concurrent attempts leave exactly one *simulated* effect, restart preserves bound route/destination, crash-after-apply-before-report reconciles from product ledger without a second effect, UNKNOWN denies blind replay, independent ledger readback |
+| Mock Stellar receiver | **Third product-owned SQLite**, real loopback POST, HMAC timestamp verification | Wrong secret or payload, wrong tenant, stale and same-revision conflicting event, duplicate event ID, 12 concurrent duplicate callbacks, restart with exact persisted tenant/credential fingerprint, HTTP 503 before/after durable acceptance and stable-ID retry, exact tenant/case/alert/request/revision readback, forbidden first-party feedback ingress |
 | Foundation RC41 offline Python Wheel | Independently SHA-verified private original-source Wheel imported in a separate temporary Python process | Missing real restore drill blocks advisory restore, unavailable SMTP authorization blocks test-send; no Grant/backend installation, scheduler or storage mutation |
 
 **Separation of proof:** HTTP 202/200 acknowledges only a mock receiver. A local
@@ -60,11 +60,23 @@ never reported as an installation PASS. Nothing is published or transferred.
 
 On dev-atlas, all nine modules below (Control/Stellar/RC41 new suites plus
 preexisting delivery, consumer guard, client response, feedback and Foundation
-outbox regressions) produced **169 passed, 1 deprecation warning** with the
-privately reviewed RC41 bundle explicitly supplied. The 15 new simulator
-cases include the optional verified Wheel subprocess. Changed-source Ruff,
-JSON fixture syntax and G12 dirty-diff SHA preservation were checked. The
-API/static GitHub candidate run is separate from this local source evidence.
+outbox regressions) produced **175 passed, 1 deprecation warning** with the
+privately reviewed RC41 bundle explicitly supplied. **21 new simulator
+cases** include the optional verified Wheel subprocess and six additional
+crash, lost acknowledgement, signed event freshness, receiver restart and
+concurrent deduplication regressions. The mock receiver persists its locally
+trusted tenant and test credential fingerprint and refuses restart with an
+unexpected identity; actual credential material is not persisted. A receiver
+may durably store a signed event yet emit an HTTP 503, so at-least-once Grant
+worker retry must reuse its event ID and create no second receiver record.
+The local Control product fixture similarly survives a crash after simulated
+effect creation but before reporting back to Grant; Grant's intermediate
+execution status is COMMITTED and any replay is reconciliation-only.
+Changed-source Ruff, JSON fixture syntax and G12 dirty-diff SHA preservation
+were checked. The API/static GitHub candidate run is separate from this
+local source evidence. CI skips the optional Wheel test without an explicitly
+provided, independently reviewed private bundle; local private Wheel PASS
+does not grant GitHub the missing Contents:read token.
 
 ## Important safeguards and next live gates
 

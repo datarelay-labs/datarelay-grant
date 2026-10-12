@@ -218,9 +218,14 @@ class MockStellarReceiver:
         self._server: ThreadingHTTPServer | None = None
         self._thread: threading.Thread | None = None
         self._fail_codes: list[int] = []
+        self._ack_failure_codes: list[int] = []
         self._attempts = 0
         with self._db() as conn:
             conn.executescript("""
+                CREATE TABLE installed_receiver (
+                    id INTEGER PRIMARY KEY CHECK(id=1),
+                    tenant_id TEXT NOT NULL, credential_fingerprint TEXT NOT NULL
+                );
                 CREATE TABLE observations (
                     event_id TEXT PRIMARY KEY, request_id TEXT NOT NULL,
                     revision INTEGER NOT NULL, state TEXT NOT NULL,
@@ -229,6 +234,44 @@ class MockStellarReceiver:
                 );
                 CREATE INDEX observations_request_revision ON observations(request_id,revision);
             """)
+            conn.execute(
+                "INSERT INTO installed_receiver VALUES(1,?,?)",
+                (tenant, hashlib.sha256(secret.encode()).hexdigest()),
+            )
+
+    @classmethod
+    def reopen(cls, path: Path, *, secret: str, tenant: str) -> MockStellarReceiver:
+        """Rebind a stopped simulator to its exact durable product identity.
+
+        Never create an empty replacement DB or silently change tenant/secret.
+        Product authentication is simulated; the original HMAC secret remains
+        only in volatile test memory, not written into receiver storage.
+        """
+        if not isinstance(secret, str) or len(secret) < 8 or not isinstance(tenant, str) or not tenant:
+            raise MockProductSafetyError("MOCK_STELLAR_CONFIG_INVALID")
+        path = Path(path)
+        if not path.is_file():
+            raise MockProductSafetyError("MOCK_STELLAR_LEDGER_MISSING")
+        instance = object.__new__(cls)
+        instance.path, instance._secret, instance.tenant = path, secret, tenant
+        instance._lock = threading.Lock()
+        instance._server = None
+        instance._thread = None
+        instance._fail_codes = []
+        instance._ack_failure_codes = []
+        instance._attempts = 0
+        try:
+            with instance._db() as conn:
+                binding = conn.execute(
+                    "SELECT tenant_id,credential_fingerprint FROM installed_receiver WHERE id=1"
+                ).fetchone()
+                actual = tuple(binding) if binding is not None else None
+                expected = (tenant, hashlib.sha256(secret.encode()).hexdigest())
+                if actual != expected:
+                    raise MockProductSafetyError("MOCK_STELLAR_PERSISTED_BINDING_CHANGED")
+        except sqlite3.DatabaseError:
+            raise MockProductSafetyError("MOCK_STELLAR_LEDGER_INVALID") from None
+        return instance
 
     @contextmanager
     def _db(self) -> Iterator[sqlite3.Connection]:
@@ -277,6 +320,18 @@ class MockStellarReceiver:
             raise MockProductSafetyError("MOCK_STELLAR_FAILURE_INJECTION_INVALID")
         with self._lock:
             self._fail_codes.append(status_code)
+
+    def fail_after_commit_once(self, status_code: int) -> None:
+        """Inject a *lost ACK*: persist the event, but fail the HTTP response.
+
+        The sender must retry under its existing at-least-once contract; the
+        independent receiver must still store exactly one event and not
+        promote HTTP acceptance to a real downstream business execution.
+        """
+        if type(status_code) is not int or not 500 <= status_code <= 599:
+            raise MockProductSafetyError("MOCK_STELLAR_ACK_FAILURE_INJECTION_INVALID")
+        with self._lock:
+            self._ack_failure_codes.append(status_code)
 
     def attempts_count(self) -> int:
         with self._lock:
@@ -340,6 +395,9 @@ class MockStellarReceiver:
                      digest, "mock.stellar." + uuid.uuid4().hex),
                 )
                 conn.commit()
+                with self._lock:
+                    if self._ack_failure_codes:
+                        return self._ack_failure_codes.pop(0)
                 return 202
             except Exception:
                 conn.rollback()

@@ -147,3 +147,27 @@ def test_denied_stellar_response_does_not_execute_or_create_control_effect(env, 
             assert len(rows) == 1 and rows[0]['state'] == 'DENIED'
             assert producer.read(pending['id'])['execution_state'] == 'NOT_STARTED'
             assert env.api.get('/api/v1/admin/notification-destinations').status_code == 403
+
+
+def test_grant_webhook_lost_ack_recovers_without_double_receiver_record(env, tmp_path):
+    with MockStellarReceiver(tmp_path/'stellar-ack-loss.sqlite', secret=SECRET, tenant='tenant-isolated') as sink:
+        settings, core, profile, token, action = configured_stellar(env, sink.url)
+        sink.fail_after_commit_once(503)
+        with run_loopback_grant(env.app) as origin, GrantClient(origin, token, dev_loopback=True) as producer:
+            request = create(producer, profile, action, ident='ack-lost-after-write')
+            approve(env, core, request)
+            worker = Worker(env.db, settings)
+            assert worker.tick(limit=10) >= 1
+            pending = webhook_row(env, request['id'])
+            assert pending['state'] == 'PENDING' and pending['attempts'] == 1
+            first = sink.readback(request['id'])
+            assert len(first) == 1
+            with env.db.transaction() as conn:
+                conn.execute('UPDATE outbox SET available_at=0 WHERE id=?', (pending['id'],))
+            assert worker.tick(limit=10) >= 1
+            done = webhook_row(env, request['id'])
+            assert done['state'] == 'DELIVERED' and done['attempts'] == 2
+            assert done['id'] == pending['id']
+            assert sink.readback(request['id']) == first
+            assert sink.attempts_count() == 2
+            assert producer.read(request['id'])['execution_state'] == 'NOT_STARTED'

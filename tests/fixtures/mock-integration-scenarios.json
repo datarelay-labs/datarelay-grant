@@ -9,7 +9,11 @@
     "action": {
       "kind": "datarelay.control.delivery_log.replay",
       "target": "delivery-log/42",
-      "parameters": {"log_id": 42, "route_id": 7, "destination_id": 9}
+      "parameters": {
+        "log_id": 42,
+        "route_id": 7,
+        "destination_id": 9
+      }
     },
     "expected_simulated_effect_count": 1,
     "checkpoint_offset": 100
@@ -26,18 +30,33 @@
     "action": {
       "kind": "stellar.alert.review",
       "target": "alert-isolated",
-      "parameters": {"response_kind": "test.quarantine.preview"}
+      "parameters": {
+        "response_kind": "test.quarantine.preview"
+      }
     },
     "accepted_grant_event_type": "grant.approval.outcome",
     "receiver_protocol": "HMAC-SHA256 over raw bytes and current timestamp",
     "expected_simulated_receiver_records_per_event": 1
   },
   "negative_cases": [
-    "unapproved_claim", "separate_token_scopes", "duplicate_product_effect",
-    "uncertain_product_reservation", "changed_control_route",
-    "concurrent_product_replay", "restarted_product_ledger",
-    "wrong_hmac", "stale_signed_outcome", "duplicate_outcome_event",
-    "cross_tenant_payload", "same_revision_conflict",
-    "receiver_http_503_retry", "grant_feedback_loop"
+    "unapproved_claim",
+    "separate_token_scopes",
+    "duplicate_product_effect",
+    "uncertain_product_reservation",
+    "changed_control_route",
+    "concurrent_product_replay",
+    "restarted_product_ledger",
+    "wrong_hmac",
+    "stale_signed_outcome",
+    "duplicate_outcome_event",
+    "cross_tenant_payload",
+    "same_revision_conflict",
+    "receiver_http_503_retry",
+    "grant_feedback_loop",
+    "receiver_accepted_but_ack_lost",
+    "receiver_restart_and_binding_integrity",
+    "receiver_concurrent_duplicate_fanin",
+    "signed_outcome_expired_timestamp",
+    "control_crash_after_effect_before_report"
   ]
 }

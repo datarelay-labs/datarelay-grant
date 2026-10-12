@@ -149,3 +149,62 @@ def test_test_dataset_is_explicitly_mock_only_and_contains_no_live_urls():
     assert manifest['stellar']['accepted_grant_event_type'] == 'grant.approval.outcome'
     assert '://' not in content
     assert all(marker not in content.casefold() for marker in ('api_key', 'password', 'private_key', 'access_token'))
+
+
+def test_stellar_response_ack_lost_after_durable_persist_is_deduplicated(tmp_path):
+    with MockStellarReceiver(tmp_path/'stellar.sqlite', secret='fixture-only-secret', tenant='t-1') as receiver:
+        received = outcome()
+        headers, body = signed_event('fixture-only-secret', received)
+        receiver.fail_after_commit_once(503)
+        assert httpx.post(receiver.url, headers=headers, content=body, timeout=5).status_code == 503
+        # From the original sender's point of view delivery failed, but the
+        # independent receiver committed the original event before losing ACK.
+        assert len(receiver.readback(received['request_id'])) == 1
+        assert httpx.post(receiver.url, headers=headers, content=body, timeout=5).status_code == 200
+        assert len(receiver.readback(received['request_id'])) == 1
+        assert receiver.attempts_count() == 2
+
+
+def test_stellar_receiver_restart_keeps_trusted_identity_and_event_dedup(tmp_path):
+    db = tmp_path/'stellar-restarted.sqlite'
+    original = outcome()
+    headers, body = signed_event('fixture-only-secret', original)
+    with MockStellarReceiver(db, secret='fixture-only-secret', tenant='t-1') as receiver:
+        assert httpx.post(receiver.url, headers=headers, content=body, timeout=5).status_code == 202
+        before = receiver.readback(original['request_id'])
+        assert len(before) == 1
+    with MockStellarReceiver.reopen(db, secret='fixture-only-secret', tenant='t-1') as reopened:
+        assert httpx.post(reopened.url, headers=headers, content=body, timeout=5).status_code == 200
+        assert reopened.readback(original['request_id']) == before
+    with pytest.raises(MockProductSafetyError):
+        MockStellarReceiver.reopen(db, secret='different-test-secret', tenant='t-1')
+    with pytest.raises(MockProductSafetyError):
+        MockStellarReceiver.reopen(db, secret='fixture-only-secret', tenant='tenant-not-installed')
+    with pytest.raises(MockProductSafetyError):
+        MockStellarReceiver.reopen(tmp_path/'missing.sqlite', secret='fixture-only-secret', tenant='t-1')
+
+
+def test_stellar_receiver_rejects_stale_clock_and_signature_before_receipt(tmp_path):
+    with MockStellarReceiver(tmp_path/'stellar.sqlite', secret='fixture-only-secret', tenant='t-1') as receiver:
+        event = outcome()
+        wrong_headers, raw = signed_event('incorrect-secret', event)
+        assert httpx.post(receiver.url, headers=wrong_headers, content=raw, timeout=5).status_code == 401
+        old_headers, old_raw = signed_event('fixture-only-secret', event, timestamp=int(time.time())-3601)
+        assert httpx.post(receiver.url, headers=old_headers, content=old_raw, timeout=5).status_code == 401
+        assert receiver.readback(event['request_id']) == []
+
+
+def test_stellar_concurrent_identical_signed_posts_commit_exactly_one(tmp_path):
+    """At-least-once callback fan-in must not create duplicate receiver records."""
+    with MockStellarReceiver(tmp_path/'stellar-concurrent.sqlite', secret='fixture-only-secret', tenant='t-1') as sink:
+        event = outcome()
+        headers, payload = signed_event('fixture-only-secret', event)
+        with ThreadPoolExecutor(max_workers=8) as threads:
+            statuses = list(threads.map(
+                lambda _: httpx.post(sink.url, headers=headers, content=payload, timeout=8).status_code,
+                range(12),
+            ))
+        assert statuses.count(202) == 1
+        assert statuses.count(200) == 11
+        assert len(sink.readback(event['request_id'])) == 1
+        assert sink.attempts_count() == 12

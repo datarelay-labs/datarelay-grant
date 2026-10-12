@@ -141,3 +141,45 @@ def test_ambiguous_product_reservation_cannot_execute_even_after_grant_commit(en
         assert executor.read(request['id'])['execution_id'] == 'control-ex-uncertain'
         assert executor.report(request['id'], 'control-ex-uncertain', action,
                                'UNKNOWN', 'mock-crash-uncertain')['execution_state'] == 'UNKNOWN'
+
+
+def test_mock_control_crash_after_effect_before_report_reconciles_without_reexecution(env, tmp_path):
+    action, intake, producer_token, executor_token = configured_control(env)
+    db = tmp_path/'control-crash-after-effect.sqlite'
+    product = MockControlLedger(db, log_id=42, route_id=7, destination_id=9)
+    with (
+        run_loopback_grant(env.app) as origin,
+        GrantClient(origin, producer_token, dev_loopback=True) as producer,
+        GrantClient(origin, executor_token, dev_loopback=True) as executor,
+    ):
+        request = producer.create_request(intake)
+        env.core.decide(Principal(env.users['approver']['id'], 'human', 'member'),
+                        request['id'], Decision(decision='APPROVED', expected_revision=1))
+        before = executor.read(request['id'])
+        reservation = product.reserve('control-log42-route7-dest9', 'control-ex-crash')
+        committed = executor.claim(request['id'], reservation.execution_id, action)
+        assert check_product_claim(
+            request=before, claim=committed, operation_key=reservation.operation_key,
+            execution_id=reservation.execution_id, expected_action=action,
+            expected_integration_id=env.integration['id'], reservation=reservation,
+        ).kind == 'PRODUCT_LEDGER_ONCE_ONLY'
+        assert product.apply_once(reservation.operation_key, reservation.execution_id)
+        # Simulate executor crash by never sending an initial result report.
+        # Consuming Grant's claim commits authorization, not product completion.
+        assert executor.read(request['id'])['execution_state'] == 'COMMITTED'
+        recovered = MockControlLedger.reopen(db, log_id=42, route_id=7, destination_id=9)
+        replay_claim = executor.claim(request['id'], reservation.execution_id, action)
+        assert replay_claim['replay'] is True
+        assert check_product_claim(
+            request=before, claim=replay_claim, operation_key=reservation.operation_key,
+            execution_id=reservation.execution_id, expected_action=action,
+            expected_integration_id=env.integration['id'],
+            reservation=recovered.reserve(reservation.operation_key, reservation.execution_id),
+        ).kind == 'RECONCILE_NO_SEND'
+        assert recovered.independent_readback(reservation.operation_key) is not None
+        assert recovered.apply_once(reservation.operation_key, reservation.execution_id) is False
+        assert recovered.read_effect_count(reservation.operation_key) == 1
+        # Evidence after a crash is explicitly an uncertain user-facing result,
+        # not a fabricated independently confirmed Control delivery.
+        assert executor.report(request['id'], reservation.execution_id, action,
+                               'UNKNOWN', 'mock-crash-needs-product-readback')['execution_state'] == 'UNKNOWN'

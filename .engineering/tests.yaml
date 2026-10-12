@@ -50,7 +50,7 @@ scenarios:
   - id: GRANT-MOCK-EXTERNAL-001
     name: Disposable Control/Stellar simulated native API integration
     cost: medium
-    estimated_seconds: 35
+    estimated_seconds: 60
     timeout_seconds: 180
     level: integration
     domains: [approval, api, integrations]
