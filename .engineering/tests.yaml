@@ -47,6 +47,18 @@ scenarios:
     command: "bash scripts/checks.sh static"
     invariants: [clean deterministic source]
     release_gate: true
+  - id: GRANT-MOCK-EXTERNAL-001
+    name: Disposable Control/Stellar simulated native API integration
+    cost: medium
+    estimated_seconds: 35
+    timeout_seconds: 180
+    level: integration
+    domains: [approval, api, integrations]
+    triggers: [pr, preflight]
+    platforms: [linux]
+    command: "uv run --frozen pytest -q tests/test_mock_product_systems.py tests/test_mock_control_flow.py tests/test_mock_stellar_flow.py"
+    invariants: [ephemeral loopback, isolated product ledger, signed outcomes, simulation is not external acceptance]
+    release_gate: false
   - id: GRANT-BROWSER-001
     name: Actual browser two-user journeys and shared administration
     level: e2e

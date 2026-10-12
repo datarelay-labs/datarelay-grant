@@ -1,5 +1,35 @@
 # Grant 1.0 implementation status
 
+## 2026-10-12 M6 pre-live technical integration simulation — mock systems only
+
+The next eligible step ahead of installing an external Control or Stellar
+adapter is independently testable without touching those products. The source
+now supplies a disposable Control-like SQLite product ledger, a separate
+Stellar-like HMAC HTTP receiver with its own SQLite observations and an
+actual isolated Grant ASGI service on ephemeral `127.0.0.1` ports. A reviewed,
+nonsecret JSON dataset specifies precise Control replay and Stellar alert
+identities. The mock technical scenarios cover independent producer/executor
+scopes, no unapproved execution, atomic simulated effect-once even under
+concurrency/restart, uncertain-operation reconciliation, stable signed outcome
+receipt, deduplication, HTTP retry, tenant/case/alert/revision binding,
+forged/stale/out-of-order outcome rejection, and feedback exclusion.
+
+Native pre-live mock-and-product integration qualification **169/169 PASS**
+across 9 focused test modules, including 15 new tests. New simulator and
+fixture source passes changed-path Ruff. This is not a two-human E2E pass.
+
+The separate optional private Foundation RC41 Python Wheel check verifies
+original source-locked bundle/Wheel SHA256, then imports the package only in
+an isolated test subprocess and confirms that missing real recovery and
+send authority block mock backup and notification previews. None of these
+tests installs the Wheel in the actual Grant backend, configures a scheduler,
+performs record deletion, writes a customer's audit sink, invokes native
+Control replay or publishes to a deployed Stellar receiver. They are not
+Full User E2E, SMTP receipt, real Control/Stellar acceptance, CI private
+Foundation access or GA. Detailed scope, commands, limitations and
+per-scenario evidence: `docs/INTEGRATION_SIMULATION.md`.
+
+
 ## 2026-10-12 — M6 native-feedback-loop ingress guard hardening
 
 Grant's actual request-creation boundary now rejects uppercase/whitespace-

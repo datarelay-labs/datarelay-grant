@@ -205,3 +205,14 @@ actual receiver readback, not just callback HTTP acceptance.
 No real M3/M4 completion is inferred from source inspection, local contract
 tests, a mock callback, an email receipt or this document. Independent G12
 pre-release checks may continue without compromising these gates.
+
+## Mock-only pre-live qualification (2026-10-12)
+
+For a reproducible fake Control operation ledger, separate signed fake
+Stellar receiver, actual isolated Grant loopback API and immutable private
+Foundation Wheel advisory previews, use `docs/INTEGRATION_SIMULATION.md`.
+The results qualify protocol wiring and fail-closed simulator behavior only.
+They do NOT count as a native Control durable operation, independently
+observed real destination, deployed Stellar receiver tenant/case/alert
+readback or signed product publisher. Keep all original external owner/target
+approval gates and independent human/mailbox E2E gates unchanged.
