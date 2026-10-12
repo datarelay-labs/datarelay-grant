@@ -1,5 +1,25 @@
 # Grant 1.0 implementation status
 
+## B4 task-first mobile delivery and template inventories (source only, 2026-10-12)
+
+The Grant Notifications workspace now projects the same already-loaded
+administrator-scoped delivery page and saved template-set records as readable
+mobile cards at widths up to 600px, while retaining the existing desktop
+tables. The delivery cards show event/state, exact request identity, attempt
+count, created date, transport acceptance, independent mailbox-receipt status
+and saved failure reason; FAILED rows retain the SAME existing Review resend
+and blocked-attempt guard as the wide table. No new list GET, resend endpoint,
+role scope, cursor/pagination/filter or delivery permission was introduced.
+Saved template cards expose the current enabled state, all nine required
+events, last updated value and the existing Open editor callback.
+
+This is a source-only UI implementation under the owner's instruction to
+complete development first: TypeScript noEmit compile PASS, but full Web,
+native Chromium/mobile keyboard, API, independent-user E2E, SMTP receipt and
+release/CI tests remain DEFERRED. No delivery was sent or business action
+executed as part of implementing these responsive views.
+
+
 ## B3 mobile Administration and reviewed account operations (source-only, 2026-10-12)
 
 The product-mounted Foundation AdministrationHub remains unchanged, but Grant

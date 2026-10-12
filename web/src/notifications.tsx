@@ -6,6 +6,7 @@ import {
   TextField,
 } from '@datarelay-labs/foundation';
 import { api, errorText } from './api';
+import './notifications-mobile.css';
 import {
   createDeliveryQueryReadScope,readCurrentDeliveryWorklist,
   currentDeliveryPageProjection,deliveryDraftHasChanges,
@@ -321,7 +322,7 @@ export function NotificationDeliveryHealth() {
         :listError?'Delivery page unavailable'
         :'Loading current administrator-scoped delivery history…'}</p>
       <p>Receipt is not independently confirmed by this delivery ledger.</p>
-      <div className="grant-table-scroll">
+      <div className="grant-table-scroll grant-notification-desktop-list">
         <table className="grant-table">
           <thead><tr>
             <th>Event</th><th>State</th><th>Attempts</th><th>Request</th>
@@ -345,6 +346,47 @@ export function NotificationDeliveryHealth() {
           </tr>)}</tbody>
         </table>
       </div>
+      {/* The same bounded administrator-scoped page, filters and one-shot
+          resend review are presented as narrow task cards. No extra reads. */}
+      <ul className="grant-notification-mobile-list"
+        aria-label="Notification delivery mobile list">
+        {page?.deliveries.map((item) => (
+          <li key={item.id} className="grant-notification-mobile-card">
+            <div className="grant-notification-mobile-heading">
+              <strong>{eventLabel(item.event_type as NotificationEvent)}</strong>
+              <span className="grant-notification-mobile-status">{item.state}</span>
+            </div>
+            <dl className="grant-notification-mobile-facts">
+              <div><dt>Request</dt>
+                <dd><NotificationRequestLink requestId={item.request_id}/></dd>
+              </div>
+              <div><dt>Attempts</dt><dd>{item.attempts}</dd></div>
+              <div><dt>Created</dt><dd>{when(item.created_at)}</dd></div>
+              <div><dt>Transport accepted</dt>
+                <dd>{item.transport_accepted ? 'Yes' : 'No'}</dd>
+              </div>
+              <div><dt>Mailbox receipt verified</dt>
+                <dd>{item.receipt_confirmed ? 'Yes' : 'No'}</dd>
+              </div>
+              <div><dt>Last delivery error</dt>
+                <dd>{item.last_error ?? 'No recorded error'}</dd>
+              </div>
+            </dl>
+            {item.state === 'FAILED' ? (
+              <div className="grant-notification-mobile-actions">
+                {deliveryGate.current.blocked(item.id)
+                  ? <small role="status">
+                      Resend attempted. Refresh before another review.
+                    </small>
+                  : <Button variant="secondary" disabled={!reviewAllowed}
+                      onClick={() => reviewResend(item)}>
+                      Review resend
+                    </Button>}
+              </div>
+            ) : null}
+          </li>
+        ))}
+      </ul>
       <div className="grant-actions">
         <Button variant="secondary" disabled={task.busy || offset <= 0}
           onClick={() => changePage(Math.max(0, offset - DELIVERY_PAGE_LIMIT))}>
@@ -790,7 +832,7 @@ export function Notifications() {
           description="Each set owns the complete Grant 1.0 event family. Existing requests keep their original snapshot."
           actions={<Button onClick={startCreate}>Create template set</Button>}
         >
-          <div className="grant-table-scroll">
+          <div className="grant-table-scroll grant-notification-desktop-list">
             <table className="grant-table">
               <thead>
                 <tr>
@@ -831,6 +873,33 @@ export function Notifications() {
               </tbody>
             </table>
           </div>
+          {/* Card/list variants are mutually hidden by CSS, not separate
+              client/server lists or different policy permissions. */}
+          <ul className="grant-notification-mobile-list"
+            aria-label="Notification template sets mobile list">
+            {sets.map((row) => (
+              <li key={row.id} className="grant-notification-mobile-card">
+                <div className="grant-notification-mobile-heading">
+                  <button type="button" className="grant-table-link"
+                    onClick={() => edit(row)}>{row.name}</button>
+                  <span className="grant-notification-mobile-status">
+                    {row.enabled ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+                <dl className="grant-notification-mobile-facts">
+                  <div><dt>Required events</dt>
+                    <dd>{events.length} events</dd>
+                  </div>
+                  <div><dt>Updated</dt><dd>{when(row.updated_at)}</dd></div>
+                  <div><dt>Saved ID</dt><dd><code>{row.id}</code></dd></div>
+                </dl>
+                <div className="grant-notification-mobile-actions">
+                  <Button variant="secondary" disabled={task.busy}
+                    onClick={() => edit(row)}>Open template</Button>
+                </div>
+              </li>
+            ))}
+          </ul>
           {!sets.length ? (
             <p>No custom template sets configured. Policies may use the system defaults.</p>
           ) : null}

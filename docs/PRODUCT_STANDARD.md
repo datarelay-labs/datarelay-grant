@@ -372,6 +372,20 @@ resending or protected execution. Resend remains an explicit separately
 authorized administrator action on eligible failed email notifications.
 
 ### 10.4 Branding
+#### Notifications responsive administration presentation
+
+The saved nine-event template-set inventory and Delivery Health worklist
+must remain usable on narrow mobile displays. Grant may project one existing
+authorized row per card rather than requiring a horizontal desktop table,
+but the mobile and desktop versions must use the **identical** current
+administrator-scoped saved data, filter/page selection and one-shot
+resend-review guard. The mobile surface must never turn an email-transport
+receipt into mailbox verification or an approval or external execution
+grant. A FAILED delivery offers only the same existing Review resend entry
+point; no implicit or repeated POST is authorized by viewport changes.
+Any source implementation remains unqualified until the separately required
+browser/user/release checks are completed.
+
 
 System-level notification branding owns product name, sender display name, logo and
 basic visual identity. Policy-specific content can override text, not security-owned

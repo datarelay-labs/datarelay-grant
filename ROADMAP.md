@@ -1,5 +1,19 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-12 B4 additional Notifications 320/375 implementation-first UI
+
+After the separate B3 Administration mobile source checkpoint, the remaining
+desktop-only saved Delivery Health and Template Sets tables were adapted to
+mobile task-first cards at <=600px. Cards reuse the exact existing
+administrator-scoped saved rows, server page/filter results, blocked resend
+identities and explicit notification-only Review -> Confirm flow. Desktop
+table actions remain. No change to identity/OTP/MFA, email transport,
+policy/template CAS, business execution, backend endpoints or common Foundation
+packages. Full tests, actual two-person independent mailbox E2E, product
+preview and release were explicitly deferred by the owner; source compilation
+alone is not installed user acceptance.
+
+
 ## B3 Administration mobile/account lifecycle source implementation checkpoint (2026-10-12)
 
 The next unimplemented Keycloak/ServiceNow-style Administration task-detail
