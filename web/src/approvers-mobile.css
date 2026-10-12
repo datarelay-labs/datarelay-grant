@@ -1,0 +1,100 @@
+/* Grant-owned narrow representation of the same authoritative saved
+ * approver groups. Foundation owns the shell, forms and button controls. */
+.grant-approver-groups-mobile-list { display: none; }
+
+@media (max-width: 600px) {
+  .grant-approver-groups-desktop-list { display: none; }
+
+  .grant-approver-groups-mobile-list {
+    display: grid;
+    gap: var(--dr-space-3);
+    min-width: 0;
+    margin: var(--dr-space-4) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .grant-approver-groups-mobile-card {
+    display: grid;
+    min-width: 0;
+    gap: var(--dr-space-3);
+    padding: var(--dr-space-4);
+    border: 1px solid var(--dr-border-default);
+    border-radius: var(--dr-radius-card);
+    overflow-wrap: anywhere;
+  }
+
+  .grant-approver-groups-mobile-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    min-width: 0;
+    gap: var(--dr-space-2);
+  }
+
+  .grant-approver-groups-mobile-heading strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .grant-approver-groups-mobile-status {
+    color: var(--dr-text-secondary);
+    font-size: var(--dr-font-size-sm);
+    font-weight: var(--dr-font-weight-strong);
+  }
+
+  .grant-approver-groups-mobile-facts {
+    display: grid;
+    gap: var(--dr-space-3);
+    margin: 0;
+    min-width: 0;
+  }
+
+  .grant-approver-groups-mobile-facts > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--dr-space-1);
+    min-width: 0;
+  }
+
+  .grant-approver-groups-mobile-facts dt {
+    color: var(--dr-text-secondary);
+    font-size: var(--dr-font-size-sm);
+    font-weight: var(--dr-font-weight-strong);
+  }
+
+  .grant-approver-groups-mobile-facts dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .grant-approver-groups-mobile-actions {
+    display: flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .grant-approver-groups-mobile-actions button {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+/* Product-owned list/detail focus targets; native Focus-visible preserves
+ * keyboard return without taking ownership of Foundation buttons. */
+.grant-approver-groups-directory,
+.grant-approver-groups-editor {
+  min-width: 0;
+  max-width: 100%;
+  scroll-margin-block-start: var(--dr-space-4);
+  outline-offset: 2px;
+}
+
+.grant-approver-groups-directory:focus-visible,
+.grant-approver-groups-editor:focus-visible {
+  outline: 2px solid var(--dr-border-default);
+  border-radius: var(--dr-radius-card);
+}

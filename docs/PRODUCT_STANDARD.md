@@ -862,6 +862,16 @@ does not confer new administration permissions or automatically approve
 or execute a human-gated business action.
 
 Configuration detail:
+At 320/375px the Grant-owned saved Approver groups directory may present
+its existing administrator-scoped groups as cards instead of a horizontal
+wide table. Both views must share the exact current search/filter results
+and member account-coverage projection: saved member IDs are **not** proof
+of current reviewer-seat eligibility; unavailable and disabled accounts
+stay visible as warnings rather than being treated as qualified members.
+Review group must reuse the original server-versioned group edit and explicit
+confirmation, with no new write path, and keyboard focus must be restored
+on list/detail navigation. Viewport choice must never change permissions.
+
 
 ~~~text
 Approval policies

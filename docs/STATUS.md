@@ -1,5 +1,21 @@
 # Grant 1.0 implementation status
 
+## B3 approver group mobile directory source checkpoint (2026-10-12)
+
+The mounted Approver groups list now displays task-first one-group-per-card
+at <=600px rather than requiring horizontal scanning of the five-column
+desktop table. The **same already saved, role-scoped group/account query**
+drives both views, with unchanged saved-ID count, enabled/disabled state,
+unknown-versus-attention account coverage, exact saved timestamp, name/facet
+filter and Review group action. Group membership is not promoted to proof
+of current approval eligibility. Existing server CAS and Review/Confirm
+remain the only mutations. Selecting a group focuses the editor; returning
+to the list restores keyboard focus without leaving a dead mobile button.
+Shared Foundation packages and server roles were not touched. Owner deferred
+formal unit/browser/real-user E2E; no test PASS is implied by source-only
+implementation. TypeScript noEmit compilation verified the source shape.
+
+
 ## B5 Operations mobile delivery/verification observation (source only, 2026-10-12)
 
 The Grant Operations view now offers <=600px task-first cards for the

@@ -1,5 +1,18 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## B3 mobile Approver groups directory — implementation-first (2026-10-12)
+
+A remaining desktop-only five-column Approver groups list now has a mobile
+read-only card presentation at <=600px with server-filtered group identity,
+enabled state, saved member IDs, current account coverage truth, and original
+Review group editor entry. Selected editor and list transitions restore
+keyboard focus. No additional accounts/approver GET, frontend grant of
+membership, local role elevation, group mutation, or Foundation source fork.
+The existing desktop table and original CAS Review -> Confirm are preserved.
+Source-only TypeScript compilation is a sanity check; tests, independently
+operated two-human/mailbox acceptance and release remain DEFERRED by owner.
+
+
 ## B5 operations mobile source checkpoint (2026-10-12)
 
 The remaining desktop-only Operations email-decision verification table

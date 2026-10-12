@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, TextField, type AccountProjection } from '@datarelay-labs/foundation';
 import { api } from './api';
+import './approvers-mobile.css';
 import { Form, Select, useTask, when } from './common';
 import type { ApproverGroup } from './types';
 import {
@@ -94,7 +95,7 @@ export function ApproverGroupDirectory({
       </Alert>}
       {loaded&&<p>{matches.length} of {groups.length} groups.
         Saved membership is not proof of current decision eligibility.</p>}
-      {loaded&&<div className="grant-table-scroll">
+      {loaded&&<div className="grant-table-scroll grant-approver-groups-desktop-list">
         <table className="grant-table">
           <thead>
             <tr><th>Group</th><th>Status</th><th>Members</th><th>Updated</th><th>Action</th></tr>
@@ -119,6 +120,35 @@ export function ApproverGroupDirectory({
           </tbody>
         </table>
       </div>}
+      {/* Mobile task-first cards reuse the SAME saved, administrator-scoped
+          filtered groups and account coverage as the desktop table.
+          Group saved IDs are never advertised as valid approval seats. */}
+      {loaded&&<ul className="grant-approver-groups-mobile-list"
+        aria-label="Approver groups mobile list">
+        {matches.map((group) => (
+          <li className="grant-approver-groups-mobile-card" key={group.id}>
+            <div className="grant-approver-groups-mobile-heading">
+              <strong>{group.name}</strong>
+              <span className="grant-approver-groups-mobile-status">
+                {group.enabled ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
+            <dl className="grant-approver-groups-mobile-facts">
+              <div><dt>Saved membership</dt><dd>
+                {group.member_ids.length} saved member ID{group.member_ids.length===1?'':'s'}
+              </dd></div>
+              <div><dt>Member account health</dt><dd>
+                <ApproverGroupAccountCoverage group={group} accounts={accounts}/>
+              </dd></div>
+              <div><dt>Updated</dt><dd>{when(group.updated_at)}</dd></div>
+            </dl>
+            <div className="grant-approver-groups-mobile-actions">
+              <Button variant="secondary" disabled={busy}
+                onClick={() => onOpen(group)}>Review group</Button>
+            </div>
+          </li>
+        ))}
+      </ul>}
       {loaded&&!error&&!matches.length&&(
         <p>{groups.length ? 'No groups match your search.' :
           'No approver groups. Create a group to configure reusable approvers.'}</p>
@@ -134,6 +164,9 @@ export function Approvers() {
   const [directoryLoaded,setDirectoryLoaded]=useState(false);
   const [directoryError,setDirectoryError]=useState('');
   const directoryRead=useRef(createApproverDirectoryReadScope());
+  const directoryFocus=useRef<HTMLDivElement>(null);
+  const editorFocus=useRef<HTMLDivElement>(null);
+  const hadEditor=useRef(false);
   const [editing, setEditing] = useState('');
   const [view, setView] = useState<'list' | 'editor'>('list');
   const [search, setSearch] = useState('');
@@ -175,6 +208,20 @@ export function Approvers() {
   }
 
   useEffect(() => { void task.run(async()=>{await load();}); }, []);
+
+  // Move keyboard focus with the selected task instead of leaving it on a
+  // no-longer-mounted mobile list action or return button.
+  useEffect(() => {
+    if (view === 'editor') {
+      hadEditor.current = true;
+      editorFocus.current?.focus({preventScroll:true});
+      editorFocus.current?.scrollIntoView({block:'start'});
+    } else if (hadEditor.current) {
+      hadEditor.current = false;
+      directoryFocus.current?.focus({preventScroll:true});
+      directoryFocus.current?.scrollIntoView({block:'start'});
+    }
+  }, [view]);
 
   function edit(group: ApproverGroup) {
     if (saveGuard.current.blocked()) return;
@@ -314,16 +361,20 @@ export function Approvers() {
       </Alert>
     )}
     {view === 'list' ? (
-      <ApproverGroupDirectory
-        groups={groups} accounts={accountInventory}
-        loaded={directoryLoaded} error={directoryError}
-        search={search} view={groupView}
-        busy={task.busy||saveGuard.current.blocked()||!directoryLoaded}
-        onSearchChange={setSearch} onViewChange={setGroupView}
-        onOpen={edit} onCreate={startCreate}
-      />
+      <div ref={directoryFocus} className="grant-approver-groups-directory"
+        aria-label="Approver groups directory" tabIndex={-1}>
+        <ApproverGroupDirectory
+          groups={groups} accounts={accountInventory}
+          loaded={directoryLoaded} error={directoryError}
+          search={search} view={groupView}
+          busy={task.busy||saveGuard.current.blocked()||!directoryLoaded}
+          onSearchChange={setSearch} onViewChange={setGroupView}
+          onOpen={edit} onCreate={startCreate}
+        />
+      </div>
     ) : (
-      <>
+      <div ref={editorFocus} className="grant-approver-groups-editor"
+        aria-label="Selected approver group editor" tabIndex={-1}>
         <div className="grant-actions">
           <Button variant="ghost" disabled={task.busy} onClick={reset}>
             ← Back to approver groups
@@ -409,7 +460,7 @@ export function Approvers() {
             onConfirm={() => { void task.run(confirmGroupSave); }}
           />
         </Card>
-      </>
+      </div>
     )}
   </div>;
 }

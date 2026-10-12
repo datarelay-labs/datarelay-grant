@@ -1,5 +1,18 @@
 # Grant UI research — owner P0-1 before P0-2 (2026-10-11)
 
+## 2026-10-12 Keycloak directory presentation gap — source-only disposition
+
+The licensed, previously pinned Keycloak 26.5.7 groups/user flow and the
+original selected Grant P0-2F saved-directory facets are not being reanalyzed.
+The next real Grant gap was only the desktop-wide approver group table on a
+320/375px device. Product-owned ApproverGroupDirectory now renders the
+same server-filtered saved groups as mobile cards showing group status,
+saved member count, account-health coverage and timestamp, with unchanged
+Review group/CAS. Keyboard focus follows list -> edit -> list. No Keycloak
+source/screenshots copied or unapproved entitlement authorizations added.
+Implementation is source-only under the owner's deferral of formal tests.
+
+
 ## Source adoption reconciliation (2026-10-12)
 
 The first-party competitor analysis and licensed static Keycloak REA are
