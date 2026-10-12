@@ -687,7 +687,7 @@ export function Profiles() {
               Clear filters
             </Button>
           </div>
-          <div className="grant-table-scroll">
+          <div className="grant-table-scroll grant-policy-desktop-list">
             <table className="grant-table grant-policy-table">
               <thead>
                 <tr>
@@ -755,6 +755,59 @@ export function Profiles() {
               </tbody>
             </table>
           </div>
+          {/* One authoritative role-scoped row collection; the narrow-screen
+              view replaces horizontal column scanning with task-first cards.
+              CSS hides the inactive view from keyboard and screen readers. */}
+          <ul className="grant-policy-mobile-list" aria-label="Approval policies mobile list">
+            {visibleRows.map((row) => (
+              <li className="grant-policy-mobile-card" key={row.id}>
+                <div className="grant-policy-mobile-heading">
+                  <button type="button" className="grant-table-link"
+                    onClick={() => openPolicy(row)}>
+                    {row.name}
+                  </button>
+                  <span className="grant-lifecycle" data-state={row.lifecycle}>
+                    {row.lifecycle}
+                  </span>
+                </div>
+                <p className="grant-policy-mobile-meta">
+                  v{row.version} · {policyDecisionSecuritySummary(row)}
+                  {row.active_version && row.active_version !== row.version
+                    ? ' · Active v' + row.active_version : ''}
+                </p>
+                <dl className="grant-policy-mobile-facts">
+                  <div>
+                    <dt>Applies to</dt>
+                    <dd>
+                      <strong>{row.action_kind}</strong>
+                      <small>{integrations.find((item) => item.id === row.integration_id)?.name ?? row.integration_id}</small>
+                      <small>tenant {row.tenant_selector || '*'} · env {row.environment || '*'}</small>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Approval rule</dt>
+                    <dd>
+                      <PolicyApprovalSummary policy={row} groups={groups} approvers={users} />
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Notifications</dt>
+                    <dd>{row.email_template_name ?? 'Built-in default'}</dd>
+                  </div>
+                  <div>
+                    <dt>Updated</dt>
+                    <dd>{when(row.updated_at)}</dd>
+                  </div>
+                </dl>
+                <div className="grant-row-actions">
+                  <Button variant="secondary" disabled={task.busy}
+                    onClick={() => openPolicy(row)}>Open</Button>
+                  <Button variant="ghost" disabled={task.busy}
+                    onClick={() => stageClone(row)}>Review clone</Button>
+                </div>
+              </li>
+            ))}
+          </ul>
           {!rows.length ? <p>No approval policies configured.</p> : null}
           {rows.length > 0 && !visibleRows.length ? (
             <p>No policies match the current search and lifecycle filters. Clear filters to see all visible policies.</p>

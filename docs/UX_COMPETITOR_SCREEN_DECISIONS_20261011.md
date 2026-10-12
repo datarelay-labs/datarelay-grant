@@ -15,6 +15,36 @@ real-user mailboxes completed E2E.
 | Keycloak role/group administration | P0-2F group facets and saved-account coverage; B4 server policy/template CAS; B3 two known Foundation member-capability contradictions corrected at source | Real two-admin/browser acceptance and any separately approved future Foundation consumer integration |
 | Windmill minimal issued-email PIN Review→Confirm | P0-2B source and backend HTML/JSON routing committed; original test formatting I001 corrected with owner authorization | Two distinct actual human recipients / genuine independent mailboxes and HTTPS/SMTP installation acceptance |
 
+### P0-2G additional mounted policy list usability (2026-10-12)
+
+**Observed source gap:** The already-selected Keycloak Group Administration
+list and ServiceNow task-first row/detail pattern were source-adopted for Grant,
+but its **Approval policies** table still required reading seven horizontally
+scrollable columns at 320/375px. An actual installed-browser inspection at
+320px observed a seven-column table extending far beyond the viewport within
+its internal scrolling container. This is a compact-screen workflow usability
+gap, not a data leak or authority failure.
+
+**Selected safe adaptation:** Mount a narrow-screen policy card view of the
+**same backend-authorized, search/lifecycle-filtered policy list**, keeping
+policy name, Draft/Testing/Active/Disabled state, version/security summary,
+action and integration scope, approval group/rule, notification template,
+updated timestamp, and explicit Open/Review clone. The desktop seven-column
+table remains unchanged and mobile CSS hides the inactive desktop view from
+tab navigation. No policy GET/POST, backend access, version/CAS, approval,
+mailbox or external execution change. The design is independently authored
+from first-party published screen patterns; no competitor source/assets copied
+and no Foundation unpublished RC installed.
+
+**Test-first acceptance:** On mounted Grant at 320 and 375, the original
+Chromium browser test was RED because the mobile policy list did not exist.
+After adopting the card rendering, the same native browser test passed on
+both narrow widths, keyboard Enter opened the exact saved policy, the page
+had no document overflow and the 1280px table remained visible. Full native
+Web 666/666, TypeScript/Vite passed on the modified source. Separate
+two-independent-human, external mailboxes, native Control/Stellar, and
+PR/CI/owner release acceptance remain outside this source-only result.
+
 The unresolved **UI/functionality** backlog is limited to independently
 evidenced Grant gaps in the B1–B6 roadmap. StrongDM workflow priority and
 enterprise access lifecycle require real Grant product projections and separate

@@ -1611,3 +1611,43 @@ test('P0-2B issued Deny link requires same-mailbox OTP and explicit reason/Confi
   await requester.close();await reader.close();
  }
 });
+
+
+// B4 source-level mobile usability: replacing a seven-column policy table with
+// a task-first card view does not change the saved row or approval authority.
+// Uses the existing disposable administrator, never a real external user.
+test('B4 policy workspace mobile 320/375 uses readable cards without horizontal policy scan',async({browser})=>{
+ for(const width of [320,375]){
+  const context=await browser.newContext({viewport:{width,height:812}});
+  const page=await context.newPage();
+  try{
+   await login(page,'admin');
+   await page.goto('/profiles');
+   await expect(page.getByRole('heading',{name:'Approval policies',exact:true,level:2})).toBeVisible();
+   const list=page.getByRole('list',{name:'Approval policies mobile list'});
+   await expect(list).toBeVisible();
+   const policy=list.getByRole('listitem').filter({hasText:'Test operation approval'});
+   await expect(policy).toBeVisible();
+   await expect(policy.getByText('test.operation',{exact:true})).toBeVisible();
+   await expect(policy.getByText('ACTIVE',{exact:true})).toBeVisible();
+   await expect(page.locator('table.grant-policy-table')).toBeHidden();
+   const size=await page.evaluate(()=>({
+    viewport:innerWidth,doc:document.documentElement.scrollWidth,
+   }));
+   expect(size.doc).toBeLessThanOrEqual(size.viewport);
+   const open=policy.getByRole('button',{name:'Open',exact:true});
+   await open.focus();
+   await page.keyboard.press('Enter');
+   await expect(page.getByRole('heading',{name:'Test operation approval',exact:true,level:2})).toBeVisible();
+   await expect(page.getByRole('button',{name:/Back to policies/})).toBeVisible();
+  }finally{await context.close();}
+ }
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ try{
+  const page=await context.newPage();
+  await login(page,'admin');
+  await page.goto('/profiles');
+  await expect(page.locator('table.grant-policy-table')).toBeVisible();
+  await expect(page.getByRole('list',{name:'Approval policies mobile list'})).toBeHidden();
+ }finally{await context.close();}
+});

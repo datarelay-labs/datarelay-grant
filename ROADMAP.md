@@ -15,6 +15,17 @@ without modifying shared Foundation packages or backend roles. Previously
 recorded blocked/partial checkpoints below refer to their historical HEAD,
 not the current source; they must never trigger reimplementation of DONE UI.
 
+**Additional source-only P0-2G mobile B4 UI:** Beyond the completed
+P0-2A/B/C/D/E/F selected original screen set, the already observed
+Keycloak/ServiceNow task-oriented list pattern is adopted for the mounted
+Approval policies page at 320/375px: cards keep server-filtered policy
+state, version, scope, group, notification and Open/Review clone;
+the desktop table stays intact. RED-first Chromium mobile/keyboard test
+became GREEN; native Web/typecheck/build PASS. This is a source UX
+improvement only, not a new policy action, Foundation package upgrade,
+two-human acceptance, or release. Detail/REA/license rationale in
+`docs/UX_COMPETITOR_SCREEN_DECISIONS_20261011.md`.
+
 **Remain OPEN:** actual two independent human/real mailbox P0-2B plus
 same-HEAD role/mobile B1/B3/B4 Full User E2E, approved nonprod HTTPS/SMTP,
 native Control/Stellar business effect and recovery provenance (B5),

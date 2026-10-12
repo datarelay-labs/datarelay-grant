@@ -515,3 +515,72 @@ pre {
 .grant-email-decision-frame input,
 .grant-email-decision-frame textarea { max-width: 100%; }
 .grant-email-decision-frame .grant-card { min-width: 0; }
+
+
+/* P0-2G: task-first, narrow policy cards informed by the already selected
+   Keycloak administration list and ServiceNow task-detail pattern.
+   Do not override Foundation shell or change policy actions/permissions. */
+.grant-policy-mobile-list { display: none; }
+
+@media (max-width: 600px) {
+  .grant-policy-desktop-list { display: none; }
+
+  .grant-policy-mobile-list {
+    display: grid;
+    list-style: none;
+    padding: 0;
+    margin: var(--dr-space-4) 0 0;
+    gap: var(--dr-space-4);
+    min-width: 0;
+  }
+
+  .grant-policy-mobile-card {
+    display: grid;
+    gap: var(--dr-space-3);
+    padding: var(--dr-space-4);
+    min-width: 0;
+    border: 1px solid var(--dr-border-divider);
+    border-radius: var(--dr-radius-card);
+    overflow-wrap: anywhere;
+  }
+
+  .grant-policy-mobile-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--dr-space-2);
+    min-width: 0;
+  }
+
+  .grant-policy-mobile-meta {
+    margin: 0;
+    color: var(--dr-text-secondary);
+    font-size: .85rem;
+    overflow-wrap: anywhere;
+  }
+
+  .grant-policy-mobile-facts {
+    display: grid;
+    gap: var(--dr-space-3);
+    min-width: 0;
+    margin: 0;
+  }
+
+  .grant-policy-mobile-facts > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .25rem;
+    min-width: 0;
+  }
+
+  .grant-policy-mobile-facts dt {
+    color: var(--dr-text-secondary);
+    font-size: .85rem;
+    font-weight: 600;
+  }
+
+  .grant-policy-mobile-facts dd { margin: 0; min-width: 0; }
+  .grant-policy-mobile-facts dd small { display: block; overflow-wrap: anywhere; }
+  .grant-policy-mobile-card .grant-row-actions { flex-wrap: wrap; }
+}

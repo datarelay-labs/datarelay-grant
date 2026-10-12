@@ -1,5 +1,24 @@
 # Grant 1.0 implementation status
 
+## B4 P0-2G task-first mobile policy cards (2026-10-12)
+
+The real mounted Approval policies workspace now presents saved policy
+records as one-card-per-policy on screens up to 600px, replacing the
+seven-column horizontal-scrolling policy table while preserving that table
+on desktops. Each mobile card uses the same already role-scoped and
+search/lifecycle-filtered server row and exposes the exact saved policy
+status, version/security, scope, approval plan, template, timestamp, and
+Open/Review clone controls. It does not duplicate backend reads or writes
+or change policy state/activation, per-admin optimistic concurrency,
+grant authorizations, SMTP or consumer execution.
+
+This extra source adoption draws on the existing licensed Keycloak list
+and documented ServiceNow task/detail pattern without copying third-party
+source. The RED-first installed-Chromium regression for missing cards became
+GREEN at 320/375px, includes keyboard-open and desktop-table parity.
+Native Web, TypeScript and Vite source checks also passed. It remains
+synthetic browser acceptance, not two distinct real-user E2E or release.
+
 ## B3 Foundation Administration member capability truth (2026-10-12)
 
 Grant's mounted, shared Foundation Administration task composition now
