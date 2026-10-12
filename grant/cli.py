@@ -4,6 +4,7 @@ import argparse
 import getpass
 import json
 import os
+import sqlite3
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -13,6 +14,21 @@ from .auth import Auth
 from .config import Settings
 from .db import Database
 from .models import NewUser
+
+
+def refuse_storage(operation: str, error: Exception) -> None:
+    """Fail closed without dumping internal stack traces or private storage paths.
+
+    Existing validation errors are static, bounded operator reasons. Unexpected
+    filesystem / SQLite errors are deliberately generalized; no repair, retry,
+    restore publication or recovery acknowledgment is performed.
+    """
+    reason = (
+        str(error)
+        if isinstance(error, ValueError)
+        else "Invalid or inaccessible protected SQLite storage"
+    )
+    raise SystemExit(f"{operation}_REFUSED: {reason}") from None
 
 
 def main():
@@ -54,14 +70,20 @@ def main():
         return
     settings = Settings.load(config)
     if args.command == "restore":
-        Database.restore(args.input, args.output)
+        try:
+            Database.restore(args.input, args.output)
+        except (ValueError, OSError, sqlite3.DatabaseError) as exc:
+            refuse_storage("RESTORE", exc)
         print("Restored NEW database; sessions cleared; delivery/consumption PAUSED.")
         print("Reconcile external effects and configure the new database before resuming.")
         return
     # Inspection and pre-upgrade backup may NOT bootstrap a missing database or
     # silently migrate old authorization state before a protected snapshot.
     if args.command == "check":
-        version, paused = Database.inspect_existing(settings.database)
+        try:
+            version, paused = Database.inspect_existing(settings.database)
+        except (ValueError, OSError, sqlite3.DatabaseError) as exc:
+            refuse_storage("CHECK", exc)
         if version != 12:
             raise SystemExit("SCHEMA_UPGRADE_REQUIRED: backup first; check does not migrate")
         print("DATABASE=ok")
@@ -69,7 +91,10 @@ def main():
         print("SMTP=" + ("CONFIGURED" if settings.smtp_host else "NOT_CONFIGURED"))
         return
     if args.command == "backup":
-        Database.backup_existing(settings.database, args.output)
+        try:
+            Database.backup_existing(settings.database, args.output)
+        except (ValueError, OSError, sqlite3.DatabaseError) as exc:
+            refuse_storage("BACKUP", exc)
         print("Backup created. Protect the installation encryption key separately.")
         return
     db = Database(settings.database)

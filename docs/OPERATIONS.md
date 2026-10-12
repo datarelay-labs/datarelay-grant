@@ -249,6 +249,15 @@ uv run --frozen grant --config /absolute/private-state/grant.json restore \
   --output /absolute/private-state/new-restored.sqlite
 ```
 
+Expected operator refusal conditions are reported as bounded, nonzero
+`CHECK_REFUSED`, `BACKUP_REFUSED`, or `RESTORE_REFUSED` messages without
+a raw Python traceback or disclosure of private storage paths. Missing
+installation state, an existing destination, and an invalid backup still
+fail closed: no database bootstrap, destination overwrite, automatic
+reconciliation, or incomplete restoration publication occurs. Unexpected
+filesystem or SQLite errors produce a generic refusal rather than leaking
+sensitive path information. These labels do not authorize repair or release.
+
 `grant check` is a read-only **existing-state health inspection**: missing or
 invalid database, unsupported schema, or recovery marker fails closed. An older
 supported schema requires a separately planned upgrade; checking cannot silently

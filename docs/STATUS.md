@@ -5,6 +5,21 @@ Status: Grant 1.0 development candidate, not production/GA or full 1.0 acceptanc
 Exact HEAD, CI and execution receipts belong in the live Work Packet rather than
 in a self-referential source commit.
 
+## B5 bounded operator CLI backup/restore failure diagnostics (2026-10-12)
+
+The native Grant `check`, `backup` and `restore` CLI now report expected
+missing-installation, occupied-output and malformed-backup errors as nonzero,
+bounded `CHECK_REFUSED` / `BACKUP_REFUSED` / `RESTORE_REFUSED` outcomes
+instead of revealing a Python traceback. Other unexpected SQLite/filesystem
+errors are generalized; no repair, recovery-resume or retry is performed.
+Actual disposable `grant init --dev`, missing-DB `check`, private file backup
+and new-target restore confirmed mode 0600, SQLite integrity, restored
+`PAUSED=1`, zero sessions and exact target overwrite refusal. Source-only
+CLI regression and related recovery suites validate these outcomes without
+real customer state. This does not establish external effect reconciliation,
+independent Control/Stellar receivers, restored customer provenance, real-user
+E2E or owner-approved release.
+
 ## B4 administrator policy / template server revision CAS (2026-10-12)
 
 The candidate now requires exact optimistic-concurrency preconditions on
