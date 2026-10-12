@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Alert, Button, Card, StatusBadge } from '@datarelay-labs/foundation';
+import {
+  Alert, Button, Card, NotificationDeliveryPanel, StatusBadge,
+  type NotificationDestinationProjection,
+} from '@datarelay-labs/foundation';
 import { api } from './api';
 import './operations-mobile.css';
 import { useTask, when } from './common';
@@ -199,11 +202,39 @@ const states: Metric[] = [
   { key: 'webhook_failed', title: 'Callback failures', description: 'Latest outgoing callback failure', queue: 'webhook_failed' },
 ];
 
+/** Real Grant outbox status only, never a test-send or execution path. */
+export function GrantNotificationDeliveryReadout({ destinations }: {
+  destinations: readonly NotificationDestinationProjection[] | null;
+}) {
+  if (!destinations) {
+    return <Alert tone="warning" title="Delivery readiness unavailable">
+      Grant could not read the current, administrator-authorized destination snapshot.
+      No empty queue or successful transport is assumed.
+    </Alert>;
+  }
+  return <div className="grant-stack">
+    <NotificationDeliveryPanel destinations={destinations}
+      triageLoadedNotificationDestinations testAvailability="unavailable" />
+    <p>Last acceptance reflects only the Grant sender transport, not mailbox receipt,
+       receiver processing or an independently completed business action.
+       This view cannot send a test, replay a notification or change a destination.</p>
+  </div>;
+}
+
 export function Operations({ navigate }: { navigate: (next: string) => void }) {
   const [snapshot, setSnapshot] = useState<OperationsSummary | null>(null);
+  const [destinations, setDestinations] = useState<readonly NotificationDestinationProjection[] | null>(null);
   const task = useTask();
   async function load() {
     setSnapshot(await api<OperationsSummary>('/admin/operations'));
+    // Optional read must never conceal already-loaded operational truth.
+    // The server authorizes the same admin actor and supplies no secrets.
+    try {
+      const rows = await api<NotificationDestinationProjection[]>('/admin/notification-destinations');
+      setDestinations(Array.isArray(rows) ? rows : null);
+    } catch {
+      setDestinations(null);
+    }
   }
   useEffect(() => { void task.run(load); }, []);
 
@@ -249,6 +280,7 @@ export function Operations({ navigate }: { navigate: (next: string) => void }) {
       onOpen={key=>navigate('/operations/queue/'+key)}/>
     {snapshot && <DecisionEmailSecurityPanel summary={snapshot.decision_email_security} />}
     {section('Request and delivery states', states, 'Each count represents distinct requests, never the number of delivery attempts.')}
+    <GrantNotificationDeliveryReadout destinations={destinations} />
     <Card title="Integration delivery health" description="Last callback is HTTP transport acceptance only, not target execution or receipt verification.">
       <div className="grant-table-scroll grant-operations-desktop-table"><table className="grant-table">
         <thead><tr>

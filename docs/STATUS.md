@@ -1,5 +1,23 @@
 # Grant 1.0 implementation status
 
+## 2026-10-12 — PF-11 Grant-native notification destination visibility
+
+The accepted private Foundation RC41 `NotificationDeliveryPanel` is now backed by
+Grant's **actual** administrator-authorized outbox rather than a synthetic
+fixture. `GET /api/v1/admin/notification-destinations` returns only safe,
+code-bounded SMTP and registered webhook references, current enabled flags,
+queued/retry/dead-letter aggregate counts and the last **transport-level**
+terminal outcome. It is read-only and fails closed for non-admin users and
+integration credentials. URLs, recipient emails, raw errors, secrets and
+payloads never enter the shared projection. No new sender, test-send, retry,
+callback or business execution route is authorized; this is not proof that a
+mailbox or downstream connected operation received or executed anything.
+
+Focused backend RED→GREEN 3/3, Web RED→GREEN 2/2 and TypeScript passed.
+Actual two-person E2E, Control/Stellar native effects, remaining unauthenticated
+Foundation Actions `foundation-web` CI and owner merge/release remain separate.
+
+
 ## 2026-10-12 Grant consumer adoption of private Foundation RC41
 
 Grant now pins original Foundation source `46ddb60cad8eae7b1718588cd19421e61b5300e7`

@@ -18,6 +18,7 @@ from .configuration_portability_v2 import (
 from .configuration_preview import preview_configuration
 from .db import audit
 from .errors import GrantError
+from .foundation_delivery import notification_destinations
 from .models import NewUser
 from .operations import operations_summary
 
@@ -195,6 +196,13 @@ def register_admin(app, actor):
             require_current_authority(conn, principal)
         app.state.core.maintenance()
         return operations_summary(app.state.db, principal)
+
+    @app.get("/api/v1/admin/notification-destinations")
+    def foundation_notification_destinations(request: Request):
+        return notification_destinations(
+            app.state.db, actor(request),
+            smtp_configured=bool(app.state.settings.smtp_host),
+        )
 
     @app.get("/api/v1/admin/health")
     def health(request: Request):
