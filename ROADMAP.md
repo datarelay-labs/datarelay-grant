@@ -1,5 +1,17 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-12 B5 Exceptions / Integration connections mobile source
+
+At <=600px, the remaining wide Exceptions-to-resolve and Registered
+connections tables are rendered as task-first mobile cards using the
+same current role-scoped records, exact exception-count unknowns, and
+unchanged diagnostic Review -> Confirm eligibility. Desktop tables,
+existing integration query/tenant authorization and external execution
+separation are preserved. No new backend or SMTP effect was implemented.
+TypeScript noEmit source compilation completed, but all formal tests and
+owner release acceptance remain DEFERRED as explicitly instructed.
+
+
 ## 2026-10-12 B1 Delegations / G8 Credentials mobile source
 
 Two additional wide desktop tables were adapted into product-owned mobile

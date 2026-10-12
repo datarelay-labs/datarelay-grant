@@ -1,0 +1,77 @@
+/* The existing authenticated Grant integration directory, presented as
+ * one registered receiver per narrow screen card. Diagnostic effects still
+ * require the original separate Review -> Confirm, never this list. */
+.grant-connection-mobile-list { display: none; }
+
+@media (max-width: 600px) {
+  .grant-connection-desktop-list { display: none; }
+
+  .grant-connection-mobile-list {
+    display: grid;
+    gap: var(--dr-space-3);
+    list-style: none;
+    padding: 0;
+    margin: var(--dr-space-4) 0;
+    min-width: 0;
+  }
+
+  .grant-connection-mobile-card {
+    display: grid;
+    min-width: 0;
+    gap: var(--dr-space-3);
+    padding: var(--dr-space-4);
+    border: 1px solid var(--dr-border-default);
+    border-radius: var(--dr-radius-card);
+    overflow-wrap: anywhere;
+  }
+
+  .grant-connection-mobile-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--dr-space-2);
+    min-width: 0;
+  }
+
+  .grant-connection-mobile-heading strong { min-width: 0; overflow-wrap: anywhere; }
+
+  .grant-connection-mobile-state {
+    color: var(--dr-text-secondary);
+    font-size: var(--dr-font-size-sm);
+    font-weight: var(--dr-font-weight-strong);
+  }
+
+  .grant-connection-mobile-facts {
+    display: grid;
+    gap: var(--dr-space-3);
+    min-width: 0;
+    margin: 0;
+  }
+
+  .grant-connection-mobile-facts > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--dr-space-1);
+    min-width: 0;
+  }
+
+  .grant-connection-mobile-facts dt {
+    color: var(--dr-text-secondary);
+    font-size: var(--dr-font-size-sm);
+    font-weight: var(--dr-font-weight-strong);
+  }
+
+  .grant-connection-mobile-facts dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .grant-connection-mobile-card > button {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .grant-connection-mobile-card code { word-break: break-word; overflow-wrap: anywhere; }
+}

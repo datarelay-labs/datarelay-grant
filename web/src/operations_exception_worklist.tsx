@@ -1,4 +1,5 @@
 import {Button,Card} from '@datarelay-labs/foundation';
+import './operations-exceptions-mobile.css';
 
 const catalog=[
   {
@@ -64,7 +65,7 @@ export function OperationsExceptionWorklist({
       description="Review the exact role-scoped request queue before choosing a response. This worklist never retries execution, resends email or records approval.">
       {!counts&&<p role="status">Waiting for current administrator-scoped snapshot.
         No empty or healthy state is assumed.</p>}
-      <div className="grant-table-scroll">
+      <div className="grant-table-scroll grant-exceptions-desktop-list">
         <table className="grant-table" aria-label="Approval and execution exceptions">
           <thead><tr>
             <th scope="col">Exception</th>
@@ -85,6 +86,26 @@ export function OperationsExceptionWorklist({
           </tr>)}</tbody>
         </table>
       </div>
+      {/* The identical server-categorized tasks and exact queue callbacks.
+          Unknown counts stay unavailable, never a falsely healthy zero. */}
+      <ul className="grant-exceptions-mobile-list"
+        aria-label="Approval and execution exceptions mobile list">
+        {rows.map((row) => (
+          <li key={row.key} className="grant-exceptions-mobile-card">
+            <div className="grant-exceptions-mobile-heading">
+              <strong>{row.title}</strong>
+              <span>{row.count===null ? 'Unavailable'
+                :row.count===0 ? 'No matching requests'
+                :row.count+' affected'}</span>
+            </div>
+            <p>{row.task}</p>
+            <Button variant="secondary" disabled={!counts}
+              onClick={() => onOpen(row.queue)}>
+              Open {row.title} queue
+            </Button>
+          </li>
+        ))}
+      </ul>
       <p>These figures are request counts from the current server snapshot.
         A transport delivery report or an executor-reported result is
         not independently verified evidence of an external business effect.

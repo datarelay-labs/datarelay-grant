@@ -1,5 +1,26 @@
 # Grant 1.0 implementation status
 
+## B5 mobile exception and integration connection task directories (2026-10-12)
+
+The existing Operations Exception Worklist and registered Integration
+Connections directory no longer require wide-table scanning at <=600px:
+Grant now projects the **same existing server-authorized list records**
+as task-first cards while retaining the desktop tables. Exception cards
+preserve five server-defined categories, exact status/count including
+unavailable rather than a falsely healthy zero, operator next-step text
+and the original role-scoped queue-opening callback. Connection cards
+show the saved name, enabled state, integration kind, tenant, receiver
+origin, minimum human verification and optionally disclosed identifier.
+Only an enabled connection retains the original Review connection test
+entry point; the actual diagnostic webhook remains behind its separate
+Confirm and server destination/role safeguards. No new API, privilege,
+test-send effect, credential enumeration, backend mutation or execution.
+
+This is product source-only implementation, with TypeScript noEmit
+compilation PASS. The owner deferred full unit/API/Chromium/mobile,
+separately operated human/mailbox E2E and owner/CI release qualification.
+
+
 ## B1 delegation / G8 credentials mobile worklists (source-only, 2026-10-12)
 
 Existing Grant Delegations and Integration Credentials desktop-only lists

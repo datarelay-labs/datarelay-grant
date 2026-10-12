@@ -944,6 +944,20 @@ policy lifecycle, action binding, or transactional authorization.
  Existing requests retain their original policy snapshots.
 
 ## 14. Operational dashboard
+### Narrow-screen exception and connection tasks
+
+The product-owned Operations Exception Worklist and Integrations
+Registered connections directory may render read-only task cards on
+small mobile viewports while preserving their exact current
+administrator-scoped server rows and desktop tables. An unknown
+exception count must never become a false zero. An integration callback
+origin or transport-accepted diagnostic is not proof of trusted
+external business execution; disabled connections cannot initiate a
+diagnostic. The original server-authorized queue actions and separate
+explicit Review -> Confirm for any connection test stay binding,
+regardless of viewport. No new token, account, tenant, approval or
+executor authority is granted by this responsive presentation.
+
 
 Mobile operational summaries must preserve the same administrator-only
 backend observations, not derive new permissions or incident severity

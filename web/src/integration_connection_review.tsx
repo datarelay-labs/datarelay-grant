@@ -1,5 +1,6 @@
 import { Alert, Button, Card, TextField } from '@datarelay-labs/foundation';
 import type { Integration } from './types';
+import './integration-connections-mobile.css';
 
 export type IntegrationTestReview = Readonly<{
   id: string;
@@ -46,7 +47,7 @@ export function IntegrationConnectionDirectory({
         placeholder="Connection, integration type, tenant or verification"
         onChange={(event) => onSearchChange(event.target.value.slice(0, 128))} />
       <p aria-live="polite">Showing {matches.length} of {rows.length} connections</p>
-      <div className="grant-table-scroll">
+      <div className="grant-table-scroll grant-connection-desktop-list">
         <table className="grant-table">
           <thead><tr>
             <th>Connection</th><th>State</th><th>Receiver origin</th>
@@ -72,6 +73,43 @@ export function IntegrationConnectionDirectory({
           </tbody>
         </table>
       </div>
+      {/* Mobile cards reflect the SAME current server-registered integration
+          directory, exact search match and explicit diagnostic review gate. */}
+      <ul className="grant-connection-mobile-list"
+        aria-label="Registered connections mobile list">
+        {matches.map((row) => (
+          <li key={row.id} className="grant-connection-mobile-card">
+            <div className="grant-connection-mobile-heading">
+              <strong>{row.name}</strong>
+              <span className="grant-connection-mobile-state">
+                {row.enabled ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
+            <dl className="grant-connection-mobile-facts">
+              <div><dt>Integration</dt>
+                <dd>{row.kind === 'datarelay' ? 'DataRelay' : 'Stellar Cyber'}</dd>
+              </div>
+              <div><dt>Tenant</dt>
+                <dd>{row.tenant || 'No tenant constraint'}</dd>
+              </div>
+              <div><dt>Receiver origin</dt>
+                <dd>{row.callback_origin || 'Receiver origin unavailable'}</dd>
+              </div>
+              <div><dt>Minimum human verification</dt>
+                <dd>{row.decision_verification_minimum ?? 'Unavailable'}</dd>
+              </div>
+            </dl>
+            <details>
+              <summary>Technical integration reference</summary>
+              <code>{row.id}</code>
+            </details>
+            {row.enabled
+              ? <Button variant="secondary" disabled={busy}
+                  onClick={() => onReviewTest(row)}>Review connection test</Button>
+              : <small>Connection disabled</small>}
+          </li>
+        ))}
+      </ul>
       {!rows.length && <p>No registered connections. Add an integration to begin.</p>}
       {rows.length > 0 && !matches.length
         && <p>No connections match the current search.</p>}
