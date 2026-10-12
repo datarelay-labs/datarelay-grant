@@ -745,6 +745,21 @@ Priority content:
 
 ### 11.2 Approval Inbox
 
+The same authenticated, role-filtered saved request worklist must be usable
+at narrow (320/375px) mobile widths without horizontal six-column scanning.
+A mobile card and desktop table must expose the **same authoritative server
+request**, current action kind/exact target, human decision and pending seat
+progress, deadline/escalation, notification-delivery status and separately
+*reported*, not independently verified, external execution state. Neither
+presentation may compute approval lateness from browser time or treat an
+unavailable approval plan as a fictitious 0/1 vote. The mobile row's Open
+request and Preview selection use the existing Request Detail and exact
+selected server-page keys; neither creates or confirms an approval. Any
+Approve/Hold/Deny/Cancel remains subject to the existing separate
+human Review -> Confirm and server-owned identity/MFA/replay policies.
+Changing a viewport never expands account/tenant/integration access.
+
+
 The primary approver view prioritizes work that needs action:
 
 - Needs my decision

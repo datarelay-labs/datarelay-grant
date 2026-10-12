@@ -1,5 +1,28 @@
 # Grant 1.0 implementation status
 
+## B1 Request Inbox narrow mobile task list (source-only, 2026-10-12)
+
+At <=600px the original six-column Request Inbox table is replaced by
+per-request cards using **the identical current role-scoped server rows**,
+current search/view/filters, 50-item page and existing Preview request
+selection. Each card displays immutable action and target, decision and
+collaboration state, current server approval-seat progress, original
+server-projected deadline/escalation truth, transport delivery state and
+separately **reported** execution state. Cards provide the original
+Open request and Preview request callbacks, not Approve/Execute/Resend.
+
+The desktop six-column table is preserved and hidden only on small
+viewports. A viewport does not introduce extra GETs, bypass actor/group
+scoping, infer overdue from a browser clock, treat approval as external
+execution, or bypass separate Request Detail human Review -> Confirm.
+This exact formerly denied source file was retried directly via the same
+authorized developer connector and accepted, not through an alternate
+host/worktree/router. TypeScript noEmit source compilation PASS; full
+API/Web/Chromium/mobile and actual two-person mailbox E2E remain
+**DEFERRED by the owner's implementation-first directive**, and no
+current-HEAD release qualification is inferred.
+
+
 ## B5 mobile exception and integration connection task directories (2026-10-12)
 
 The existing Operations Exception Worklist and registered Integration

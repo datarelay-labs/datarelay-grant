@@ -1,5 +1,24 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-12 B1 mobile Request Inbox — source implementation checkpoint
+
+The last wide six-column current Request Inbox list now presents exact
+saved role-scoped request rows as <=600px task-first cards: requested
+action/target, current human decision, authoritative approval-seat count,
+deadline/escalation, delivery and separately reported execution status.
+Original advanced/quick filters, pagination, selected request Preview,
+desktop table and separate human Review -> Confirm route are unchanged.
+Only the original product UI file and Grant-owned responsive styles
+were modified; previous platform-denied exact source path was retried
+with the same authorized tool and accepted, not bypassed. Missing backend
+overdue truth, if independently evidenced on the current source, is not
+claimed fixed by this purely read-only projection.
+
+Owner explicitly deferred formal browser/API/Web user tests, genuine
+two-person independent-mailbox acceptance and CI/release. Source compiled
+via TypeScript noEmit only; no release or external execution evidence.
+
+
 ## 2026-10-12 B5 Exceptions / Integration connections mobile source
 
 At <=600px, the remaining wide Exceptions-to-resolve and Registered

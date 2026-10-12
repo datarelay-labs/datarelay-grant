@@ -7,6 +7,7 @@ import {
 } from './request_inbox_task_worklist';
 import { Select, State, useTask } from './common';
 import { InboxDeadlineTruth } from './request_inbox_deadline_truth';
+import './request-inbox-mobile.css';
 import {
   currentSelectedInboxRequest,InboxSelectedRequestPreview,
   type InboxPreviewSelection,
@@ -357,7 +358,7 @@ export function RequestList({
         <Button variant="secondary" disabled={task.busy} onClick={reset}>Clear filters</Button>
       </div>
       <div className={'grant-inbox-master-detail'+(preview?' has-preview':'')}>
-      <div className="grant-table-scroll"><table className="grant-table">
+      <div className="grant-table-scroll grant-inbox-desktop-list"><table className="grant-table">
         <thead><tr>
           <th>Request</th><th>Decision</th><th>Approval progress</th>
           <th>Callback delivery</th><th>Execution</th><th>Deadline</th>
@@ -381,6 +382,57 @@ export function RequestList({
           <td><InboxDeadlineTruth row={row}/></td>
         </tr>)}</tbody>
       </table></div>
+      {/* The existing exact role-filtered current server page is also a
+          compact task list on mobile. It never derives overdue/approval
+          authority from local time, credentials or another unscoped GET. */}
+      <ul className="grant-inbox-mobile-list"
+        aria-label="Current request worklist mobile list">
+        {rows.map((row) => (
+          <li className="grant-inbox-mobile-card" key={row.id}>
+            <div className="grant-inbox-mobile-heading">
+              <Button variant="ghost"
+                onClick={() => navigate('/requests/' + row.id)}>
+                {row.title}
+              </Button>
+              <State value={row.state} />
+            </div>
+            <small>{row.external_id}
+              {row.viewer_delegated_for ? ' · Delegated to you' : ''}
+            </small>
+            <InboxActionTarget row={row} />
+            {row.collaboration_state !== 'OPEN' && (
+              <p className="grant-inbox-mobile-state">
+                Information: {row.collaboration_state.replaceAll('_', ' ')}
+              </p>
+            )}
+            <dl className="grant-inbox-mobile-facts">
+              <div><dt>Approval progress</dt>
+                <dd><InboxApprovalProgress row={row} /></dd>
+              </div>
+              <div><dt>Decision deadline</dt>
+                <dd><InboxDeadlineTruth row={row} /></dd>
+              </div>
+              <div><dt>Callback delivery</dt>
+                <dd><State value={row.delivery_state} /></dd>
+              </div>
+              <div><dt>Reported execution</dt>
+                <dd><State value={row.execution_state} /></dd>
+              </div>
+            </dl>
+            <div className="grant-inbox-mobile-actions">
+              <Button variant="secondary"
+                aria-pressed={preview?.id === row.id}
+                disabled={listBusy}
+                onClick={() => setSelectedPreview({
+                  query: currentQuery,
+                  requestId: row.id,
+                })}>
+                Preview request
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
       {preview&&<div ref={previewRef} tabIndex={-1} className="grant-inbox-focus">
         <InboxSelectedRequestPreview row={preview}
           onOpen={()=>navigate('/requests/'+encodeURIComponent(preview.id))}

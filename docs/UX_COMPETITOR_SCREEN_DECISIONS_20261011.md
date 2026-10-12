@@ -1,5 +1,20 @@
 # Grant UI research — owner P0-1 before P0-2 (2026-10-11)
 
+## 2026-10-12 Entra/ServiceNow task-first Inbox narrow-screen source gap
+
+The already-completed first-party Entra selected request and ServiceNow
+task/detail studies and selected original P0-2A read-only Inbox Preview
+were retained unchanged. A separate actual current Grant UX gap persisted:
+the role-scoped Request Inbox still used a six-column horizontal-scroll
+table at 320/375px. Its product-owned mobile cards now render the exact
+same backend-scoped rows, action target, status, seat/deadline truth,
+delivery versus reported executor evidence and Preview request button.
+This is neither copied vendor markup nor a new Keycloak/REA analysis.
+Full browser/mobile/human acceptance is postponed by owner instruction,
+and any previously asserted backend overdue correctness requires its own
+separate verified server evidence. No client approval or effect authority.
+
+
 ## 2026-10-12 Keycloak directory presentation gap — source-only disposition
 
 The licensed, previously pinned Keycloak 26.5.7 groups/user flow and the
