@@ -6,7 +6,8 @@ engineering_system:
   native_ci_workflows:
   - .github/workflows/grant-checks.yml
   merge_gate_status: unknown
-  policy_epoch: 14
+  policy_epoch: 26
+  governance_epoch: 1
 project:
   name: datarelay-grant
   type: approval-execution-control
