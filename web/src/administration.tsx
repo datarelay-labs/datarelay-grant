@@ -72,6 +72,19 @@ function availability(user: User, capability: string): CapabilityAvailability {
   return value;
 }
 
+/** Existing Grant Draft-only portability is distinct from a host/DB backup restore.
+ * The target route is already administrator-gated by the Grant app router. */
+export function GrantConfigurationPortabilityTask() {
+  return <Card title="Grant configuration portability">
+    <p>The existing configuration tools can export saved Grant policy and
+      notification templates, then preview a separate, explicitly reviewed
+      Draft-only import. This is not a database backup or disaster recovery.</p>
+    <a href="/integrations?view=diagnostics">Open configuration portability</a>
+    <p>Navigate to Integrations diagnostics. Imported policies remain disabled
+      Drafts; restoring a server or automatically activating policies is not available.</p>
+  </Card>;
+}
+
 export function Administration({ user }: { user: User }) {
   const [accounts, setAccounts] = useState<readonly AccountProjection[]>([]);
   const [events, setEvents] = useState<readonly AuditEventProjection[]>([]);
@@ -589,13 +602,14 @@ export function Administration({ user }: { user: User }) {
       ) : null}
 
       {section === 'lifecycle' ? (
-        <Card title="Lifecycle & recovery">
-          <p>
-            Backup, restore, installation origin, TLS and upgrades follow the documented
-            operator procedures. Foundation renders common administration interaction
-            patterns; Grant remains authoritative for its state, validation and audit.
-          </p>
-        </Card>
+        <div className="grant-stack">
+          <Card title="Lifecycle & recovery">
+            <p>Host backup, database restore, installation origin, TLS and
+              upgrades still require documented operator procedures. Foundation
+              renders common administration patterns, not execution authority.</p>
+          </Card>
+          <GrantConfigurationPortabilityTask />
+        </div>
       ) : null}
         </div>
       ) : null}

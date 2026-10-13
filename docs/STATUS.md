@@ -1,5 +1,33 @@
 # Grant 1.0 implementation status
 
+## 2026-10-14 — user-reported System Management parity gap, P0 OPEN
+
+Two authorized screenshots expose a major limitation of the previously
+accepted Foundation RC41 Grant Web consumer. The **same nine task labels**
+are present using the Foundation `AdministrationHub`, but only Grant-native
+Accounts/Audit/Health (plus mail test and read-only recovery guidance)
+have product action destinations. Five Control-like tasks are explicitly
+`unavailable` in `web/src/administration.tsx`; platform password policy,
+HTTPS listener/cert, display timezone, network apply and retention editing
+are NOT implemented. RC41's private on-prem Python security Wheel is
+original-source tested but NOT installed/connected to the Grant backend.
+
+The Control reference uses Foundation `AdminTaskCatalog` plus Control-owned
+settings pages and API contracts. It is not automatically transferred by
+importing the Foundation frontend; its hardcoded `supported` task badges
+do not substitute for measured runtime effects.
+
+**Correction of past completion labels:** Existing Grant Foundation RC41
+SDK pin, shared auth/shell/task UI, original Admin users, backed health
+and audit, and all previously accepted request/approval/policy/CAS features
+remain implemented and tested. However **M2 System Management functional
+parity is OPEN** as newly specified by the owner's screenshots. This
+new scope is P0-SM ahead of further pre-E2E cosmetic UI work. Owner-controlled
+privileged host security/port and data-retention/restore effects are not
+silently authorized. See `ROADMAP.md` and
+`docs/FOUNDATION_SYSTEM_MANAGEMENT_PARITY_20261014.md` for the gap matrix
+and staged acceptance gates.
+
 ## 2026-10-14 — current pre-E2E UX readiness (source qualification)
 
 The bounded direct source review of the beginner Home → New Request →
@@ -1528,3 +1556,15 @@ are unchanged. New visual source is `web/src/admin_first_run_setup.tsx` and
 the Grant-scoped workflow CSS. Full new-HEAD browser login/2-person E2E is
 not claimed; a previously attempted custom authenticated Playwright probe
 was blocked by platform safety review and was not rerouted.
+
+**First safe current-HEAD source improvement:** System Management's
+read-only Backup & Import task now opens the already Grant-admin-scoped
+Integration Diagnostics tab and its existing version-2 policy/template
+portability surface using the explicit
+`/integrations?view=diagnostics` URL. Unknown or duplicate query
+views cannot select credential issuance or registration panes.
+The existing Dry-run/Review/Confirm lifecycle and server RBAC remain
+unchanged; this does not implement host backup or DB restore.
+Two RED-first new unit regressions plus all affected existing suites
+**24/24 PASS**, Web TypeScript and Vite production build PASS.
+Other SM-1 tasks and SM-2 timezone/backend settings remain OPEN.

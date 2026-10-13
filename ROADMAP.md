@@ -1,5 +1,42 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## P0-SM ACTIVE — Control-reference System Management functionality parity (2026-10-14)
+
+**New user-observed unmet requirement, outranks new cosmetic/pre-E2E polish.**
+Two owner screenshots show Control with nine `supported/Manage` System
+Administration task cards versus Grant with five tasks `unavailable`
+(HTTPS, Password Management, Display timezone, Network, Retention), Backup
+& Import `read only`, and only selected Grant actions functioning.
+This is a **product capability/adapter gap**, not merely an unpinned or
+missing Foundation Web package. Grant is correctly locked to RC41 and
+renders Foundation AdministrationHub but declares these five capabilities
+unavailable and has no corresponding Grant mutation endpoints. Control
+uses the Foundation AdminTaskCatalog inside its own Control-native
+Administration page and separately implemented settings APIs.
+
+The prior statement **M2 SOURCE COMPLETE** describes shared shell /
+AdministrationHub / accounts adoption ONLY; **M2 full functional parity
+is OPEN**. Accordingly, any prior blanket `M1–M5 source complete`
+claim does not close this later-confirmed user-required System Management
+functionality. Never fake green badges or unsupported Manage buttons.
+
+| Priority | Deliverable | Current status and gate |
+| --- | --- | --- |
+| **SM-0** | First-party screenshot/source comparison, pinned RC41 truth, nine-task feature matrix, standard and roadmap correction | **DONE** — `docs/FOUNDATION_SYSTEM_MANAGEMENT_PARITY_20261014.md` |
+| **SM-1** | Reconcile Foundation task routing with only genuinely existing Grant-authenticated UI/API; improve safe read-only guidance and direct paths, keep role truth and Grant mail extension | **PARTIAL SOURCE IMPLEMENTED:** Backup & Import now links the actual admin-guarded Diagnostics → Draft configuration portability. Fail-closed single-query view parser; RED→GREEN 2 new + existing affected tests 24/24 PASS; remaining safe capability routes continue NEXT |
+| **SM-2** | True IANA timezone user/platform persistence & discoverable self-service password/security pathways, without pretending a platform credential-policy editor | **SOURCE OPEN** — separate design/validator/API tests |
+| **SM-3** | Actual HTTPS/cert, platform password-policy and network reverse-proxy changes with reviewed apply/rollback | **OWNER-GATED HIGH-RISK HOST/CREDENTIAL EFFECT** — no privilege/proxy/secret mutations by default |
+| **SM-4** | Retention schedule/deletion and restore-capable backup/import beyond current Draft-only portability | **OWNER-GATED DATA EFFECT** — no unapproved deletion/restore |
+| **SM-5** | Same nine tasks with genuine Grant destinations, role/mobile/keyboard and signed-in user browser qualification | **DEPENDENCY WAIT** — includes owner-controlled E2E |
+
+**Sequence:** finish SM-1 then SM-2 where independently runnable,
+preserve protected original G12 RED test and Inbox stash, no unrelated
+product work. Explicit owner approval is required before SM-3/4 effects.
+Current original Control/Stellar native integration, independent two-human
+mailbox Full User E2E, PR merge and release exclusions remain unchanged.
+The source-specific gap and true availability rules live in Product
+Standard §12 and the parity matrix.
+
 ## 2026-10-14 — latest pre-E2E runnable source closeout (current)
 
 This table supersedes dated partial/source-only rows elsewhere below; older

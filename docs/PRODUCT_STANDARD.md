@@ -878,6 +878,35 @@ The Administration landing surface uses Product Foundation capability declaratio
 common administration components. Unsupported backup/restore/TLS/upgrade mutations are
 not made interactive merely to fill a settings page.
 
+### Control-reference System Management parity (owner requirement, 2026-10-14)
+
+The accepted *target* is the first-party Control Administration screenshot's nine
+functioning task destinations: HTTPS, User Management, Password Management, Display
+timezone, Network, Retention, Backup & Import, Audit and System Health. Grant's
+additional Mail & Notifications tasks remain product-specific. Matching the
+Foundation task catalog alone **does not** satisfy this requirement: every
+supported View/Manage task must open a real Grant-authorized functional destination.
+
+Grant must reuse the Foundation family administration UI/typed contracts, while
+providing separately reviewed **Grant-owned** identity, deployment, persistence,
+audit and rollback adapters. Display timezone requires an authenticated user
+override/platform default contract with UTC-safe rendering. TLS/certificate,
+network/listener apply, platform password policy, retention scheduler/deletion,
+and backup/import/restore are separate security-, host- or data-sensitive
+capabilities, never enabled simply to copy Control badges. Each mutation requires
+role-enforced server validation, exact Review -> Confirm, concurrency safeguards,
+auditable durable receipts and appropriate recovery/rollback. Host security,
+network/listener changes, credential policy and destructive data operations need
+separate owner authorization for the actual target and effects.
+
+Foundation's shared `AdministrationHub` and optional RC41 review panels are
+presentation and/or pure library code; their presence does not prove product
+backend installation. Existing Grant self-service account password/MFA, admin
+accounts, audit, health and Draft-only configuration portability should be
+reused before designing new APIs. The requirement's current gap matrix,
+priority and measured consumer state are
+`docs/FOUNDATION_SYSTEM_MANAGEMENT_PARITY_20261014.md`.
+
 On a narrow viewport (up to 600px), Grant's product-owned Administration task
 view should show the selected task separately from the Foundation task catalog,
 with a clearly labeled return action and restored keyboard focus. The shared

@@ -38,7 +38,17 @@ import {
   type IssuedCredentialHandoff, type IssuedCredentialReceiptMetadata,
 } from './integration_credential_handoff';
 
+/** A read-only deep link into the already administrator-guarded diagnostic view.
+ * Never use URL input to enter registration or credential mutation workflows. */
+export function readIntegrationsInitialView(search: string): 'connections' | 'diagnostics' {
+ const params = new URLSearchParams(search);
+ return [...params.keys()].length === 1 && params.get('view') === 'diagnostics'
+   ? 'diagnostics' : 'connections';
+}
+
 export function Integrations() {
+ const initialView = typeof window === 'undefined'
+   ? 'connections' : readIntegrationsInitialView(window.location.search);
  const [purpose,setPurpose]=useState('producer'); const [rows,setRows]=useState<Integration[]>([]); const [name,setName]=useState(''); const [kind,setKind]=useState('datarelay'); const [url,setUrl]=useState(''); const [tenant,setTenant]=useState(''); const [headers,setHeaders]=useState('{}'); const [hmac,setHmac]=useState(''); const [selected,setSelected]=useState(''); const [scopes,setScopes]=useState(['request:create','request:read']); const [token,setToken]=useState('');
  const [issuedTokenId,setIssuedTokenId]=useState('');
  const [issuedHandoff,setIssuedHandoff]=useState<IssuedCredentialHandoff|null>(null);
@@ -49,8 +59,8 @@ export function Integrations() {
  const [issueNeedsRefresh,setIssueNeedsRefresh]=useState(false);
  const issueGate=useRef(createCredentialIssueGuard());
  const selectedCredentialRef=useRef('');
- const credentialViewRef=useRef<'connections'|'create'|'security'|'diagnostics'>('connections');
- const [view,setView]=useState<'connections'|'create'|'security'|'diagnostics'>('connections');
+ const credentialViewRef=useRef<'connections'|'create'|'security'|'diagnostics'>(initialView);
+ const [view,setView]=useState<'connections'|'create'|'security'|'diagnostics'>(initialView);
  const [search,setSearch]=useState('');
  const [reviewedTest,setReviewedTest]=useState<IntegrationTestReview|null>(null);
  const [testNeedsRefresh,setTestNeedsRefresh]=useState(false);
