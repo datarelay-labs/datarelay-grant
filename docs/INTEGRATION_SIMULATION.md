@@ -117,3 +117,10 @@ remain **not verified**, regardless of the configured grant policy or bearer
 credentials. `live_effect_authorized` is always false in this read-only
 planning projection. Actual execution authority remains server-side in the
 consumer and must be established independently with an approved installation.
+
+The administrator-only Integration Diagnostics Web workspace also renders the
+backend-provided `external_readiness` facts. It displays a missing projection
+as **Readiness unavailable** and cannot create requests, send notifications,
+confirm external execution, apply a Control replay, or authenticate a Stellar
+receiver. UI bindings are informational only; actual authorization always
+requires authenticated server-side enforcement by the consuming product.

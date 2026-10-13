@@ -2031,3 +2031,9 @@ actual product-owned authorization and observations exist. No new action,
 secret, approval, external send or runtime mutation is authorized by this API.
 See `docs/INTEGRATION_SIMULATION.md`; production Control/Stellar gates remain
 separate and two-person real E2E is explicitly deferred.
+
+The existing Integration Diagnostics Web UI additionally displays the
+admin-authorized readiness projection as read-only facts; missing data shows
+unavailable rather than successful external integration. It exposes no
+mutation or credential operation. Native Control/Stellar acceptance stays
+owner-target-dependent and Full User E2E is still deferred.

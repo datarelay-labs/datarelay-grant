@@ -9,6 +9,7 @@ import { TextArea } from './common';
 import { Select, useTask, when } from './common';
 import type { Integration } from './types';
 import { ConfigurationPortabilityV2 } from './configuration_portability_v2';
+import { ExternalIntegrationReadiness, type ExternalReadiness } from './external_integration_readiness';
 import {
   createConfigurationPreviewReadScope, readCurrentConfigurationPreview,
   readCurrentConfigurationExport,
@@ -37,6 +38,7 @@ type Diagnostics = {
   credentials: CredentialMetadata[];
   credential_history: AuditEvent[];
   connection_tests: ConnectionEvent[];
+  external_readiness?: ExternalReadiness;
 };
 export type DryRunPreview = {
   schema_version: number;
@@ -207,6 +209,8 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
           <dt>Callback health</dt><dd>{details.transport.health.replaceAll('_', ' ')}</dd>
           <dt>Failed callbacks</dt><dd>{details.transport.failed_events}</dd>
         </dl>
+        <ExternalIntegrationReadiness status={details.external_readiness}
+          kind={details.integration.kind} />
         <Card title="Credential roles" description="Metadata only. Producer credentials cannot decide approvals; executor/reporting credentials do not have to create requests.">
           {details.credentials.map((item) => <div className="grant-delivery" key={item.id}>
             <div><strong>{item.role.replaceAll('_', ' ')}</strong>

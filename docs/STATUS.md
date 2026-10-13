@@ -1433,3 +1433,8 @@ stored producer/executor credentials and tenant binding. It never claims
 native Control enforcement, Stellar receiver ingestion or independent actual
 effect readback, all of which remain outside this Grant database. See
 `docs/INTEGRATION_SIMULATION.md` for the exact contract and limitations.
+
+The existing administrator Integration Diagnostics route now includes the
+read-only external readiness panel with fail-closed missing-evidence messaging.
+Three dedicated Web tests and the existing full Web unit suite establish this
+projection; the panel is not a substitute for independent external acceptance.
