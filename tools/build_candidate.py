@@ -42,17 +42,18 @@ def main() -> None:
     subprocess.run(["npm", "--prefix", "web", "run", "check"], cwd=ROOT, check=True)
     if git("rev-parse", "HEAD") != head or git("status", "--porcelain"):
         raise SystemExit("Source changed while building the candidate")
-    # Bind every tracked byte to the immutable Git index as well as HEAD.
-    # A racing edit can otherwise be archived after the earlier clean check.
+    # HEAD, not the mutable index, owns the reviewed source blobs. An index
+    # race can stage different bytes after the clean check and make an
+    # index-backed archive falsely look clean even if the index is restored.
     tracked = {}
-    for line in git("ls-files", "--stage").splitlines():
+    for line in git("ls-tree", "-r", "--full-tree", "HEAD").splitlines():
         try:
             metadata, name = line.split("\t", 1)
-            mode, blob, stage = metadata.split()
+            mode, kind, blob = metadata.split()
         except ValueError:
-            raise SystemExit("Unsupported candidate Git index entry") from None
-        if stage != "0" or mode not in ("100644", "100755") or name in tracked:
-            raise SystemExit("Unsupported candidate Git index entry")
+            raise SystemExit("Unsupported candidate Git tree entry") from None
+        if kind != "blob" or mode not in ("100644", "100755") or name in tracked:
+            raise SystemExit("Unsupported candidate Git tree entry")
         tracked[name] = (mode, blob)
     paths = [Path(name) for name in tracked]
     paths += sorted(p.relative_to(ROOT) for p in (ROOT / "web/dist").rglob("*") if p.is_file())
