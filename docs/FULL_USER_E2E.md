@@ -1,5 +1,14 @@
 # Grant R1 complete user acceptance contract
 
+**Canonical detailed execution matrix (2026-10-14):**
+`docs/FULL_USER_E2E_SCENARIOS.md`. Read and execute that complete
+role-indexed User/Admin/Email/CLI/External/Recovery/Concurrency/Performance
+contract **in addition** to this original top-level acceptance contract and
+`docs/USER_SCENARIOS.md`. The non-destructive, separate
+`docs/CLI_FEATURE_SCENARIO_RECONCILIATION.md` must not be mislabeled as
+actual-user E2E. Writing the two scenario documents does not execute or pass
+any E2E scenario. Foundation common UI remains Foundation-project owned.
+
 Read this whole document, `USER_SCENARIOS.md`, `SURFACE_RECONCILIATION.md`,
 `INTEGRATION.md` and `OPERATIONS.md` before execution. CHATGPT_CHAT directly owns the
 operator/requester/approver/unrelated-user personas under the execution profile.

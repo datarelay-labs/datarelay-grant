@@ -1,5 +1,36 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-14 — owner-directed DRLink-style Grant E2E documents PREPARED
+
+**This is DOCUMENTATION ONLY: no E2E was executed, no user/mailbox or
+native Control/Stellar effect was tested, and no release gate passed.**
+Foundation-owned common UI development stays in the Foundation project;
+Grant consumes accepted shared packages and tests its own user/adapter/API
+workflows. Do not duplicate shared Foundation UI implementation.
+
+The owner requested two new independent normative plans modeled on
+DRLink's `docs/CLI_FEATURE_SCENARIO_RECONCILIATION.md` and
+`docs/FULL_USER_E2E_SCENARIOS.md`. Grant now has:
+
+1. **`docs/CLI_FEATURE_SCENARIO_RECONCILIATION.md`** — non-destructive,
+   7 actual local CLI subcommands, 24 product feature contracts and
+   30 scenario-by-scenario public CLI/Web/API/operator consistency audits.
+   No production mutation or real user/approval PASS inferred.
+2. **`docs/FULL_USER_E2E_SCENARIOS.md`** — real user/admin/approver/mail
+   PIN/OTP/MFA, all 7 CLI operator lifecycles on disposable private state,
+   approved Control/Stellar native readback, negative/rollback,
+   concurrency/load and 320/375/390 desktop-mobile role acceptance.
+   The 121 indexed scenario IDs explicitly require independently authorized
+   humans/mailboxes and native effects for R1 Full PASS. Claims without
+   approved environment/evidence remain BLOCKED, not PASS.
+
+These plans extend (do not replace) `docs/FULL_USER_E2E.md`,
+`docs/USER_SCENARIOS.md`, `docs/SURFACE_RECONCILIATION.md`,
+`docs/INTEGRATION.md` and the Engineering System user-acceptance gate.
+M7 remains **NOT RUN / awaiting owner-approved actors and external
+environment**, and M8 remains unapproved. P0-SM Grant product-adapter
+gaps and Foundation shared UI gaps retain separate ownership.
+
 ## P0-SM ACTIVE — Control-reference System Management functionality parity (2026-10-14)
 
 **New user-observed unmet requirement, outranks new cosmetic/pre-E2E polish.**

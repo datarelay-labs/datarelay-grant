@@ -1,5 +1,20 @@
 # Grant 1.0 implementation status
 
+## 2026-10-14 — DRLink-based E2E plan prepared (NOT TESTED)
+
+Two complete standalone, English product-test documents now cover
+(1) non-destructive public CLI feature ↔ Web/API ↔ operator scenario
+reconciliation and (2) full user/browser/admin/mail/MFA/CLI/native
+external/recovery/concurrency/performance E2E. The plans are
+`docs/CLI_FEATURE_SCENARIO_RECONCILIATION.md` and
+`docs/FULL_USER_E2E_SCENARIOS.md`. They require exact installed HEAD,
+directly operated authorized user sessions, independent two-human/inbox
+proof, native Control/Stellar effects and evidence-ledger consistency
+for complete R1 acceptance. None has been executed or passed by writing
+these files. Foundation common UI stays Foundation-project owned;
+Grant owns product adapters and user-flow verification. Existing
+`docs/FULL_USER_E2E.md` now points to the detailed plan.
+
 ## 2026-10-14 — user-reported System Management parity gap, P0 OPEN
 
 Two authorized screenshots expose a major limitation of the previously
