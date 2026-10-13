@@ -59,6 +59,20 @@ export function approvalQuickViewFilters(view: ApprovalQuickView): Filters {
   return { ...initialFilters('approvals'), view };
 }
 
+/** The next shortcut is navigation only, using the already loaded, role-scoped
+ * approval worklist. It does not decide, approve or bypass server checks.
+ */
+export function nextReviewableAssignedRow(
+  rows: readonly RequestRow[], viewerId: string,
+): RequestRow | null {
+  return rows.find((row) =>
+    row.viewer_assigned === true && row.viewer_can_decide === true &&
+    row.requester_id !== viewerId &&
+    (row.state === 'AWAITING' || row.state === 'HELD') &&
+    row.collaboration_state === 'OPEN',
+  ) ?? null;
+}
+
 const advancedFields = [
   'policy_id', 'action_kind', 'created_after', 'created_before',
   'delivery_state', 'execution_state', 'requester_id',
@@ -173,6 +187,8 @@ export function RequestList({
   })();
   const rows=currentInboxProjection(savedRows,currentQuery);
   const currentLoaded=Boolean(currentQuery&&savedRows?.key===currentQuery);
+  const nextAssigned = mode === 'approvals' && currentLoaded
+    ? nextReviewableAssignedRow(rows, user.id) : null;
   // Snapshot always comes from the *currently loaded* role-scoped queue.
   // A changed search/page hides a stale selection during render BEFORE
   // the next async GET can start; no extra privileged read occurs.
@@ -285,7 +301,12 @@ export function RequestList({
     </Alert>}
     <Card title={heading} description="Search and filters apply to all role-visible records on the server, before pagination. Decisions, notifications and execution remain separate."
       actions={<div className="grant-actions">
-        <Button onClick={() => navigate('/requests/new')}>New request</Button>
+        {nextAssigned && <Button onClick={() => navigate('/requests/' + nextAssigned.id)}>
+          Review next assigned request
+        </Button>}
+        {mode === 'approvals'
+          ? <Button variant="secondary" onClick={() => navigate('/requests/new')}>New request</Button>
+          : <Button onClick={() => navigate('/requests/new')}>New request</Button>}
         <Button variant="secondary" disabled={listBusy} onClick={() => void load(currentQuery)}>Refresh</Button>
       </div>}>
       {mode === 'approvals' && <>
@@ -300,7 +321,7 @@ export function RequestList({
             >{option.label}</Button>,
           )}
         </nav>
-        <p>Choose a work queue to clear old filters and return to the server-scoped first page. Opening a request never records a decision.</p>
+        <p>Choose a work queue, open an assigned request, and review the exact action before deciding. A decision requires a separate confirmation; opening a request never approves it.</p>
       </>}
       <div className="grant-grid">
         <TextField label="Search requests" value={draft.search} maxLength={100} onChange={(e) => edit('search', e.target.value)} />

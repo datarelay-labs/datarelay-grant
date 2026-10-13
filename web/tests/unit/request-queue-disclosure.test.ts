@@ -1,9 +1,9 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { approvalQuickViewFilters, countAdvancedFilters, queryFor, RequestList } from '../../src/request_inbox';
+import { approvalQuickViewFilters, countAdvancedFilters, nextReviewableAssignedRow, queryFor, RequestList } from '../../src/request_inbox';
 import type { Filters } from '../../src/request_inbox';
-import type { User } from '../../src/types';
+import type { RequestRow, User } from '../../src/types';
 
 const viewer: User = {
   id: 'test-user', username: 'test-user', email: 'test@example.invalid',
@@ -162,5 +162,45 @@ describe('Grant approval task-first quick views', () => {
       expect(url.searchParams.get('limit')).toBe('50');
       expect(url.searchParams.get('offset')).toBe('0');
     }
+  });
+});
+
+
+describe('Approval Inbox next-step navigation', () => {
+  const assigned = {
+    id: 'aaaa0000-0000-4000-8000-000000000003',
+    requester_id: 'requester',
+    viewer_assigned: true,
+    viewer_can_decide: true,
+    state: 'AWAITING',
+    collaboration_state: 'OPEN',
+  } as RequestRow;
+
+  it('selects only an existing, current role-scoped assigned action, without granting a vote', () => {
+    const unrelated = { ...assigned, id: 'unrelated', viewer_assigned: false };
+    const self = { ...assigned, id: 'self', requester_id: viewer.id };
+    const closed = { ...assigned, id: 'closed', state: 'APPROVED' };
+    const awaitingInfo = { ...assigned, id: 'info', collaboration_state: 'INFO_REQUESTED' as const };
+    const unavailable = { ...assigned, id: 'unknown', viewer_can_decide: undefined };
+    expect(nextReviewableAssignedRow(
+      [unrelated, self, closed, awaitingInfo, unavailable, assigned], viewer.id,
+    )?.id).toBe(assigned.id);
+    expect(nextReviewableAssignedRow([unrelated, self, closed, awaitingInfo, unavailable], viewer.id))
+      .toBeNull();
+    expect(nextReviewableAssignedRow(
+      [{ ...assigned, state: 'HELD' }], viewer.id,
+    )?.id).toBe(assigned.id);
+  });
+
+  it('keeps request creation available without making it the only primary approval task', () => {
+    const approval = renderToStaticMarkup(createElement(RequestList, {
+      user: viewer, mode: 'approvals', navigate: () => undefined,
+    }));
+    expect(approval).toContain('New request');
+    expect(approval).toContain('A decision requires a separate confirmation');
+    // No server-loaded row at first render: never fabricate an assigned next action.
+    expect(approval).not.toContain('Review next assigned request');
+    expect(display('member')).toContain('New request');
+    expect(display('member')).not.toContain('A decision requires a separate confirmation');
   });
 });
