@@ -1424,3 +1424,12 @@ A Starlette TestClient deprecation warning is recorded without suppressing it.
 
 Remote dev-atlas execution, source editing, and authenticated GitHub coordination
 are available. Engineering System migration #32 remains a separate workstream.
+
+## 2026-10-13 product-owned pre-live integration readiness
+
+The existing administrator-only integration diagnostics API now includes
+non-mutating, safe `external_readiness` facts for active policy, separated
+stored producer/executor credentials and tenant binding. It never claims
+native Control enforcement, Stellar receiver ingestion or independent actual
+effect readback, all of which remain outside this Grant database. See
+`docs/INTEGRATION_SIMULATION.md` for the exact contract and limitations.

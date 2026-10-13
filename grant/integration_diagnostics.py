@@ -84,6 +84,46 @@ def diagnostics(db: Database, actor: Principal, ident: str) -> dict:
                 "enabled": bool(token["enabled"]),
                 "created_at": token["created_at"],
             })
+        # Non-executing, administrator-scoped readiness of the INSTALLED
+        # Grant configuration. Never elevate transport or test fixtures into
+        # Control's actual atomic effect / Stellar receiver acceptance.
+        active_policy = bool(row["enabled"]) and conn.execute(
+            """SELECT 1 FROM profile_versions pv
+               JOIN profiles p ON p.id=pv.profile_id
+               WHERE pv.integration_id=? AND pv.lifecycle='ACTIVE'
+                 AND p.enabled=1 LIMIT 1""",
+            (ident,),
+        ).fetchone() is not None
+        enabled_tokens = [json.loads(token["scopes"]) for token in tokens if token["enabled"]]
+        producer = any(
+            "request:create" in scopes and
+            "grant:consume" not in scopes and "result:write" not in scopes
+            for scopes in enabled_tokens
+        )
+        executor = any(
+            "request:create" not in scopes and
+            {"request:read", "grant:consume", "result:write"}.issubset(scopes)
+            for scopes in enabled_tokens
+        )
+        mixed = sum(
+            "request:create" in scopes and
+            bool({"grant:consume", "result:write"}.intersection(scopes))
+            for scopes in enabled_tokens
+        )
+        stellar = row["kind"] == "stellar"
+        external_readiness = {
+            "schema_version": 1,
+            "scope": "pre_live_configuration_only",
+            "active_policy": active_policy,
+            "separate_producer": producer,
+            "separate_executor": None if stellar else executor,
+            "mixed_credentials": mixed,
+            "tenant_bound": bool(row["tenant"]) if stellar else None,
+            "native_execution_guard": "not_applicable" if stellar else "not_verified",
+            "receiver_readback": "not_verified" if stellar else "not_applicable",
+            "independent_effect_readback": "not_verified",
+            "live_effect_authorized": False,
+        }
         audit_rows = conn.execute(
             """SELECT at,action,detail FROM audit
                WHERE action IN (
@@ -143,6 +183,7 @@ def diagnostics(db: Database, actor: Principal, ident: str) -> dict:
                 "health": health,
             },
             "credentials": credentials,
+            "external_readiness": external_readiness,
             "credential_history": credential_history[:100],
             "connection_tests": connection_tests[:100],
         }

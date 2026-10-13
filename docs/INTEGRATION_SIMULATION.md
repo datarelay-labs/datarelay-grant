@@ -103,3 +103,17 @@ does not grant GitHub the missing Contents:read token.
 All mock SQLite databases, ephemeral listener sockets, test-only credentials
 and Wheel scratch import files are released after the tests. No production
 objects are created, deleted or modified.
+
+## Grant saved-configuration readiness (2026-10-13)
+
+The existing admin-only integration diagnostics endpoint now returns an
+additive `external_readiness` projection derived exclusively from actual
+stored active approval policies and enabled producer/executor token scopes.
+It does not contain secret material or destinations and never calls Control
+or Stellar. Mixed credentials are not treated as separated least-privilege
+roles. The independently required native Control execution guard, actual
+Control destination readback, and deployed Stellar receiver verification
+remain **not verified**, regardless of the configured grant policy or bearer
+credentials. `live_effect_authorized` is always false in this read-only
+planning projection. Actual execution authority remains server-side in the
+consumer and must be established independently with an approved installation.

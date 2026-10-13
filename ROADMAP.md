@@ -2019,3 +2019,15 @@ blockers. **SOURCE_COMPLETE never means Full User E2E or GA.**
 Report in Korean using: 로드맵 / 이번 작업 / 블로커 / 사용자 조치 /
 다음 작업. Do not stop after a bounded source packet while another safe
 authorized P0 next action exists.
+
+## 2026-10-13 — Admin external integration readiness (pre-live, no E2E)
+
+Grant's existing role-scoped `GET /api/v1/integrations/{id}/diagnostics`
+now supplies a read-only `external_readiness` projection. It uses stored active
+approval policy state and enabled producer/executor scopes without exposing
+credentials, endpoints or customer data. Native Control guard, external
+receiver and independent effect readback always remain unverified until
+actual product-owned authorization and observations exist. No new action,
+secret, approval, external send or runtime mutation is authorized by this API.
+See `docs/INTEGRATION_SIMULATION.md`; production Control/Stellar gates remain
+separate and two-person real E2E is explicitly deferred.
