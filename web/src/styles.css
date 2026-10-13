@@ -605,3 +605,50 @@ pre {
     justify-self: end;
   }
 }
+
+/* Grant sign-in: retain reference links behind optional disclosure after the
+   primary form, instead of pushing first-time mobile sign-in below the fold. */
+.grant-auth-help {
+  margin-top: var(--dr-space-5);
+  padding-top: var(--dr-space-3);
+  border-top: 1px solid var(--dr-border-divider);
+  min-width: 0;
+}
+.grant-auth-help > summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: .4rem 0;
+}
+.grant-auth-help > summary:focus-visible,
+.grant-auth-help nav a:focus-visible {
+  outline: 2px solid var(--dr-focus-ring);
+  outline-offset: 2px;
+}
+.grant-auth-help nav {
+  display: grid;
+  gap: var(--dr-space-2);
+  margin-top: var(--dr-space-3);
+}
+.grant-auth-help nav a {
+  display: grid;
+  gap: 2px;
+  padding: var(--dr-space-2);
+  border-radius: var(--dr-radius-control);
+  color: inherit;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.grant-auth-help nav a:hover { background: var(--dr-surface-hover); }
+.grant-auth-help nav small { color: var(--dr-text-muted); }
+
+/* The new Review→Confirm region receives keyboard and screen-reader focus
+   after review, without changing the explicit final creation click. */
+.grant-create-confirmation {
+  scroll-margin-top: 1rem;
+  min-width: 0;
+}
+.grant-create-confirmation:focus-visible {
+  outline: 3px solid var(--dr-focus-ring);
+  outline-offset: 3px;
+  border-radius: var(--dr-radius-card);
+}

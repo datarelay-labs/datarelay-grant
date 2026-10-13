@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  AuthLayout,
   Button,
   Card,
   LoginForm,
@@ -9,6 +8,7 @@ import {
   ThemeRoot,
 } from '@datarelay-labs/foundation';
 import { Administration, Security } from './administration';
+import { GrantAuthFrame } from './grant_auth_frame';
 import { AuditExplorer } from './audit_explorer';
 import { Approvers } from './approvers';
 import { Delegations } from './delegations';
@@ -25,37 +25,7 @@ import { NewRequest, RequestDetail, RequestList } from './requests';
 import { PublicEmailDecisionLanding, parseEmailDecisionLandingToken } from './email_decision_landing';
 import type { Session } from './types';
 
-const AUTH_RESOURCES = [
-  {
-    title: 'Documentation',
-    description: 'datarelay.run/docs',
-    href: 'https://datarelay.run/docs',
-    external: true,
-  },
-  {
-    title: 'Quick Start Guide',
-    description: 'datarelay.run/quickstart',
-    href: 'https://datarelay.run/quickstart',
-    external: true,
-  },
-  {
-    title: 'Release Notes',
-    description: 'datarelay.run/releases',
-    href: 'https://datarelay.run/releases',
-    external: true,
-  },
-  {
-    title: 'DataRelay Website',
-    description: 'datarelay.run',
-    href: 'https://datarelay.run',
-    external: true,
-  },
-  {
-    title: 'Support',
-    description: 'support@datarelay.run',
-    href: 'mailto:support@datarelay.run',
-  },
-] as const;
+
 
 export function App() {
   // The original emailed capability URL is a public human-decision route.
@@ -109,13 +79,12 @@ function AuthenticatedGrantApp() {
   if (loading) {
     return (
       <ThemeRoot theme={theme}>
-        <AuthLayout
+        <GrantAuthFrame
           productName="DataRelay Grant"
           productSubtitle="Approval Control Platform"
           description="Request. Approve. Execute. Control sensitive actions with explicit human authorization."
           title="Connecting to DataRelay"
           subtitle="Verifying your current Grant session."
-          resources={AUTH_RESOURCES}
         >
           {task.feedback}
           <Button
@@ -129,7 +98,7 @@ function AuthenticatedGrantApp() {
           >
             Retry
           </Button>
-        </AuthLayout>
+        </GrantAuthFrame>
       </ThemeRoot>
     );
   }
@@ -139,13 +108,12 @@ function AuthenticatedGrantApp() {
     const mfa = session?.state === 'mfa_required';
     return (
       <ThemeRoot theme={theme}>
-        <AuthLayout
+        <GrantAuthFrame
           productName="DataRelay Grant"
           productSubtitle="Approval Control Platform"
           description="Request. Approve. Execute. Control sensitive actions with explicit human authorization."
           title={mfa ? 'Verify your identity' : 'Welcome to DataRelay'}
           subtitle={mfa ? 'Complete multi-factor authentication to continue.' : 'Please sign in to continue.'}
-          resources={AUTH_RESOURCES}
         >
           {task.feedback}
           {mfa ? (
@@ -188,7 +156,7 @@ function AuthenticatedGrantApp() {
               </p>
             </>
           )}
-        </AuthLayout>
+        </GrantAuthFrame>
       </ThemeRoot>
     );
   }

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Alert, Button } from '@datarelay-labs/foundation';
 import type { Profile, RequestRow } from './types';
 
@@ -257,9 +258,16 @@ export function RequestCreationConfirmation({
   onConfirm: () => void;
   onBack: () => void;
 }) {
-  if (!reviewed || !isCurrentRequestCreationReview(reviewed, draft)) return null;
+  const focusTarget = useRef<HTMLDivElement>(null);
+  const visible = Boolean(reviewed && isCurrentRequestCreationReview(reviewed, draft));
+  useEffect(() => {
+    if (visible) focusTarget.current?.focus();
+  }, [visible, reviewed]);
+  if (!reviewed || !visible) return null;
   const { payload } = reviewed;
   return (
+    <div ref={focusTarget} tabIndex={-1} role="region"
+      aria-label="Review and confirm approval request" className="grant-create-confirmation">
     <Alert tone="warning" title="Review approval request">
       <p>Create only an approval request; no external execution or approval occurs at this step.</p>
       <dl className="grant-facts">
@@ -285,5 +293,6 @@ export function RequestCreationConfirmation({
       <Button disabled={busy} onClick={onConfirm}>Confirm create request</Button>
       <Button disabled={busy} variant="ghost" onClick={onBack}>Edit request</Button>
     </Alert>
+    </div>
   );
 }

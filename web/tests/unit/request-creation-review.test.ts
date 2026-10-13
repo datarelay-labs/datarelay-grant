@@ -345,3 +345,14 @@ describe('Grant New Request explicit task-first review before creating an immuta
     expect(stale).toBe('');
   });
 });
+
+describe('First-time request review focus', () => {
+  it('exposes a named confirmation region for focus after Review request', () => {
+    const html = previewMarkup();
+    expect(html).toContain('role="region"');
+    expect(html).toContain('tabindex="-1"');
+    expect(html).toContain('aria-label="Review and confirm approval request"');
+    expect(html).toContain('Confirm create request');
+    expect(html).not.toContain('Auto execute');
+  });
+});

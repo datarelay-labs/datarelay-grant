@@ -109,3 +109,37 @@ It **does not** cure the earlier platform-denied authenticated-browser
 credential operation or qualify actual two-user/two-mailbox Full User E2E.
 No backend policy, integration token, SMTP transport, external effect, host
 service, release or permanent credential is changed by this feature.
+
+## Novice sign-in and review-focus refinement (2026-10-13)
+
+At PR #100 baseline `49e1e1e`, direct HTTPS development preview was
+visited with an installed, **anonymous** Chromium at 1280×800 and 390×844.
+Each of `/login`, `/home`, `/requests/new`, `/approvals`,
+`/requests/{id}`, and `/profiles` returned HTTP 200 HTML but displayed
+the expected sign-in gate instead of protected data. There was no horizontal
+overflow or browser JavaScript exception. This is **not signed-in E2E**.
+
+A real 390px login screenshot exposed a beginner problem: five optional
+documentation/support links occupied most of the first screen and pushed
+the actual sign-in action below them. The Grant-owned `GrantAuthFrame`
+retains those same destinations but moves them into a collapsed
+`Help & documentation` disclosure **after** the primary auth form.
+This composes the original pinned Foundation `AuthLayout`; it does not
+fork Foundation, change auth/session handling, remove a resource, or
+relocate any protected user action.
+
+In the `New Request` Review → Confirm sequence, the separately reviewed,
+never-auto-executed confirmation panel now exposes a keyboard-focusable
+named region and focuses it when a valid review first appears. A mobile
+keyboard/screen-reader user can follow the form-to-confirm transition
+without hunting below the original form. Final creation still requires the
+original explicit `Confirm create request` click, fresh policy read,
+single-POST guard and server receipt.
+
+The change was developed with RED-first regressions for auth composition
+and focus-region markup, followed by affected Web GREEN and TypeScript/Vite
+build. The prior unauthenticated browser screen cannot establish the
+post-change signed-in journey. A subsequent detailed browser DOM operation
+was explicitly safety-blocked and was not rerouted; the original fixture
+credential attempt remains prohibited. Preserve G12 original diff and
+Inbox stash and distinguish any later preview smoke from human acceptance.
