@@ -179,3 +179,23 @@ checks are run before committing. The existing previously blocked
 credential-fixture browser attempt is not retried. An anonymous
 public-IP browser/HTTP smoke and role-rendered component tests do not
 constitute authenticated-user UI E2E.
+
+## Request Detail initial GET visibility (2026-10-13 continuation)
+
+A source-level walk-through of the next required task page found another
+first-time usability defect. Before the role-scoped `GET /requests/{id}`
+resolved, the mounted `RequestDetail` displayed only `Back to requests`
+and `Refresh`, with no indication that it was loading. The actual
+component now shows a plain `role=status` "Loading request details…"
+message whenever there is no current authorized row and no error.
+An explicit failed GET still displays the existing bounded warning;
+a successful fresh/current authorized GET clears any previous stale
+load warning before the action presentation appears. Approval/deny,
+cancel, execute and transport controls remain gated by their original
+request and server-owned role conditions.
+
+A RED-first actual RequestDetail server-render test established the
+blank state, then changed to GREEN. Focused Request Detail/route-read
+scope/New Request/workflow suites 39/39 PASS, TypeScript/Vite PASS.
+This is **source correctness**, not a signed-in end-user browser
+acceptance nor an approval/execution effect.

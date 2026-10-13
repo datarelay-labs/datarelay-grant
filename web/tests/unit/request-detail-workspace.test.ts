@@ -2,7 +2,8 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { RequestDetailOverview } from '../../src/request_detail_overview';
-import type { RequestRow } from '../../src/types';
+import { RequestDetail } from '../../src/requests';
+import type { RequestRow, User } from '../../src/types';
 
 const row: RequestRow = {
   id: 'aaaa0000-0000-4000-8000-000000000001',
@@ -117,5 +118,21 @@ describe('P0 ServiceNow/Jira inspired RequestDetail exact-action-first presentat
     expect(output).not.toContain('<script>');
     expect(output).not.toContain('<img src=x');
     expect(output).not.toContain('<svg onload');
+  });
+});
+
+describe('Request Detail initial navigation clarity', () => {
+  it('announces the current request loading instead of rendering an unexplained empty page', () => {
+    const user: User = {
+      id: 'member', username: 'member', email: 'member@example.invalid',
+      role: 'member', mfa_enabled: false,
+    };
+    const output = renderToStaticMarkup(createElement(RequestDetail, {
+      id: row.id, user, navigate: () => undefined,
+    }));
+    expect(output).toContain('Loading request details');
+    expect(output).toContain('role="status"');
+    expect(output).not.toContain('Approve</button>');
+    expect(output).not.toContain('Confirm</button>');
   });
 });

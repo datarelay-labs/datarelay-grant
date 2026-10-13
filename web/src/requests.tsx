@@ -267,6 +267,8 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
     () => api<RequestRow>('/requests/' + encodeURIComponent(id)),
     (current) => {
       setRow(current);
+      // A successful current role-scoped GET clears a previous load error.
+      setLoadError('');
       if (decisionGuard.current.readSucceeded()) setDecisionMustRefresh(false);
     },
   );
@@ -390,6 +392,7 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
   (row.requester_id === user.id || user.role === 'admin');
  return <div className="grant-stack">{task.feedback}
  {loadError && <Alert tone="warning" title="Unable to load this request">{loadError}</Alert>}
+ {!row && !loadError && <p role="status" className="grant-intake-field-guide">Loading request details…</p>}
  <div className="grant-actions"><RequestTaskBackLink row={row} user={user} navigate={navigate} /><Button variant="secondary" disabled={task.busy} onClick={()=>void task.run(async()=>{
  const accepted = await load();
  if (accepted && resendGate.current.readSucceeded()) setResendAttempted([]);
