@@ -6,6 +6,21 @@ import re
 from grant.models import Profile
 
 
+def _short_code_exposed(response_text: str, code: str) -> bool:
+    """Detect a visible standalone PIN, not coincidental digits inside an ID.
+
+    E.g. an unrelated UUID segment containing "6641" is not a leaked PIN;
+    a JSON field or free-text message exposing "6641" as a code is.
+    """
+    return re.search(rf"(?<![A-Za-z0-9]){re.escape(code)}(?![A-Za-z0-9])", response_text) is not None
+
+
+def test_short_code_redaction_guard_distinguishes_uuid_from_disclosure():
+    assert not _short_code_exposed('{"id":"6c7-d68137664105"}', '6641')
+    assert _short_code_exposed('{"pin":"6641"}', '6641')
+    assert _short_code_exposed('{"notice":"Enter code 6641"}', '6641')
+
+
 def _email_material(env, request_id):
     with env.db.transaction(write=False) as conn:
         item = conn.execute(
@@ -219,7 +234,8 @@ def test_operator_decision_email_security_metrics_expose_counts_only(env):
     summary = second.json()["decision_email_security"]
     assert summary["locked_issuances"] == 1
     assert summary["active_issuances"] == 0
-    assert token not in second.text and pin not in second.text
+    assert token not in second.text
+    assert not _short_code_exposed(second.text, pin)
     assert env.users["approver"]["email"] not in second.text
     assert "_decision_tokens" not in second.text and "pin_digest" not in second.text
     assert env.human("requester").get(endpoint).status_code == 403
