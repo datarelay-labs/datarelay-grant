@@ -62,7 +62,8 @@ describe('Grant New Request explicit task-first review before creating an immuta
     }));
     expect(form).toContain('Review request');
     expect(form).not.toContain('Submit request</button>');
-    expect(form).not.toContain('Confirm create request');
+    // Instructions may name the next action, but no Confirm button exists before review.
+    expect(form).not.toContain('Confirm create request</button>');
   });
 
   it('captures exactly the existing bounded POST payload and complete policy/source', () => {

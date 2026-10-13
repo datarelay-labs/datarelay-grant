@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { approvalQuickViewFilters, countAdvancedFilters, nextReviewableAssignedRow, queryFor, RequestList } from '../../src/request_inbox';
+import { approvalQuickViewFilters, countAdvancedFilters, emptyWorklistGuidance, nextReviewableAssignedRow, queryFor, RequestList } from '../../src/request_inbox';
 import type { Filters } from '../../src/request_inbox';
 import type { RequestRow, User } from '../../src/types';
 
@@ -202,5 +202,17 @@ describe('Approval Inbox next-step navigation', () => {
     expect(approval).not.toContain('Review next assigned request');
     expect(display('member')).toContain('New request');
     expect(display('member')).not.toContain('A decision requires a separate confirmation');
+  });
+});
+
+describe('Novice empty approval queue guidance', () => {
+  it('does not tell a reviewer to create a new request when no assigned work matches', () => {
+    expect(emptyWorklistGuidance('approvals')).toContain('No approvals match');
+    expect(emptyWorklistGuidance('approvals')).toContain('another approval view');
+    expect(emptyWorklistGuidance('approvals')).not.toContain('creating a new request');
+  });
+  it('keeps request creation help for a requester and neutral filters for a general list', () => {
+    expect(emptyWorklistGuidance('requester')).toContain('start a new request');
+    expect(emptyWorklistGuidance('all')).toContain('clearing filters');
   });
 });

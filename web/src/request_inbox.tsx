@@ -17,6 +17,17 @@ import type { ApproverGroup, Integration, Profile, RequestRow, User } from './ty
 type Navigate = (path: string) => void;
 export type InboxMode = 'all' | 'approvals' | 'requester';
 
+/** Guidance must match the current user task, not steer reviewers to create. */
+export function emptyWorklistGuidance(mode: InboxMode): string {
+  if (mode === 'approvals') {
+    return 'No approvals match this work view and current filters. Try another approval view or clear filters.';
+  }
+  if (mode === 'requester') {
+    return 'No submitted requests match these filters. Clear filters or start a new request.';
+  }
+  return 'No matching requests. Try clearing filters or creating a new request.';
+}
+
 export type Filters = {
   view: string;
   search: string;
@@ -473,7 +484,7 @@ export function RequestList({
       {!rows.length&&!listError&&
         (listBusy||!currentLoaded
           ? <p role="status">Loading this exact role-visible worklist…</p>
-          : <p>No matching requests. Try clearing filters or creating a new request.</p>)}
+          : <p>{emptyWorklistGuidance(mode)}</p>)}
       <div className="grant-actions">
         <Button variant="secondary" disabled={!offset || listBusy} onClick={() => setOffset(Math.max(0, offset - 50))}>Previous page</Button>
         <span>Page {Math.floor(offset / 50) + 1} · {rows.length} loaded</span>

@@ -63,6 +63,39 @@ export function NewRequestPolicyContext({ profile }: { profile: Profile | null }
   );
 }
 
+
+/** Empty/loading source-policy states are informational. Only the backend
+ * resolves eligible policies; an admin shortcut never activates a policy. */
+export function RequestPolicyAvailability({
+  loaded, hasAvailablePolicies, isAdmin, onManagePolicies, loadFailed = false,
+}: {
+  loaded: boolean;
+  hasAvailablePolicies: boolean;
+  isAdmin: boolean;
+  onManagePolicies: () => void;
+  loadFailed?: boolean;
+}) {
+  if (!loaded) {
+    return loadFailed ? null : <p role="status">Loading approval policies…</p>;
+  }
+  if (hasAvailablePolicies) return null;
+  return (
+    <Alert tone="warning" title="No active approval policy">
+      <p>There is no active, enabled policy available for a new request.</p>
+      {isAdmin ? (
+        <div className="grant-actions">
+          <Button type="button" variant="secondary" onClick={onManagePolicies}>
+            Open Approval Policies
+          </Button>
+        </div>
+      ) : (
+        <p>Ask an administrator to activate a policy in Approval Policies
+          before creating a request.</p>
+      )}
+    </Alert>
+  );
+}
+
 /** An uncertain request creation may already have succeeded. Offer an
  * independent read-only reconciliation path instead of another POST.
  */

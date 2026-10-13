@@ -143,3 +143,39 @@ post-change signed-in journey. A subsequent detailed browser DOM operation
 was explicitly safety-blocked and was not rerouted; the original fixture
 credential attempt remains prohibited. Preserve G12 original diff and
 Inbox stash and distinguish any later preview smoke from human acceptance.
+
+## Task-relevant zero-state guidance (2026-10-13 continuation)
+
+A source-level novice usability pass found that `New Request` showed a
+blank policy selector while its role-scoped policy GET was pending, and
+told **administrators** to ask another administrator whenever the saved
+policy list had no ACTIVE+enabled policy. It now says
+`Loading approval policies…` while data loads; once the policy read
+succeeds with no usable result, only the current authenticated admin
+gets an `Open Approval Policies` button to the pre-existing admin
+policy route. Non-admin users instead receive a precise instruction to
+contact an administrator. No policy is inferred, automatically created,
+activated, or made request-eligible. A failed GET keeps the original
+error path rather than displaying a false empty-policy conclusion.
+Both normal creation and linked replacement receive the same role
+indicator from the active authenticated App session.
+
+`Approvals` also previously displayed the generic empty-result advice
+to **create a new request**. It now distinguishes the approval work
+queue (switch approval view or clear filters), requester history (clear
+filters or start a new request) and general all-visible work. The
+server-scoped queue, pagination, assignment filters, mobile cards and
+Review/Confirm authorization boundaries are unchanged.
+
+The step-three text was corrected to say that a separate confirmation
+appears **below the same form**, rather than on a new screen. The
+existing test guarding against an early Confirm creation button
+continues to assert absence of the actual action button, while
+allowing explanatory wording to name that next action.
+
+RED-first tests were added to the existing New Request and Approvals
+unit modules and converted to GREEN; affected Web/TypeScript/Vite
+checks are run before committing. The existing previously blocked
+credential-fixture browser attempt is not retried. An anonymous
+public-IP browser/HTTP smoke and role-rendered component tests do not
+constitute authenticated-user UI E2E.

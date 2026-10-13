@@ -22,7 +22,7 @@ import { RequestExecutionReport } from './request_execution_report';
 import { recordDecisionThenRead } from './request_decision_receipt';
 import { createDecisionAttemptGuard } from './request_decision_attempt';
 import { createRequestCreationAttemptGuard } from './request_creation_attempt';
-import { eligibleIntakeProfiles, NewRequestPolicyContext, RequestCreationReconciliationNotice } from './request_intake_context';
+import { eligibleIntakeProfiles, NewRequestPolicyContext, RequestPolicyAvailability, RequestCreationReconciliationNotice } from './request_intake_context';
 import { prepareRequestCreationReview, isCurrentRequestCreationReview, submitReviewedRequestCreationWithFreshRead, verifyCreatedRequestReceipt, RequestCreationConfirmation, type NewRequestDraft, type RequestCreationReview } from './request_creation_review';
 import { RequestDecisionConfirmation, prepareRequestDecisionReview, isCurrentRequestDecisionReview, type RequestDecisionReview, type RequestDecisionChoice } from './request_decision_review';
 import { Form, Select, State, TextArea, useTask, when } from './common';
@@ -30,7 +30,7 @@ import { RequestIntakeSteps } from './request_workflow_guide';
 import type { Profile, RequestRow, Delivery, Outcome, User } from './types';
 
 type Navigate = (path: string) => void;
-export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; predecessorId?: string }) {
+export function NewRequest({ navigate, predecessorId, isAdmin = false }: { navigate: Navigate; predecessorId?: string; isAdmin?: boolean }) {
  const intakeGate = useRef(createRequestIntakeReadGate());
  const [loadedContext, setLoadedContext] =
    useState<IntakeProjection<Profile, RequestRow> | null>(null);
@@ -200,10 +200,10 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
      <option value="">Select an active approval policy</option>
      {availableProfiles.map(p=><option key={p.id} value={p.id}>{p.name} · {p.action_kind}</option>)}
     </Select>
-    {currentContext && availableProfiles.length === 0 &&
-      <Alert tone="warning" title="No active approval policy">
-        Ask an administrator to activate a policy in Approval Policies before creating a request.
-      </Alert>}
+    <RequestPolicyAvailability loaded={Boolean(currentContext)}
+      hasAvailablePolicies={availableProfiles.length > 0} isAdmin={isAdmin}
+      loadFailed={!currentContext && Boolean(reviewError)}
+      onManagePolicies={() => navigate('/profiles')} />
     <NewRequestPolicyContext profile={selected ?? null} />
    </section>
    <section className="grant-intake-section" aria-label="Describe the requested business action" id="grant-action-details">
@@ -235,7 +235,7 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
    </section>
    <section className="grant-intake-section" aria-label="Review before creating" id="grant-request-review">
     <h3>Step 3 · Review, then confirm</h3>
-    <p className="grant-intake-review-note">Select <strong>Review request</strong> below to check the exact policy, action and target. Review does not submit anything. The next screen has a separate final confirmation to create the request.</p>
+    <p className="grant-intake-review-note">Select <strong>Review request</strong> below to check the exact policy, action and target. Review does not submit anything. A separate confirmation appears below the form; read it before selecting <strong>Confirm create request</strong>.</p>
    </section>
   </Form>
   {reviewError && <Alert tone="warning" title="Review required">{reviewError}</Alert>}

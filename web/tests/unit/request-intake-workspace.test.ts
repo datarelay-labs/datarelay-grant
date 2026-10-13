@@ -6,6 +6,7 @@ import { prepareRequestCreationReview, type NewRequestDraft } from '../../src/re
 import {
   eligibleIntakeProfiles,
   NewRequestPolicyContext,
+  RequestPolicyAvailability,
   RequestCreationReconciliationNotice,
 } from '../../src/request_intake_context';
 import type { Profile } from '../../src/types';
@@ -129,5 +130,45 @@ describe('P0 competitor-derived task-first New Request workspace', () => {
     expect(html).toContain('Open My requests');
     expect(html).toContain('will not retry');
     expect(html).not.toContain('Try create again');
+  });
+});
+
+describe('First-time New Request availability guidance', () => {
+  it('makes the read-only policy loading state explicit before GET completes', () => {
+    const html = renderToStaticMarkup(createElement(RequestPolicyAvailability, {
+      loaded: false, hasAvailablePolicies: false, isAdmin: false, onManagePolicies: () => undefined,
+    }));
+    expect(html).toContain('Loading approval policies');
+    expect(html).not.toContain('No active approval policy');
+  });
+
+  it('directs only an administrator to the existing policy workspace when no policy is active', () => {
+    const html = renderToStaticMarkup(createElement(RequestPolicyAvailability, {
+      loaded: true, hasAvailablePolicies: false, isAdmin: true, onManagePolicies: () => undefined,
+    }));
+    expect(html).toContain('No active approval policy');
+    expect(html).toContain('Open Approval Policies');
+    expect(html).not.toContain('Automatically activate');
+  });
+
+  it('does not show an admin-only policy action for ordinary members or healthy policy lists', () => {
+    const member = renderToStaticMarkup(createElement(RequestPolicyAvailability, {
+      loaded: true, hasAvailablePolicies: false, isAdmin: false, onManagePolicies: () => undefined,
+    }));
+    const available = renderToStaticMarkup(createElement(RequestPolicyAvailability, {
+      loaded: true, hasAvailablePolicies: true, isAdmin: true, onManagePolicies: () => undefined,
+    }));
+    expect(member).toContain('Ask an administrator');
+    expect(member).not.toContain('Open Approval Policies');
+    expect(available).toBe('');
+  });
+
+  it('mounts the availability state in the New Request page without auto-creating a policy', () => {
+    const html = renderToStaticMarkup(createElement(NewRequest, {
+      navigate: () => undefined, isAdmin: true,
+    }));
+    expect(html).toContain('Loading approval policies');
+    expect(html).not.toContain('Open Approval Policies');
+    expect(html).not.toContain('Activate policy');
   });
 });

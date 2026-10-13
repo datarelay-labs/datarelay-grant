@@ -179,9 +179,10 @@ function AuthenticatedGrantApp() {
   } else if (path === '/requests' || path === '/approvals' || path === '/my-requests') {
     page = <RequestList key={path} user={user} mode={path === '/approvals' ? 'approvals' : path === '/my-requests' ? 'requester' : 'all'} navigate={navigate} />;
   } else if (path === '/requests/new') {
-    page = <NewRequest navigate={navigate} />;
+    page = <NewRequest navigate={navigate} isAdmin={user.role === 'admin'} />;
   } else if (/^\/requests\/[a-f0-9-]{36}\/replace$/.test(path)) {
-    page = <NewRequest key={path} navigate={navigate} predecessorId={path.split('/')[2]!} />;
+    page = <NewRequest key={path} navigate={navigate} predecessorId={path.split('/')[2]!}
+      isAdmin={user.role === 'admin'} />;
   } else if (/^\/requests\/[a-f0-9-]{36}$/.test(path)) {
     page = <RequestDetail key={path} id={path.split('/')[2]!} user={user} navigate={navigate} />;
   } else if (path === '/delegations') {
