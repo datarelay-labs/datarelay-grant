@@ -2069,3 +2069,13 @@ new exact-HEAD end-to-end claim. See
 `docs/UX_GUIDED_APPROVAL_WORKFLOWS_20261013.md` and the exact candidate Web
 and GitHub CI evidence. Independent new browser/full-user E2E, installed
 Control/Stellar and release remain separately owner-gated.
+
+## 2026-10-13 novice-administrator policy setup UX
+
+Grant's user-requested text-to-workflow UX improvement now additionally
+covers the Approval Policies *administrator list*: numbered visual navigation
+through integration registration, approver roster, Draft creation, then
+explicit isolated test and activation. Uses only existing admin-authorized
+list data and accepted UI actions; no new integration/permission/mutation
+path, synthetic readiness or external-system effect. Evidence and remaining
+browser acceptance distinction: `docs/UX_GUIDED_APPROVAL_WORKFLOWS_20261013.md`.

@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { AdminFirstRunSetup } from './admin_first_run_setup';
 import { Alert, Button, Card, TextField, type AccountProjection } from '@datarelay-labs/foundation';
 import { api } from './api';
 import { PolicyCloneConfirmation, createPolicyCloneReview, submitReviewedPolicyClone, type PolicyCloneIntent } from './policy_clone_review';
@@ -339,6 +340,7 @@ export function PolicyLifecycleConfirmation({
 
 export function Profiles() {
   const [rows, setRows] = useState<Profile[]>([]);
+  const [setupLoaded, setSetupLoaded] = useState(false);
   const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [users, setUsers] = useState<AccountProjection[]>([]);
   const [templates, setTemplates] = useState<NotificationTemplateSet[]>([]);
@@ -385,6 +387,7 @@ export function Profiles() {
     setUsers(accounts);
     setTemplates(templateSets);
     setGroups(approverGroups);
+    setSetupLoaded(true);
     return policies;
   };
 
@@ -654,12 +657,21 @@ export function Profiles() {
           <Button onClick={startCreate}>Create policy</Button>
         </section>
 
+        <AdminFirstRunSetup loaded={setupLoaded}
+          registeredConnections={integrations.length}
+          enabledAccounts={users.filter((account) => account.status === 'enabled').length}
+          savedPolicies={rows.length}
+          activePolicies={rows.filter((policy) => policy.lifecycle === 'ACTIVE'
+            || (policy.active_version !== null && policy.active_version !== undefined)).length}
+          onCreatePolicy={startCreate} />
+
         <PolicyCloneConfirmation intent={pendingClone}
           source={rows.find((row) => row.id === pendingClone?.policyId)}
           busy={task.busy}
           onCancel={() => setPendingClone(null)}
           onConfirm={() => void task.run(confirmClone)} />
 
+        <div id="grant-policy-list">
         <Card
           title="Policies"
           description="Scan policy status and scope first. Open a policy only when you need to configure or test it."
@@ -813,6 +825,7 @@ export function Profiles() {
             <p>No policies match the current search and lifecycle filters. Clear filters to see all visible policies.</p>
           ) : null}
         </Card>
+        </div>
       </div>
     );
   }

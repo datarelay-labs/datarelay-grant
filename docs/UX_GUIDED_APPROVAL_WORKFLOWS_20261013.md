@@ -70,3 +70,42 @@ Independent full two-person mailbox browser acceptance and native real
 Control/Stellar effects remain separately pending. Direct-IP preview should
 be updated only from an immutable Web snapshot with private rollback, keeping
 its SMTP/worker/credential effects disabled.
+
+## Next safe UX iteration — administrator's first setup path (2026-10-13)
+
+After the first guided Home/New Request/Request Detail implementation and
+CI-qualified source, a separate novice administrator path remained unclear:
+Approval Policies opened on a long table and a `Create policy` button, but
+neither explained the actual preparation sequence nor showed where to go.
+
+`web/src/admin_first_run_setup.tsx` now mounts a compact four-step visual
+journey **inside the existing administrator-only Policies list page**:
+
+1. Register a connection → `/integrations` (a registered record is NOT a
+   verified external product connection)
+2. Choose approvers → `/approvers` (an enabled account is NOT an assigned or
+   verified approval seat)
+3. Create a Draft policy → original `startCreate` editor callback (no new
+   create POST or bypass)
+4. Test and activate → scroll to `#grant-policy-list` and open the existing
+   source-authoritative saved policy, preserving separate Testing and
+   activation confirmations
+
+Counts come from the same already admin-authorized loaded integrations,
+account roster and policy rows. Before successful load they say "Checking
+saved setup", never a fabricated zero, green status or automatic approval.
+A policy with a separately recorded active version can be counted as active
+even if the newest draft is under edit. Every call to configure, test or
+activate retains the original server controls. The existing policy list and
+Create button remain intact. `web/src/workflow-guidance.css` adds responsive
+four/two/one-column numbered setup cards with keyboard focus, not a new
+Foundation theme or navigation privilege.
+
+`web/tests/unit/admin-first-run-setup.test.ts` checks the exact flow,
+registered-vs-verified semantics, loading state and actual mounted Policy
+page; previous policy-workspace regressions must remain green. This iteration
+requires affected native Web/TypeScript/Vite plus exact-HEAD GitHub CI.
+It **does not** cure the earlier platform-denied authenticated-browser
+credential operation or qualify actual two-user/two-mailbox Full User E2E.
+No backend policy, integration token, SMTP transport, external effect, host
+service, release or permanent credential is changed by this feature.

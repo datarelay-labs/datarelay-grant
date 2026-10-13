@@ -1482,3 +1482,17 @@ functional decisions and limitations. A direct new browser run using
 previous disposable test credentials was blocked at tool safety admission;
 no real/user E2E PASS is asserted on this source snapshot. Browser and
 independent mailbox acceptance remain separate from native source/Web tests.
+
+## 2026-10-13 guided administrator workflow — source-only UX follow-up
+
+The existing administrator Approval Policies list mounts a four-step novice
+setup map: Register a connection → Choose approvers → Create a Draft policy →
+Test and activate. Each action routes to an existing administrator task or
+uses the original create-draft handler. Saved counts come solely from the
+already-authorized Policy page reads, and unknown/loading state is displayed
+as unknown. Registered does not mean verified, and a saved Draft never
+means active permission. All prior review/confirm and authority invariants
+are unchanged. New visual source is `web/src/admin_first_run_setup.tsx` and
+the Grant-scoped workflow CSS. Full new-HEAD browser login/2-person E2E is
+not claimed; a previously attempted custom authenticated Playwright probe
+was blocked by platform safety review and was not rerouted.
