@@ -20,6 +20,7 @@ from .db import audit
 from .errors import GrantError
 from .foundation_delivery import notification_destinations
 from .models import NewUser
+from .operational_readiness import operational_readiness
 from .operations import operations_summary
 
 
@@ -203,6 +204,10 @@ def register_admin(app, actor):
             app.state.db, actor(request),
             smtp_configured=bool(app.state.settings.smtp_host),
         )
+
+    @app.get("/api/v1/admin/operational-readiness")
+    def read_operational_readiness(request: Request):
+        return operational_readiness(app.state.db, actor(request))
 
     @app.get("/api/v1/admin/health")
     def health(request: Request):

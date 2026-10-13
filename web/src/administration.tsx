@@ -51,6 +51,7 @@ import {
 } from './foundation_rc41';
 import { Form, Select, useTask } from './common';
 import type { User } from './types';
+import { OperationalSecurityReadinessReadout, type OperationalSecurityReadiness } from './operational_security_readiness';
 import './administration-detail.css';
 
 type AdminSection = 'health' | 'accounts' | 'audit' | 'mail' | 'lifecycle' | null;
@@ -75,6 +76,7 @@ export function Administration({ user }: { user: User }) {
   const [accounts, setAccounts] = useState<readonly AccountProjection[]>([]);
   const [events, setEvents] = useState<readonly AuditEventProjection[]>([]);
   const [health, setHealth] = useState<HealthProjection>();
+  const [operationalSecurity, setOperationalSecurity] = useState<OperationalSecurityReadiness | null>(null);
   const [info, setInfo] = useState<SystemInfoProjection>();
   const [section, setSection] = useState<AdminSection>(null);
   const sectionRef=useRef<AdminSection>(null);
@@ -143,16 +145,18 @@ export function Administration({ user }: { user: User }) {
   );
 
   async function load() {
-    const [accountRows, auditRows, currentHealth, currentInfo] = await Promise.all([
+    const [accountRows, auditRows, currentHealth, currentInfo, securityFacts] = await Promise.all([
       accountsAdapter.list(),
       operationsAdapter.listAudit!(),
       operationsAdapter.readHealth(),
       operationsAdapter.readSystemInfo(),
+      api<OperationalSecurityReadiness>('/admin/operational-readiness').catch(() => null),
     ]);
     setAccounts(accountRows);
     setEvents(auditRows);
     setHealth(currentHealth);
     setInfo(currentInfo);
+    setOperationalSecurity(securityFacts);
   }
 
   useEffect(() => {
@@ -386,7 +390,10 @@ export function Administration({ user }: { user: User }) {
           Back to administration tasks
         </Button>
       </div>
-      {section === 'health' ? <SystemStatus health={health} info={info} /> : null}
+      {section === 'health' ? <div className="grant-stack">
+        <SystemStatus health={health} info={info} />
+        <OperationalSecurityReadinessReadout status={operationalSecurity} />
+      </div> : null}
 
       {section === 'accounts' ? (
         <div className="grant-stack">

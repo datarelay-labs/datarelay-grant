@@ -1438,3 +1438,29 @@ The existing administrator Integration Diagnostics route now includes the
 read-only external readiness panel with fail-closed missing-evidence messaging.
 Three dedicated Web tests and the existing full Web unit suite establish this
 projection; the panel is not a substitute for independent external acceptance.
+
+## 2026-10-13 M5 — Grant-backed Foundation RC41 operational evidence
+
+The administrator-only read-only `GET /api/v1/admin/operational-readiness`
+now exposes actual persisted integration-token record counts and the current
+recovery-pause marker. It revalidates current session/role authority, and
+never returns credentials, destination addresses, record contents or keys.
+An invalid/missing recovery marker is unavailable, not healthy.
+
+Foundation RC41 read-only advisory panels are mounted under Administration
+System Health without Review, Test, Apply or mutation callbacks. Unsupported
+external audit forwarding, protected backup-artifact evidence, independent
+restore proof, key rotation, approval/audit retention, host SSH protection and
+Web CIDR ingress stay clearly unavailable or not configured. Ordinary expiry
+of sessions and rate limits is not a general approval/audit deletion policy.
+
+In a separate disposable Grant installation, actual CLI init/check/private
+backup/new-target restore, SQLite integrity, 0600 file permissions, session
+clearance, recovery PAUSED=1 and existing destination overwrite refusal all
+passed. Private scratch was cleaned up. No real installation, customer data,
+SMTP, external Control or Stellar effect was changed or resumed.
+
+This is an authenticated product UI/status adapter, not installation of the
+optional Foundation Python on-prem security Wheel. Actual MFA/host security,
+encrypted backup provenance, external audit sink, record-retention policy and
+key rotation still need their own accepted authorization/policy/host adapters.

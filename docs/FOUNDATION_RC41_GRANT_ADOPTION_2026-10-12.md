@@ -43,3 +43,23 @@ bash scripts/checks.sh web
 ```
 
 The first command checks out the locked original Git SHA, not the moving checkout branch. Preserve the original G12 RED worktree change and the Inbox stash. To roll back a failed developer-preview frontend activation, reselect the **previous immutable web_root snapshot** without mutating the database or changing Grant identities, keys or SMTP.
+
+## 2026-10-13 Grant-owned M5 operations advisory consumer
+
+Grant now supplies an actual administrator-authorized, read-only operational
+status projection to shared Foundation RC41 Audit Forwarding, Recovery,
+Secret Lifecycle and Data Retention informational UI. Only current Grant
+product record counts and the recovery-pause marker are authoritative.
+The Web readout explicitly marks unavailable policy/encryption/rotation/
+retention/host-control evidence as missing, not a healthy status, and no
+privileged callback is mounted. The operator-owned private backup CLI was
+exercised with a disposable new SQLite installation and cleanup.
+
+**This is not a deployed Python Wheel consumer or host security controller.**
+The original on-prem security library remains original-source tested and
+uninstalled in Grant's runtime. An actual product policy, privileged host
+capability, authenticated audit sink, encrypted backup evidence/restore
+drill, managed credential lifecycle and compliance deletion require their
+own accepted contracts and independent qualification. No record was deleted,
+secret rotated, restore resumed or external destination contacted by this
+status feature.

@@ -2037,3 +2037,21 @@ admin-authorized readiness projection as read-only facts; missing data shows
 unavailable rather than successful external integration. It exposes no
 mutation or credential operation. Native Control/Stellar acceptance stays
 owner-target-dependent and Full User E2E is still deferred.
+
+## 2026-10-13 M5 PF-RC41 non-E2E operational evidence implementation
+
+M1–M4 accepted source/competitive UI is already complete and should not be
+repeated. Remaining M5 product-owned read-only advisory capability now binds
+current administrator authority, persisted integration token status and the
+actual recovery-pause sentinel to the existing Foundation RC41 administration
+panels. No unsupported backup proof, audit-forwarding sink, record-retention
+policy, key rotation, SSH firewall or management allowlist is fabricated.
+No new persistence, background jobs, privileged network/host effects or
+external execution are activated by this UI/API. A disposable Grant CLI
+backup→restore and rollback-safety check passes without customer data.
+Detailed evidence and truthful restrictions: `docs/STATUS.md`.
+
+Real installed on-prem security/encryption/audit/retention enforcement still
+needs owner-approved product policy and target capabilities. Those are not
+identical to Foundation's reusable preview components. G11 native Control/
+Stellar external effects, user E2E and owner release remain separately gated.
