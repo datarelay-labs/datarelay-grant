@@ -110,9 +110,11 @@ describe('P0 competitor-derived task-first New Request workspace', () => {
     const html = renderToStaticMarkup(createElement(NewRequest, {
       navigate: () => undefined,
     }));
-    expect(html).toContain('1. Choose an active approval policy');
-    expect(html).toContain('2. Describe the exact requested action');
-    expect(html).toContain('3. Review before creating');
+    expect(html).toContain('Step 1 · Choose what needs approval');
+    expect(html).toContain('Step 2 · Tell the reviewer what you need');
+    expect(html).toContain('Step 3 · Review, then confirm');
+    expect(html).toContain('Request creation progress');
+    expect(html).toContain('Advanced integration details');
     expect(html).toContain('Review request');
     expect(html).toContain('Action parameters (JSON object; no credentials)');
     expect(html).not.toContain('Confirm create request</button>');

@@ -5,6 +5,7 @@ import { useTask, when } from './common';
 import { collectVisibleRequestPages, projectHomeWorkspace, requesterProgress } from './home_pages';
 import type { HomeWorkspace } from './home_pages';
 import type { RequestRow, User } from './types';
+import { HomeGettingStarted } from './home_getting_started';
 
 type Navigate = (path: string) => void;
 
@@ -40,6 +41,9 @@ export function HomeWorkspaceContent({
           <Button variant="secondary" disabled={busy} onClick={refresh}>Refresh</Button>
         </div>
       </section>
+
+      <HomeGettingStarted user={user} view={view} navigate={navigate}
+        summaryComplete={summaryComplete} />
 
       {!summaryComplete ? (
         <p role="status">These are lower-bound counts from the first 1,000 visible

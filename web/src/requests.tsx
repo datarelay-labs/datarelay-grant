@@ -26,6 +26,7 @@ import { eligibleIntakeProfiles, NewRequestPolicyContext, RequestCreationReconci
 import { prepareRequestCreationReview, isCurrentRequestCreationReview, submitReviewedRequestCreationWithFreshRead, verifyCreatedRequestReceipt, RequestCreationConfirmation, type NewRequestDraft, type RequestCreationReview } from './request_creation_review';
 import { RequestDecisionConfirmation, prepareRequestDecisionReview, isCurrentRequestDecisionReview, type RequestDecisionReview, type RequestDecisionChoice } from './request_decision_review';
 import { Form, Select, State, TextArea, useTask, when } from './common';
+import { RequestIntakeSteps } from './request_workflow_guide';
 import type { Profile, RequestRow, Delivery, Outcome, User } from './types';
 
 type Navigate = (path: string) => void;
@@ -182,7 +183,9 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
    throw error;
   }
  }
- return <Card title="Create an approval request" description="This creates a request, not an execution. The assigned approver is determined by the profile.">
+ return <div className="grant-new-request"><Card title="Create an approval request"
+  description="Start with a policy and the target. You can check everything before sending it to an approver.">
+  <RequestIntakeSteps policySelected={Boolean(selected)} detailsEntered={Boolean(title.trim() && target.trim())} />
   {task.feedback}
   {createOutcomeUnknown && (
     <RequestCreationReconciliationNotice openMyRequests={() => navigate('/my-requests')} />
@@ -190,23 +193,26 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
   {predecessor && <p>Replacement for cancelled request <code>{predecessor.id}</code>.
     A new explicit approval is required.</p>}
   <Form busy={task.busy || createOutcomeUnknown} onSubmit={reviewRequest} label="Review request">
-   <section className="grant-stack" aria-label="Choose active approval policy">
-    <h3>1. Choose an active approval policy</h3>
-    <p>Select an available policy to review the exact operation, approval rule,
-      deadline and verification requirement before entering request details.</p>
+   <section className="grant-intake-section" aria-label="Choose active approval policy" id="grant-policy-choice">
+    <h3>Step 1 · Choose what needs approval</h3>
+    <p>Pick the policy for this task. Grant automatically finds the assigned reviewers.</p>
     <Select label="Approval profile" value={profile} onChange={chooseProfile}>
      <option value="">Select an active approval policy</option>
      {availableProfiles.map(p=><option key={p.id} value={p.id}>{p.name} · {p.action_kind}</option>)}
     </Select>
+    {currentContext && availableProfiles.length === 0 &&
+      <Alert tone="warning" title="No active approval policy">
+        Ask an administrator to activate a policy in Approval Policies before creating a request.
+      </Alert>}
     <NewRequestPolicyContext profile={selected ?? null} />
    </section>
-   <section className="grant-stack" aria-label="Describe the requested business action">
-    <h3>2. Describe the exact requested action</h3>
-    <p>The selected active policy owns the operation and assigned reviewers.
-      State only the target, request identity, parameters and business reason.</p>
+   <section className="grant-intake-section" aria-label="Describe the requested business action" id="grant-action-details">
+    <h3>Step 2 · Tell the reviewer what you need</h3>
+    <p>Start with just the request title and the system or asset to change.</p>
     <TextField label="Request title" required maxLength={250} value={title} onChange={e=>{setTitle(e.target.value);resetReview();}}/>
+    <p className="grant-intake-field-guide">Example: Restart the reporting service for planned maintenance.</p>
     <TextField label="Target" required maxLength={500} value={target} onChange={e=>{setTarget(e.target.value);resetReview();}}/>
-    <TextField label="External request ID" required maxLength={200} value={external} onChange={e=>{setExternal(e.target.value);resetReview();}}/>
+    <p className="grant-intake-field-guide">Example: web-server-03 or reporting-service. Use the exact system or asset name.</p>
     {selected?.tenant&&<p>Tenant scope: {selected.tenant}</p>}
     {selected?.tenant_selector && !selected.tenant &&
      <TextField label="Source tenant" required maxLength={200} value={sourceTenant} onChange={e=>{setSourceTenant(e.target.value);resetReview();}} />}
@@ -216,20 +222,26 @@ export function NewRequest({ navigate, predecessorId }: { navigate: Navigate; pr
      <TextField label="Severity" required maxLength={200} value={severity} onChange={e=>{setSeverity(e.target.value);resetReview();}} />}
     {selected?.risk_level &&
      <TextField label="Risk level" required maxLength={200} value={riskLevel} onChange={e=>{setRiskLevel(e.target.value);resetReview();}} />}
-    <TextArea label="Action parameters (JSON object; no credentials)" value={parameters} onChange={v=>{setParameters(v);resetReview();}} required/>
     <TextArea label="Reason" value={reason} onChange={v=>{setReason(v);resetReview();}}/>
+    <p className="grant-intake-field-guide">Optional: explain why the change is needed and what the reviewer should check.</p>
+    <details className="grant-intake-advanced" key={predecessorId || 'new'} open={predecessorId ? true : undefined}>
+      <summary>Advanced integration details</summary>
+      <div>
+        <p className="grant-intake-field-guide">The request ID is generated automatically. Leave parameters as {'{}'} unless the policy needs an exact JSON object. Never enter passwords or API keys.</p>
+        <TextField label="External request ID" required maxLength={200} value={external} onChange={e=>{setExternal(e.target.value);resetReview();}}/>
+        <TextArea label="Action parameters (JSON object; no credentials)" value={parameters} onChange={v=>{setParameters(v);resetReview();}} required/>
+      </div>
+    </details>
    </section>
-   <section className="grant-stack" aria-label="Review before creating">
-    <h3>3. Review before creating</h3>
-    <p>Reviewing never sends a request. A separate Confirm shows the exact
-      action and source, and only that final confirmation can create a request.
-      Approval and external execution require their own subsequent steps.</p>
+   <section className="grant-intake-section" aria-label="Review before creating" id="grant-request-review">
+    <h3>Step 3 · Review, then confirm</h3>
+    <p className="grant-intake-review-note">Select <strong>Review request</strong> below to check the exact policy, action and target. Review does not submit anything. The next screen has a separate final confirmation to create the request.</p>
    </section>
   </Form>
   {reviewError && <Alert tone="warning" title="Review required">{reviewError}</Alert>}
   <RequestCreationConfirmation reviewed={createOutcomeUnknown ? null : reviewed} draft={draft} busy={task.busy || createOutcomeUnknown}
     onConfirm={()=>void task.run(submit)} onBack={()=>setReviewed(null)} />
- </Card>;
+ </Card></div>;
 }
 export function RequestDetail({ id, user, navigate }: { id: string; user: User; navigate: Navigate }) {
  const [storedRow, setRow] = useState<RequestRow | null>(null);
@@ -385,7 +397,7 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  <RequestDetailOverview row={row} canReplace={Boolean(canReplace)} navigate={navigate} />
  {row.escalation && <Card title="Escalation status"><dl className="grant-facts"><dt>Escalation target</dt><dd>{row.escalation.target_group_id ? 'Approver group' : 'Approver'} · {row.escalation.target_members.length} member(s)</dd><dt>Escalation due</dt><dd>{when(row.escalation.due_at)}</dd><dt>Applied at</dt><dd>{when(row.escalation.fired_at)}</dd></dl><p>Escalation changes only who may decide; it never executes the requested action.</p></Card>}
  {decisionMustRefresh && <Alert tone="warning" title="Refresh required before another decision">A human decision or cancellation was attempted. A possible server write is never repeated automatically. Use Refresh to load the current request before reviewing another action.</Alert>}
- {(canDecide || canCancel) && !decisionMustRefresh && <Card title="Explicit decision">
+ {(canDecide || canCancel) && !decisionMustRefresh && <section id="grant-decision-actions" aria-label="Choose a reviewed decision"><Card title="Explicit decision">
   <TextArea label="Decision or cancellation reason (maximum 2000 characters)"
     value={reason} onChange={(value) => { setReason(value); setReviewed(null); }} />
   {reason.length > 2000 && <Alert tone="warning" title="Reason is too long">
@@ -404,7 +416,7 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
   <RequestDecisionConfirmation row={row} user={user} reviewed={reviewed}
     reason={reason} nowSeconds={Date.now() / 1000} busy={task.busy}
     onConfirm={()=>void task.run(decide)} onBack={()=>setReviewed(null)} />
- </Card>}
+ </Card></section>}
  {row.predecessor_id && <RevisionComparison requestId={row.id} />}
  <RequestCollaboration row={row} user={user} onRecorded={(updated) => {
    if (acceptCurrentRequestMutation(readGate.current, id, updated, setRow)) setReviewed(null);

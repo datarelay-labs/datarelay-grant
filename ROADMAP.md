@@ -2055,3 +2055,17 @@ Real installed on-prem security/encryption/audit/retention enforcement still
 needs owner-approved product policy and target capabilities. Those are not
 identical to Foundation's reusable preview components. G11 native Control/
 Stellar external effects, user E2E and owner release remain separately gated.
+
+## 2026-10-13 post-source UX improvement — visible onboarding
+
+Added a nonprivileged guided workflow layer over already authorized M1/M2/M4
+mounted screens in response to direct user review: Home action-first start
+cards, compact three-stage request intake with automatic generated IDs and
+advanced JSON collapsed, and a visual human decision/notification/external
+report status summary with an explicit jump to existing decision controls.
+Existing full server-side approval validation is not modified. Historical
+synthetic Chromium screenshot supports the text-heavy before state, not a
+new exact-HEAD end-to-end claim. See
+`docs/UX_GUIDED_APPROVAL_WORKFLOWS_20261013.md` and the exact candidate Web
+and GitHub CI evidence. Independent new browser/full-user E2E, installed
+Control/Stellar and release remain separately owner-gated.

@@ -1464,3 +1464,21 @@ This is an authenticated product UI/status adapter, not installation of the
 optional Foundation Python on-prem security Wheel. Actual MFA/host security,
 encrypted backup provenance, external audit sink, record-retention policy and
 key rotation still need their own accepted authorization/policy/host adapters.
+
+## 2026-10-13 — workflow-first visual onboarding, source-only
+
+Grant's previously source-complete Home, New Request and Request Detail screens
+were revisited using the prior Chromium fixture screenshot and the direct
+mounted source. The accepted improvement introduces three prominent role-safe
+starting task cards, an accessible three-step New Request progress strip,
+short required-field examples and a collapsed technical-ID/JSON editor,
+plus human decision / transport / unverified execution visual stages and a
+jump to existing permission-checked decision buttons. Exact action and
+approval deadline remain visible; server authority, explicit Review→Confirm,
+anti-replay and externally reported-only execution are unchanged.
+
+See `docs/UX_GUIDED_APPROVAL_WORKFLOWS_20261013.md` for the before/after
+functional decisions and limitations. A direct new browser run using
+previous disposable test credentials was blocked at tool safety admission;
+no real/user E2E PASS is asserted on this source snapshot. Browser and
+independent mailbox acceptance remain separate from native source/Web tests.
