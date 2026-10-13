@@ -14,11 +14,14 @@ type Navigate = (path: string) => void;
  */
 export function HomeWorkspaceContent({
   user, view, summaryComplete, busy, feedback, navigate, refresh,
+  loaded = true, loadFailed = false,
 }: {
   user: User;
   view: HomeWorkspace;
   summaryComplete: boolean;
   busy: boolean;
+  loaded?: boolean;
+  loadFailed?: boolean;
   feedback?: React.ReactNode;
   navigate: Navigate;
   refresh: () => void;
@@ -45,6 +48,11 @@ export function HomeWorkspaceContent({
       <HomeGettingStarted user={user} view={view} navigate={navigate}
         summaryComplete={summaryComplete} />
 
+      {!loaded ? (
+        <p role="status">{loadFailed
+          ? 'Approval summary unavailable. Refresh to retry or open your approval queue.'
+          : 'Loading your approval workspace…'}</p>
+      ) : <>
       {!summaryComplete ? (
         <p role="status">These are lower-bound counts from the first 1,000 visible
           requests. Open the full work queue to see every matching request.</p>
@@ -194,6 +202,7 @@ export function HomeWorkspaceContent({
           </div>
         </Card>
       ) : null}
+      </>}
     </div>
   );
 }
@@ -201,6 +210,7 @@ export function HomeWorkspaceContent({
 export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
   const [rows, setRows] = useState<RequestRow[]>([]);
   const [summaryComplete, setSummaryComplete] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const task = useTask();
 
   async function load() {
@@ -209,6 +219,7 @@ export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
     );
     setRows(snapshot.rows);
     setSummaryComplete(snapshot.complete);
+    setLoaded(true);
   }
 
   useEffect(() => { void task.run(load); }, []);
@@ -219,6 +230,8 @@ export function Home({ user, navigate }: { user: User; navigate: Navigate }) {
     user={user}
     view={view}
     summaryComplete={summaryComplete}
+    loaded={loaded}
+    loadFailed={Boolean(task.error)}
     busy={task.busy}
     feedback={task.feedback}
     navigate={navigate}

@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { HomeWorkspaceContent } from '../../src/home';
+import { Home, HomeWorkspaceContent } from '../../src/home';
 import { projectHomeWorkspace } from '../../src/home_pages';
 import type { RequestRow, User } from '../../src/types';
 
@@ -169,5 +169,30 @@ describe('Grant task-oriented Home composition', () => {
     expect(html).toContain('≥0');
     expect(html).toContain('No ready decisions in the loaded subset');
     expect(html).not.toContain('No assigned decisions are ready right now.');
+  });
+});
+
+describe('First-time Home initial data truth', () => {
+  it('does not show zero approvals as a successful server result before the first GET', () => {
+    const html = renderToStaticMarkup(createElement(Home, {
+      user: member, navigate: () => undefined,
+    }));
+    expect(html).toContain('Loading your approval workspace');
+    expect(html).toContain('role="status"');
+    expect(html).not.toContain('0 ready');
+    expect(html).not.toContain('No assigned decisions are ready right now.');
+    expect(html).not.toContain('You have not submitted a request yet.');
+    expect(html).toContain('Create approval request');
+  });
+
+  it('keeps task navigation available while the summary is loading', () => {
+    const html = renderToStaticMarkup(createElement(HomeWorkspaceContent, {
+      user: member, view: projectHomeWorkspace([], member.id, false, 500),
+      summaryComplete: true, busy: true, loaded: false,
+      navigate: () => undefined, refresh: () => undefined,
+    }));
+    expect(html).toContain('Loading your approval workspace');
+    expect(html).toContain('Open my approvals');
+    expect(html).not.toContain('0 ready');
   });
 });

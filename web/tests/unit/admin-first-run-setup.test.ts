@@ -45,3 +45,19 @@ describe('First-run Grant administrator guided setup without new permission',()=
   expect(html).not.toContain('Execute</button>');
  });
 });
+
+describe('Pre-E2E administrator first-read truth', () => {
+  it('does not display a zero-policy conclusion before the administrator data loads', () => {
+    const html=renderToStaticMarkup(createElement(Profiles));
+    expect(html).toContain('Loading approval policies');
+    expect(html).not.toContain('No approval policies configured.');
+    expect(html).not.toContain('Showing 0 of 0 policies');
+  });
+  it('prevents opening a new policy editor before its saved prerequisites are loaded', () => {
+    const html=renderToStaticMarkup(createElement(Profiles));
+    expect(html).toMatch(/<button[^>]*disabled[^>]*>Create policy<\/button>/);
+    const guide=render({loaded:false});
+    expect(guide).toMatch(/<button[^>]*disabled[^>]*>Create draft policy/);
+    expect(guide).not.toContain('All integrations verified');
+  });
+});

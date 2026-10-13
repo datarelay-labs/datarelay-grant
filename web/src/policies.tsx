@@ -457,6 +457,8 @@ export function Profiles() {
   }
 
   function startCreate() {
+    // Do not enter an empty editor before current policies and selectors are read.
+    if (!setupLoaded) return;
     resetEditor();
     setView('details');
   }
@@ -654,9 +656,13 @@ export function Profiles() {
               activation.
             </p>
           </div>
-          <Button onClick={startCreate}>Create policy</Button>
+          <Button disabled={!setupLoaded || task.busy} onClick={startCreate}>Create policy</Button>
         </section>
 
+        {!setupLoaded && task.error && <Button variant="secondary"
+          onClick={() => void task.run(async () => { await load(); })}>
+          Retry loading policies
+        </Button>}
         <AdminFirstRunSetup loaded={setupLoaded}
           registeredConnections={integrations.length}
           enabledAccounts={users.filter((account) => account.status === 'enabled').length}
@@ -692,7 +698,9 @@ export function Profiles() {
             </Select>
           </div>
           <div className="grant-row-actions">
-            <small aria-live="polite">Showing {visibleRows.length} of {rows.length} policies</small>
+            <small aria-live="polite">{setupLoaded
+              ? `Showing ${visibleRows.length} of ${rows.length} policies`
+              : task.error ? 'Approval policy list unavailable' : 'Loading approval policies…'}</small>
             <Button variant="ghost"
               disabled={!listSearch && listLifecycle === 'ALL'}
               onClick={() => { setListSearch(''); setListLifecycle('ALL'); }}>
@@ -820,8 +828,8 @@ export function Profiles() {
               </li>
             ))}
           </ul>
-          {!rows.length ? <p>No approval policies configured.</p> : null}
-          {rows.length > 0 && !visibleRows.length ? (
+          {setupLoaded && !rows.length ? <p>No approval policies configured.</p> : null}
+          {setupLoaded && rows.length > 0 && !visibleRows.length ? (
             <p>No policies match the current search and lifecycle filters. Clear filters to see all visible policies.</p>
           ) : null}
         </Card>

@@ -1,5 +1,37 @@
 # Grant 1.0 implementation status
 
+## 2026-10-14 — current pre-E2E UX readiness (source qualification)
+
+The bounded direct source review of the beginner Home → New Request →
+Approvals → Request Detail → administrator Policies/Notifications order
+found three remaining first-read UX contradictions beyond the already
+shipped guided flow: unverified Home counts appeared as `0 ready`,
+administrator Policies displayed `0 of 0` before its multi-GET resolved,
+and Notification Template Sets displayed a false empty set and allowed
+creation before its existing admin reads. These are corrected on the
+existing PR100 candidate without changing any approval, RBAC, credential,
+policy activation, notification, SMTP, outbox, DB or external effect.
+
+Home's initial state now withholds status/count cards while still
+offering the three task shortcuts, and shows a bounded unavailable state
+if the initial read fails. Administrator Policies and Notifications
+distinguish `Loading`, failed reads (with safe retry), verified zero and
+verified populated inventories. Editor-start actions wait for the
+already-authorized source data; server CAS and Review→Confirm remain
+the only mutations. RED-first first-render component regressions and
+affected existing suites **52/52 PASS**; TypeScript and production Vite
+PASS on the implementation worktree. The authoritative new exact-head
+CI/preview state remains in Work Packet #67 and PR100.
+
+M1–M5 accepted implementation source, 6/6 adopted competitor UI
+patterns and current bounded pre-E2E source usability work are complete
+within the user-authorized non-external scope; the installed
+**signed-in browser persona journey remains NOT VERIFIED**. One prior
+credential-extraction browser script and a later detailed DOM invocation
+were platform safety-denied, not rerouted. User-deferred independent
+two-person/mailbox Full User E2E, native installed Control/Stellar effect
+and release/PR merge are intentionally open and not claimed passed.
+
 ## 2026-10-12 M6 pre-live technical integration simulation — mock systems only
 
 The next eligible step ahead of installing an external Control or Stellar

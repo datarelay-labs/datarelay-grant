@@ -199,3 +199,47 @@ blank state, then changed to GREEN. Focused Request Detail/route-read
 scope/New Request/workflow suites 39/39 PASS, TypeScript/Vite PASS.
 This is **source correctness**, not a signed-in end-user browser
 acceptance nor an approval/execution effect.
+
+## 2026-10-14 — pre-E2E novice initial-state correction (source only)
+
+The Home workspace initially showed `0 ready` with a green badge and
+"No assigned decisions are ready right now" **before** its first scoped
+request-list GET completed. New source distinguishes first-read
+`loaded=false` from a verified empty role-scoped list. During initial
+loading, task starting cards remain clickable and a status message is
+visible; count/status cards are withheld. Failed initial retrieval shows
+the existing bounded error and explicit unavailable guidance, never a
+fabricated zero. On a successful read, the original loaded partial-count
+and authorized per-role projection appears. Regressions were RED before
+the change, GREEN after, with no new request authority or API.
+
+Approval Policies had a similar initial-screen failure: the list said
+`Showing 0 of 0 policies` and `No approval policies configured` even
+when its five admin-scoped GET requests had not finished. Both list
+claims now require the successful combined read. The ordinary Create
+policy action and four-step setup's Create draft policy action are
+disabled before prerequisite results are loaded; the original
+`startCreate` handler also refuses premature entry. A failed initial
+read retains the existing error and offers a non-mutating Retry
+loading policies. Existing Draft/Testing/Active lifecycle, CAS and
+administrator server permissions remain unchanged.
+
+Notifications Template Sets likewise had an unqualified initial
+"No custom template sets configured" message and a premature Create
+template set action. Its three already authorized GETs now gate both
+the empty message and initial editor entry. Incomplete/failed reads show
+loading or unavailable status; a failed read allows a safe retry.
+No template POST, delivery attempt, SMTP, account change, credential,
+policy activation or product execution occurs in this source batch.
+
+New RED-first regressions are in
+`web/tests/unit/home-content.test.ts`,
+`web/tests/unit/admin-first-run-setup.test.ts`, and
+`web/tests/unit/notification-initial-readiness.test.ts`.
+Affected existing Home/Policy/Notification suites completed
+**52/52 PASS**, and TypeScript + Vite production build PASS.
+The tests use rendered first-party components, not authenticated
+two-person browser actions. The earlier safety-denied password fixture
+and browser DOM effects have not been repeated or rerouted. Real
+signed-in browser usability and owner-excluded installed Control/Stellar,
+two-human mailbox Full User E2E and release remain separate gates.

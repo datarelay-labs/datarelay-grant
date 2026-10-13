@@ -47,7 +47,7 @@ export function AdminFirstRunSetup({
         <div className="grant-admin-setup-step">
           <strong>Create a Draft policy</strong>
           <small>{status(savedPolicies, 'saved policies', 'saved policy')} — drafts do not authorize requests</small>
-          <button type="button" onClick={onCreatePolicy}>Create draft policy <span aria-hidden="true">→</span></button>
+          <button type="button" disabled={!loaded} onClick={onCreatePolicy}>Create draft policy <span aria-hidden="true">→</span></button>
         </div>
       </li>
       <li>

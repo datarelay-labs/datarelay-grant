@@ -407,6 +407,7 @@ export function NotificationDeliveryHealth() {
 
 export function Notifications() {
   const [sets, setSets] = useState<NotificationTemplateSet[]>([]);
+  const [templatesLoaded, setTemplatesLoaded] = useState(false);
   const [variables, setVariables] = useState<string[]>([]);
   const [branding, setBranding] = useState<NotificationBranding>({
     brand_name: 'DataRelay Grant',
@@ -492,6 +493,7 @@ export function Notifications() {
     setBranding(currentBranding);
     setBrandName(currentBranding.brand_name);
     setSenderName(currentBranding.sender_display_name);
+    setTemplatesLoaded(true);
   };
 
   useEffect(() => {
@@ -509,6 +511,8 @@ export function Notifications() {
   }
 
   function startCreate() {
+    // Do not open default templates as though saved state has been verified.
+    if (!templatesLoaded) return;
     resetEditor();
     templateViewRef.current='editor';
     selectedTemplateRef.current='';
@@ -830,7 +834,7 @@ export function Notifications() {
         <Card
           title="Template Sets"
           description="Each set owns the complete Grant 1.0 event family. Existing requests keep their original snapshot."
-          actions={<Button onClick={startCreate}>Create template set</Button>}
+          actions={<Button disabled={!templatesLoaded || task.busy} onClick={startCreate}>Create template set</Button>}
         >
           <div className="grant-table-scroll grant-notification-desktop-list">
             <table className="grant-table">
@@ -900,7 +904,15 @@ export function Notifications() {
               </li>
             ))}
           </ul>
-          {!sets.length ? (
+          {!templatesLoaded ? (
+            <div>
+              <p role="status">{task.error
+                ? 'Notification template inventory unavailable. Retry loading before editing.'
+                : 'Loading notification template sets…'}</p>
+              {task.error && <Button variant="secondary" disabled={task.busy}
+                onClick={() => void task.run(load)}>Retry loading template sets</Button>}
+            </div>
+          ) : !sets.length ? (
             <p>No custom template sets configured. Policies may use the system defaults.</p>
           ) : null}
         </Card>

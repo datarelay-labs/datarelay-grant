@@ -1,5 +1,41 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-14 — latest pre-E2E runnable source closeout (current)
+
+This table supersedes dated partial/source-only rows elsewhere below; older
+snapshots remain immutable historical evidence. Selected competitor UI
+patterns P0-2A/B/C/D/E/F and the additional task-first B1–B5 mobile screens,
+Foundation RC41 consumer and reviewer/policy/template CAS **were already
+implemented** and must not be repeated.
+
+| Delivery bundle | Implementation status before owner user E2E | Remaining gate |
+| --- | --- | --- |
+| M1 · Requester/approver workspaces and evidence | **SOURCE COMPLETE**; exact role-scoped task lists, reviewed decisions, latest novice Home/RequestDetail first-read truth | Signed-in first-time browser journey, keyboard/mobile |
+| M2 · Shared Foundation/Admin | **SOURCE COMPLETE**; shared shell and administration, 320/375 list cards, administrator first-run setup and current first-read policy state | Direct authenticated role/mobile acceptance |
+| M3 · Policies/groups/notification operations | **SOURCE COMPLETE** for accepted Grant UI/API, stale-write CAS and non-sending test/preview; initial notification template loading states now verified | Two real admin sessions and authorized mail receipt are not source-only gates |
+| M4 · Email approval security | **SOURCE COMPLETE** for issued inert GET/Review→Confirm and recipient PIN/OTP/fresh MFA guards | Genuine independent mailbox/persona testing |
+| M5 · Ops/audit/recovery | **SOURCE COMPLETE** for bounded read-only readiness, protected recovery and mock/disposable qualification | Installed destination evidence and operator acceptance |
+| M6 · Control and Stellar | **Only isolated mock/simulation and guards qualified**, native integration **not accepted** | Owner-controlled installed effects/readback, explicitly excluded now |
+| M7 · Full User E2E | **NOT EXECUTED** | Direct independent users/mailboxes; explicitly deferred |
+| M8 · Freeze, merge and release | **NOT AUTHORIZED** | Owner acceptance and release authority, explicitly deferred |
+
+**Current independent pre-E2E usability source fix:** first page load no
+longer presents misleading successful zeros (Home), nonexistent policies
+(Approval Policies), or nonexistent template sets (Notifications) while
+admin/current-user scoped GETs are unresolved. Create policy and template
+editor shortcuts now wait for required existing server reads; failure
+states provide safe retry. Changed-source targeted RED→GREEN **52/52 PASS**
+and TypeScript/Vite PASS. Changes do **not** alter approval/credential,
+session, SMTP, external action or database behavior. Final exact-head
+GitHub native CI and preview identity are tracked in Work Packet #67.
+
+**No false completion:** direct authenticated browser persona E2E has not
+passed; prior explicitly safety-denied fixture-credential/browser DOM
+operations must not be retried via another tool/host. The user deferred
+native Control/Stellar effects, independent two-person mailbox Full User
+E2E, PR merge and production release. Other latent defects, if later
+discovered by legitimate browser users, are not claimed absent.
+
 ## 2026-10-12 M6 pre-live technical integration simulation — mock systems only
 
 The next eligible step ahead of installing an external Control or Stellar
