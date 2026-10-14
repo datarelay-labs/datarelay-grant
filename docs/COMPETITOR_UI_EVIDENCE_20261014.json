@@ -1161,8 +1161,8 @@
       "verification_id": "V-U4.02",
       "pass_criterion": "V-U4.02: delay/out-of-order response/unmount/edit tests prove old responses never win; previous image remains while Updating is visible; stale/error result cannot count as current test/publish review.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "IN_PROGRESS",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1173,6 +1173,15 @@
             "web/tests/canvas/preview-contract.spec.ts"
           ],
           "result": "3/3 PASS: delayed old response, explicit failure/recovery, samples/modes/nine events/widths/source/text/diagnostics; no real mail or person acceptance. Image-off/dark simulations remain outside this checkpoint."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u4-preview-exact-focus-results.json",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "test_id": "V-U4.02",
+          "observed_at": "2026-10-14T07:30:10.564690+00:00",
+          "result_detail": "Mounted Notifications preview-contract 4/4 PASS on current source: stale ordering, explicit failure recovery, sample/mode/event/width/source-text consistency. Synthetic transport only."
         }
       ],
       "blocker": null
@@ -1185,8 +1194,8 @@
       "verification_id": "V-U4.03",
       "pass_criterion": "V-U4.03: select each sample and compare expected values/required context; only fake request data, invalid URLs and dummy PIN appear; sample switching changes no stored template, issuance or live request.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "IN_PROGRESS",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1197,6 +1206,15 @@
             "web/tests/canvas/preview-contract.spec.ts"
           ],
           "result": "3/3 PASS: delayed old response, explicit failure/recovery, samples/modes/nine events/widths/source/text/diagnostics; no real mail or person acceptance. Image-off/dark simulations remain outside this checkpoint."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u4-preview-exact-focus-results.json",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "test_id": "V-U4.03",
+          "observed_at": "2026-10-14T07:30:10.564690+00:00",
+          "result_detail": "Mounted Notifications preview-contract 4/4 PASS on current source: stale ordering, explicit failure recovery, sample/mode/event/width/source-text consistency. Synthetic transport only."
         }
       ],
       "blocker": null
@@ -1208,9 +1226,9 @@
       "depends_on": "U1.02, U4.02",
       "verification_id": "V-U4.04",
       "pass_criterion": "V-U4.04: induce contrast/length/missing-required errors; click message to focus exact block/input, fix and re-render; stale error clears only on correct response; publication remains blocked until valid.",
-      "status": "BLOCKED",
-      "source": "IN_PROGRESS",
-      "interaction": "FAIL",
+      "status": "OPEN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1219,16 +1237,18 @@
           "artifact": ".dev/u4-exact-focus-red.txt",
           "pending_scenario": ".dev/u4-exact-focus-blocked/preview-contract.spec.ts",
           "result": "FAIL: clicking Hold contrast recovery does not focus Hold color. This gate is not passed."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u4-preview-exact-focus-results.json",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "test_id": "V-U4.04",
+          "observed_at": "2026-10-14T07:30:10.564690+00:00",
+          "result_detail": "RED->GREEN exact-field recovery: Hold contrast problem opens the existing inspector and focuses Hold button color; corrected render clears only after current validation. 4/4 mounted preview scenarios PASS; Web full 736/736 and type/build PASS."
         }
       ],
-      "blocker": {
-        "class": "PLATFORM_SAFETY_DENIAL",
-        "tool": "Remote_Desktop_Commander.start_process",
-        "target": "dev-atlas: U4.04 exact input recovery in model/live preview/workbench",
-        "message": "요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.",
-        "effect": "Genuine Hold-input focus defect reproduced; source correction not written. Other preview validation remains functional. No bypass.",
-        "bypassed": false
-      }
+      "blocker": null
     },
     {
       "id": "U4.05",
@@ -1238,7 +1258,7 @@
       "verification_id": "V-U4.05",
       "pass_criterion": "V-U4.05: same current revision in each view; required content/actions readable without clipping; text fallback usable; simulations never display Gmail/Outlook acceptance PASS.",
       "status": "OPEN",
-      "source": "NOT_RUN",
+      "source": "IN_PROGRESS",
       "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
@@ -1250,6 +1270,13 @@
             "web/tests/canvas/preview-contract.spec.ts"
           ],
           "result": "3/3 PASS: delayed old response, explicit failure/recovery, samples/modes/nine events/widths/source/text/diagnostics; no real mail or person acceptance. Image-off/dark simulations remain outside this checkpoint."
+        },
+        {
+          "kind": "PARTIAL_CURRENT_PREVIEW_QUALIFICATION",
+          "artifact": ".dev/u4-preview-exact-focus-results.json",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "observed_at": "2026-10-14T07:30:10.564690+00:00",
+          "result": "320/375/390/600 widths and exact plain/HTML source views PASS. Explicit images-off and dark-mode labeled simulations remain OPEN and are not inferred."
         }
       ],
       "blocker": null
@@ -1287,8 +1314,8 @@
       "verification_id": "V-U4.07",
       "pass_criterion": "V-U4.07: diagnostics collapsed by default; data matches actual server output and current generation; source inspection cannot edit or execute HTML and cannot expose real secrets.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "IN_PROGRESS",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1299,6 +1326,15 @@
             "web/tests/canvas/preview-contract.spec.ts"
           ],
           "result": "3/3 PASS: delayed old response, explicit failure/recovery, samples/modes/nine events/widths/source/text/diagnostics; no real mail or person acceptance. Image-off/dark simulations remain outside this checkpoint."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u4-preview-exact-focus-results.json",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "test_id": "V-U4.07",
+          "observed_at": "2026-10-14T07:30:10.564690+00:00",
+          "result_detail": "Mounted Notifications preview-contract 4/4 PASS on current source: stale ordering, explicit failure recovery, sample/mode/event/width/source-text consistency. Synthetic transport only."
         }
       ],
       "blocker": null
@@ -1311,8 +1347,8 @@
       "verification_id": "V-U4.08",
       "pass_criterion": "V-U4.08: user sees current draft centrally; saved test/review names exact revision; edits invalidate evidence; no two unlabeled previews disagree about what will save, publish or send.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "IN_PROGRESS",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1323,6 +1359,15 @@
             "web/tests/canvas/preview-contract.spec.ts"
           ],
           "result": "3/3 PASS: delayed old response, explicit failure/recovery, samples/modes/nine events/widths/source/text/diagnostics; no real mail or person acceptance. Image-off/dark simulations remain outside this checkpoint."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/wbs-u4-08-green-results.json",
+          "source_head": "2d7d5e343076ae92a8ac36f3143e6423003f5c6e",
+          "test_id": "V-U4.08",
+          "observed_at": "2026-10-14T07:30:10.564690+00:00",
+          "result_detail": "Mounted distinction scenario PASS: unsaved live preview is separate from saved revision preview/test; editing invalidates and disables saved-preview/test evidence; zero writes."
         }
       ],
       "blocker": null

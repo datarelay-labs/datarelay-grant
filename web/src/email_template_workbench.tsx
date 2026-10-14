@@ -67,9 +67,15 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,reviewOpe
   change({...draft,templates:{...draft.templates,[event]:{...draft.templates[event],[key]:value}},
    ...(formatted&&design?{design:{...design,rich_text:true}}:{})});
  }
- function select(block:EmailBlock,focus=true){
+ function select(block:EmailBlock,focus=true,fieldLabel?:string){
   setSelected(block);setInspectorOpen(true);setRestore(false);setLocalError('');field.current=null;
-  if(focus)requestAnimationFrame(()=>inspector.current?.querySelector<HTMLElement>('input:not([type=color]),textarea,select,button')?.focus());
+  if(focus)requestAnimationFrame(()=>{
+   const panel=inspector.current;if(!panel)return;
+   const label=fieldLabel?Array.from(panel.querySelectorAll<HTMLLabelElement>('label')).find(item=>item.textContent?.trim()===fieldLabel):undefined;
+   const target=label?.control instanceof HTMLElement?label.control:panel.querySelector<HTMLElement>('input:not([type=color]),textarea,select,button');
+   for(let parent=target?.parentElement;parent&&parent!==panel;parent=parent.parentElement){if(parent instanceof HTMLDetailsElement)parent.open=true;}
+   target?.focus();
+  });
  }
  function closeInspector(){
   setInspectorOpen(false);
@@ -160,7 +166,7 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,reviewOpe
     {blockLabels[block]}{['request_context','actions','verification'].includes(block)&&<small>Protected</small>}
    </button>)}{visual&&design&&<Button type="button" variant="secondary" disabled={busy||Object.keys(design.optional_content??{}).length>=3} onClick={()=>{try{const next=addEmailContent(design);const id=optionalEmailBlocks.find(item=>!design.blocks.includes(item))!;designChange(next);setSelected(id);setInspectorOpen(true);}catch(error){setLocalError(error instanceof Error?error.message:'Unable to add content.');}}}>Add content block</Button>}</nav>
    <div className="grant-email-central-canvas"><p className="grant-email-canvas-hint">Select a message or button to edit its appearance. No approval or navigation is performed.</p>
-    <LiveEmailPreview draft={draft} event={event} selectedBlock={selected} onSelectBlock={block=>select(block)} onPreviewState={onPreviewState}/>
+    <LiveEmailPreview draft={draft} event={event} selectedBlock={selected} onSelectBlock={(block,fieldLabel)=>select(block,true,fieldLabel)} onPreviewState={onPreviewState}/>
    </div>
    <section id="grant-email-properties" ref={inspector} className={'grant-email-properties'+(inspectorOpen?' is-open':'')} aria-label="Selected block properties"
     onFocusCapture={e=>capture(e.target)} onSelect={e=>capture(e.target)}

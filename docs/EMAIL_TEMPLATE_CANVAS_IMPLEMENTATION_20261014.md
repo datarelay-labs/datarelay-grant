@@ -700,3 +700,25 @@ Evidence: `.dev/u3-01-03-python.txt`, `.dev/u3-01-03-browser.txt`,
 `.dev/u3-01-03-browser-results.json`, `.dev/u3-palette-web-full.txt`,
 `.dev/u3-palette-web-check.txt`. Real Gmail/Outlook/Apple/iOS rendering remains
 separate U7.04 acceptance.
+
+
+### U4 exact-field recovery and preview contract — current qualification
+
+The previously reproduced U4.04 recovery defect is now GREEN. Local validation
+problems carry the exact field label; recovery opens the existing selected-block
+inspector and focuses the intended control instead of the first unrelated input.
+The Hold-button contrast scenario verifies focus on `Hold button color`, preserves
+the stale previous render until corrected, and clears the problem only after a
+current successful render. No save, publication or SMTP write occurs.
+
+Current mounted preview contract: 4/4 PASS in `preview-contract.spec.ts`.
+Delayed older requests cannot replace the newer generation; failed current renders
+keep the last result explicitly invalid until retry; sample scenarios, three
+verification modes, all nine events, 320/375/390/600 preview widths and exact
+plain/HTML source views remain tied to one current synthetic renderer output.
+Full Web units 736/736 and TypeScript/Vite build PASS after this change.
+Evidence: `.dev/u4-preview-exact-focus.txt`,
+`.dev/u4-preview-exact-focus-results.json`, `.dev/u4-web-full.txt`,
+`.dev/u4-web-check.txt`. U4.05 remains OPEN for explicitly labeled images-off and
+dark-mode simulation; these passes are not substituted for actual Gmail/Outlook/
+Apple/iOS acceptance.

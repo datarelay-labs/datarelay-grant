@@ -11,27 +11,27 @@ export function syntheticEmailSample(kind:EmailSampleKind,event:NotificationEven
   reason:kind==='missing_optional'?'':'Synthetic preview only',deadline:'2030-01-01T00:00:00Z',
   decision_state:states[event]??'AWAITING',execution_state:event==='execution_succeeded'?'REPORTED_SUCCEEDED':event==='execution_failed'?'REPORTED_FAILED':event==='execution_unknown'?'UNKNOWN':'NOT_STARTED'};
 }
-export type EmailPreviewProblem={block:EmailBlock;message:string};
+export type EmailPreviewProblem={block:EmailBlock;message:string;field?:string};
 export function emailPreviewProblems(draft:TemplateDraft,event:NotificationEvent):EmailPreviewProblem[]{
  const problems:EmailPreviewProblem[]=[];
  const text=draft.templates[event],design=draft.design;
- if(!text.subject.trim()||text.subject.length>250)problems.push({block:'subject',message:'Enter a subject of 1 to 250 characters.'});
- if(!text.body.trim()||text.body.length>8000)problems.push({block:'message',message:'Enter message wording of 1 to 8,000 characters.'});
+ if(!text.subject.trim()||text.subject.length>250)problems.push({block:'subject',field:'Event subject',message:'Enter a subject of 1 to 250 characters.'});
+ if(!text.body.trim()||text.body.length>8000)problems.push({block:'message',field:'Event body',message:'Enter message wording of 1 to 8,000 characters.'});
  if(design){
   const palette=design.palette??emailPalettes.light;
   for(const [field,label] of [['body_text','Message'],['brand_text','Brand']] as const){
-   if(mailPaletteContrast(palette[field],palette.content_background)<4.5)problems.push({block:'message',message:label+' text requires 4.5:1 contrast against the mail content background.'});
+   if(mailPaletteContrast(palette[field],palette.content_background)<4.5)problems.push({block:'message',field:field==='body_text'?'Mail body text color':'Mail brand text color',message:label+' text requires 4.5:1 contrast against the mail content background.'});
   }
-  if(!/^#[0-9a-f]{6}$/i.test(palette.page_background))problems.push({block:'message',message:'Use a six-digit mail page background color.'});
+  if(!/^#[0-9a-f]{6}$/i.test(palette.page_background))problems.push({block:'message',field:'Mail page background',message:'Use a six-digit mail page background color.'});
   const heading=design.event_headings?.[event]??design.heading;
-  if(!heading.trim()||heading.length>250)problems.push({block:'heading',message:'Enter a heading of 1 to 250 characters.'});
+  if(!heading.trim()||heading.length>250)problems.push({block:'heading',field:'Event heading',message:'Enter a heading of 1 to 250 characters.'});
   for(const [key,label] of [['approve_color','Approve'],['hold_color','Hold'],['deny_color','Deny']] as const){
    const color=design.styles[key];let contrast=0;
    if(/^#[0-9a-f]{6}$/i.test(color)){
     const linear=[1,3,5].map(index=>parseInt(color.slice(index,index+2),16)/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4);
     contrast=1.05/(linear[0]!*.2126+linear[1]!*.7152+linear[2]!*.0722+.05);
    }
-   if(contrast<4.5)problems.push({block:'actions',message:label+' button text is difficult to read. Choose a darker background.'});
+   if(contrast<4.5)problems.push({block:'actions',field:label+' button color',message:label+' button text is difficult to read. Choose a darker background.'});
   }
  }
  return problems;

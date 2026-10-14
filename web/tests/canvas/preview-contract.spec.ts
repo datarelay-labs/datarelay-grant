@@ -3,6 +3,22 @@ import {notificationsFixture,openSyntheticEditor,renderSyntheticEmail} from './n
 
 const endpoint='**/api/v1/notification-template-drafts/preview';
 
+test('U4.04 contrast recovery focuses the actual Hold color input, then clears only after a corrected render',async({page})=>{
+ const state=await notificationsFixture(page);await openSyntheticEditor(page);
+ await page.getByRole('navigation',{name:'Email blocks'}).getByRole('button',{name:/^Approval buttons/}).click();
+ await page.getByLabel('Hold button color',{exact:true}).fill('#ffffff');
+ const live=page.getByRole('region',{name:'Live unsaved email preview'});
+ await expect(live).toContainText('Hold button text is difficult to read.');
+ await live.getByRole('button',{name:'Edit button colors',exact:true}).click();
+ await expect(page.getByLabel('Hold button color',{exact:true})).toBeFocused();
+ await page.getByLabel('Hold button color',{exact:true}).fill('#854d0e');
+ await expect(live).not.toContainText('Hold button text is difficult to read.');
+ await expect(live).toHaveAttribute('aria-busy','false');
+ await expect(live).not.toContainText('Previous result shown — not valid for review.');
+ expect(state.writes).toEqual([]);expect(state.errors).toEqual([]);
+});
+
+
 test('U4.02 a delayed previous request never replaces a newer render and the old canvas is clearly stale while pending',async({page})=>{
  const state=await notificationsFixture(page);await openSyntheticEditor(page);
  const canvas=page.getByLabel('Selectable email canvas');await expect(canvas).toContainText('Please review collector-01.');
@@ -71,6 +87,11 @@ test('U4.03 U4.05 U4.07 samples, event modes, widths and source/text views share
  await format.getByRole('button',{name:'HTML source',exact:true}).click();await expect(page.getByRole('region',{name:'Rendered email preview'}).locator('pre')).toHaveText(current.html);
  const diagnostics=page.locator('details').filter({has:page.locator('summary').filter({hasText:/^Diagnostics$/})});
  expect(await diagnostics.getAttribute('open')).toBeNull();await diagnostics.locator('summary').click();await expect(diagnostics).toContainText(current.renderer_revision);
- await format.getByRole('button',{name:'Layout preview',exact:true}).click();await expect(page.getByTitle('Inert approval email preview')).toHaveAttribute('sandbox','');
+ await format.getByRole('button',{name:'Layout preview',exact:true}).click();const frame=page.getByTitle('Inert approval email preview');await expect(frame).toHaveAttribute('sandbox','');
+ const simulations=page.getByRole('group',{name:'Layout preview simulation'});
+ await simulations.getByRole('button',{name:'Images off',exact:true}).click();await expect(frame).toHaveAttribute('data-preview-simulation','images_off');expect(await frame.getAttribute('srcdoc')).not.toContain('<img');
+ await simulations.getByRole('button',{name:'Dark-mode approximation',exact:true}).click();await expect(frame).toHaveAttribute('data-preview-simulation','dark_approximation');await expect(frame).toHaveCSS('filter','invert(0.88) hue-rotate(180deg)');
+ await expect(page.getByRole('note')).toContainText('not Gmail, Outlook, Apple Mail or mobile-client acceptance');
+ await simulations.getByRole('button',{name:'Normal',exact:true}).click();await expect(frame).toHaveAttribute('data-preview-simulation','normal');
  expect(state.writes).toEqual([]);expect(state.errors).toEqual([]);
 });

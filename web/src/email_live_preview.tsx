@@ -10,7 +10,7 @@ export type LiveEmailPreview={rendered:{subject:string;preheader?:string;body:st
 export type EmailPreviewState={signature:string;event:NotificationEvent;current:boolean};
 export function createPreviewSequence(){let sequence=0;return {next:()=>++sequence,current:(value:number)=>value===sequence,invalidate:()=>{sequence++;}};}
 /** Read-only synthetic requests. A stale render is presentation, never review evidence. */
-export function LiveEmailPreview({draft,event,selectedBlock,onSelectBlock,onPreviewState}:{draft:TemplateDraft;event:NotificationEvent;selectedBlock?:EmailBlock;onSelectBlock?:(block:EmailBlock)=>void;onPreviewState?:(state:EmailPreviewState)=>void}){
+export function LiveEmailPreview({draft,event,selectedBlock,onSelectBlock,onPreviewState}:{draft:TemplateDraft;event:NotificationEvent;selectedBlock?:EmailBlock;onSelectBlock?:(block:EmailBlock,field?:string)=>void;onPreviewState?:(state:EmailPreviewState)=>void}){
  const [result,setResult]=useState<{key:string;value:LiveEmailPreview}|null>(null);
  const [error,setError]=useState('');const [pending,setPending]=useState(true);
  const [mode,setMode]=useState('EMAIL_PIN');const [sampleKind,setSampleKind]=useState<EmailSampleKind>('normal');
@@ -44,7 +44,7 @@ export function LiveEmailPreview({draft,event,selectedBlock,onSelectBlock,onPrev
    <p>Synthetic request data only. PIN 0000 and sample links cannot authorize a decision.</p>
   </details>
   {problems.map((problem,index)=><Alert key={index} tone="critical" title={problem.message}>
-   {onSelectBlock&&<Button variant="secondary" onClick={()=>onSelectBlock(problem.block)}>Edit {problem.block==='actions'?'button colors':problem.block}</Button>}
+   {onSelectBlock&&<Button variant="secondary" onClick={()=>onSelectBlock(problem.block,problem.field)}>Edit {problem.block==='actions'?'button colors':problem.block}</Button>}
   </Alert>)}
   {error&&<Alert tone="critical" title="The current draft could not be rendered">{error}. Check the selected event and retry. The previous preview is not valid for review.</Alert>}
   {!current&&preview&&<p role="status" className="grant-email-stale">{pending?'Updating preview — previous result shown.':'Previous result shown — not valid for review.'}</p>}
