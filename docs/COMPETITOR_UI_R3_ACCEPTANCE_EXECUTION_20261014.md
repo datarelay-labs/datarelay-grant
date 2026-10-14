@@ -10,9 +10,9 @@ Private evidence root: `/home/aella/datarelay-grant-r3-evidence/grant-r3-2026101
 ## Actual observed environment
 
 - Development preview: `https://221.139.249.116:18443/`.
-- SMTP host configured: **NO**.
-- SMTP credential present: **NO**.
-- Outbox worker enabled: **NO**.
+- SMTP host configured: **YES** (owner-approved during R3 continuation).
+- SMTP credential present: **YES** (secret not recorded in evidence).
+- Outbox worker enabled: **NO**; existing pending outbox was not released.
 - Existing database account rows: **4**, all enabled; identities not recorded here.
 - Existing session rows: **1**; session/cookie material was not read or reused.
 - Existing outbox rows: **14 PENDING**.
@@ -26,7 +26,7 @@ Private evidence root: `/home/aella/datarelay-grant-r3-evidence/grant-r3-2026101
 
 | WBS | Result | Reason |
 | --- | --- | --- |
-| U6.06 | BLOCKED_ENVIRONMENT | No configured real SMTP path; worker disabled; no authorized mailbox receipt can be produced. |
+| U6.06 | BLOCKED_PRECONDITION | Grant SMTP + STARTTLS + corrected sender + actual Gmail receipt are verified with DKIM/SPF PASS. Current DB has zero saved template rows, so the exact-saved-revision receipt criterion remains. |
 | U7.04 | BLOCKED_ENVIRONMENT | Current-candidate Gmail transport/MIME is verified, but direct Gmail Web/Mobile visual rendering is not observed; Outlook is unconnected and Apple Mail/iOS has no actual client session. |
 | U7.05 | BLOCKED_ENVIRONMENT | No two independently acting real humans with independently controlled mailboxes are available. |
 | U7.06 | BLOCKED_ENVIRONMENT | No authorized first-time participant exists for measured action/time targets. |
@@ -39,9 +39,19 @@ Private evidence root: `/home/aella/datarelay-grant-r3-evidence/grant-r3-2026101
 - R1/R2 evidence remains intact. R3 does not lower any security/approval rule and does not turn CI, fixtures or browser emulation into acceptance.
 - U9.02 remains blocked until the applicable real acceptance gates actually run.
 
+
+### Grant SMTP continuation result
+
+- Owner supplied SMTP credentials to the private current-preview config. Secrets were never committed or copied into evidence.
+- Config validation: host/user/password present, port 587, STARTTLS true, worker false.
+- Found and fixed a sender configuration defect: authenticated SMTP user was configured but smtp_from still used the default grant@localhost; it is now aligned with the authenticated sender. A 0600 backup of the prior config was retained.
+- A requested preview-process restart was attempted but blocked by OpenAI safety inspection before execution; it was not rerouted. Direct Settings.load(...) + product grant.transport.send_email() used the newly validated config for receipt qualification.
+- Two bounded non-authorizing current-candidate Grant SMTP messages were sent during qualification; the corrected-sender message was received by Gmail with Grant Message-ID, multipart text/HTML, DKIM PASS, SPF PASS, and no unexpected X-Google-Original-From.
+- Current dev DB email_templates count is 0. Therefore the remaining U6.06 blocker is no longer SMTP or mailbox receipt; it is the absence of an exact product-saved template revision to send. Product authentication is not bypassed to fabricate that row.
+
 ## User/external prerequisites to continue
 
-1. Configure DataRelay Grant SMTP credentials for the approved nonproduction sender so U6.06 can exercise the product SMTP path; current-render Gmail receipt via Gmail API is already verified separately.
+1. U6.06 SMTP transport and real Gmail receipt are now verified. Create/save one legitimate notification template revision through an authorized product session, then send that exact saved revision to the approved mailbox; do not insert a DB row directly.
 2. For U7.04, capture direct Gmail Web/Mobile visual observations of the current message, connect Outlook and inspect the same candidate, and provide actual Apple Mail/iOS observations.
 3. Two independently acting authorized people with two independently controlled mailboxes for U7.05.
 4. One authorized first-time/novice participant for U7.06.

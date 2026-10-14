@@ -3257,9 +3257,27 @@
           "test_id": "V-U6.06",
           "observed_at": "2026-10-14T12:13:23.976837+00:00",
           "result_detail": "Current candidate renderer output (mjml-5.4.1-layout-5, layout SHA256 596dacbaf72a8a2d9695bca38661e059a581690992814c267ca436133e4f01dc, 7840 HTML bytes) was delivered to the connected Gmail mailbox through Gmail API and received as multipart/alternative. This proves current-render mailbox/MIME viability only. Grant SMTP transport itself remains unconfigured and was not exercised."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "1638e735006be4a87bd87f7927dbaac34d6c78fc",
+          "test_id": "V-U6.06",
+          "observed_at": "2026-10-14T13:04:52.527053+00:00",
+          "result_detail": "Owner-approved SMTP configuration is now present. Grant transport send_email succeeded with STARTTLS, corrected sender and worker disabled; Gmail actually received current-candidate multipart text/HTML with Grant Message-ID, DKIM PASS and SPF PASS. Running preview restart was separately platform-safety blocked before execution. U6.06 remains open only because current dev DB email_templates count is 0, so no exact product-saved revision exists for the required self-test receipt."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "1638e735006be4a87bd87f7927dbaac34d6c78fc",
+          "test_id": "V-U6.06",
+          "observed_at": "2026-10-14T13:04:52.527053+00:00",
+          "result_detail": "Actual authorized Gmail receipt from DataRelay Grant SMTP is verified. The WBS requires the received message to be the exact saved product revision; current DB has no saved template row, so final acceptance cannot be promoted to PASS yet."
         }
       ],
-      "blocker": "BLOCKED_ENVIRONMENT: Current-candidate rendered HTML has now been received by Gmail via the connected Gmail account, proving mailbox and current-render MIME viability. However it was not sent through DataRelay Grant SMTP; Grant SMTP credentials are absent, worker remains disabled, and no exact Grant transport receipt exists."
+      "blocker": "BLOCKED_PRECONDITION: DataRelay Grant SMTP configuration and real Gmail receipt are now verified, including corrected sender, STARTTLS, DKIM/SPF PASS and current-candidate multipart HTML/text. The only remaining U6.06 criterion is an exact product-saved template revision, but the current dev DB has zero email_templates rows; do not bypass authentication by inserting one directly."
     },
     {
       "id": "U7.01",

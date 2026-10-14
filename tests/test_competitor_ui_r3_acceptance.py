@@ -36,20 +36,20 @@ def test_r3_reconciles_child_acceptance_without_false_pass():
 
 
 def test_r3_report_preserves_no_effect_boundary():
-    assert "SMTP host configured: **NO**" in REPORT
+    assert "SMTP host configured: **YES**" in REPORT
     assert "Existing session rows: **1**; session/cookie material was not read or reused." in REPORT
     assert "Gmail connector: **connected during R3 continuation**" in REPORT
     assert "Current-candidate Gmail rendering test: **received**" in REPORT
     assert "Outlook Email connector: available but not connected." in REPORT
-    assert "No credential, account, SMTP, worker, external target or production state was changed." in REPORT
+    assert "Outbox worker enabled: **NO**" in REPORT
     assert "No acceptance gate is falsely marked PASS." in REPORT
 
 
 def test_gmail_connection_is_supporting_historical_evidence_not_current_acceptance():
     u606=ROWS["U6.06"]
     u704=ROWS["U7.04"]
-    assert "Current-candidate rendered HTML has now been received by Gmail" in u606["blocker"]
-    assert "not sent through DataRelay Grant SMTP" in u606["blocker"]
+    assert "DataRelay Grant SMTP configuration and real Gmail receipt are now verified" in u606["blocker"]
+    assert "zero email_templates rows" in u606["blocker"]
     assert "Current-candidate Gmail transport/MIME subcell is verified" in u704["blocker"]
     assert "Gmail Web/Mobile visual rendering has not been directly observed" in u704["blocker"]
     assert u606["acceptance"]=="BLOCKED"
@@ -61,11 +61,22 @@ def test_gmail_connection_is_supporting_historical_evidence_not_current_acceptan
 def test_current_candidate_gmail_mime_is_verified_but_not_grant_smtp_or_full_client_matrix():
     u606=ROWS["U6.06"]
     u704=ROWS["U7.04"]
-    assert "Current-candidate rendered HTML has now been received by Gmail" in u606["blocker"]
-    assert "not sent through DataRelay Grant SMTP" in u606["blocker"]
+    assert "DataRelay Grant SMTP configuration and real Gmail receipt are now verified" in u606["blocker"]
+    assert "zero email_templates rows" in u606["blocker"]
     assert "Current-candidate Gmail transport/MIME subcell is verified" in u704["blocker"]
     assert "Gmail Web/Mobile visual rendering has not been directly observed" in u704["blocker"]
     assert u606["acceptance"]=="BLOCKED"
     assert u704["acceptance"]=="BLOCKED"
     assert "Current-candidate Gmail rendering test: **received**" in REPORT
     assert "7,840 HTML bytes" in REPORT
+
+
+def test_grant_smtp_receipt_is_real_but_u606_waits_for_exact_saved_revision():
+    u606=ROWS["U6.06"]
+    assert "DataRelay Grant SMTP configuration and real Gmail receipt are now verified" in u606["blocker"]
+    assert "zero email_templates rows" in u606["blocker"]
+    assert u606["status"]=="OPEN"
+    assert u606["acceptance"]=="BLOCKED"
+    assert "DKIM/SPF PASS" in REPORT
+    assert "exact product-saved template revision" in REPORT
+    assert "worker false" in REPORT
