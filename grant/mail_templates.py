@@ -199,7 +199,7 @@ def normalize_snapshot(template: Mapping[str, object] | None) -> dict[str, objec
             from .email_design import renderer_snapshot, validate_design
 
             result["design"] = validate_design(template["design"])
-            expected = renderer_snapshot()
+            expected = renderer_snapshot(result["design"])
             if template.get("renderer", expected) != expected:
                 raise ValueError("Unsupported immutable email renderer snapshot")
             result["renderer"] = expected
@@ -243,7 +243,7 @@ def snapshot(row: object | None = None, *, branding: Mapping[str, str] | None = 
             from .email_design import renderer_snapshot, validate_design
 
             result["design"] = validate_design(json.loads(design))
-            result["renderer"] = renderer_snapshot()
+            result["renderer"] = renderer_snapshot(result["design"])
     if branding:
         for key in ("brand_name", "sender_display_name", "logo_asset"):
             if branding.get(key):

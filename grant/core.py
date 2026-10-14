@@ -37,6 +37,7 @@ from .models import (
     Integration,
     IntegrationVerificationPolicy,
     NotificationBrandingUpdate,
+    NotificationDraftPreview,
     NotificationPreview,
     NotificationTemplateSet,
     NotificationTemplateSetUpdate,
@@ -534,24 +535,61 @@ class Core:
         actor.require_admin()
         return {"variables": sorted(ALLOWED_VARIABLES)}
 
+    @staticmethod
+    def _notification_review_hash(actor: Principal, ident: str, updated_at: float,
+                                  body: NotificationPreview, rendered: dict, recipient_email: str) -> str:
+        return fingerprint({"actor": actor.id, "recipient": recipient_email,
+                            "template_set_id": ident, "updated_at": updated_at,
+                            "input": body.model_dump(exclude={"recipient_user_id", "expected_updated_at", "preview_hash", "attempt_id"}),
+                            "rendered": rendered})
+
+    def preview_notification_draft(self, actor: Principal, body: NotificationDraftPreview) -> dict:
+        from .mail_templates import render_preview
+
+        actor.require_admin()
+        with self.db.transaction(write=False) as conn:
+            require_current_authority(conn, actor)
+            template = {"templates": {key: item.model_dump() for key, item in body.template.templates.items()},
+                        "branding": self._branding(conn)}
+            if body.template.design:
+                template["design"] = body.template.design.model_dump()
+        try:
+            rendered = render_preview(template, body.event, body.sample.model_dump(),
+                                      verification_mode=body.verification_mode)
+        except ValueError as exc:
+            raise GrantError("NOTIFICATION_RENDER_INVALID", 422) from exc
+        return {"preview_kind": "unsaved_draft", "template_set_id": "", "event": body.event,
+                "rendered": rendered, "transport_accepted": False, "receipt_confirmed": False,
+                "execution_allowed": False, "validation": {
+                    "valid": True, "html_bytes": len(rendered["html"].encode()),
+                    "protected_actions": 4 if body.event in ("requested", "reminder") else 1,
+                    "mail_client_acceptance": "NOT_RUN", "logo_upload": "UNAVAILABLE",
+                }}
+
     def preview_notification(
         self, actor: Principal, ident: str, body: NotificationPreview
     ) -> dict:
+        from .mail_templates import render_preview
+
         actor.require_admin()
         with self.db.transaction(write=False) as conn:
+            require_current_authority(conn, actor)
             row = conn.execute("SELECT * FROM email_templates WHERE id=?", (ident,)).fetchone()
             if not row:
                 raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
             template = snapshot(row, branding=self._branding(conn))
-        from .mail_templates import render_preview
-
-        rendered = render_preview(template, body.event, body.sample.model_dump())
+            recipient = conn.execute("SELECT email FROM users WHERE id=?", (actor.id,)).fetchone()
+        try:
+            rendered = render_preview(template, body.event, body.sample.model_dump(),
+                                      verification_mode=body.verification_mode)
+        except ValueError as exc:
+            raise GrantError("NOTIFICATION_RENDER_INVALID", 422) from exc
         return {
-            "template_set_id": ident,
-            "event": body.event,
-            "rendered": rendered,
-            "transport_accepted": False,
-            "receipt_confirmed": False,
+            "preview_kind": "saved_draft", "template_set_id": ident, "event": body.event,
+            "template_updated_at": row["updated_at"], "verification_mode": body.verification_mode,
+            "preview_hash": self._notification_review_hash(actor, ident, row["updated_at"], body,
+                                                            rendered, recipient["email"]),
+            "rendered": rendered, "transport_accepted": False, "receipt_confirmed": False,
             "execution_allowed": False,
         }
 

@@ -27,13 +27,13 @@ No arbitrary HTML/JS/CSS, link rebinding, tracking or hidden approval block.
 | Phase | Priority | Deliverable / exit criterion | Current status |
 | --- | --- | --- | --- |
 | ET-0 | Current request | 20-family source survey, recommendation, roadmap and 24 acceptance checks saved and linked | DONE — RESEARCH/DOCS ONLY |
-| ET-1 | P0; first next implementation | Same-input local MJML/React Email renderer PoC; structured subject/HTML/text, mode-correct guidance, three decisions + View Details; remove fragile body-string split | SOURCE IMPLEMENTED — 20 renderer tests; affected API 46 PASS; editor remains ET-2 onward |
-| ET-2 | P0; ET-1 | Protected JSON design schema, server style/asset validation, CAS draft API and immutable template/layout/renderer snapshot; legacy compatibility | CORE SOURCE DONE — 51 affected tests PASS; logo upload/CID implementation platform-blocked and null-only in schema |
-| ET-3 | P0; ET-2 | Single block editor, three presets, safe variable chips and configurable text/button design with keyboard/mobile usability; reuse Foundation controls | NOT STARTED |
-| ET-4 | P0; ET-1–3 | Same-render live draft preview in desktop/mobile/HTML/text; inert sample data/PIN/links; saved-revision self-only test-send Review→Confirm | NOT STARTED |
-| ET-5 | P1 implementation; required before production | Publish impact/history, future-request-only revision selection, rollback-as-new-revision, nine events/locales and opt-in text migration | NOT STARTED |
-| ET-6 | P0 release qualification; ET-1–5 | Security/regression, actual Gmail/Outlook/Apple Mail matrix, permitted editor and mailbox/user E2E; 24 checks with actual evidence | NOT RUN / prerequisite-gated |
-| ET-7 | P2 optional | Extra reusable layouts/locales and optional safe AI-assisted wording; no authority editing | DEFERRED / not core 1.0 acceptance |
+| ET-1 | P0; first next implementation | Same-input local MJML/React Email renderer PoC; structured subject/HTML/text, mode-correct guidance, three decisions + View Details; remove fragile body-string split | SOURCE COMPLETE — common renderer and preserved v1 output verified; client acceptance in ET-6 |
+| ET-2 | P0; ET-1 | Protected JSON design schema, server style/asset validation, CAS draft API and immutable template/layout/renderer snapshot; legacy compatibility | CORE SOURCE COMPLETE — design/CAS/migration/snapshots; logo pipeline PLATFORM BLOCKED |
+| ET-3 | P0; ET-2 | Single block editor, three presets, safe variable chips and configurable text/button design with keyboard/mobile usability; reuse Foundation controls | EDITOR CORE COMPLETE — presets, styles, text/variables, language defaults; logo and real browser acceptance pending |
+| ET-4 | P0; ET-1–3 | Same-render live draft preview in desktop/mobile/HTML/text; inert sample data/PIN/links; saved-revision self-only test-send Review→Confirm | READONLY LIVE PREVIEW COMPLETE — new reviewed-send UI PLATFORM BLOCKED; stricter API patch preserved, NOT shipped |
+| ET-5 | P1 implementation; required before production | Publish impact/history, future-request-only revision selection, rollback-as-new-revision, nine events/locales and opt-in text migration | BACKEND COMPLETE — publish/impact/history/rollback and EN/KO; publication UI PLATFORM BLOCKED |
+| ET-6 | P0 release qualification; ET-1–5 | Security/regression, actual Gmail/Outlook/Apple Mail matrix, permitted editor and mailbox/user E2E; 24 checks with actual evidence | SOURCE QUALIFICATION — native CI results in Issue #37/#67; real browser/mail-client/two-user acceptance NOT RUN |
+| ET-7 | P2 optional | Extra reusable layouts/locales and optional safe AI-assisted wording; no authority editing | DEFERRED — required earlier gates remain open |
 
 **ET-1 source implementation (2026-10-14):** pinned MJML build-time shell and shared runtime renderer implemented; see `docs/ADR_EMAIL_RENDERER.md`. Next runnable is ET-2 protected design schema. Actual mail-client acceptance remains unrun.
 

@@ -1,3 +1,6 @@
+import {LiveEmailPreview} from './email_live_preview';
+import {EmailTemplateDesignEditor,EmailBodyEditor,type EmailBodyHandle} from './email_template_design_editor';
+import {createEmailDesign,type EmailDesign} from './email_design';
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
@@ -434,6 +437,8 @@ export function Notifications() {
   const [name, setName] = useState('');
   const [enabled, setEnabled] = useState(true);
   const [event, setEvent] = useState<NotificationEvent>('requested');
+  const [draftDesign,setDraftDesign]=useState<EmailDesign|null>(null);
+  const emailBodyRef=useRef<EmailBodyHandle>(null);
   const [draftTemplates, setDraftTemplates] =
     useState<Record<NotificationEvent, NotificationEventTemplate>>(copyDefaults());
   const [preview, setPreview] = useState<PreviewResult | null>(null);
@@ -448,7 +453,7 @@ export function Notifications() {
   const [executionState, setExecutionState] = useState('NOT_STARTED');
   const task = useTask();
   const draftDirty = hasUnsavedTemplateChanges(savedSignature, {
-    name, enabled, templates: draftTemplates,
+    name, enabled, templates: draftTemplates, design:draftDesign,
   });
   const sampleInputsKey = JSON.stringify([
     sampleTitle, sampleTarget, sampleReason, decisionState, executionState,
@@ -457,7 +462,7 @@ export function Notifications() {
   const brandingDraft:BrandingDraft={
     brand_name:brandName,sender_display_name:senderName,
   };
-  const templateDraft={name,enabled,templates:draftTemplates};
+  const templateDraft={name,enabled,templates:draftTemplates,design:draftDesign};
   const currentTemplate=editing
     ?sets.find(row=>row.id===editing)??null:null;
 
@@ -507,6 +512,7 @@ export function Notifications() {
     setEnabled(true);
     setEvent('requested');
     setDraftTemplates(copyDefaults());
+    setDraftDesign(createEmailDesign());
     invalidatePreview();
   }
 
@@ -527,6 +533,7 @@ export function Notifications() {
     setName(row.name);
     setEnabled(row.enabled);
     setDraftTemplates(structuredClone(row.templates));
+    setDraftDesign(row.design?structuredClone(row.design):null);
     setEvent('requested');
     invalidatePreview();
     setTemplateView('editor');
@@ -589,6 +596,7 @@ export function Notifications() {
       setName(output.name);
       setEnabled(output.enabled);
       setDraftTemplates(structuredClone(output.templates));
+    setDraftDesign(output.design?structuredClone(output.design):null);
       setSavedSignature(templateDraftSignature(output));
       setSets(current=>current.some(row=>row.id===output.id)
         ?current.map(row=>row.id===output.id?output:row)
@@ -624,6 +632,7 @@ export function Notifications() {
     setName(target.name);
     setEnabled(target.enabled);
     setDraftTemplates(structuredClone(target.templates));
+    setDraftDesign(target.design?structuredClone(target.design):null);
     setSavedSignature(templateDraftSignature(target));
     invalidatePreview();
     if(templateSaveGuard.current.readSucceeded(attempted))setTemplateNeedsRefresh(false);
@@ -934,6 +943,7 @@ export function Notifications() {
             </div>
           </section>
 
+<div className="grant-email-workbench">
           <Card
             title={editing ? 'Template set details' : 'Create notification template set'}
             description="All Grant events stay in one coherent set; editing never rewrites existing request snapshots."
@@ -980,13 +990,24 @@ export function Notifications() {
                   value={draftTemplates[event].subject}
                   onChange={(change) => updateCurrent('subject', change.target.value)}
                 />
-                <TextArea
-                  label="Event body"
-                  required
-                  value={draftTemplates[event].body}
-                  onChange={(value) => updateCurrent('body', value)}
-                />
+                <EmailBodyEditor ref={emailBodyRef} value={draftTemplates[event].body}
+                  visual={draftDesign!==null} onChange={value=>updateCurrent('body',value)}
+                  onEnableFormatting={()=>{if(draftDesign){setDraftDesign({...draftDesign,shared_layout_revision:2,rich_text:true});invalidatePreview();}}}/>
               </div>
+
+              <EmailTemplateDesignEditor key={editing||'new-template'} value={draftDesign}
+                variables={variables} disabled={task.busy||templateSaveGuard.current.blocked()}
+                onChange={design=>{setDraftDesign(design);invalidatePreview();}}
+                onInsertVariable={variable=>emailBodyRef.current?.insert('{{'+variable+'}}')}
+                onRestoreEventCopy={()=>{void task.run(async()=>{
+                  const generation=previewGeneration.current;
+                  const selected=event;
+                  const result=await api<{templates:Record<NotificationEvent,NotificationEventTemplate>}>(
+                    '/notification-template-defaults?locale='+(draftDesign?.locale??'en'));
+                  if(generation!==previewGeneration.current)throw Error('EVENT_DRAFT_CHANGED_REVIEW_REQUIRED');
+                  setDraftTemplates(current=>({...current,[selected]:result.templates[selected]}));
+                  invalidatePreview();
+                });}}/>
 
               {editing ? (
                 <label className="grant-checkbox">
@@ -1033,11 +1054,24 @@ export function Notifications() {
             </details>
           </Card>
 
-          {editing ? (
             <Card
               title="Preview & test send"
               description="Transport acceptance is distinct from inbox receipt. Test messages never authorize execution."
             >
+              <LiveEmailPreview draft={templateDraft} event={event}/>
+              <details><summary>Saved revision preview and test email</summary>
+              {preview ? (
+                <Alert tone="info" title={preview.rendered.subject}>
+                  <NotificationRenderedPreview rendered={preview.rendered}/>
+                  <p>
+                    Sender: {preview.rendered.sender_display_name} · transport accepted:{' '}
+                    {String(preview.transport_accepted)} · inbox receipt confirmed:{' '}
+                    {String(preview.receipt_confirmed)} · execution allowed:{' '}
+                    {String(preview.execution_allowed)}
+                  </p>
+                </Alert>
+              ) : null}
+              <details><summary>Sample inputs</summary>
               <div className="grant-grid">
                 <TextField
                   label="Sample request title"
@@ -1080,6 +1114,7 @@ export function Notifications() {
                   invalidatePreview();
                 }}
               />
+              </details>
               <NotificationPreviewActions
                 saved={Boolean(editing)}
                 dirty={draftDirty}
@@ -1109,19 +1144,10 @@ export function Notifications() {
                   </Button>
                 </Alert>
               )}
-              {preview ? (
-                <Alert tone="warning" title={preview.rendered.subject}>
-                  <NotificationRenderedPreview rendered={preview.rendered}/>
-                  <p>
-                    Sender: {preview.rendered.sender_display_name} · transport accepted:{' '}
-                    {String(preview.transport_accepted)} · inbox receipt confirmed:{' '}
-                    {String(preview.receipt_confirmed)} · execution allowed:{' '}
-                    {String(preview.execution_allowed)}
-                  </p>
-                </Alert>
-              ) : null}
+
+              </details>
             </Card>
-          ) : null}
+          </div>
         </>
       ) : null}
 

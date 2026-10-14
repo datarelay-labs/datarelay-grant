@@ -133,7 +133,7 @@ def test_cli_preupgrade_backup_preserves_real_old_v8_source_without_migration(tm
         ).fetchone()[0] == "LEGACY_PRESERVED"
 
 
-def test_cli_readonly_health_reports_existing_v12_and_paused_rollback(tmp_path):
+def test_cli_readonly_health_reports_existing_current_schema_and_paused_rollback(tmp_path):
     """A valid restored installation is observable without resuming any effects."""
     config = tmp_path / "existing" / "config.json"
     cmd = [sys.executable, "-m", "grant.cli", "--config", str(config)]

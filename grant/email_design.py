@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 BLOCKS = ["brand", "heading", "message", "request_context", "actions", "verification", "footer"]
 
@@ -39,10 +39,26 @@ class EmailStyles(StrictDesign):
         return value.lower()
 
 
+class ButtonSuffixes(StrictDesign):
+    approve: str = Field(default="", max_length=40)
+    hold: str = Field(default="", max_length=40)
+    deny: str = Field(default="", max_length=40)
+    details: str = Field(default="", max_length=40)
+
+    @field_validator("approve", "hold", "deny", "details")
+    @classmethod
+    def literal_suffix(cls, value: str) -> str:
+        if "{{" in value or any(ord(c) < 32 or 0xD800 <= ord(c) <= 0xDFFF
+                or 0x200B <= ord(c) <= 0x200F or 0x202A <= ord(c) <= 0x202E
+                or 0x2066 <= ord(c) <= 0x2069 for c in value):
+            raise ValueError("Button descriptions must be plain one-line text without control characters")
+        return value
+
+
 class EmailDesign(StrictDesign):
     schema_version: Literal[1] = 1
     renderer_contract_version: Literal[1] = 1
-    shared_layout_revision: Literal[1] = 1
+    shared_layout_revision: Literal[1, 2] = 2
     locale: Literal["en", "ko"] = "en"
     preset: Literal["standard", "compact", "high_visibility"] = "standard"
     button_size: Literal["S", "M", "L"] = "M"
@@ -52,6 +68,16 @@ class EmailDesign(StrictDesign):
     logo_asset_id: None = None
     blocks: list[str] = Field(default_factory=lambda: list(BLOCKS), min_length=7, max_length=7)
     styles: EmailStyles = Field(default_factory=EmailStyles)
+    rich_text: bool = False
+    paragraph_alignment: Literal["left", "center", "right"] = "left"
+    button_suffixes: ButtonSuffixes = Field(default_factory=ButtonSuffixes)
+
+    @model_validator(mode="after")
+    def immutable_legacy_layout(self):
+        if self.shared_layout_revision == 1 and (self.rich_text
+                or self.paragraph_alignment != "left" or any(self.button_suffixes.model_dump().values())):
+            raise ValueError("These new authoring features require shared layout revision 2")
+        return self
 
     @field_validator("blocks")
     @classmethod
@@ -74,8 +100,9 @@ def validate_design(value: object) -> dict:
     return EmailDesign.model_validate(value).model_dump()
 
 
-def renderer_snapshot() -> dict:
-    from .email_renderer import LAYOUT_DIGEST
+def renderer_snapshot(design: dict | None = None) -> dict:
+    from .email_renderer import LAYOUT_REGISTRY
 
-    return {"contract_version": 1, "layout_revision": 1, "compiler": "mjml@5.4.1",
-            "layout_sha256": LAYOUT_DIGEST}
+    revision = design["shared_layout_revision"] if design else 1
+    return {"contract_version": 1, "layout_revision": revision, "compiler": "mjml@5.4.1",
+            "layout_sha256": LAYOUT_REGISTRY[revision]["sha256"]}

@@ -126,3 +126,7 @@ The six initial RED asset tests and their evidence are preserved under
 implemented acceptance and are not counted as passing tests. Pillow was
 removed because the blocked pipeline does not run; no unused imaging dependency
 is shipped. Design/style/editor work is independent and continues.
+
+## ET-3 through ET-5 source checkpoint
+
+The immutable v1 artifact and all 27 legacy reference outputs are retained. Layout v2 adds safe rich text, full-width protected controls, canonical localized labels and bounded optional descriptive suffixes. See `EMAIL_TEMPLATE_EDITOR_IMPLEMENTATION_20261014.md` for the actual implementation, explicit platform-blocked UI/asset gaps, unchanged existing test-send behavior and source-only qualification. Publication API/history are implemented; the blocked publication UI is not. No claim of complete ET-4, ET-5 or ET-6 acceptance is made.

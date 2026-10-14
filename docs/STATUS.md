@@ -1,3 +1,7 @@
+## 2026-10-14 — Email editor source checkpoint (ET-1 through ET-5 partial)
+
+Renderer, protected design/CAS/migration, visual editor, read-only unsaved live preview and future-only publication/localization backend are implemented. Logo upload/CID, new reviewed-test-send UI and publication confirmation/history UI encountered platform denials; they are not shipped or counted complete. Existing test-send remains unchanged; its stricter pending patch is preserved separately. Actual mail clients, authenticated browser, two-user E2E, preview deployment, merge and release are not performed. Full detail and phase boundaries: `docs/EMAIL_TEMPLATE_EDITOR_IMPLEMENTATION_20261014.md`. Latest exact-HEAD Git/CI evidence is in Issue #37/#67.
+
 ## 2026-10-14 — ET-2 protected design/draft source
 
 Strict versioned design, bounded button styles and contrast, preserved protected blocks, CAS draft saves, renderer/layout hash snapshots and atomic v12→v13 migration implemented. 51 affected Python tests PASS, including preservation of actual synthetic request/outbox/issuance bytes. Existing legacy clients preserve design; opt-in conversion retains the unchanged published baseline; unpublished new designs cannot enter request snapshots.

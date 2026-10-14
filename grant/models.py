@@ -246,8 +246,13 @@ class NotificationSample(Input):
 
 
 class NotificationPreview(Input):
+    verification_mode: Literal["EMAIL_PIN", "EMAIL_PIN_PLUS_OTP", "EMAIL_PIN_PLUS_MFA"] = "EMAIL_PIN"
     event: NotificationEvent
     sample: NotificationSample
+
+
+class NotificationDraftPreview(NotificationPreview):
+    template: NotificationTemplateSet
 
 
 class NotificationTestSend(NotificationPreview):

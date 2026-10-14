@@ -1,8 +1,9 @@
+import {designSignature} from './email_design';
 import { useState } from 'react';
 import { Button } from '@datarelay-labs/foundation';
 import type { NotificationTemplateSet } from './types';
 
-export type TemplateDraft = Pick<NotificationTemplateSet, 'name' | 'enabled' | 'templates'>;
+export type TemplateDraft = Pick<NotificationTemplateSet, 'name' | 'enabled' | 'templates' | 'design'>;
 
 /**
  * Compare the complete persisted content, not the selected event or updated_at.
@@ -12,6 +13,7 @@ export function templateDraftSignature(draft: TemplateDraft): string {
   return JSON.stringify([
     draft.name,
     draft.enabled,
+    designSignature(draft.design),
     ...Object.entries(draft.templates)
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([event, value]) => [event, value.subject, value.body]),

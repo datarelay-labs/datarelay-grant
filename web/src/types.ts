@@ -1,3 +1,4 @@
+import type {EmailDesign} from './email_design';
 export type User = { id: string; username: string; email: string; role: 'admin' | 'member'; mfa_enabled: boolean };
 export type Session = { state: 'authenticated' | 'mfa_required'; user: User | null; csrf: string };
 export type Action = { kind: string; target: string; parameters: Record<string, unknown> };
@@ -38,7 +39,7 @@ export type Profile = {
 };
 export type NotificationEvent = 'requested' | 'reminder' | 'approved' | 'denied' | 'expired' | 'cancelled' | 'execution_succeeded' | 'execution_failed' | 'execution_unknown';
 export type NotificationEventTemplate = { subject: string; body: string };
-export type NotificationTemplateSet = { id: string; name: string; templates: Record<NotificationEvent, NotificationEventTemplate>; enabled: boolean; created_at: number; updated_at: number };
+export type NotificationTemplateSet = { design?:EmailDesign|null; draft_revision?:number; published_revision?:number|null; id: string; name: string; templates: Record<NotificationEvent, NotificationEventTemplate>; enabled: boolean; created_at: number; updated_at: number };
 export type NotificationDelivery = { id: string; request_id: string; event_type: string; state: string; attempts: number; last_error: string | null; available_at: number; delivered_at: number | null; created_at: number; transport_accepted: boolean; receipt_confirmed: boolean };
 export type NotificationBranding = { brand_name: string; sender_display_name: string; logo_asset: string };
 export type PolicyHistory = { profile_id: string; versions: Profile[]; events: { id: string; at: number; actor: string; action: string; detail: Record<string, unknown> }[] };

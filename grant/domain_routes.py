@@ -5,6 +5,13 @@ from typing import Literal
 from fastapi import Query, Request, Response
 from fastapi.responses import FileResponse
 
+from .email_publication import (
+    PublicationCommit,
+    PublicationReview,
+    commit_publication,
+    publication_history,
+    review_publication,
+)
 from .integration_diagnostics import configuration_manifest, diagnostics
 from .models import (
     ApproverGroup,
@@ -26,6 +33,7 @@ from .models import (
     IntentOtpVerification,
     IntentPin,
     NotificationBrandingUpdate,
+    NotificationDraftPreview,
     NotificationEvent,
     NotificationPreview,
     NotificationTemplateSet,
@@ -303,6 +311,33 @@ def register_domain(app, actor, human, reader):
     @app.put("/api/v1/email-templates/{ident}")
     def update_email_template(ident: str, body: EmailTemplateUpdate, request: Request):
         return core.update_email_template(actor(request), ident, body)
+
+    @app.post("/api/v1/notification-template-sets/{ident}/publication-review")
+    def notification_publication_review(ident: str, body: PublicationReview, request: Request):
+        return review_publication(core, actor(request), ident, body)
+
+    @app.post("/api/v1/notification-template-sets/{ident}/publish")
+    def notification_publication_commit(ident: str, body: PublicationCommit, request: Request):
+        return commit_publication(core, actor(request), ident, body)
+
+    @app.get("/api/v1/notification-template-sets/{ident}/versions")
+    def notification_publication_history(ident: str, request: Request):
+        return publication_history(core, actor(request), ident)
+
+    @app.get("/api/v1/notification-template-defaults")
+    def notification_template_defaults(request: Request, locale: Literal["en", "ko"] = "en"):
+        from .auth import require_current_authority
+        from .email_localization import event_defaults
+
+        principal = actor(request)
+        principal.require_admin()
+        with core.db.transaction(write=False) as conn:
+            require_current_authority(conn, principal)
+        return {"locale": locale, "templates": event_defaults(locale), "saved": False}
+
+    @app.post("/api/v1/notification-template-drafts/preview")
+    def preview_notification_draft(body: NotificationDraftPreview, request: Request):
+        return core.preview_notification_draft(actor(request), body)
 
     @app.get("/api/v1/notification-template-sets")
     def notification_template_sets(request: Request):

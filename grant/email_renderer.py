@@ -14,9 +14,13 @@ from dataclasses import dataclass
 from importlib.resources import files
 from urllib.parse import urlsplit
 
-LAYOUT_BYTES = files("grant").joinpath("email_layout_v1.json").read_bytes()
-LAYOUT_DIGEST = hashlib.sha256(LAYOUT_BYTES).hexdigest()
-LAYOUTS = json.loads(LAYOUT_BYTES)["layouts"]
+LAYOUT_REGISTRY = {}
+for _revision in (1, 2):
+    _bytes = files("grant").joinpath(f"email_layout_v{_revision}.json").read_bytes()
+    LAYOUT_REGISTRY[_revision] = {"sha256": hashlib.sha256(_bytes).hexdigest(),
+                                   "layouts": json.loads(_bytes)["layouts"]}
+LAYOUT_DIGEST = LAYOUT_REGISTRY[1]["sha256"]
+LAYOUTS = LAYOUT_REGISTRY[1]["layouts"]
 SLOT = re.compile(r"@@GRANT_([A-Z_]+)@@")
 OUTCOMES = ("APPROVED", "HELD", "DENIED")
 MODES = ("EMAIL_PIN", "EMAIL_PIN_PLUS_OTP", "EMAIL_PIN_PLUS_MFA")
@@ -70,7 +74,7 @@ def compose_email(
             "Action: " + context["action_kind"], "Target: " + context["target"],
             "Deadline: " + context["deadline"],
         ]),
-        "DETAILS_URL": details, "DETAILS_LABEL": "View Details", "LOCALE": "en",
+        "DETAILS_URL": details, "DETAILS_LABEL": "View Details", "LOCALE": "en", "ALIGN": "left",
         "FONT_SIZE": "16", "BUTTON_FONT": "16", "BUTTON_Y": "12", "BUTTON_X": "24",
         "GAP": "8", "RADIUS": "6", "APPROVE_COLOR": "#166534",
         "HOLD_COLOR": "#854d0e", "DENY_COLOR": "#991b1b",
@@ -92,6 +96,7 @@ def compose_email(
         values["TITLE"] = TOKEN.sub(lambda match: context[match[1]], design["heading"])
         if design["footer"]:
             values["FOOTER"] += "\n" + TOKEN.sub(lambda match: context[match[1]], design["footer"])
+    revision = design["shared_layout_revision"] if design else 1
     segments = [body, values["CONTEXT"]]
     if eligible:
         assert security is not None
@@ -125,18 +130,55 @@ def compose_email(
         segments += [values["GUIDANCE"], *[
             LABELS[outcome] + ": " + security.links[outcome] for outcome in OUTCOMES
         ], values["PIN"]]
+    korean = bool(design and revision == 2 and design["locale"] == "ko")
+    if korean:
+        from .email_localization import KO_GUIDANCE
+
+        values["DETAILS_LABEL"] = "상세 보기"
+        values["CONTEXT"] = "\n".join([
+            "요청: " + context["request_title"], "외부 ID: " + context["external_id"],
+            "작업: " + context["action_kind"], "대상: " + context["target"], "마감: " + context["deadline"],
+        ])
+        values["FOOTER"] = "상세 보기는 기존 계정의 조회 권한을 요구하며 결정을 기록하지 않습니다. 미리보기는 실행을 승인하지 않습니다."
+        if eligible:
+            values["APPROVE_LABEL"], values["HOLD_LABEL"], values["DENY_LABEL"] = "승인", "보류", "거부"
+            values["GUIDANCE"] = ("링크를 여는 것만으로 결정이 기록되지 않습니다. " + KO_GUIDANCE[security.mode]
+                + " 확인 화면은 현재 정책이 더 강해진 경우에도 최신 인증 요구사항을 적용합니다.")
+            values["PIN"] = "4자리 확인 PIN: " + security.pin
+            values["FOOTER"] = "같은 메일에 포함된 PIN은 개인 신원이나 MFA를 증명하지 않습니다. 이 메일을 전달하지 마세요. " + values["FOOTER"]
+        if design["footer"]:
+            values["FOOTER"] += "\n" + TOKEN.sub(lambda match: context[match[1]], design["footer"])
     if sample:
-        values["FOOTER"] = "SAMPLE ONLY. PIN 0000 and all sample links are inert. " + values["FOOTER"]
+        prefix = "샘플 전용. PIN 0000과 모든 샘플 링크는 실제 결정에 사용할 수 없습니다. " if korean else "SAMPLE ONLY. PIN 0000 and all sample links are inert. "
+        values["FOOTER"] = prefix + values["FOOTER"]
     segments += ["View Details: " + details, values["FOOTER"]]
+    if design and revision == 2:
+        values["ALIGN"] = design["paragraph_alignment"]
+        for slot, key in (("APPROVE", "approve"), ("HOLD", "hold"), ("DENY", "deny"), ("DETAILS", "details")):
+            suffix = design["button_suffixes"][key]
+            if slot + "_LABEL" in values and suffix:
+                values[slot + "_LABEL"] += " · " + suffix
+        # Derive text from the same protected fields, including custom heading.
+        segments = [values["TITLE"], body, values["CONTEXT"]]
+        if eligible:
+            segments += [values["GUIDANCE"], *[
+                values[slot + "_LABEL"] + ": " + values[slot + "_URL"]
+                for slot in ("APPROVE", "HOLD", "DENY")
+            ], values["PIN"]]
+        segments += [values["DETAILS_LABEL"] + ": " + details, values["FOOTER"]]
     escaped = {key: html.escape(value, quote=True) for key, value in values.items()}
     for key in ("BODY", "CONTEXT", "GUIDANCE", "PIN", "FOOTER"):
         if key in escaped:
             escaped[key] = escaped[key].replace("\n", "<br>")
+    if design and revision == 2 and design["rich_text"]:
+        from .email_rich_text import render_rich_text
+
+        escaped["BODY"] = render_rich_text(body)
     # One substitution pass: user text resembling an internal slot is never re-evaluated.
-    rendered_html = SLOT.sub(lambda match: escaped[match[1]], LAYOUTS["decision" if eligible else "notice"])
+    rendered_html = SLOT.sub(lambda match: escaped[match[1]], LAYOUT_REGISTRY[revision]["layouts"]["decision" if eligible else "notice"])
     text = "\n\n".join(segments)
     if len(rendered_html.encode("utf-8")) > 131072:
         raise ValueError("Rendered email HTML exceeds size limit")
     return {**content, "body": text, "text": text, "html": rendered_html,
-            "renderer_contract_version": "1", "renderer_revision": "mjml-5.4.1-layout-1",
-            "layout_sha256": LAYOUT_DIGEST}
+            "renderer_contract_version": "1", "renderer_revision": f"mjml-5.4.1-layout-{revision}",
+            "layout_sha256": LAYOUT_REGISTRY[revision]["sha256"]}

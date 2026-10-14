@@ -1,0 +1,13 @@
+.grant-email-designer{display:grid;gap:1rem;min-width:0;margin-block:1.25rem}
+.grant-email-design-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.5rem}
+.grant-email-design-grid>section{display:grid;align-content:start;gap:.85rem;min-width:0}
+.grant-email-style-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;padding-block:1rem}
+.grant-email-designer .grant-actions{flex-wrap:wrap}
+.grant-email-designer button{min-height:44px;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:760px){.grant-email-design-grid,.grant-email-style-grid{grid-template-columns:minmax(0,1fr)}}
+
+.grant-email-workbench{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:1.25rem;align-items:start}
+.grant-email-workbench>*{min-width:0}
+.grant-email-workbench>:last-child{position:sticky;top:1rem}
+.grant-email-workbench .grant-email-design-grid{grid-template-columns:minmax(0,1fr)}
+@media(max-width:1100px){.grant-email-workbench{grid-template-columns:minmax(0,1fr)}.grant-email-workbench>:last-child{position:static;order:-1}}

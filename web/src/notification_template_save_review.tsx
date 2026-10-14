@@ -22,6 +22,7 @@ export type TemplateSaveReview=Readonly<{
 function cloned(draft:TemplateDraft):TemplateDraft{
   return {
     name:draft.name,enabled:draft.enabled,
+    ...(draft.design?{design:structuredClone(draft.design)}:{}),
     templates:Object.fromEntries(requiredEvents.map(event=>[
       event,{
         subject:draft.templates[event].subject,
@@ -94,7 +95,7 @@ export function isCurrentTemplateSaveReview(
   }catch{return false;}
 }
 export type TemplateSavePayload={
-  name:string;templates:NotificationTemplateSet['templates'];enabled?:boolean;
+  name:string;templates:NotificationTemplateSet['templates'];enabled?:boolean;design?:NotificationTemplateSet['design'];
   expected_updated_at?:number;
 };
 /** Synchronous one-shot. A potentially committed save is kept latched
@@ -166,6 +167,7 @@ export async function submitReviewedTemplateSave<T extends NotificationTemplateS
     const payload:TemplateSavePayload={
       name:intent.draft.name,
       templates:cloned(intent.draft).templates,
+      ...(intent.draft.design?{design:structuredClone(intent.draft.design)}:{}),
       ...(intent.mode==='update'?{
         enabled:intent.draft.enabled,
         expected_updated_at:intent.savedUpdatedAt!,
@@ -194,8 +196,18 @@ export function NotificationTemplateSaveConfirmation({
       <dt>Requested name</dt><dd>{reviewed.draft.name}</dd>
       <dt>Saved status</dt><dd>{reviewed.savedEnabled===null?'Not created':reviewed.savedEnabled?'Enabled':'Disabled'}</dd>
       <dt>Requested status</dt><dd>{reviewed.draft.enabled?'Enabled':'Disabled'}</dd>
+      <dt>Visual design</dt><dd>{reviewed.draft.design?reviewed.draft.design.preset+' · '+reviewed.draft.design.button_size+' buttons':'Legacy text template'}</dd>
       <dt>Changes to messages</dt><dd>{reviewed.changedEvents.length} of {requiredEvents.length} events</dd>
     </dl>
+    {reviewed.draft.design&&<details><summary>Review exact visual design</summary><pre className="grant-mono">{JSON.stringify(reviewed.draft.design,null,2)}</pre></details>}
+    {reviewed.draft.design&&<section aria-label="Reviewed visual email design">
+      <h4>Visual design in this save</h4>
+      <p>Preset: {reviewed.draft.design.preset} · Buttons: {reviewed.draft.design.button_size}
+        {' · '}Font: {reviewed.draft.design.styles.button_font_size}px
+        {' · '}Padding: {reviewed.draft.design.styles.button_padding_y}px / {reviewed.draft.design.styles.button_padding_x}px
+        {' · '}Gap: {reviewed.draft.design.styles.button_gap}px · Radius: {reviewed.draft.design.styles.button_radius}px</p>
+      <p>Language: {reviewed.draft.design.locale}. Saving this visual draft does not publish it.</p>
+    </section>}
     <details>
       <summary>Review all future event subjects and bodies</summary>
       {requiredEvents.map(event=><section key={event} aria-label={'Event '+event}>

@@ -160,3 +160,25 @@ def test_v12_upgrade_preserves_actual_synthetic_request_outbox_and_issuance(env)
             for table in before
         }
     assert after == before
+
+
+def test_canonical_suffix_rich_text_and_full_width_never_accept_html_or_hidden_controls():
+    from grant.email_design import EmailDesign
+    from grant.mail_templates import render_preview
+
+    design = EmailDesign(rich_text=True, paragraph_alignment="center").model_dump()
+    design["button_suffixes"]["approve"] = "scheduled change"
+    template = {"templates": deepcopy(DEFAULT_EVENT_TEMPLATES), "design": design}
+    template["templates"]["requested"]["body"] = "**Review** _carefully_\n- First item\n<script>alert(1)</script>"
+    rendered = render_preview(template, "requested", CONTEXT)
+    assert "Approve · scheduled change" in rendered["body"]
+    assert "<strong>Review</strong>" in rendered["html"]
+    assert "<em>carefully</em>" in rendered["html"]
+    assert "<li>First item</li>" in rendered["html"]
+    assert "<script>" not in rendered["html"]
+    assert "display:block;background:" in rendered["html"]
+    assert "text-align:center" in rendered["html"]
+    with pytest.raises(ValidationError):
+        EmailDesign(button_suffixes={"deny": "\u202eApprove"})
+    with pytest.raises(ValidationError):
+        EmailDesign(shared_layout_revision=1, rich_text=True)
