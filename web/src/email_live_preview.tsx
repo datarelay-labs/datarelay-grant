@@ -6,7 +6,7 @@ import {emailPreviewProblems,syntheticEmailSample,type EmailSampleKind} from './
 import type {EmailBlock} from './email_canvas_model';
 import type {NotificationEvent} from './types';
 
-export type LiveEmailPreview={rendered:{subject:string;body:string;html:string;renderer_revision?:string};validation:{html_bytes:number;protected_actions:number}};
+export type LiveEmailPreview={rendered:{subject:string;preheader?:string;body:string;html:string;renderer_revision?:string};validation:{html_bytes:number;protected_actions:number}};
 export type EmailPreviewState={signature:string;event:NotificationEvent;current:boolean};
 export function createPreviewSequence(){let sequence=0;return {next:()=>++sequence,current:(value:number)=>value===sequence,invalidate:()=>{sequence++;}};}
 /** Read-only synthetic requests. A stale render is presentation, never review evidence. */
@@ -50,8 +50,8 @@ export function LiveEmailPreview({draft,event,selectedBlock,onSelectBlock,onPrev
   {!current&&preview&&<p role="status" className="grant-email-stale">{pending?'Updating preview — previous result shown.':'Previous result shown — not valid for review.'}</p>}
   {pending&&!preview&&<p role="status">Rendering current draft…</p>}
   {preview&&<><button type="button" className="grant-email-subject-select" onClick={()=>onSelectBlock?.('subject')}>
-   <small>Subject</small><strong>{preview.rendered.subject}</strong></button>
-   <NotificationRenderedPreview rendered={preview.rendered} selectedBlock={selectedBlock} onSelectBlock={draft.design?.shared_layout_revision===3?onSelectBlock:undefined}/>
+   <small>Subject</small><strong>{preview.rendered.subject}</strong>{preview.rendered.preheader&&<><small>Preheader</small><span aria-label="Inbox preheader preview">{preview.rendered.preheader}</span></>}</button>
+   <NotificationRenderedPreview rendered={preview.rendered} selectedBlock={selectedBlock} onSelectBlock={draft.design&&draft.design.shared_layout_revision>=3?onSelectBlock:undefined}/>
    <details><summary>Diagnostics</summary><p>Validated HTML: {preview.validation.html_bytes.toLocaleString()} bytes · Protected actions: {preview.validation.protected_actions}. Renderer: {preview.rendered.renderer_revision??'server renderer'}. Mail-client acceptance has not been tested.</p></details>
   </>}
   <Button variant="secondary" disabled={pending||!!problems.length} onClick={()=>setRefresh(value=>value+1)}>Refresh live preview</Button>

@@ -22,6 +22,8 @@ export function emailCanvasNodes(html:string,selected:EmailBlock):ReactNode {
   if(node.nodeType!==Node.ELEMENT_NODE)return null;
   const element=node as HTMLElement,tag=element.tagName.toLowerCase();
   if(!tags.has(tag))return null;
+  // Compiler-owned inbox metadata is not visible body content or an editable block.
+  if(tag==='div'&&element.classList.contains('grant-mail-preheader')&&element.children.length===0)return null;
   const style:Record<string,string>={};
   for(const name of Array.from(element.style??[])){
    const value=safeEmailCanvasStyle(name,element.style.getPropertyValue(name));

@@ -500,6 +500,16 @@
           ],
           "scope": "Five unique new scenario outcomes PASS across original restore test and four corrected selector tests. No product source changed for this verification. Preheader remains absent; real-person/deployed acceptance NOT_RUN.",
           "real_user_acceptance": false
+        },
+        {
+          "kind": "TESTED_PREHEADER_WORKTREE_PENDING_COMMIT_BINDING",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "test_files": [
+            "tests/test_email_event_preheader.py",
+            "web/tests/canvas/preheader.spec.ts",
+            "web/tests/unit/email-preheader.test.ts"
+          ],
+          "result": "2 new Chromium cases; 86 affected Python; 727 full Web units; TypeScript/build/Ruff/compiler-reproduction/wheel assets PASS. New versioned preheader source is complete pending exact Git/CI binding; no dev/mail/person acceptance."
         }
       ],
       "blocker": null

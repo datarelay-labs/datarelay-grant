@@ -15,7 +15,7 @@ from importlib.resources import files
 from urllib.parse import urlsplit
 
 LAYOUT_REGISTRY = {}
-for _revision in (1, 2, 3):
+for _revision in (1, 2, 3, 4):
     _bytes = files("grant").joinpath(f"email_layout_v{_revision}.json").read_bytes()
     LAYOUT_REGISTRY[_revision] = {"sha256": hashlib.sha256(_bytes).hexdigest(),
                                    "layouts": json.loads(_bytes)["layouts"]}
@@ -166,6 +166,13 @@ def compose_email(
                 for slot in ("APPROVE", "HOLD", "DENY")
             ], values["PIN"]]
         segments += [values["DETAILS_LABEL"] + ": " + details, values["FOOTER"]]
+    if design and revision >= 4:
+        preheader = TOKEN.sub(lambda match: context[match[1]], design["event_preheaders"].get(event, ""))
+        if len(preheader) > 2048 or any(ord(c) < 32 or ord(c) == 127 for c in preheader):
+            raise ValueError("Rendered preheader must be bounded one-line text")
+        values["PREHEADER"] = preheader
+        if preheader:
+            segments.insert(0, preheader)
     escaped = {key: html.escape(value, quote=True) for key, value in values.items()}
     for key in ("BODY", "CONTEXT", "GUIDANCE", "PIN", "FOOTER"):
         if key in escaped:
@@ -179,6 +186,7 @@ def compose_email(
     text = "\n\n".join(segments)
     if len(rendered_html.encode("utf-8")) > 131072:
         raise ValueError("Rendered email HTML exceeds size limit")
-    return {**content, "body": text, "text": text, "html": rendered_html,
+    return {**content, **({"preheader": values["PREHEADER"]} if design and revision >= 4 else {}),
+            "body": text, "text": text, "html": rendered_html,
             "renderer_contract_version": "1", "renderer_revision": f"mjml-5.4.1-layout-{revision}",
             "layout_sha256": LAYOUT_REGISTRY[revision]["sha256"]}

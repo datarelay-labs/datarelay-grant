@@ -53,7 +53,7 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,onChange,
  const inspector=useRef<HTMLElement>(null);
  const outline=useRef<HTMLElement>(null);
  const field=useRef<HTMLInputElement|HTMLTextAreaElement|null>(null);
- const design=draft.design??null,visual=design?.shared_layout_revision===3;
+ const design=draft.design??null,visual=!!design&&design.shared_layout_revision>=3;
  const busy=disabled||restoring;
  function change(next:TemplateDraft){if(busy)return;history.current.push(draft);setLocalError('');onChange(next);}
  function designChange(next:EmailDesign){change({...draft,design:next});}
@@ -70,12 +70,14 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,onChange,
   requestAnimationFrame(()=>outline.current?.querySelector<HTMLElement>('[aria-pressed="true"]')?.focus());
  }
  function insert(key:string){
-  const max=selected==='message'?8000:selected==='footer'?1000:250;
-  const value=selected==='subject'?draft.templates[event].subject:selected==='message'?draft.templates[event].body:selected==='heading'?(design?.event_headings?.[event]??design?.heading??''):design?.footer??'';
   const element=field.current?.isConnected?field.current:null;
+  const inPreheader=selected==='subject'&&!!design&&!!element?.hasAttribute('data-email-preheader');
+  const max=inPreheader?200:selected==='message'?8000:selected==='footer'?1000:250;
+  const value=inPreheader?(design?.event_preheaders?.[event]??''):selected==='subject'?draft.templates[event].subject:selected==='message'?draft.templates[event].body:selected==='heading'?(design?.event_headings?.[event]??design?.heading??''):design?.footer??'';
   try{
    const next=insertEmailVariable(value,element?.selectionStart??value.length,element?.selectionEnd??value.length,key,variables,max);
-   if(selected==='subject'||selected==='message')copyChange(selected==='subject'?'subject':'body',next.value);
+   if(inPreheader&&design)designChange({...design,shared_layout_revision:4,event_preheaders:{...design.event_preheaders,[event]:next.value}});
+   else if(selected==='subject'||selected==='message')copyChange(selected==='subject'?'subject':'body',next.value);
    else if(design)designChange(selected==='heading'?{...design,event_headings:{...design.event_headings,[event]:next.value}}:{...design,footer:next.value});
    requestAnimationFrame(()=>{const target=element??inspector.current?.querySelector<HTMLInputElement|HTMLTextAreaElement>('[data-email-wording]');target?.focus();target?.setSelectionRange(next.cursor,next.cursor);});
   }catch(error){setLocalError(error instanceof Error?error.message:'Unable to insert this variable.');}
@@ -91,7 +93,11 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,onChange,
  </details>:null;
  const capture=(target:EventTarget|null)=>{const element=target as HTMLElement|null;if(element?.matches('[data-email-wording],textarea'))field.current=element as HTMLInputElement|HTMLTextAreaElement;};
  let properties:ReactNode;
- if(selected==='subject')properties=<TextField data-email-wording label="Event subject" required maxLength={250} value={draft.templates[event].subject} disabled={busy} onChange={e=>copyChange('subject',e.target.value)}/>;
+ if(selected==='subject')properties=<><TextField data-email-wording label="Event subject" required maxLength={250} value={draft.templates[event].subject} disabled={busy} onChange={e=>copyChange('subject',e.target.value)}/>
+  {visual&&design&&<><TextField data-email-wording data-email-preheader label="Event preheader" maxLength={200} value={design.event_preheaders?.[event]??''} disabled={busy}
+   onChange={e=>designChange({...design,shared_layout_revision:4,event_preheaders:{...design.event_preheaders,[event]:e.target.value}})}/>
+   <p>Optional inbox summary for this event. Leave empty to omit it. Use one line and up to 200 characters. Editing opts this unsaved draft into layout 4; published mail is unchanged.</p></>}
+ </>;
  else if(selected==='message')properties=<>
   <EmailBodyEditor value={draft.templates[event].body} visual={!!design} disabled={busy}
    onChange={value=>copyChange('body',value)} onEnableFormatting={()=>{}}

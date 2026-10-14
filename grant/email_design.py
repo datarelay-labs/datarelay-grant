@@ -58,12 +58,13 @@ class ButtonSuffixes(StrictDesign):
 class EmailDesign(StrictDesign):
     schema_version: Literal[1] = 1
     renderer_contract_version: Literal[1] = 1
-    shared_layout_revision: Literal[1, 2, 3] = 2
+    shared_layout_revision: Literal[1, 2, 3, 4] = 2
     locale: Literal["en", "ko"] = "en"
     preset: Literal["standard", "compact", "high_visibility"] = "standard"
     button_size: Literal["S", "M", "L"] = "M"
     heading: str = Field(default="{{request_title}}", min_length=1, max_length=250)
     event_headings: dict[str, str] = Field(default_factory=dict, max_length=9)
+    event_preheaders: dict[str, str] = Field(default_factory=dict, max_length=9)
     footer: str = Field(default="", max_length=1000)
     # Asset pipeline is not available: fail closed, never silently ignore a logo.
     logo_asset_id: None = None
@@ -87,7 +88,23 @@ class EmailDesign(StrictDesign):
             raise ValueError("These new authoring features require shared layout revision 2")
         if self.shared_layout_revision < 3 and self.event_headings:
             raise ValueError("Per-event headings require shared layout revision 3")
+        if self.shared_layout_revision < 4 and self.event_preheaders:
+            raise ValueError("Per-event preheaders require shared layout revision 4")
         return self
+
+    @field_validator("event_preheaders")
+    @classmethod
+    def safe_event_preheaders(cls, values: dict[str, str]) -> dict[str, str]:
+        from .mail_templates import DEFAULT_EVENT_TEMPLATES
+
+        for event, value in values.items():
+            if event not in DEFAULT_EVENT_TEMPLATES or len(value) > 200:
+                raise ValueError("Use a supported event and a preheader of at most 200 characters")
+            if any(ord(c) < 32 or ord(c) == 127 or 0x200B <= ord(c) <= 0x200F
+                    or 0x2028 <= ord(c) <= 0x202E or 0x2066 <= ord(c) <= 0x2069 for c in value):
+                raise ValueError("Preheaders must be one-line text without control characters")
+            cls.safe_text(value)
+        return values
 
     @field_validator("event_headings")
     @classmethod
