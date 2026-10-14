@@ -25,6 +25,16 @@ PASSWORDS = PasswordHasher()
 DUMMY_HASH = PASSWORDS.hash(secrets.token_urlsafe(32))
 
 
+def valid_new_password(password: str) -> bool:
+    """Grant password policy: 8+ chars with uppercase, digit and special char."""
+    return (
+        8 <= len(password) <= 256
+        and any("A" <= char <= "Z" for char in password)
+        and any("0" <= char <= "9" for char in password)
+        and any(not char.isalnum() and not char.isspace() for char in password)
+    )
+
+
 def digest(value: str) -> str:
     return hashlib.sha256(value.encode()).hexdigest()
 
@@ -111,7 +121,14 @@ class Auth:
         role: str = "member",
         actor: str | Principal = "bootstrap",
     ) -> dict:
-        if len(password) < 12 or len(password) > 256 or role not in ("admin", "member"):
+        # Privileged callers must prove current authority before input-policy
+        # validation so an ended/revoked session cannot use validation errors
+        # as an authenticated administrative oracle.
+        if isinstance(actor, Principal):
+            actor.require_admin()
+            with self.db.transaction(write=False) as conn:
+                require_current_authority(conn, actor)
+        if not valid_new_password(password) or role not in ("admin", "member"):
             raise GrantError("INVALID_ACCOUNT", 422)
         hashed = PASSWORDS.hash(password)
         user_id = uid()
@@ -282,7 +299,7 @@ class Auth:
         self.rate("password:" + actor.id, 10, 300)
         with self.db.transaction(write=False) as conn:
             row = conn.execute("SELECT password_hash FROM users WHERE id=?", (actor.id,)).fetchone()
-        if not verify_password(row[0], current) or len(new) < 12:
+        if not verify_password(row[0], current) or not valid_new_password(new):
             raise GrantError("PASSWORD_CHANGE_REJECTED", 422)
         hashed = PASSWORDS.hash(new)
         with self.db.transaction() as conn:

@@ -24,7 +24,7 @@ def env(tmp_path):
         callback_urls=("http://127.0.0.1:18794/callback",),
     )
     app = create_app(settings)
-    password = secrets.token_urlsafe(20)
+    password = "GrantTest1!"
     users = {
         name: app.state.auth.create_user(
             name, name + "@example.invalid", password, "admin" if name == "admin" else "member"

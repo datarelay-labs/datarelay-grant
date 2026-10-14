@@ -58,6 +58,10 @@ configured public origin and forwarded Host exactly; forwarded client headers do
 not automatically confer trust. TLS/proxy/firewall and production changes require
 explicit deployment authorization. This runbook does not apply them.
 
+### Local account password policy
+
+Grant local-account passwords must contain at least **8 characters**, including at least **one uppercase letter**, **one number**, and **one special character**. The same policy is enforced for CLI `user-add`, administrator-created accounts, and self-service password changes. Existing stored passwords remain valid for login until they are changed.
+
 ## SMTP and callback configuration
 
 Stop the local service before editing installation settings. Add the existing SMTP

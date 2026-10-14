@@ -322,8 +322,6 @@ def test_reassignment_rejects_previous_vote_without_changing_quorum(env):
 
 def test_two_admin_escalation_stale_update_cannot_replace_routing(env):
     """Two independently authenticated admins cannot silently replace escalation."""
-    import secrets
-
     from fastapi.testclient import TestClient
 
     profile = active_group_profile(env)
@@ -331,7 +329,7 @@ def test_two_admin_escalation_stale_update_cannot_replace_routing(env):
     endpoint = f"/api/v1/requests/{request['id']}/escalation"
     original_revision = request["revision"]
     admin_a = env.human("admin")
-    password = secrets.token_urlsafe(24)
+    password = "GrantTest3!"
     second = env.auth.create_user(
         "routing-admin", "routing-admin@example.invalid", password, "admin",
     )

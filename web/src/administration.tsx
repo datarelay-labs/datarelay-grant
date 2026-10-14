@@ -25,6 +25,8 @@ import {
 import { api } from './api';
 import {
   createAccountCreationReview,
+  GRANT_PASSWORD_GUIDANCE,
+  GRANT_PASSWORD_PATTERN,
   isCurrentAccountCreateReview,
   type AccountCreateReview,
 } from './admin_account_create_review';
@@ -492,7 +494,9 @@ export function Administration({ user }: { user: User }) {
                 label="Initial password"
                 type="password"
                 autoComplete="new-password"
-                minLength={12}
+                minLength={8}
+                pattern={GRANT_PASSWORD_PATTERN}
+                hint={GRANT_PASSWORD_GUIDANCE}
                 required
                 value={password}
                 onChange={(event) => { setPassword(event.target.value); setReviewedCreation(null); }}
@@ -645,6 +649,7 @@ export function Security({
       <Card title="Change password">
         <PasswordChangeForm
           busy={task.busy}
+          guidance={GRANT_PASSWORD_GUIDANCE}
           onSubmit={(input) =>
             task.run(async () => {
               await authAdapter.changePassword!(input);

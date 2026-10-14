@@ -216,12 +216,10 @@ def test_policy_preview_contains_full_group_approval_plan(env):
 
 def test_stale_group_editor_cannot_reduce_future_all_threshold(env):
     """Two real admin sessions must not silently lose an ALL approver."""
-    import secrets
-
     from fastapi.testclient import TestClient
 
     admin_a = env.human("admin")
-    second_password = secrets.token_urlsafe(24)
+    second_password = "GrantTest2!"
     env.auth.create_user(
         "second-admin", "second-admin@example.invalid", second_password, "admin"
     )
@@ -235,7 +233,7 @@ def test_stale_group_editor_cannot_reduce_future_all_threshold(env):
         admin_b.headers["x-csrf-token"] = login.json()["csrf"]
         extra = env.auth.create_user(
             "extra-approver", "extra-approver@example.invalid",
-            secrets.token_urlsafe(24), "member",
+            "GrantTest4!", "member",
         )["id"]
         original_members = [
             env.users["approver"]["id"], env.users["stranger"]["id"],

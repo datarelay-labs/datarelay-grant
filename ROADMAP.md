@@ -8,15 +8,16 @@
 Canonical detailed execution plan: [10 milestones / 68 registered WBS tasks](docs/COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md).
 Per-task evidence: [UI evidence ledger](docs/COMPETITOR_UI_EVIDENCE_20261014.json).
 
-Current product source remains `4fe71b4b96c66ed80e7c67138c784e17b0714435`. Exact mutable evidence/coordination HEAD and CI are intentionally tracked in GitHub Roadmap #37, ACTIVE Work Packet #67 and Draft PR #100 rather than pinned here, so evidence-only commits do not make this file falsely stale.
+The competitor-UI implementation baseline remains `4fe71b4b96c66ed80e7c67138c784e17b0714435`; the later owner-directed password-policy source change is tracked by the exact mutable HEAD/CI in GitHub Roadmap #37, ACTIVE Work Packet #67 and Draft PR #100 rather than pinned here.
 - U1–U5, U6.01–U6.05, U7.01–U7.03 and U8.01–U8.07 have source + mounted interaction PASS evidence.
-- Focused mounted editor/Notifications 6/6 PASS; qualification keyboard/focus/touch 3/3 PASS; full Web unit 738/738 PASS; TypeScript + production build PASS.
+- Focused mounted editor/Notifications 6/6 PASS; qualification keyboard/focus/touch 3/3 PASS; current full Web unit 740/740 PASS; TypeScript + production build PASS.
 - U0.02 coordination, U0.04 preservation and U0.05 evidence-model gates PASS. Original G12 and stash remain protected.
 - **R2 S02/no-omission COMPLETE:** raw S02 remains unavailable and is not claimed recovered; owner disposition accepts the retained 16 mandatory S02 promise groups as the final S02 traceability scope with automatic reopen on material delta. U0.01/U0.03/U8.08/U9.01 PASS.
 - Current development HTTPS preview serves the current Web build with independent byte-matched readback; U7.07 source + dev deployment PASS, while authenticated same-UI-task interaction remains blocked without an authorized persona/credential path.
 - **R1 deployment reconciliation COMPLETE:** 52 implementation-qualified rows reconciled; 50 dev-deployment PASS and U7.02/U7.03 N/A because U7.07 owns deployment provenance. Acceptance remains unchanged/NOT_RUN. See docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md.
 - **R3 actual acceptance preflight EXECUTED:** Grant SMTP is now owner-configured and current-candidate Gmail receipt is verified with corrected sender, STARTTLS and DKIM/SPF PASS while worker remains disabled. The known dev preview has also been restarted successfully with the corrected config and HTTPS readback is healthy. U6.06 stays OPEN only because the dev DB has zero saved notification-template revisions; U7.04 still lacks direct Gmail Web/Mobile visual + Outlook + Apple Mail/iOS, U7.05/U7.06 remain external-participant blocked, and U7.07 interaction remains BLOCKED_TOOLING.
 - U9.01 no-omission traceability PASS. U9.02 remains OPEN on actual acceptance; U9.03/U9.04 cannot close until U9.02 does. The exclusive priority lock remains active.
+- **Owner-directed password policy override implemented 2026-10-14:** new/change local passwords require 8+ characters with at least one uppercase letter, one number and one special character. Server enforcement, CLI/admin UI guidance and tests share the rule; existing password hashes remain valid until changed. This explicit owner request temporarily supersedes the unrelated-work lock only for this bounded policy change, then R3 resumes.
 
 **Next action (R3 resume):** provide/connect one of the real prerequisites recorded in docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md, then execute that exact gate. Do not substitute fixtures/emulation, extract session/fixture secrets or reopen S02 research. Exact current HEAD/CI must be read from #37/#67/PR100 before any resumed action.
 

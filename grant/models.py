@@ -19,6 +19,7 @@ class Login(Input):
 
 
 class NewUser(Login):
+    password: str = Field(min_length=8, max_length=256)
     email: str = Field(min_length=3, max_length=254)
     role: Literal["admin", "member"] = "member"
 
@@ -345,7 +346,7 @@ class Token(Input):
 
 class PasswordChange(Input):
     current_password: str = Field(min_length=1, max_length=256)
-    new_password: str = Field(min_length=12, max_length=256)
+    new_password: str = Field(min_length=8, max_length=256)
 
 
 class MfaCode(Input):

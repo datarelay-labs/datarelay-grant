@@ -4,6 +4,14 @@
  */
 import type { User } from './types';
 
+export const GRANT_PASSWORD_PATTERN = '(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9\\s]).{8,256}';
+export const GRANT_PASSWORD_GUIDANCE = 'Use 8 or more characters with at least one uppercase letter, one number, and one special character.';
+
+export function isValidGrantPassword(value: string): boolean {
+  return value.length >= 8 && value.length <= 256 &&
+    /[A-Z]/.test(value) && /[0-9]/.test(value) && /[^A-Za-z0-9\s]/.test(value);
+}
+
 export type AccountCreateReview = Readonly<{
   actorId: string;
   username: string;
@@ -19,7 +27,7 @@ export function createAccountCreationReview(
   if (actor.role !== 'admin' || !actor.id ||
     !username || !email ||
     (role !== 'admin' && role !== 'member') ||
-    initialPassword.length < 12 || initialPassword.length > 256) {
+    !isValidGrantPassword(initialPassword)) {
     throw Error('ACCOUNT_CREATE_REVIEW_UNAVAILABLE');
   }
   return Object.freeze({
@@ -42,5 +50,5 @@ export function isCurrentAccountCreateReview(
     actor.role === 'admin' && intent.actorId === actor.id &&
     username === intent.username && email === intent.email &&
     role === intent.role && initialPassword.length === intent.secretLength &&
-    initialPassword.length >= 12 && initialPassword.length <= 256);
+    isValidGrantPassword(initialPassword));
 }

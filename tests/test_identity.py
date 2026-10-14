@@ -128,7 +128,7 @@ def test_password_change_revokes_sessions_and_errors_do_not_echo_secret(env):
     assert bad.status_code == 422 and env.password not in bad.text and "short" not in bad.text
     changed = client.post(
         "/api/v1/auth/password",
-        json={"current_password": env.password, "new_password": "a-new-test-password-123"},
+        json={"current_password": env.password, "new_password": "A-new-test-password-123!"},
     )
     assert changed.status_code == 200
     assert second.get("/api/v1/auth/session").status_code == 401
@@ -190,6 +190,7 @@ def test_account_management_enforces_admin_and_invalidates_sessions(env):
         "email": "new@example.invalid",
         "password": "isolated-test-password-42",
     }
+    body["password"] = "ValidTest1!"
     assert member.post("/api/v1/admin/users", json=body).status_code == 403
     assert admin.post("/api/v1/admin/users", json={**body, "email": "a@b,b@c"}).status_code == 422
     assert admin.post("/api/v1/admin/users", json={**body, "username": " "}).status_code == 422
@@ -245,6 +246,43 @@ def test_ended_session_cannot_change_password_or_complete_mfa_enrollment(env):
         conn.execute("DELETE FROM sessions WHERE id=?", (principal.session_id,))
 
     with pytest.raises(GrantError, match="AUTHENTICATION_REQUIRED"):
-        env.auth.change_password(principal, env.password, "new-isolated-password-42")
+        env.auth.change_password(principal, env.password, "New-isolated-password-42!")
     with pytest.raises(GrantError, match="AUTHENTICATION_REQUIRED"):
         env.auth.confirm_enrollment(principal, pyotp.TOTP(material["secret"]).now())
+
+
+def test_password_policy_requires_8_upper_number_special(env):
+    from grant.auth import valid_new_password
+
+    assert valid_new_password("Stellar1!")
+    assert valid_new_password("A1!bcdef")
+    assert not valid_new_password("Stellar1")  # no special character
+    assert not valid_new_password("stellar1!")  # no uppercase
+    assert not valid_new_password("Stellar!!")  # no number
+    assert not valid_new_password("A1!bcde")  # only 7 characters
+
+    created = env.auth.create_user(
+        "policy-user", "policy-user@example.invalid", "Stellar1!", "member"
+    )
+    assert created["username"] == "policy-user"
+
+    for index, password in enumerate(("Stellar1", "stellar1!", "Stellar!!", "A1!bcde")):
+        with pytest.raises(GrantError, match="INVALID_ACCOUNT"):
+            env.auth.create_user(
+                f"bad-policy-{index}", f"bad-policy-{index}@example.invalid", password, "member"
+            )
+
+
+def test_password_change_uses_same_password_policy(env):
+    browser = env.human("stranger")
+    principal = env.auth.session(browser.cookies["grant_session"])
+    env.auth.change_password(principal, env.password, "Stellar2!")
+
+    relogin = TestClient(env.app)
+    response = relogin.post(
+        "/api/v1/auth/login", json={"username": "stranger", "password": "Stellar2!"}
+    )
+    assert response.status_code == 200
+    principal = env.auth.session(relogin.cookies["grant_session"])
+    with pytest.raises(GrantError, match="PASSWORD_CHANGE_REJECTED"):
+        env.auth.change_password(principal, "Stellar2!", "NoSpecial2")

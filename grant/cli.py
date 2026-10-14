@@ -99,7 +99,7 @@ def main():
         return
     db = Database(settings.database)
     if args.command == "user-add":
-        password = getpass.getpass("New password (12+ characters): ")
+        password = getpass.getpass("New password (8+ chars; uppercase, number, special): ")
         if password != getpass.getpass("Confirm password: "):
             raise SystemExit("Passwords do not match")
         draft = NewUser(username=args.username, email=args.email, password=password, role=args.role)

@@ -964,6 +964,10 @@ The Administration landing surface uses Product Foundation capability declaratio
 common administration components. Unsupported backup/restore/TLS/upgrade mutations are
 not made interactive merely to fill a settings page.
 
+#### Local password policy
+
+Grant local-account password creation and password changes use one server-authoritative rule: **8 or more characters with at least one uppercase letter, one number, and one special character**. Client forms mirror the rule for early validation but never replace server enforcement. Existing stored credentials are not forcibly invalidated by a policy update; the rule applies when a password is created or changed.
+
 ### Control-reference System Management parity (owner requirement, 2026-10-14)
 
 The accepted *target* is the first-party Control Administration screenshot's nine
