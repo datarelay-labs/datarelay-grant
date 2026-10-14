@@ -2392,10 +2392,10 @@
       "verification_id": "V-U6.06",
       "pass_criterion": "V-U6.06: exact saved revision and message observed in authorized inbox, dummy actions/PIN confirmed nonauthorizing; record receipt separately from transport and client layout. Missing approval/environment stays OPEN, not synthetic PASS.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
-      "dev_deployment": "NOT_RUN",
-      "acceptance": "NOT_RUN",
+      "source": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "interaction": "BLOCKED",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "CURRENT_SCOPE_BOUNDARY",
@@ -2403,9 +2403,35 @@
           "observed_at": "2026-10-14T05:00:51.941052+00:00",
           "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
           "result": "NOT_RUN: no live self-mail was authorized or sent; transport acceptance and mailbox receipt remain distinct."
+        },
+        {
+          "gate": "source",
+          "justification": "U6.06 is an external receipt acceptance row; no additional product source is required beyond U6.03-U6.05."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/FULL_USER_E2E_SCENARIOS.md",
+          "source_head": "68aeaa6ddaf65f73e308b42d88cff5d75b6e3879",
+          "test_id": "V-U6.06",
+          "observed_at": "2026-10-14T10:38:58.994222+00:00",
+          "result_detail": "Actual self-test delivery/receipt was not executed because real SMTP/mailbox effect approval is not present in the active scope."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "U6.06 evaluates an approved mailbox receipt, not development deployment provenance; U7.07 owns dev deployment."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/FULL_USER_E2E_SCENARIOS.md",
+          "source_head": "68aeaa6ddaf65f73e308b42d88cff5d75b6e3879",
+          "test_id": "V-U6.06",
+          "observed_at": "2026-10-14T10:38:58.994222+00:00",
+          "result_detail": "Requires separately authorized actual mailbox receipt with inert/non-authorizing actions; synthetic transport or preview cannot substitute."
         }
       ],
-      "blocker": null
+      "blocker": "Requires explicit authorization for a real nonproduction SMTP/mailbox receipt. Current scope explicitly forbids real SMTP/external effects."
     },
     {
       "id": "U7.01",
@@ -2546,12 +2572,39 @@
       "verification_id": "V-U7.04",
       "pass_criterion": "V-U7.04: record exact client/version/OS/configuration and same message revision; normal/long EN-KO/dark/images-off/narrow/large-button/terminal cases readable and correct; every supported matrix cell PASS, unavailable cell explicitly OPEN. Browser emulation is not client PASS.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
-      "dev_deployment": "NOT_RUN",
-      "acceptance": "NOT_RUN",
-      "evidence": [],
-      "blocker": null
+      "source": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "interaction": "BLOCKED",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "acceptance": "BLOCKED",
+      "evidence": [
+        {
+          "gate": "source",
+          "justification": "U7.04 is a real mail-client acceptance matrix and requires no new product source by itself."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/FULL_USER_E2E_SCENARIOS.md",
+          "source_head": "68aeaa6ddaf65f73e308b42d88cff5d75b6e3879",
+          "test_id": "V-U7.04",
+          "observed_at": "2026-10-14T10:38:58.994222+00:00",
+          "result_detail": "No approved Gmail/Outlook/Apple Mail/iOS client sessions or same-message matrix are available in the current execution environment."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "Mail-client rendering acceptance is separate from Grant development deployment; U7.07 owns deployed preview provenance."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/FULL_USER_E2E_SCENARIOS.md",
+          "source_head": "68aeaa6ddaf65f73e308b42d88cff5d75b6e3879",
+          "test_id": "V-U7.04",
+          "observed_at": "2026-10-14T10:38:58.994222+00:00",
+          "result_detail": "Requires actual supported mail clients and message revision observations; browser emulation is explicitly insufficient."
+        }
+      ],
+      "blocker": "Approved real Gmail/Outlook/Apple Mail/iOS client and mailbox environments are not available to this Chat."
     },
     {
       "id": "U7.05",
@@ -2561,12 +2614,39 @@
       "verification_id": "V-U7.05",
       "pass_criterion": "V-U7.05: read current complete contract before running; same exact candidate, real authorized personas, actual persisted UI outcomes and independently operated mailboxes where required; preserve all original 121 IDs. No fixture-secret workaround, mock-as-user PASS or implicit execution/approval.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
-      "dev_deployment": "NOT_RUN",
-      "acceptance": "NOT_RUN",
-      "evidence": [],
-      "blocker": null
+      "source": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "interaction": "BLOCKED",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "acceptance": "BLOCKED",
+      "evidence": [
+        {
+          "gate": "source",
+          "justification": "U7.05 is the existing Full User E2E/Surface Reconciliation acceptance gate, not a new source implementation row."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/FULL_USER_E2E_SCENARIOS.md",
+          "source_head": "68aeaa6ddaf65f73e308b42d88cff5d75b6e3879",
+          "test_id": "V-U7.05",
+          "observed_at": "2026-10-14T10:38:58.994222+00:00",
+          "result_detail": "No two independently acting authorized real personas and independently controlled mailboxes are available for the required same-candidate journeys."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "Exact development deployment provenance is tracked separately by U7.07; U7.05 requires real-user acceptance on an approved candidate surface."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/FULL_USER_E2E_SCENARIOS.md",
+          "source_head": "68aeaa6ddaf65f73e308b42d88cff5d75b6e3879",
+          "test_id": "V-U7.05",
+          "observed_at": "2026-10-14T10:38:58.994222+00:00",
+          "result_detail": "The 121-case contract cannot be passed by fixtures, synthetic browser identities, shared credentials or mock mailboxes."
+        }
+      ],
+      "blocker": "Requires approved independent human participants, independently controlled real mailboxes and an approved acceptance surface."
     },
     {
       "id": "U7.06",
@@ -2576,12 +2656,39 @@
       "verification_id": "V-U7.06",
       "pass_criterion": "V-U7.06: from already-open editor body wording+button size require <=5 purposeful UI actions excluding text keystrokes; first-time admin preset/personalize/mobile/save <=180 seconds excluding SMTP latency; record participant/task/timestamps/action definition/errors. No passing estimate in lieu of observation.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
-      "dev_deployment": "NOT_RUN",
-      "acceptance": "NOT_RUN",
-      "evidence": [],
-      "blocker": null
+      "source": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "interaction": "BLOCKED",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "acceptance": "BLOCKED",
+      "evidence": [
+        {
+          "gate": "source",
+          "justification": "U7.06 is a measured usability acceptance row; it does not require new source unless observation finds a defect."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/FULL_USER_E2E_SCENARIOS.md",
+          "source_head": "68aeaa6ddaf65f73e308b42d88cff5d75b6e3879",
+          "test_id": "V-U7.06",
+          "observed_at": "2026-10-14T10:38:58.994222+00:00",
+          "result_detail": "No authorized first-time participant is available to perform the measured task and provide real timestamps/action counts."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "Deployment provenance is owned by U7.07; U7.06 measures a real participant using an approved surface."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/FULL_USER_E2E_SCENARIOS.md",
+          "source_head": "68aeaa6ddaf65f73e308b42d88cff5d75b6e3879",
+          "test_id": "V-U7.06",
+          "observed_at": "2026-10-14T10:38:58.994222+00:00",
+          "result_detail": "The <=5-action and <=180-second targets require observed participant measurements; estimates or automation cannot substitute."
+        }
+      ],
+      "blocker": "Requires an authorized novice/first-use participant and measured task recording."
     },
     {
       "id": "U7.07",
@@ -2592,9 +2699,9 @@
       "pass_criterion": "V-U7.07: record source HEAD, build hash, deployed asset hash and actual GET/readback; screenshot the real candidate, validate same UI task, preserve dev state/rollback and disabled unapproved live effects. Config inspection alone is not deployment/browser proof.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "NOT_RUN",
+      "interaction": "BLOCKED",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "evidence": [
         {
           "gate": "source",
@@ -2631,9 +2738,22 @@
           "test_id": "V-U7.07",
           "observed_at": "2026-10-14T10:35:38.427590+00:00",
           "result_detail": "Development HTTPS preview updated to current Web build. Local and independent dev-drcontrol GETs returned HTTP 200 with byte-identical index/JS/CSS SHA256; protected unauthenticated admin GET returned 401. Rollback config and SQLite backup retained with quick_check=ok; worker remains disabled and SMTP unconfigured. Fresh anonymous Chromium login screenshot HTTP 200/title DataRelay Grant. Authenticated deployed-task interaction and user acceptance remain NOT_RUN."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/FULL_USER_E2E_SCENARIOS.md",
+          "source_head": "68aeaa6ddaf65f73e308b42d88cff5d75b6e3879",
+          "test_id": "V-U7.07",
+          "observed_at": "2026-10-14T10:38:58.994222+00:00",
+          "result_detail": "Current development preview provenance and anonymous login screenshot are verified, but an authenticated same-UI-task run is not available without an authorized credential/persona path. Prior fixture-credential extraction was safety-denied and is not bypassed."
+        },
+        {
+          "gate": "acceptance",
+          "justification": "U7.07 separates development deployment provenance from user/mail-client acceptance; U7.04-U7.06 own those acceptance gates."
         }
       ],
-      "blocker": null
+      "blocker": "Authenticated same-UI-task interaction on the deployed development preview requires an authorized persona/credential path; no fixture-secret workaround is permitted."
     },
     {
       "id": "U8.01",
