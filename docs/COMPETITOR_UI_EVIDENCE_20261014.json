@@ -1372,12 +1372,44 @@
       "depends_on": "Changed U1–U6 source",
       "verification_id": "V-U7.01",
       "pass_criterion": "V-U7.01: record exact commit, actual command, exit and artifact; affected regressions and required CI pass without rerunning completed renderer selection; lock/license/integrity and old output hashes verified; no unsupported dependency or Foundation pin change.",
-      "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
-      "dev_deployment": "NOT_RUN",
-      "acceptance": "NOT_RUN",
-      "evidence": [],
+      "status": "PASS",
+      "source": "PASS",
+      "interaction": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "source_head": "d1421320678e8b660e6d43614f175030f1ed3729",
+          "test_id": "V-U7.01",
+          "observed_at": "2026-10-14T05:21:43.286599+00:00",
+          "commands": [
+            "python3 tools/validate_competitor_ui_wbs.py --self-test",
+            "node --max-old-space-size=256 mail-renderer/build.mjs --check",
+            "uv build --wheel --out-dir .dev/u7-01-package"
+          ],
+          "native_ci": [
+            38515371490,
+            38515372044,
+            38515370052
+          ],
+          "result_detail": "WBS validator PASS/open-product; layouts 1..6 exact compiler reproduction and wheel bytes PASS; exact-head native CI SUCCESS."
+        },
+        {
+          "gate": "interaction",
+          "justification": "U7.01 is a source/build/artifact integrity gate; it defines no user interaction."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "U7.01 validates source/build artifacts independent of deployment; U7.07 owns deployment provenance."
+        },
+        {
+          "gate": "acceptance",
+          "justification": "U7.01 has no persona or mail-client acceptance requirement; U7.04/U7.05 own those gates."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1388,11 +1420,30 @@
       "verification_id": "V-U7.02",
       "pass_criterion": "V-U7.02: actual UI events and persisted readback at same candidate demonstrate all steps; screenshots desktop/390px plus request/response assertions; helper/SSR/source-string checks alone fail this gate. Synthetic backend tests are labeled, not actual user acceptance.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "web/tests/canvas/qualification.spec.ts",
+          "source_head": "d1421320678e8b660e6d43614f175030f1ed3729",
+          "test_id": "V-U7.02",
+          "observed_at": "2026-10-14T05:21:43.286599+00:00",
+          "result_detail": "Committed mounted editor journey; native exact-head CI SUCCESS."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u7-qualification-green-results.json",
+          "source_head": "d1421320678e8b660e6d43614f175030f1ed3729",
+          "test_id": "V-U7.02",
+          "observed_at": "2026-10-14T05:21:43.286599+00:00",
+          "result_detail": "1/1 Playwright mounted Notifications PASS: keyboard preset -> body edit -> actions -> size -> 390px -> Review/Confirm save -> authoritative refresh -> inventory -> reopen; one synthetic PUT; published v1 unchanged. Synthetic transport, not user acceptance."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1403,11 +1454,19 @@
       "verification_id": "V-U7.03",
       "pass_criterion": "V-U7.03: complete task by keyboard without drag; clear accessible names, logical focus, no trap/overflow/clipped primary action at 390px; all rendered labels/context usable at 320/375/390; automation findings plus manual evidence, no unearned standards certification.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "IN_PROGRESS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "PARTIAL_MOUNTED_ACCESSIBILITY_QUALIFICATION",
+          "artifact": ".dev/u7-qualification-green-results.json",
+          "source_head": "d1421320678e8b660e6d43614f175030f1ed3729",
+          "observed_at": "2026-10-14T05:21:43.286599+00:00",
+          "result": "Keyboard-only editor task and 390px no-overflow/mobile inspector PASS with desktop/390 screenshots. 320/375 editor widths plus manual/touch/error-focus acceptance remain OPEN; no standards-certification claim."
+        }
+      ],
       "blocker": null
     },
     {

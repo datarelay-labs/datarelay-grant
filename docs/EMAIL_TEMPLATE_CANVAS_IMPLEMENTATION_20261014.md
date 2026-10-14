@@ -510,3 +510,27 @@ scoped Ruff/diff hygiene and immutable renderer reproduction PASS. Evidence:
 queued/in progress when this evidence note was written; it is not pre-claimed.
 U6.06 actual self-mail receipt remains NOT_RUN and requires its real authorized
 environment/effect. No production, merge or release action was performed.
+
+
+### U7 committed qualification checkpoint
+
+Current exact source `d1421320678e8b660e6d43614f175030f1ed3729` has native
+Grant checks and both Engineering System workflows SUCCESS. The pinned MJML
+compiler reproduces immutable layouts 1..6; the locally built wheel contains
+byte-identical layout artifacts with the recorded hashes. The WBS/crosswalk
+validator and its negative self-checks PASS while correctly retaining overall
+product completion OPEN.
+
+The mounted Notifications qualification at this exact source uses real Grant
+components with explicitly synthetic route transport. One keyboard-only task
+selects Compact, edits the message, selects protected approval actions, changes
+button size, captures desktop and 390px evidence, saves through Review/Confirm,
+performs the mandatory post-write authoritative refresh, returns to inventory and
+reopens the persisted draft. Result 1/1 PASS; the saved draft revision advances,
+published revision does not, and only one synthetic PUT is observed. Evidence:
+`.dev/u7-qualification-green.txt`, `.dev/u7-qualification-green-results.json`,
+`.dev/u7-keyboard-desktop.png`, `.dev/u7-keyboard-mobile-390.png`.
+This is mounted synthetic interaction evidence, not a real user/mail-client PASS.
+320/375 editor-width qualification, manual/touch observations, actual clients,
+independent authorized personas and measured novice timing remain separate OPEN
+gates.
