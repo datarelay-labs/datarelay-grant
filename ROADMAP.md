@@ -1,5 +1,54 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## P0-ET ACTIVE — approval-email visual editor (research complete; implementation open)
+
+**Owner request, 2026-10-14:** compare competing email template editors and
+put the best-fit Grant direction into the roadmap. The documented survey
+covers **20 product/project families** and 33 primary source references:
+`docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md`. This is documented
+comparison, not a claim of authenticated hands-on testing of every vendor.
+
+**Decision:** one approval-specific block editor in existing Notifications
+Template Sets, with content/button styling, protected action/PIN blocks,
+shared layouts, real HTML + plain-text preview and explicit draft/publish
+versioning. Use Grant-owned validated JSON and an offline server renderer;
+**MJML is the first PoC candidate; React Email is the comparison/fallback**.
+Do not install either merely from this plan. Foundation owns reusable common
+UI; Grant owns its approval editor composition/schema/backend/rendering.
+
+Users must be able to change body wording, bounded rich text, colors,
+button S/M/L size and bounded font/padding/gap/radius, layout and approved
+logo without knowing HTML. Three presets (Standard/Compact/High visibility),
+English/Korean samples and mobile previews are part of the core target.
+The server retains exact action IDs/URLs, canonical localized labels, PIN
+issuance, verification floor, immutable request context and final Confirm.
+No arbitrary HTML/JS/CSS, link rebinding, tracking or hidden approval block.
+
+| Phase | Priority | Deliverable / exit criterion | Current status |
+| --- | --- | --- | --- |
+| ET-0 | Current request | 20-family source survey, recommendation, roadmap and 24 acceptance checks saved and linked | DONE — RESEARCH/DOCS ONLY |
+| ET-1 | P0; first next implementation | Same-input local MJML/React Email renderer PoC; structured subject/HTML/text, mode-correct guidance, three decisions + View Details; remove fragile body-string split | NOT STARTED |
+| ET-2 | P0; ET-1 | Protected JSON design schema, server style/asset validation, CAS draft API and immutable template/layout/renderer snapshot; legacy compatibility | NOT STARTED |
+| ET-3 | P0; ET-2 | Single block editor, three presets, safe variable chips and configurable text/button design with keyboard/mobile usability; reuse Foundation controls | NOT STARTED |
+| ET-4 | P0; ET-1–3 | Same-render live draft preview in desktop/mobile/HTML/text; inert sample data/PIN/links; saved-revision self-only test-send Review→Confirm | NOT STARTED |
+| ET-5 | P1 implementation; required before production | Publish impact/history, future-request-only revision selection, rollback-as-new-revision, nine events/locales and opt-in text migration | NOT STARTED |
+| ET-6 | P0 release qualification; ET-1–5 | Security/regression, actual Gmail/Outlook/Apple Mail matrix, permitted editor and mailbox/user E2E; 24 checks with actual evidence | NOT RUN / prerequisite-gated |
+| ET-7 | P2 optional | Extra reusable layouts/locales and optional safe AI-assisted wording; no authority editing | DEFERRED / not core 1.0 acceptance |
+
+**First runnable work on later owner continuation:** ET-1 reproducible
+synthetic baseline + renderer comparison and RED-first render/security
+contract. Do not repeat the survey, claim the designer exists, or start
+live mailbox/native Control/Stellar/independent-human tests from a plan.
+Core implementation ET-1–ET-6 is still open. Shared Foundation work remains
+upstream; P0-SM product adapter gaps and prior E2E documents stay preserved,
+not marked completed or silently deleted by this priority addition.
+
+**This turn:** documentation/research only. No app/backend/dependency code,
+private package install, preview deployment, SMTP/worker/account/credential
+change, live approval, external operation, Full User E2E, merge or release.
+The detailed ET-T01–ET-T24 matrix is linked from the existing Full User E2E
+plan; its original 121 indexed scenarios are not falsely recounted as run.
+
 ## 2026-10-14 — owner-directed DRLink-style Grant E2E documents PREPARED
 
 **This is DOCUMENTATION ONLY: no E2E was executed, no user/mailbox or

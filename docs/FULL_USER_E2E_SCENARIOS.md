@@ -502,3 +502,16 @@ NEXT_ACTION=
 ~~~
 
 **Minimal future execution order:** `CLI feature reconciliation` may run safely first; obtain actual owner-approved personas/inboxes/external lab; `Surface Reconciliation`; full real-user discovery sweep; freeze findings; one bounded remediation batch per owning repository; affected rerun; new exact-HEAD two-pass full confirmation; independent native/CI/provenance and owner acceptance. **Do not execute these steps merely because this document has been authored.**
+
+## Appendix — planned P0-ET visual email editor checks (2026-10-14; NOT RUN)
+
+The owner requested a researched roadmap for editable approval-mail wording
+and button design. `docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md` §8
+contains ET-T01–ET-T24 proposed acceptance checks covering same-render
+HTML/text/preview, protected decisions/PIN, mode-correct guidance, draft/CAS/
+publish/immutable snapshots, actual email-client rendering, offline/security
+and legacy compatibility. Map these to A-009/A-010, E-001–E-013 and V-001–V-008
+when their implementation exists; add explicit run-ledger rows then. This
+appendix does not change the current 121-scenario registry or claim any test
+executed. Real mail delivery and independent-human/native-effect gates still
+require their existing approvals. Foundation shared UI defects stay upstream.

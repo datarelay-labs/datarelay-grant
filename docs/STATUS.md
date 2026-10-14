@@ -1,5 +1,24 @@
 # Grant 1.0 implementation status
 
+## 2026-10-14 — email template editor research and P0-ET plan complete; editor NOT implemented
+
+The owner requested competitor research and a roadmap, not implementation
+or mail delivery. `docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md` records
+20 product/project families, official source references, the selected
+approval-specific block-editor direction and 24 future acceptance checks.
+MJML is the preferred offline-renderer PoC, React Email the comparison;
+neither was installed/qualified here. Common UI remains Foundation-owned.
+
+Current verified Grant behavior remains subject/body editing, nine events,
+text preview and existing SMTP HTML support; the real issued email still
+uses three unstyled fixed-label links and separately appended PIN content.
+Button design controls, a styled View Details action, unified final-HTML
+preview and a visual draft/publish designer are OPEN requirements. ET-0
+research/docs is done; ET-1–ET-6 implementation/qualification is not started.
+Do not infer designer completion from earlier M3 text-template completion.
+Existing E2E plans, G12 original changes, Inbox stash and product state remain
+preserved. No runtime/source/dependency/preview deployment or test-send change.
+
 ## 2026-10-14 — DRLink-based E2E plan prepared (NOT TESTED)
 
 Two complete standalone, English product-test documents now cover

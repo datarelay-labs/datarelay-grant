@@ -723,6 +723,48 @@ not a fork of the shared user sign-in UI. The bounded design rationale
 and residual impersonation risk are captured in
 `docs/ADR_EMAIL_PIN_DECISION.md`.
 
+### 10.10 Planned approval-email visual editor (P0-ET, 2026-10-14)
+
+**Planned product target; not implemented by this specification change.**
+The email editor must permit nontechnical administrators to modify message
+wording and bounded visual styles (including button size/color/spacing and
+approved logo/layout) in one block-based Template Sets workflow. Preserve
+all nine notification events and existing administrator scope, CAS,
+Review→Confirm and immutable request/mail snapshot semantics.
+
+The editable design is a versioned, validated Grant JSON document. Only
+allowlisted content/variables/styles/assets are accepted. The server owns
+approval action IDs, generated URLs, current seat, PIN/verification-floor
+instructions, required context, uniqueness and readable canonical localized
+action names. Optional caption text must not replace the action name.
+Protected action blocks cannot be deleted, duplicated, hidden or rebound;
+no raw HTML/JS/CSS/MJML/JSX execution or arbitrary link/recipient editing.
+Bounded presentation changes are permitted; changing authorization semantics
+or security-owned content is not. View Details is a nondeciding navigation
+operation and must retain its separately authorized read-access contract.
+
+Preview, sample test and real delivery use one versioned structured renderer
+for subject, HTML and meaningful plain text. The default EMAIL_PIN workflow
+must not claim that account login is required, and emailed OTP alone is not
+MFA. Preview uses only fake request data, dummy PIN and non-actionable links,
+with zero issuance/outbox/decision side effects. Test mail remains a separate
+exact-saved-revision, current-admin-own-mailbox Review→Confirm operation;
+SMTP acceptance must not be called verified inbox receipt.
+
+A saved draft is not published. Publication shows affected policy use and
+creates an immutable template/layout/locale/asset/renderer revision for
+future requests. Existing request/queued mail/reminder/reissue design
+snapshots remain stable while current revocation and assurance checks stay
+authoritative. Rollback creates a new revision; migration cannot rewrite
+issued capabilities or auto-activate a policy. Approved asset validation,
+sandboxed preview and offline renderer dependency qualification are required.
+
+Foundation owns generic shared UI controls; Grant composes the approval-domain
+editor and owns its schema/backend/renderer. MJML is a preferred PoC candidate,
+React Email a comparison/fallback, not an installed or prequalified dependency.
+See `docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md` for competitor evidence,
+ET-0–ET-7 delivery phases and ET-T01–ET-T24 planned acceptance criteria.
+
 ## 11. User experience standard
 
 Grant follows the DataRelay Product Foundation for shared application identity, semantic
