@@ -34,6 +34,7 @@ export function RequestDetailOverview({
         description="Current server-projected approval progress and assignment. Approval, delivery and external execution remain separate."
       >
         <RequestWorkflowGuide row={row} />
+        <RequestGrantScope row={row} />
         {row.viewer_can_decide === true && ['AWAITING', 'HELD'].includes(row.state)
           && row.collaboration_state === 'OPEN' && row.deadline * 1000 > Date.now() && (
           <div className="grant-detail-next">
@@ -55,7 +56,6 @@ export function RequestDetailOverview({
           <summary>Review current status and technical evidence</summary>
           <div>
             <RequestStageSummary row={row} />
-            <RequestGrantScope row={row} />
             {row.viewer_delegated_for && (
               <p>You are acting as the recorded substitute for an assigned
                 approver. Both identities remain auditable.</p>
