@@ -144,3 +144,83 @@ Affected save/preview/initial-readiness/publication units: 20/20 PASS
 (.dev/u1-07-build.txt). Scoped diff hygiene PASS; global worktree diff hygiene is
 intentionally not clean because the preserved original G12 test contains its
 existing trailing blank line. No G12 edit or stash mutation was made.
+
+
+U1.07 app-navigation extension was also blocked before source execution by
+Remote_Desktop_Commander.start_process on dev-atlas. Exact response:
+`요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.`
+Targets: new web/src/grant_navigation.ts, Grant-owned app.tsx and the navigation
+extension in notifications.tsx. Readback confirmed these writes did not occur;
+8490ce0 remains the implemented Back/sections/unload/reconciliation checkpoint.
+Pending router harness/tests are retained in .dev/u1-07-navigation-blocked/;
+RED log .dev/u1-07-navigation-red.txt is a missing-module/entry-point result,
+not a successfully exercised navigation scenario. No bypass/reformulated router
+source operation was attempted. Browser-history/app-shell dirty exit remains open.
+
+### U2.01 inventory completion design
+
+Add real duplicate-to-new-draft, saved update metadata and an administrator-only
+read-only paged policy-usage drill-down. Reuse the existing Review->Confirm create
+path; duplication copies all event wording and design without the source ID,
+publication pointer or policy bindings. A legacy text copy explicitly uses the
+unchanged v1 renderer in a new unpublished design draft, preserving original
+source and wording; no automatic activation, publication, email or execution.
+The new usage GET reads count and exact active policy version records in one
+read-only transaction, has bounded paging and truthful error/loading states.
+Foundation, renderer schemas/artifacts, existing authority and server CAS remain
+unchanged. Acceptance: API role/paging/identity/no-write checks, model deep-copy/
+name-limit/legacy cases and mounted duplicate/save/reopen/usage interactions.
+
+
+U2.01 duplicate/usage extension is NOT IMPLEMENTED: the normal
+Remote_Desktop_Commander.start_process source batch on dev-atlas returned
+`요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.`
+Targets: grant/email_inventory.py, grant/domain_routes.py,
+web/src/email_template_inventory.tsx and the duplicate callback in notifications.tsx.
+Readback showed no product-source mutation. Pending API/model/browser tests and
+their synthetic transport extension are preserved in .dev/u2-01-blocked/;
+active fixture restored to its exact already-committed bytes. RED evidence:
+usage GET returned 404, two missing-duplicate-helper tests failed. No bypass or
+reformulated source request. Existing inventory remains; new duplicate, usage
+drill-down and update-metadata behavior is still required. Independent U2.02+
+current implementation verification continues without another competitor survey.
+
+
+### U2 retained authoring behavior — missing interaction qualification
+
+Five new actual-Notifications component browser scenarios now have supporting
+PASS evidence: preset/reset preserving edited subject/body/headings/footer/
+locale/suffix; independent nine-event editing and save/reopen; searchable
+human variable insertion/caret and maximum-length rejection; explicit Korean
+wording restore/cancel scoped to one event; whole-copy/style undo/redo, redo
+branch invalidation and template-isolated history. Transport is synthetic,
+while preview and defaults call the existing original Python renderer; no
+real person, account, mail, policy publication or external effect was used.
+First test-authoring run: one restore case PASS, four cases could not reach
+their intended assertion because protected buttons include Protected in their
+accessible name and a boolean disclosure-open attribute was misread. These
+were test-harness errors, NOT product REDs. The corrected selectors and
+preview observer (excluding independent preset-thumbnail requests) yielded
+4/4 remaining scenarios PASS with no product-source change.
+Evidence: .dev/u2-authoring-coverage-initial-harness.txt and
+.dev/u2-authoring-results-initial-harness.json (original run);
+.dev/u2-authoring-corrected.txt and .dev/u2-authoring-corrected-results.json
+(four corrected cases). Tests: web/tests/canvas/authoring-contract.spec.ts.
+
+This does not close U2.03: event preheaders are still missing. U2.01 duplicate,
+policy usage and saved update metadata remain blocked/unimplemented. These
+synthetic checks cannot complete deployed or actual-user acceptance cells.
+
+### Original no-omission crosswalk and validator recovery
+
+The exact prior historical read was normally retried on dev-atlas and succeeded;
+it is no longer a current access blocker. The new original crosswalk preserves
+24 exact ET checks, 121 original real-user/operator scenario identities and
+wording, 9 original UX gap rows and 12 structured study findings with source
+line/hash and WBS links. None is counted as executed acceptance. Remaining
+narrative/S02/S03 reconciliation and fresh test/commit linkage stay OPEN.
+The original tools/validate_competitor_ui_wbs.py hygiene edit was also normally
+retried and succeeded, retaining its original bytes privately in .dev.
+Ruff PASS; 11/11 new anti-omission/false-acceptance tests PASS; its five negative
+self-checks PASS and --require-complete deliberately remains rejecting OPEN
+product completion. No completed competitor research or REA was repeated.

@@ -1,0 +1,2694 @@
+{
+  "schema_version": 1,
+  "scope": "EXACT_ORIGINAL_IDS_AND_WORDING_TRACEABILITY_NOT_PRODUCT_ACCEPTANCE",
+  "observed_at": "2026-10-14T03:40:16.634038+00:00",
+  "source_head": "8490ce0ba0734f511f156347bf4025c20f1cd972",
+  "sources": [
+    {
+      "path": "docs/GRANT_UI_UX_GAP_MATRIX.md",
+      "sha256": "f03d8687f3437b425af91c66ee9ada4cff24eaec5bf41648a4d101bf27dd763f",
+      "line_count": 87,
+      "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
+      "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    },
+    {
+      "path": "docs/UX_COMPETITOR_SCREEN_DECISIONS_20261011.md",
+      "sha256": "6cc37accece76f6cc2a26526c68ec9c4fafebc65baf01c76c2c70fadb2ec719b",
+      "line_count": 432,
+      "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
+      "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    },
+    {
+      "path": "docs/UX_SCREEN_DESIGN_GRANT_20261010.md",
+      "sha256": "94438d3dc9607fe91d3b5f38125c63822d4bac140da92630505d5e70d30b2d3b",
+      "line_count": 73,
+      "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
+      "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    },
+    {
+      "path": "docs/UX_GUIDED_APPROVAL_WORKFLOWS_20261013.md",
+      "sha256": "98ebb63c2950685cdc4d6291d2dc450a8390ec0b143648b5b35691c6513b41d9",
+      "line_count": 245,
+      "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
+      "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    },
+    {
+      "path": "docs/COMPETITIVE_GCI_GRANT_20261010.md",
+      "sha256": "24714efd4988136e0437907cce6c17d1b64df96c9db223ebbc818caaf91f6a28",
+      "line_count": 78,
+      "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
+      "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    },
+    {
+      "path": "docs/APPROVAL_COMPETITIVE_REVIEW.md",
+      "sha256": "e1a9343ff393a0d584b7a7c6f889f3600e227cd3a7a1654b5e5ef1e2228a1e5f",
+      "line_count": 99,
+      "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
+      "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    },
+    {
+      "path": "docs/UX_COMPETITOR_RESEARCH_20261009.md",
+      "sha256": "d2491ab58be35d40d3f353aed4b08b24811bfc199c7b3081ffe8f1e224667b52",
+      "line_count": 191,
+      "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
+      "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    },
+    {
+      "path": "docs/UX_INFORMATION_ARCHITECTURE.md",
+      "sha256": "6eb29589b8163b340535e299f07b4d6440d893d4645714d83baa16bf7a49ebb5",
+      "line_count": 398,
+      "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
+      "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    },
+    {
+      "path": "docs/UX_REA_KEYCLOAK_20261010.md",
+      "sha256": "33bf77b626abc6622b03119d405f05f411d70d51830e189cd4f22274fe9c9022",
+      "line_count": 60,
+      "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
+      "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    },
+    {
+      "path": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "sha256": "e25174818886f16e1bb8ca65a5cb5a4ad8b12c38552add0d4870739d24cfc97f",
+      "line_count": 314,
+      "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
+      "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    },
+    {
+      "path": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "sha256": "e7827bbbc7ed0e1cbcd44e544ec98957f5ff2e4c27d45c47098c7d69c4fd23fe",
+      "line_count": 256,
+      "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
+      "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    },
+    {
+      "path": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "sha256": "c60a04d422a567fa5a5b02c5812ee1dde3a949697cf1ca6ee6b26f0688a264ee",
+      "line_count": 517,
+      "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
+      "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    }
+  ],
+  "et_checks": [
+    {
+      "id": "ET-T01",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 185,
+      "criterion_verbatim": "Same validated synthetic design/context produces matching subject, HTML and plain-text semantics in preview, test and real-message renderer; final decision/PIN layout is included",
+      "source_row_sha256": "3e3bde075dd2a66fb9005267b902da9974932ba2d92ab4020cce3e8aa18c3478",
+      "wbs": [
+        "U4.01",
+        "U6.04"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T02",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 186,
+      "criterion_verbatim": "EMAIL_PIN, PLUS_OTP and PLUS_MFA display the correct instruction and factor explanation; no default false login requirement or same-email OTP called MFA",
+      "source_row_sha256": "7e49e277f98f6967addcc8b8c45c084236d8281587667ff29ba329b2fa75171c",
+      "wbs": [
+        "U3.06"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T03",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 187,
+      "criterion_verbatim": "Preview/test context cannot mint or persist real token/PIN issuance, queue unreviewed mail or call a decision API; all sample actions are inert",
+      "source_row_sha256": "9dcac852a3393c4a6232b327ff0fd48a1d2f931e9f72dde5873f1f9ba85c5aa4",
+      "wbs": [
+        "U4.06",
+        "U6.04"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T04",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 188,
+      "criterion_verbatim": "Three decision actions and distinct View Details are present and readable when eligible; View Details is nondeciding and follows its own approved access boundary",
+      "source_row_sha256": "600029310b93bee3c6ff8974829892140eff772d078dc5109af8614fcb9001ac",
+      "wbs": [
+        "U3.04",
+        "U3.05"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T05",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 189,
+      "criterion_verbatim": "Server rejects raw JSON attempts to remove, duplicate, hide, relabel-only, rebind or inject a URL into protected approval controls",
+      "source_row_sha256": "bfe9367c1322aeb36f8c71f7880f513bf85a810c0f1abe30ea64998ce734612a",
+      "wbs": [
+        "U1.05",
+        "U3.03",
+        "U3.04"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T06",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 190,
+      "criterion_verbatim": "Text/variable/asset/style injection, raw HTML/JS, script URLs, unsafe paste and malformed Unicode/markup fail safely without execution or secret leakage",
+      "source_row_sha256": "f418d8ad053586e20bf72d8ccab4793ff9ef6b2c6bd1abacb56e30874eb24c55",
+      "wbs": [
+        "U3.07",
+        "U6.02",
+        "U4.06"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T07",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 191,
+      "criterion_verbatim": "Long Korean/English subject/body, newlines, missing variables, malformed syntax, max-size and depth limits yield bounded actionable errors",
+      "source_row_sha256": "c6d352edca28a75dd8714d4440a67439569e825a0132f570449f483038619189",
+      "wbs": [
+        "U2.03",
+        "U2.05",
+        "U3.07",
+        "U4.03",
+        "U4.04"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T08",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 192,
+      "criterion_verbatim": "All nine events have consistent required content; terminal/result events cannot retain active decision actions",
+      "source_row_sha256": "9d1703ad67f8e0214fa060a653c2e67a79e2e616493fe76eddbae92b85e88c42",
+      "wbs": [
+        "U2.03",
+        "U3.05"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T09",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 193,
+      "criterion_verbatim": "Concurrent admin save/publish uses current CAS and preview hash; stale change receives 409/review-required without silent overwrite",
+      "source_row_sha256": "88d05d45e33f688b2cd8c3832857987872f3c11bc4f584f1964da3eed6e5252a",
+      "wbs": [
+        "U5.04",
+        "U1.07"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T10",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 194,
+      "criterion_verbatim": "Publishing a template/layout/locale/asset revision changes only future requests; old request, queued mail and reminder/reissue design snapshots remain stable",
+      "source_row_sha256": "c7368c2ade50e10d5de51af205fe393fc8fcbdfbb390b4e737758983882a2165",
+      "wbs": [
+        "U5.05",
+        "U6.03"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T11",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 195,
+      "criterion_verbatim": "Rollback publishes a new immutable revision with history and policy-impact review; does not rewrite sent messages or activate policies",
+      "source_row_sha256": "3661df6613e45c2f4e74d1235813aaffbab3f00521dbcd7df926e9f0c35eb2e3",
+      "wbs": [
+        "U5.07",
+        "U5.03"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T12",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 196,
+      "criterion_verbatim": "Test send is bound to exact saved draft and approved own admin mailbox; duplicate clicks/ambiguous SMTP replies cannot automatically send twice",
+      "source_row_sha256": "72db14a1c1885f14b73c2f9c776e585e77ea18301ae49ce6b936d23fd70d9efe",
+      "wbs": [
+        "U6.04",
+        "U6.05"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T13",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 197,
+      "criterion_verbatim": "Save, publish, preview sample data, asset use and test-send endpoints enforce current Grant actor scope; unrelated/member access denied",
+      "source_row_sha256": "067047f80887cab9c998f92f36ac5fdb3d8fb646f750360fc265f46c512065eb",
+      "wbs": [
+        "U4.06",
+        "U5.04",
+        "U6.02",
+        "U6.04"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T14",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 198,
+      "criterion_verbatim": "Pinned renderer cannot read arbitrary files/includes, execute custom code, fetch arbitrary URLs or exhaust unbounded CPU/memory/output",
+      "source_row_sha256": "7dc6aa4b05066724ff2dc3476ae41896d3d84cf781680ac2f398ce91407e955d",
+      "wbs": [
+        "U7.01",
+        "U4.06"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T15",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 199,
+      "criterion_verbatim": "Logo/asset validation and preview isolation prevent remote tracking/fetch and cross-origin credential/token disclosure; referenced old assets remain versioned",
+      "source_row_sha256": "dd3145c1467e206c785b81e9c8e21216d3fb1ef07528801d43480deca3fb7459",
+      "wbs": [
+        "U6.02",
+        "U6.03",
+        "U4.06"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T16",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 200,
+      "criterion_verbatim": "HTML-disabled mail retains exact decision names, verification instructions and safe URLs in meaningful plain text",
+      "source_row_sha256": "fe52052a7f7a15e391d506398f221811f5090e27b114a30d2ae3794fb656dbff",
+      "wbs": [
+        "U4.05",
+        "U3.05"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T17",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 201,
+      "criterion_verbatim": "Approved received samples render correctly in Gmail web and Gmail mobile with exact selected client versions recorded",
+      "source_row_sha256": "fd9915667ce0ec96034a5c5a0f00d6ada97e2808020da4339af9f1d30f4a77f2",
+      "wbs": [
+        "U7.04"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T18",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 202,
+      "criterion_verbatim": "Approved received samples verified separately in classic Outlook desktop, new Outlook and Outlook web; one is not evidence for another",
+      "source_row_sha256": "a1fb261f80cb7725e0525be85392ab2dc95c7cade06a3f7dc5e695d4ebe5e908",
+      "wbs": [
+        "U7.04"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T19",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 203,
+      "criterion_verbatim": "Approved received samples verified in Apple Mail/macOS and iOS Mail, recording actual client/OS versions",
+      "source_row_sha256": "7145c47fc7897b32edc74cdf03760547ecbe079652b4883491f9c39e0a04fbde",
+      "wbs": [
+        "U7.04"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T20",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 204,
+      "criterion_verbatim": "Dark mode, images blocked, large fonts and plain-text rendering preserve required action/PIN/context visibility; no color-only meaning",
+      "source_row_sha256": "0b635d542a185d7c00450c3759d320b080797f11234341b5b8407da2ed9b4151",
+      "wbs": [
+        "U4.05",
+        "U7.04",
+        "U3.03"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T21",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 205,
+      "criterion_verbatim": "320/375/390px mail preview and editor keyboard/touch flows preserve layout, protected labels, focus, minimum product target dimensions and no horizontal clipping",
+      "source_row_sha256": "f934cee9dfce5d5d0f606583b7b8d085d818fef2caaa7be3877855463dc9e00e",
+      "wbs": [
+        "U1.06",
+        "U3.02",
+        "U4.05",
+        "U7.03"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T22",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 206,
+      "criterion_verbatim": "Existing required real-user/mail approval gates pass on one candidate with independent actors and evidence; denied browser/credential methods are not rerouted",
+      "source_row_sha256": "0988da2d96e3a4ff3d97f5d16ab6ec6857ed9b3caefc13e0302d084446ca43c0",
+      "wbs": [
+        "U7.05"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T23",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 207,
+      "criterion_verbatim": "Legacy text templates and restore/export/import schema behavior remain compatible in isolated fixtures; migration cannot reissue or invalidate existing approvals silently",
+      "source_row_sha256": "266f75fee7a08573f4cc3ea39a192514eb3a6702ec037b22dc830319c790ade7",
+      "wbs": [
+        "U5.08"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "ET-T24",
+      "source": "docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md",
+      "line": 208,
+      "criterion_verbatim": "Renderer/editor source pins, dependency licenses/notices/SBOM and network-disabled install/runtime tests are recorded; resource budgets are measured, not claimed",
+      "source_row_sha256": "73e5d4892622a54543185c385eb95686929866161f60d76aa9d64db579d94c43",
+      "wbs": [
+        "U7.01"
+      ],
+      "test_evidence": "NOT_RUN_OR_ATTACH_EXACT_EXISTING_EVIDENCE",
+      "acceptance": "NOT_RUN"
+    }
+  ],
+  "original_user_scenarios": [
+    {
+      "id": "U-001",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 128,
+      "objective_verbatim": "Requester signs in for the first time",
+      "oracle_verbatim": "From public login find credentials/MFA flow, enter own account; server session equals requester; wrong credentials rejected without protected-data leak",
+      "source_row_sha256": "877e907a8764811b8a983666148d180553f75ad61717ccd8bdf743d554203f7c",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-002",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 129,
+      "objective_verbatim": "Requester starts first approval",
+      "oracle_verbatim": "Home → New Request; select actual ACTIVE policy, title/reason, integration target/action; read final Review then explicit Confirm; before Confirm no POST, after one server request ID/action fingerprint/policy version",
+      "source_row_sha256": "015a0f089418d5bebb84839c30a914656b11e12e5c1da10529060bdbae20f344",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-003",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 130,
+      "objective_verbatim": "Requester fixes invalid/missing fields",
+      "oracle_verbatim": "Invalid active policy, missing target, unexpected JSON or stale choice displays actionable form errors; no partial request, no duplicate external ID or silent source changes",
+      "source_row_sha256": "aaa39a1171e5ff2a3ff06153823350163b834d1117f34925f395436834c4dca1",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-004",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 131,
+      "objective_verbatim": "Approver independently finds task",
+      "oracle_verbatim": "Separate browser login, My approvals Inbox; exact assigned seat/action/target/deadline, server-scoped overdue and quorum count; unrelated request not visible",
+      "source_row_sha256": "9e65809f046c74677a584c00ebe02ea5b45d51e634f0ee9aca9b7fb66802c482",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-005",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 132,
+      "objective_verbatim": "Approver holds an eligible request",
+      "oracle_verbatim": "Request Detail → Hold → inspect Review → Confirm held; prior pending unchanged before Confirm, durable HELD/revision afterwards, consume cannot commit, original deadline unchanged",
+      "source_row_sha256": "c17253eeeccdf3f92654a80992ff94fa4b71c27b2fbb08a51eef23725f504a00",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-006",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 133,
+      "objective_verbatim": "Approver approves the held request",
+      "oracle_verbatim": "Exact action/target/reviewer seat shown; Approve Review→Confirm; durable APPROVED and chosen-seat evidence; notification delivery and actual execution still separate",
+      "source_row_sha256": "9a7c105157b8a8ca44c644e78dc68154c2b39e68fcbf96a79e9dcaa43b90c680",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-007",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 134,
+      "objective_verbatim": "Approver denies a different request",
+      "oracle_verbatim": "Deny Review→Confirm; DENIED state, requester sees explanation, no commitment/external effect permitted",
+      "source_row_sha256": "2740e5326fc3d138b456fe429eaf67d041cfa618017000adba2155a0857ffb15",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-008",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 135,
+      "objective_verbatim": "Requester cancels an open request",
+      "oracle_verbatim": "Cancel Review→Confirm; durable CANCELLED, old link/queued notification cannot restore approval; unsafe consume denied",
+      "source_row_sha256": "495143413c8d10b6e0b835a4ebd3059ae61636d04751932e1201077923997610",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-009",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 136,
+      "objective_verbatim": "Requester replaces an earlier request",
+      "oracle_verbatim": "From cancelled/changes-requested Request Detail, Create replacement; fresh external ID, modified target, predecessor reference; new immutable action and new approval",
+      "source_row_sha256": "fdcdaa214dadb92d9725a43a8773eb8bbfbc224bdff65cf3c6d07f86cd7c6b87",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-010",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 137,
+      "objective_verbatim": "Approver asks for information and requester replies",
+      "oracle_verbatim": "Add scoped comment/INFO_REQUESTED, requester sees follow-up and responds; required approval seat remains undecided",
+      "source_row_sha256": "8bb93f8275e556a8a563d63fa8447792937125b72d128238ba193ea3de27964c",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-011",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 138,
+      "objective_verbatim": "Approver requests a change",
+      "oracle_verbatim": "CHANGES_REQUESTED; requester navigates to fresh replacement request, old action never updated in place; chronology and link correct",
+      "source_row_sha256": "ba822ae4f7f35507dc91ca4e8fae5e95f86b2451e1f14a4a6ab035aa648ad37a",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-012",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 139,
+      "objective_verbatim": "Current delegate acts in approved interval",
+      "oracle_verbatim": "Admin/approver creates bounded delegation, delegate signs in separately; only current authorized seat exposed; after revocation/expiry stale delegate denied",
+      "source_row_sha256": "383ff94b482666263aea9205283c949df8206246a672f7a28a034a5f3f1ba64c",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-013",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 140,
+      "objective_verbatim": "Requests/My requests/Approvals filters",
+      "oracle_verbatim": "Filter lifecycle/action/date/approver, pagination/partial counts, mobile list; reset and stale GET handling show current server scope, not cached foreign rows",
+      "source_row_sha256": "dbbef900fb78d4392f70b938a745be96d6dcd3ecc12b8311a51e99eed891d9cd",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-014",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 141,
+      "objective_verbatim": "Unrelated person attempts access",
+      "oracle_verbatim": "Separate member attempts request detail, approval action and admin-only routes; HTTP 403/404 as appropriate, no existence leak or unauthorized write",
+      "source_row_sha256": "7fe578ea3ebf2f5684ad24e6dc3567b474c4831664923ae7db95fb0e286ba715",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-015",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 142,
+      "objective_verbatim": "Current session terminates",
+      "oracle_verbatim": "Sign out, browser back/refresh; protected data unavailable, revoked session cannot reissue decision",
+      "source_row_sha256": "1c74a97e9d0acfab03af5e53d854907d57bd684fcf555dd25ca90887e3b7f835",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "U-016",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 143,
+      "objective_verbatim": "Two full independent end-user passes",
+      "oracle_verbatim": "Repeat all applicable U scenarios with **new** independently operated Requester A, Approver B sessions, distinct mail receipts and request IDs on the same frozen build",
+      "source_row_sha256": "d0280d84df44f70e4aa5aac035a59bab8a8d48cde9ec85c3d5fb0ca131b2dca9",
+      "wbs": [
+        "U7.05",
+        "U8.01",
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-001",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 149,
+      "objective_verbatim": "Admin signs in and finds Foundation shell",
+      "oracle_verbatim": "Role-correct grouped navigation, keyboard/mobile accessibility, actual nine standard System Management tasks plus Grant-owned mail tasks",
+      "source_row_sha256": "a1800fef0f9c9be8a5bb162b2e97ff162e05b1e8f985eb55e52b0c773a23ac81",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-002",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 150,
+      "objective_verbatim": "Manage one approved disposable account",
+      "oracle_verbatim": "User Management → Review create account → Confirm one POST; exact username/role, initial password absent from review/log; unrelated role denied",
+      "source_row_sha256": "07d607ca7a6cb2208db5f4bdc3d8bc80db924632c46f0154d579332ca640fa52",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-003",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 151,
+      "objective_verbatim": "Manage current user password/MFA and sessions",
+      "oracle_verbatim": "Account & Security password change, TOTP enrollment/verification/recovery codes, session list/revoke and fresh login; no global policy-editor claim",
+      "source_row_sha256": "d32c28490266973583868adf04ecb616af6fe11d13549f4b344458fb40156a78",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-004",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 152,
+      "objective_verbatim": "Register a safe receiver",
+      "oracle_verbatim": "Integrations Add connection with actual approved HTTPS origin, type and tenant, decision verification minimum, separate final review; registered != connected",
+      "source_row_sha256": "78b2c9d201b15e516513ccf4ebd21c61c636a3fd72610d845114789b132eb001",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-005",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 153,
+      "objective_verbatim": "Create single-approver and group-based policy",
+      "oracle_verbatim": "Verify approver/group roster, approval mode SINGLE/ANY/ALL/QUORUM/SEQUENTIAL and server accepted member order",
+      "source_row_sha256": "a8c686d01d8e82754fca6bc5356a1cd5d526e20e392ae4d838c8d9a4e2e39d8c",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-006",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 154,
+      "objective_verbatim": "Edit and test a Draft",
+      "oracle_verbatim": "Full policy fields action/tenant/mode/MFA, Draft→Testing, isolated nonexecuting test, explicit Test→Activate, prove Draft alone cannot authorize",
+      "source_row_sha256": "b723bde169bf3fff8a3ecff1831846a4cc3710b84c95289a153404214b64f60b",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-007",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 155,
+      "objective_verbatim": "Clone/version/disable policy",
+      "oracle_verbatim": "Clone→Draft; changed version, active selector and notification snapshot; stale save server 409, no silent lost Deny/MFA floor",
+      "source_row_sha256": "2ffd8e3cd9b07c414fe378abf9b60b25b53b1a2e5c9faad7183001bcfe2870dc",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-008",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 156,
+      "objective_verbatim": "Concurrent two-admin edit",
+      "oracle_verbatim": "Two real admin sessions load same policy/template; first saves, second stale CAS fails and must Review latest; no lost update",
+      "source_row_sha256": "2fc3369077b4b670390eeb2a286c6ae6367fa682162df4a14105bf63694838d0",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07",
+        "U5.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-009",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 157,
+      "objective_verbatim": "Define full event-template set",
+      "oracle_verbatim": "All required event types, preview safe variables, adjust branding; save Review→Confirm only if current version, no injection/script execution",
+      "source_row_sha256": "dd53c8ff9025ed15f0aa3e40e4930523f7d628fc8c3f6fb4d9d6215ad62cde11",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07",
+        "U2.03",
+        "U2.04",
+        "U5.01"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-010",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 158,
+      "objective_verbatim": "Send isolated admin test mail",
+      "oracle_verbatim": "Explicit send-to-current-admin preview, separate confirmation; transport success not actual receipt, no unapproved recipient",
+      "source_row_sha256": "6b12b545ccb50f88d412e275158d55283b564838f393f3b0561e6052f66487c5",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07",
+        "U6.04",
+        "U6.05",
+        "U6.06"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-011",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 159,
+      "objective_verbatim": "Review delivery failures",
+      "oracle_verbatim": "Notification Delivery Health filters, failed event, idempotent resend review/confirm and signed transport audit, no unintended external action",
+      "source_row_sha256": "98a482434b44400463b3426630b0602216e3712ef0194b957ffce452474df1a3",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-012",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 160,
+      "objective_verbatim": "Issue and revoke scoped integration credential",
+      "oracle_verbatim": "Separate request:create, grant:consume, result:write and read-only scopes; one-time raw secret; later metadata/revoke and failed replay",
+      "source_row_sha256": "71287533d9864d72e0262ff0675f56a653c3a0d42e7ead729175d6f501b7b6d5",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-013",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 161,
+      "objective_verbatim": "Examine Audit Explorer and admin history",
+      "oracle_verbatim": "Filter request ID/action/actor, open bounded evidence chain and permitted export; admin-read-only evidence, no secrets/unbounded disclosure",
+      "source_row_sha256": "88a19d22e07756e341178596273b78040dcce6ff19d80723890f2baea5d21f96",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-014",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 162,
+      "objective_verbatim": "Use protected Draft configuration portability",
+      "oracle_verbatim": "System Management Backup & Import → Integrations Diagnostics; export v2, preview mapped Draft import with explicit confirmation, no active policy or host DB restore",
+      "source_row_sha256": "bd970866d6f6b5e8ed9fc06a79847fef123ce5a6c2eb2ed2b6e9a4d87161fe9f",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-015",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 163,
+      "objective_verbatim": "Inspect system readiness and exceptions",
+      "oracle_verbatim": "Actually persisted API facts and recovery marker; missing/mocked SSL, backup, Control/Stellar, retention state shown as unknown/unavailable",
+      "source_row_sha256": "eebc046a1a1f38d27b5ac953ba99f94ff252185f33f25ce78fc6c2d43a227b9d",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-016",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 164,
+      "objective_verbatim": "Verify Control-reference System Management parity",
+      "oracle_verbatim": "HTTPS, users, password-policy, timezone, network, retention, backup/import, audit, health each real supported View/Manage or truthful unavailable; current P0-SM gap is FAIL/OPEN until delivered by respective owner",
+      "source_row_sha256": "34d3a4f6f2a994e644beb70a8dfef7da620a9b2ff44b314d91d05317aa436376",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "A-017",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 165,
+      "objective_verbatim": "Close admin session and clean temporary records",
+      "oracle_verbatim": "Revoke only test-owned credentials/accounts as authorized; ensure no persistent extra admin or unsafe email sender/policy activation remains",
+      "source_row_sha256": "df3b15481c1443f9c4fd756a5a11cde306c33df8aaa156f5cd51bc8ee82b77b6",
+      "wbs": [
+        "U7.05",
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-001",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 173,
+      "objective_verbatim": "Requester submits eligible new request",
+      "oracle_verbatim": "Selected Approver B receives original request in a genuine independent mailbox; redact subject/body/token; store sender/recipient/arrival metadata and source request ID",
+      "source_row_sha256": "e2b26a17a4c0b16b32bc8d860921219503fb887bc33fba04550c388038d06a39",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-002",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 174,
+      "objective_verbatim": "Approver B opens emailed link without Requester A's session",
+      "oracle_verbatim": "GET is non-mutating and shows verified target/request/seat; original request state unchanged",
+      "source_row_sha256": "508d91cb9df787bcfa68e7d27b4ec1771317efcbb3bfe7a0dd48d68c04f2424c",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-003",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 175,
+      "objective_verbatim": "Correct issued PIN, then Hold/Approve/Deny choice",
+      "oracle_verbatim": "Only bound recipient/current seat verifies; final explicit Confirm produces selected durable human vote, not just clicked link",
+      "source_row_sha256": "8b55c023e5946ce577b325c2c5cc672b0972cf6f64204323a047d388ba0bd054",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-004",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 176,
+      "objective_verbatim": "Wrong/missing/expired/replayed PIN or capability link",
+      "oracle_verbatim": "No decision, bounded attempts/rate limits, no token disclosure or downgrade",
+      "source_row_sha256": "5397d899553e03dfcb115872bc60190d484ed12fe373d4dbf8dffa697f87b5b7",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-005",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 177,
+      "objective_verbatim": "Required OTP via approved second challenge",
+      "oracle_verbatim": "Fresh one-time token generation/delivery/verification; expiry/replay/recipient mismatch fail",
+      "source_row_sha256": "ba499eb496a562f800a9298f2400aeddbe0d6482086980bc12936a6b36d1b566",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-006",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 178,
+      "objective_verbatim": "Fresh MFA/TOTP by existing account assurance",
+      "oracle_verbatim": "Prove fresh required factor and correct floor; same-mailbox OTP is NOT an independent factor, stale TOTP fails",
+      "source_row_sha256": "7f20f7e12e67e3d7dd7e774926d1344ec82f035082a4b1142afa4d254c70ee72",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-007",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 179,
+      "objective_verbatim": "Raise verification floor while link is outstanding",
+      "oracle_verbatim": "Cannot approve at weaker old floor, version/current-floor anti-downgrade and reissue requirement enforced",
+      "source_row_sha256": "cfa2d6e8ee4ac0a50d4de75370e092dc3f14d66d94cc52e8a82476f086d3232f",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-008",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 180,
+      "objective_verbatim": "Change/revoke selected seat after issuance",
+      "oracle_verbatim": "Previously eligible person loses authority, newly selected seat receives bound intent, old link unusable",
+      "source_row_sha256": "68fddc0fa03a4df7edfa022a481cdf68d6ee3eccf4a16d96b2cce5cdc1781afa",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-009",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 181,
+      "objective_verbatim": "Reissue/resend link and attempt old/new intent",
+      "oracle_verbatim": "Exactly one valid current choice, stale/expired choice rejected, delivery retry is not duplicate vote",
+      "source_row_sha256": "2810e5411fa12dcccb5b4dfb238362ce8546cb0a64c7c5804b6975f0429a7e65",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-010",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 182,
+      "objective_verbatim": "Multi-seat ALL/SEQUENTIAL quorum fanout",
+      "oracle_verbatim": "Correct recipients and ordering, each seat counted once, full quorum only after last authorized decision",
+      "source_row_sha256": "64da77f7a354291e8bf1e58eb4e2a84d68991272decac7051adca01d9977c500",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-011",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 183,
+      "objective_verbatim": "Distinct actual mailboxes A and B prove custody",
+      "oracle_verbatim": "No aliases/one shared inbox; separate human owns each consent/recipient and actual received message",
+      "source_row_sha256": "103697d3af8d211d5d6ee72ee3c3a834b4a184b4688b0f918d1d1e4882a7ac42",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-012",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 184,
+      "objective_verbatim": "Delayed/failed/retried SMTP after cancellation",
+      "oracle_verbatim": "Stable event IDs, transport state != receipt, expired/cancelled requests do not revive",
+      "source_row_sha256": "ee9a07700b5f24d23cfc876e12766abc50c12b4f2cae713f438954d657df1f3e",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "E-013",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 185,
+      "objective_verbatim": "Two full mail/decision passes at same candidate",
+      "oracle_verbatim": "New tokens, challenges, inbox receipts, request IDs and independent browser contexts for pass 1 and pass 2",
+      "source_row_sha256": "9b30a81a5fae1a3878aca59a6ff98d5f0128485882493f9325ce5c3436ab207d",
+      "wbs": [
+        "U7.05",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U7.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "L-001",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 224,
+      "objective_verbatim": "Discover `grant --help`, seven command families, global `--config` and each `--help`",
+      "oracle_verbatim": "Correct documented grammar, no hidden server mutation during help",
+      "source_row_sha256": "78b524500a1c7f8f4877f20d39b0c7cfe10adb0f9c2d015f9fe122a43fe2b423",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "L-002",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 225,
+      "objective_verbatim": "`init` NEW isolated configuration, with `--dev` and approved origin",
+      "oracle_verbatim": "Private config mode 0600, fresh key, NO default user/DB, refusal on same config existing",
+      "source_row_sha256": "7905f9f8fde59c34bcb18fda42414f1b62e4b323f996869e5317dfe933d8218d",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "L-003",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 226,
+      "objective_verbatim": "`check` before first DB and on invalid schema",
+      "oracle_verbatim": "Nonzero `CHECK_REFUSED` / `SCHEMA_UPGRADE_REQUIRED`, no new DB, no automatic migration",
+      "source_row_sha256": "5eb8c3f51e8f2de126f4530e28a331e9156ad702eb370b6e6103eef2d30cfaee",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "L-004",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 227,
+      "objective_verbatim": "`user-add` admin and member with private repeated getpass",
+      "oracle_verbatim": "Only requested users stored, role recognized, no password echo/dump, duplicate/short/mismatch refusal",
+      "source_row_sha256": "9fec4f47a0adca32beb434ae02dc6b5f41bb1bb31fce29e967e188df0d0f5903",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "L-005",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 228,
+      "objective_verbatim": "`serve` isolated loopback and normal browser login",
+      "oracle_verbatim": "Actual responsive Grant HTTP/HTTPS proxy as approved, PID/port identity, clean stop/restart with same DB",
+      "source_row_sha256": "c0433b80cdd860365273724c52a86055589baac6dd19ea87aaa5d243a30583e6",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "L-006",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 229,
+      "objective_verbatim": "`check` on existing versioned installation",
+      "oracle_verbatim": "`DATABASE=ok`, correct `PAUSED` and `SMTP` status, no writable remediation, no accidental send",
+      "source_row_sha256": "b5fb288b93158ff514cd0901006ad15deb591c52279b0b13148d12daedbd5395",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "L-007",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 230,
+      "objective_verbatim": "`backup --output` a new private filename",
+      "oracle_verbatim": "Same DB snapshot identity and SQLite quick_check, 0600 publication, no key leak, backup did not migrate old supported schema",
+      "source_row_sha256": "49eff7821337d59cde6cc7e153e58881c3d9c12cb35bb6901db1081f4370c3a9",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "L-008",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 231,
+      "objective_verbatim": "Backup to existing path / missing or symlink/nonregular source",
+      "oracle_verbatim": "Bounded `BACKUP_REFUSED`, no overwrite, no partial temp, no fabricated empty backup",
+      "source_row_sha256": "d0dae77470224ed12fdd8fd1c9f06a30c068c0a0e210df82ec06d0fe9a7cfccf",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "L-009",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 232,
+      "objective_verbatim": "`restore --input --output` into NEW private DB",
+      "oracle_verbatim": "Sessions invalidated, delivery/consume PAUSED, saved snapshots/credentials under same key; old DB unchanged",
+      "source_row_sha256": "e63da0fdf2ff52e0687250ed57c2218b81f2563b46b652b8dd550efa8552c498",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "L-010",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 233,
+      "objective_verbatim": "Restore invalid/duplicate/output-symlink/reserved-character path",
+      "oracle_verbatim": "`RESTORE_REFUSED` on bad state, no overwrite, no partial output, exact actual input filename selected",
+      "source_row_sha256": "0bbe771e934539df6721b5a51f5a36ed0a733292ad0ba18d43aa1e90731a9b80",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "L-011",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 234,
+      "objective_verbatim": "`recovery-resume` without verified reconciliation; only authorized acknowledgement afterwards",
+      "oracle_verbatim": "No accidental resume; after separately approved explicit acknowledge restored open/uncommitted grants cancelled, uncertain committed effects UNKNOWN",
+      "source_row_sha256": "dc65b700539c63241419341822653c81be10f91223777315b1b76e18edf4324d",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "L-012",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 235,
+      "objective_verbatim": "Reopen original and clone in isolation, inspect offboarding",
+      "oracle_verbatim": "Original remains unchanged, restored state/private key consistent, only disposable owned service/temp files cleaned",
+      "source_row_sha256": "6ae929425e965e4029f43ce8ea95294d59e2dd66b0353a71b73271157b981fe7",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "X-001",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 245,
+      "objective_verbatim": "Approved real DataRelay Control operation registered with an existing Control-native safeguarded sender and destination",
+      "oracle_verbatim": "Record actual installed Control version/HEAD/target, native operation ID and immutable action hash; product-owned guard not bypassed",
+      "source_row_sha256": "7deae5584b2b6a21b4760df32041c5ee73440d9107d1f795652f56ee3a125f2d",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "X-002",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 246,
+      "objective_verbatim": "Request without current approved human seat attempts Control execution",
+      "oracle_verbatim": "Existing Control operation refuses before native effect; durable destination ledger unchanged",
+      "source_row_sha256": "fd5bdae5dac7484c7a0fb097176e2cc5c6a76199a4dcfff0cf02e9b8ff038eb8",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "X-003",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 247,
+      "objective_verbatim": "Valid approved human request triggers native Control operation exactly once",
+      "oracle_verbatim": "Actual Control send boundary commits single native effect, independent destination/ledger readback matches tenant/action/request",
+      "source_row_sha256": "1376a8ebe40cbd02eca13086ae4ea6716dd59e8e657d13b4932f97731f7e13b5",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "X-004",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 248,
+      "objective_verbatim": "Duplicate consume/retry, crash-after-effect-before-ACK, restart",
+      "oracle_verbatim": "Identical replay doesn't create second business effect; uncertain result reconciled against native operation ledger",
+      "source_row_sha256": "34bb1b6f6a6b1a9d612c6d0c6ee86db6c1f248fe78c43fe11278f852200103da",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "X-005",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 249,
+      "objective_verbatim": "DENIED, HELD, EXPIRED, CANCELLED or stale delegated approval attempts execute",
+      "oracle_verbatim": "Every case rejected by Control-side enforcement, not Grant helper-only warning",
+      "source_row_sha256": "ec7c71d6a5f9ebe94f4240483435917aefc5c1fadbee9a5afab8f0a9d76364be",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "X-006",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 250,
+      "objective_verbatim": "Stellar Cyber delivered receiver is connected to approved test tenant/case/alert",
+      "oracle_verbatim": "Log deployed Stellar version/config and supported receiver route, actual tenant/case/alert correlation, signed destination record",
+      "source_row_sha256": "01397cf2f0024e94a64be16f11afc0bd7d407a58e5d5f9d27451c79ca817b5a6",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "X-007",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 251,
+      "objective_verbatim": "APPROVED/DENIED case event reaches Stellar and is actually ingested",
+      "oracle_verbatim": "Independent native Stellar search/readback confirms exact event identity/state; no acceptance from an echo/HMAC fixture alone",
+      "source_row_sha256": "1e0a09cedefa1286aae37486d7c243511ea93938ff623c6b480b8aabe3d13ec6",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "X-008",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 252,
+      "objective_verbatim": "Forged, stale, malformed, duplicated, feedback-origin or wrong-tenant outcome received",
+      "oracle_verbatim": "Native/Grant ingress rejects or deduplicates as contracted; no self-triggering feedback loop",
+      "source_row_sha256": "cc5768703ad1bac5b0f8ae1d9c573972f5e6a58159d15671f82cf1c02da2cfc2",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "X-009",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 253,
+      "objective_verbatim": "Delayed/failed sender retry followed by restoration",
+      "oracle_verbatim": "Event IDs stable, error/backoff shown, no new human approval or business effect created",
+      "source_row_sha256": "e2662b7653bc4f78d89c358ac73106da20690ffa7d8e19fa478c9fff18e275d7",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "X-010",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 254,
+      "objective_verbatim": "Mail transport to independent recipient",
+      "oracle_verbatim": "Received original and final decision mails in actual unrelated mailboxes, not just SMTP 250/HTTP 200",
+      "source_row_sha256": "5753f7f882c62551740ceb5f8d76ef75e80415e2c75818ca5764b05c5f56c886",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "X-011",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 255,
+      "objective_verbatim": "External cleanup of authorized test-owned effects",
+      "oracle_verbatim": "Native observer confirms no unapproved residue; never delete production records to satisfy cleanup",
+      "source_row_sha256": "6b88ee2f13416c7c05a6b9a49626582fc0c5e6781bc8bf3d0d2b199ddc27517b",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-001",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 263,
+      "objective_verbatim": "Wrong role / unrelated member / self-approval / integration-token approval",
+      "oracle_verbatim": "Server denies with no request existence or human-seat privilege escalation",
+      "source_row_sha256": "2d4a698200556769bbf50542a2172bc4e2411da29010cb32c54d72c3369ec6e0",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-002",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 264,
+      "objective_verbatim": "Stale policy edit from another administrator",
+      "oracle_verbatim": "Atomic 409/CAS, unchanged saved policy/template and explicit reload/re-review",
+      "source_row_sha256": "12faf3f053dc0ea945249eb73e4c2c205d5f6bd0672492f962bd13cf469c409f",
+      "wbs": [
+        "U7.05",
+        "U5.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-003",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 265,
+      "objective_verbatim": "Duplicate request external ID, rapid Confirm, ambiguous timeout",
+      "oracle_verbatim": "At most one durable request/decision, operator must reconcile instead of auto-resubmit",
+      "source_row_sha256": "83b90280c3cd471b90809ee0a86e7f3fdfd505806f4b0e14fb5c3968c9959f60",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-004",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 266,
+      "objective_verbatim": "Mutate immutable action/tenant/source between review and submit",
+      "oracle_verbatim": "Block or force new request, never silently carry approval to changed action",
+      "source_row_sha256": "d2c80ad501300336341bdff2bad84c6bc00eeff1353f6462abb4e1ebb872fb6b",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-005",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 267,
+      "objective_verbatim": "Expired approval seat and reminder deadline race",
+      "oracle_verbatim": "No post-deadline approve, monotonic server expiry, no browser-clock privilege",
+      "source_row_sha256": "f7c26cf74b3a0556d0cb5d3549370cdb9406b7c262e982ba12e4ce438cf5226f",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-006",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 268,
+      "objective_verbatim": "Cancellation vs consume race",
+      "oracle_verbatim": "Exactly one permitted outcome, no work executed without pre-commit valid grant",
+      "source_row_sha256": "9aa8641cac4ca3e529ffc24695d4b5417ca2006a3690cc1676781af240dc9970",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-007",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 269,
+      "objective_verbatim": "Revoke/deactivate credential during external attempt",
+      "oracle_verbatim": "Later scopes denied, no unaudited reuse or raw-secret leak",
+      "source_row_sha256": "1e32b1fbd61178da2ecf3110e7767e213c54b5922511c4bcefd6f3307de3a820",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-008",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 270,
+      "objective_verbatim": "Link/PIN/OTP/TOTP tamper, replay, brute-force limit",
+      "oracle_verbatim": "No decision, bounded/recorded failures, no weakening assurance floor",
+      "source_row_sha256": "f3f1308f66b971eabd09c4127cb3b3808c53472147bcb999d55c2a42f22f8e41",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-009",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 271,
+      "objective_verbatim": "Browser refresh/logout while confirmation pending",
+      "oracle_verbatim": "No extra POST; ambiguous result requires fresh authoritative read",
+      "source_row_sha256": "e33ef3425a032a9238099756b7bea8b8ae5ff2ddb49871f1ac0b8021d2314c67",
+      "wbs": [
+        "U7.05",
+        "U1.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-010",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 272,
+      "objective_verbatim": "Wrong host/tenant/case/alert and callback URL redirect",
+      "oracle_verbatim": "Registered destination and TLS/tenant authority enforced, no arbitrary external send",
+      "source_row_sha256": "ef413cca1357378b8df0baf0e8cee7989293d75e7ab028adbe0a763185e437e0",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-011",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 273,
+      "objective_verbatim": "Oversized, malformed, duplicate-key, nonfinite, nested feedback JSON",
+      "oracle_verbatim": "Bounded refusal and audit; no state corruption or event amplification",
+      "source_row_sha256": "88212c3b08edd3a039e8e813c94d7263210f7e60ce5eb80d0cb72cd7e27fd252",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-012",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 274,
+      "objective_verbatim": "SMTP unavailable/retrying, webhook HTTP timeout, duplicate queue attempt",
+      "oracle_verbatim": "Stable bounded retries, explicit FAILED/UNKNOWN, no human-approval or execution claim",
+      "source_row_sha256": "d3fe42efdda74fe22f0a7e3b252bf36c9b479939e2c87bae4e552896e97443be",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-013",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 275,
+      "objective_verbatim": "DB filesystem permission failure, symlink/nonregular file, no free space",
+      "oracle_verbatim": "Private storage refusal, no insecure publication, no stack trace/secret contents",
+      "source_row_sha256": "4e4e80783d298dac00ec50d46f8507f0842e4499db36fa25b3757cc227ab6c45",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-014",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 276,
+      "objective_verbatim": "Backup source wrong name/URI reserved chars/missing PAUSED marker",
+      "oracle_verbatim": "Exact source integrity and new-path output guard, no partial restore",
+      "source_row_sha256": "61baa01d3bfcb6845bfe086cc23121b3aa340e48fcba7ba4b8dbf8b2d575e417",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-015",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 277,
+      "objective_verbatim": "Restart during reserved consume/outbound send",
+      "oracle_verbatim": "Lease reconciliation, idempotent replay and UNKNOWN preserved; no duplicate effect",
+      "source_row_sha256": "ea491b7d2d77f3b58957ecf8448111f35fadc35de78979f59467621c6a35f2c8",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-016",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 278,
+      "objective_verbatim": "Recovery-paused installation attempts send/consume/resend",
+      "oracle_verbatim": "Fail closed until explicit separately approved reconciliation/resume",
+      "source_row_sha256": "de6cc9aa36d6dc99221a9fdab20a4df7b40e98f3794a0d324371986c4a5ee747",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-017",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 279,
+      "objective_verbatim": "Incompatible backup/version or old v8 schema",
+      "oracle_verbatim": "Read-only check refuses implicit migration, protected pre-upgrade snapshot, isolated v8→v12 upgrade regression",
+      "source_row_sha256": "29bc152c83116fd9b9080dce829515f0c0e78ce468b9afcd0e905537dcc7d18d",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-018",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 280,
+      "objective_verbatim": "Missing Foundation package/incorrect pinned bundle/Web assets",
+      "oracle_verbatim": "Exact-head staging/CI failure, no fake fallback to incompatible shared UI",
+      "source_row_sha256": "b59d8fbeb473484819afa1167a1c8f9c2228daeb12066bccc849064b58f82ad6",
+      "wbs": [
+        "U7.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-019",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 281,
+      "objective_verbatim": "Admin System Management unsupported task clicked",
+      "oracle_verbatim": "Honest unavailable/read-only messaging, not a dead Manage button; raise outstanding P0-SM defect",
+      "source_row_sha256": "b55df5b648379feda2746780dcb8ae5d0ae2e89a1a88a9acdc081c3d46ba3391",
+      "wbs": [
+        "U7.05",
+        "U8.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-020",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 282,
+      "objective_verbatim": "Mobile/keyboard/no JS accessible labels",
+      "oracle_verbatim": "No hidden essential confirmation, wrong focus, horizontal overflow or screen-reader ambiguity",
+      "source_row_sha256": "05b07cb9ab980d466943123087af2a085050975bfd755a428a6e214459d5d0a2",
+      "wbs": [
+        "U7.05",
+        "U7.03"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-021",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 283,
+      "objective_verbatim": "Unauthorized CSV/JSON audit export or oversized query",
+      "oracle_verbatim": "Role-scoped bounded/redacted output and no partial secret disclosure",
+      "source_row_sha256": "c701b731658bded713aa52f2aae804d2f9b2a4b7253e038404b297d5999585f7",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-022",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 284,
+      "objective_verbatim": "Service offline, expired session, stale inbox GET",
+      "oracle_verbatim": "Recoverable public error; no ghost verified counts, stale/foreign request or misleading healthy status",
+      "source_row_sha256": "da178d9ccdb9b7ad35ebcae6f273acffa5b0987f2d736a52a79e216b4830925d",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-023",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 285,
+      "objective_verbatim": "Invalid Draft-only import mapping/conflict/version",
+      "oracle_verbatim": "Preview blocks, no policy activation or secret transfer, no partial import",
+      "source_row_sha256": "150ab84e0f385be4d9833afe7c684a5a69a0360a769250a8b80141d139f0bc09",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "S-024",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 286,
+      "objective_verbatim": "Unrecognized legacy/hidden CLI aliases/options",
+      "oracle_verbatim": "Help/parser errors nonzero with correct public guidance; no undocumented privileged grammar",
+      "source_row_sha256": "a981ae0e396759562cb848be3955b5a963c1ddfa2aaad4777ce02d8c837b1941",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "C-001",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 298,
+      "objective_verbatim": "Two administrators edit same policy/template/group revision",
+      "oracle_verbatim": "One commits, other CAS/409 and review required; no lost update",
+      "source_row_sha256": "9f11ac6fa78e53df73900fa9ea296ce2a65d29b0c88d3cd17f787c7d8269c052",
+      "wbs": [
+        "U7.05",
+        "U5.04"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "C-002",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 299,
+      "objective_verbatim": "Same selected approver opens twice/confirms concurrently",
+      "oracle_verbatim": "Exactly one seat decision and one audit outcome",
+      "source_row_sha256": "72db16c76d6b654e0493c33e5515c3254f71094990cfcfd183558bd3519a9865",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "C-003",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 300,
+      "objective_verbatim": "Two different valid quorum reviewers confirm nearly together",
+      "oracle_verbatim": "Correct ANY/ALL/QUORUM/SEQUENTIAL state, no skipped seat",
+      "source_row_sha256": "f3ff653ec6b8fd341593e0e2463c9bbbafda9778e6d3324428f1d2d14a20612a",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "C-004",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 301,
+      "objective_verbatim": "Requester cancel races with approver decision/consumer commit",
+      "oracle_verbatim": "Transactional winner honored, rejected contender cannot produce extra work",
+      "source_row_sha256": "ce538f8942e1fe45805b01a4506bbb6adb80c67fa4cce00a089cc238e9c5bf09",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "C-005",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 302,
+      "objective_verbatim": "Multiple email PIN/OTP/reissue confirmations for same bound seat",
+      "oracle_verbatim": "No replay or weaker verification, at most one current decision",
+      "source_row_sha256": "bb02a9e0e926fd0be5dc56651bd10cb06f13e8b889d57ddd6e4eed872f0056b1",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "C-006",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 303,
+      "objective_verbatim": "Concurrent consume retries and result reports, native crash simulation if approved",
+      "oracle_verbatim": "Single execution claim/effect, result bound to correct action/tenant",
+      "source_row_sha256": "212a101273e0d97d990263306a1fcb376e7a303f7ceb610cd8343d80c250913a",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "C-007",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 304,
+      "objective_verbatim": "Many notification callback retries including receiver restart",
+      "oracle_verbatim": "Same event identity, idempotent delivery/reconciliation, no mail-execution conflation",
+      "source_row_sha256": "8c9df7e63215c1e191b1deadc28af7ce4a8ee2d27695d4019a12708cc28d0a9b",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "C-008",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 305,
+      "objective_verbatim": "Multiple independent browser users/filter changes while list GETs complete out of order",
+      "oracle_verbatim": "Latest query/scope shown, no cross-user disclosure or wrong empty state",
+      "source_row_sha256": "53a221edf0da6834fa99ea76f121e3354c0ab1d5e8d2a38b0f3895f6d990fc0b",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "C-009",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 306,
+      "objective_verbatim": "Recovery/backup attempt while operations are paused or recovering",
+      "oracle_verbatim": "Existing pause/safety guards, isolated restore evidence and no reopened spent grants",
+      "source_row_sha256": "f608e75cf7c35bb70fc76e65b9360e66f62793fa7469f8dd77fcfd926323e864",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "C-010",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 307,
+      "objective_verbatim": "Two complete E2E passes and final candidate identity",
+      "oracle_verbatim": "Separate requests/emails/users, exact identical frozen HEAD/build for PASS1 and PASS2",
+      "source_row_sha256": "d45de78e93b0c2021651a23780cc3577b75237308609c71a5ec8f6fec9b3228b",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "P-001",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 315,
+      "objective_verbatim": "Browser login/new-request/confirmation baseline latency p50/p95/p99",
+      "oracle_verbatim": "Auth roles correct, request created once",
+      "source_row_sha256": "3125201984fd143603bbee75bf49671a4e2599245d77c655be6261549ff4d3ad",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "P-002",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 316,
+      "objective_verbatim": "Reviewer Inbox/policy filtering with growing isolated request history",
+      "oracle_verbatim": "Current-seat/latest-query truth, bounded pagination",
+      "source_row_sha256": "da93164381a46cc13d0efba4a2d0975cf6c21758cbe4c2101dbfa236053130fc",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "P-003",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 317,
+      "objective_verbatim": "SMTP notification fanout across authorized approver group",
+      "oracle_verbatim": "Per-recipient delivery IDs, no unapproved recipient",
+      "source_row_sha256": "27c1dd1ade49c358e1034a8ef757cd2a78603f0ebfa534582443fade8f236cff",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "P-004",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 318,
+      "objective_verbatim": "Many parallel human request/decision attempts from distinct disposable identities",
+      "oracle_verbatim": "No cross-user/tenant leak, no duplicated same seat",
+      "source_row_sha256": "6e6fb4fc332d8dded987c04763eff4bdf416100cbf033ebae0bcb0405c568d63",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "P-005",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 319,
+      "objective_verbatim": "Native Control consume-replay contention (owner-authorized only)",
+      "oracle_verbatim": "Exactly one native effect, no split-brain receipt",
+      "source_row_sha256": "d4df7a3bb5c7c9b5b3415dfcab4022850020b1625cdfddf9de3af4f347f7e322",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "P-006",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 320,
+      "objective_verbatim": "Callback retry/timeout/delay after simulated receiver restart",
+      "oracle_verbatim": "Durable queue bounded, correct eventual state",
+      "source_row_sha256": "3a4a2993f4d2807f5d07cc80e8ee9b94a1dc1bfb0e5e3583d74c0e72e6058d85",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "P-007",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 321,
+      "objective_verbatim": "Create/approve/cancel during read-heavy audit and health polling",
+      "oracle_verbatim": "No lost audit events, user-visible commands remain responsive",
+      "source_row_sha256": "355200c50834d2e60e1a5e2a67f1c5faef56a4ac6126aeae39f200e1206765cc",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "P-008",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 322,
+      "objective_verbatim": "Longer controlled idle session and worker soak within approved budget",
+      "oracle_verbatim": "Bounded memory/process growth, no auto sign-in bypass",
+      "source_row_sha256": "361664a5a685e154a39692d1403b6c9ce1f1a6278f1772e0439b43d16d903193",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "P-009",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 323,
+      "objective_verbatim": "Function-under-load collision: policy CAS + request create + mail retry",
+      "oracle_verbatim": "No stale policy downgrade or changed immutable action",
+      "source_row_sha256": "2f572da6bf162bf24398f83675a3fb4b7b8a27dca9b51586f0f70a5de1150adf",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "P-010",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 324,
+      "objective_verbatim": "Stop stress and restart checked disposable service",
+      "oracle_verbatim": "Recoverable verified state, no orphan temp/extra send, normal short user journey still PASS",
+      "source_row_sha256": "0a7aa9f7225c5cf2f093ac912b11593c7fb2cf22c02a5c1851b197e7dd6edbf0",
+      "wbs": [
+        "U7.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "V-001",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 334,
+      "objective_verbatim": "Login desktop 1280, 390, 375 and 320 width",
+      "oracle_verbatim": "Sign-in form visible without scrolling past help; proper field labels, errors and MFA/recovery; no horizontal overflow",
+      "source_row_sha256": "ca47309efc561be8c78af006fd5184d7dca1f5cc7f4405969337e2bee778f976",
+      "wbs": [
+        "U7.05",
+        "U7.03",
+        "U8.07",
+        "U8.08"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "V-002",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 335,
+      "objective_verbatim": "ProductShell desktop navigation, collapse/expand and mobile drawer",
+      "oracle_verbatim": "Home/My work/Configuration/Administration and Account & Security reachable with keyboard, focus and active-route clarity",
+      "source_row_sha256": "8f2b1b12712073ce5ed58ff405124d08f4a2d1c7534e59936355fb7db93bd957",
+      "wbs": [
+        "U7.05",
+        "U7.03",
+        "U8.07",
+        "U8.08"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "V-003",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 336,
+      "objective_verbatim": "Home → New Request → Approvals → Request Detail",
+      "oracle_verbatim": "Prominent next actions, numbered workflow, explicit review/final confirm, current server status and role-scoped queue",
+      "source_row_sha256": "ec144b9a1a5ed48cc2439771410a09de6e341854f1c8f80ab6dbe2dc4108c818",
+      "wbs": [
+        "U7.05",
+        "U7.03",
+        "U8.07",
+        "U8.08"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "V-004",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 337,
+      "objective_verbatim": "Policies/group/Notification/Integration workspace on mobile",
+      "oracle_verbatim": "Same scoped records and enabled actions as desktop; cards/tables do not invent data or eliminate controls",
+      "source_row_sha256": "462db3fa047ff820b2b45170b6e96257424df75bc522376ba04c11b2ac236582",
+      "wbs": [
+        "U7.05",
+        "U7.03",
+        "U8.07",
+        "U8.08"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "V-005",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 338,
+      "objective_verbatim": "System Management reference vs actual Grant",
+      "oracle_verbatim": "Correct nine core task names, current support/read-only/unavailable truth, product-specific Mail & Notifications; missing real backend actions remain P0 Gap",
+      "source_row_sha256": "8518dd56ef4b3796731a73233620a97c127fe31b8d2d781f42da7311ea70e721",
+      "wbs": [
+        "U7.05",
+        "U7.03",
+        "U8.07",
+        "U8.08"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "V-006",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 339,
+      "objective_verbatim": "Approve/Deny/Hold on keyboard and screen reader",
+      "oracle_verbatim": "Selection does not POST before separate confirmation, readable exact action/reviewer seat and correct focus return",
+      "source_row_sha256": "4f0ba66dcd72693638744cbbd1f664fd2c73dd7bb4257a1dd66ab042fb879cdf",
+      "wbs": [
+        "U7.05",
+        "U7.03",
+        "U8.07",
+        "U8.08"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "V-007",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 340,
+      "objective_verbatim": "Error/loading/zero records and unsupported controls",
+      "oracle_verbatim": "No green 0 before GET, no stale success after error, no fake \"Manage\" or backend-less DNS/TLS/retention toggle",
+      "source_row_sha256": "189209fa3f9d079052774df5b71ae28916f0f0fad4d4e19cd76e334e9ed74b45",
+      "wbs": [
+        "U7.05",
+        "U7.03",
+        "U8.07",
+        "U8.08"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "V-008",
+      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "line": 341,
+      "objective_verbatim": "Themes/different zoom/touch targets",
+      "oracle_verbatim": "Foundation-supported interactions maintain contrast/readable density; Grant-specific issue vs shared upstream owner distinguished",
+      "source_row_sha256": "b730727bf2559cb0d83e616aefe467fc3f6f375da3cb71f70a4681a764e024c8",
+      "wbs": [
+        "U7.05",
+        "U7.03",
+        "U8.07",
+        "U8.08"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_GATE",
+      "current_execution_scope": "NOT_EXECUTED_REAL_USER_ACCEPTANCE",
+      "requires_original_authorization": true,
+      "acceptance": "NOT_RUN"
+    }
+  ],
+  "original_user_family_counts": {
+    "U": 16,
+    "A": 17,
+    "E": 13,
+    "L": 12,
+    "X": 11,
+    "S": 24,
+    "C": 10,
+    "P": 10,
+    "V": 8
+  },
+  "historical_gap_rows": [
+    {
+      "id": "UX-01A",
+      "source": "docs/GRANT_UI_UX_GAP_MATRIX.md",
+      "line": 47,
+      "source_row_verbatim": "| **UX-01A** | Approval Inbox: Teleport/Entra/ServiceNow `DOCUMENTED` | `request_inbox.tsx`, `home_pages.ts`, `grant/core.py`: **UX_DEFECT**. Current approver `view=overdue` and Home can include a request in `EXPIRED` state with an **already recorded APPROVED decision** after execution-grant expiry. Admin `ops_overdue` correctly excludes it; roadmap [original reproduction](https://github.com/datarelay-labs/datarelay-grant/issues/37#issuecomment-6097247368) | Approver falsely sees completed voting as actionable. **Grant M1**, backend + Home jointly, protected `grant/core.py` source boundary | **P0**; RED→GREEN real disposable API two-persona approval→expiry plus `web/tests/unit/home-pages.test.ts`, `tests/test_operations.py`; original protected source edit denied, **WAITING_BLOCKER** |",
+      "wbs": [
+        "U8.02"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UX-01B",
+      "source": "docs/GRANT_UI_UX_GAP_MATRIX.md",
+      "line": 48,
+      "source_row_verbatim": "| **UX-01B** | Reviewer seat/context: Jira/Entra `DOCUMENTED` | `request_inbox.tsx`, `request_evidence.tsx` **SOURCE_PRESENT** current votes and timeline, previous G0 source verified | Readable request-first and one-seat decision context; **Grant M1**, no duplicate vote engine | **P1** only after actual user feedback; existing source tests already passed, browser direct-user check in M7 |",
+      "wbs": [
+        "U8.02",
+        "U8.06"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UX-02",
+      "source": "docs/GRANT_UI_UX_GAP_MATRIX.md",
+      "line": 49,
+      "source_row_verbatim": "| **UX-02** | Email action/link clarity: Jira/Entra `DOCUMENTED`; vendor PIN/MFA parity `UNKNOWN` | `decision_links.py` issued API URL, `email_decision_portal.tsx` standalone component, `app.tsx`: **PRESENT_BUT_UNMOUNTED / CONFIRMED_GAP** for accepted Grant 1.0 human email page | Approver receives JSON preflight rather than PIN entry. **Grant M4** must mount a safe human landing with GET non-mutating and separate final POST. Preserve optional independent fresh TOTP assurance | **P0**; exact two distinct real inboxes, default PIN, denied/held, OTP/MFA and stale/replay E2E + `web/tests/unit/email-decision-flow.test.ts`, API `tests/test_g10a_email_decisions.py`. Earlier `app.tsx` edit platform-denied; **WAITING_BLOCKER** |",
+      "wbs": [
+        "U8.02",
+        "U7.05"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UX-03A",
+      "source": "docs/GRANT_UI_UX_GAP_MATRIX.md",
+      "line": 50,
+      "source_row_verbatim": "| **UX-03A** | Role-aware administration: Keycloak/StrongDM `DOCUMENTED` | `foundation.config.ts`, `administration.tsx`, Foundation `AdministrationHub`: **UX_DEFECT** for current member `core.users` and `grant.smtp.test` capability projection. Source already has shared grouped navigation; don't duplicate it | Trustworthy role-gated task affordances. **Foundation B2 (shared) + Grant M2 (mapping)**; compare Control same edition before shared change | **P0**; member vs admin capability/menu/no-action and 9-task/4-group contract in `web/tests/unit/administration-consumer-conformance.test.ts` + permitted source and browser tests. Earlier Administration/app/styles denied; **WAITING_BLOCKER** |",
+      "wbs": [
+        "U8.07"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UX-03B",
+      "source": "docs/GRANT_UI_UX_GAP_MATRIX.md",
+      "line": 51,
+      "source_row_verbatim": "| **UX-03B** | Login center / first-viewport, Keycloak/ServiceNow mobile `NOT VERIFIED` | Foundation `AuthLayout` pinned `pf8.4` and `ProductShell` **SOURCE_PRESENT**. Prior owner screenshots raised centering/white margin/320px first viewport; **current exact-installed-HEAD visual status UNKNOWN** | **Foundation B2** owns auth layout and global reset, Grant consumes tested package; no CSS fork. Keyboard first, 320×568/375×667 and desktop | **P0 for actual user blocking**, vendor mobile equivalence UNKNOWN, previous screenshot/browser actions denied; explicit permitted full visual+keyboard E2E still required |",
+      "wbs": [
+        "U8.07",
+        "U7.03"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UX-04A",
+      "source": "docs/GRANT_UI_UX_GAP_MATRIX.md",
+      "line": 52,
+      "source_row_verbatim": "| **UX-04A** | Admin approval group/policy: Jira/StrongDM/Teleport `DOCUMENTED` | `policies.tsx`, `approvers.tsx`, `grant/core.py` **SOURCE_PRESENT** for SINGLE/ANY_ONE/ALL/N_OF_M/SEQUENTIAL, Draft/Test/Activate, group selection. **UX_DEFECT** at stale two-admin Deny/MFA/integration verification-floor overwrite according to #37 | Changes to security policy can silently override other admin; **Grant M3** server CAS + current editor conflicts, never just visual notice | **P0**; real two synthetic admin sessions stale saves 200/200 must become explicit conflict; maintain former value, histories + web tests. Prior broad Phase1 source actions denied; **WAITING_BLOCKER** |",
+      "wbs": [
+        "U8.04"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UX-04B",
+      "source": "docs/GRANT_UI_UX_GAP_MATRIX.md",
+      "line": 53,
+      "source_row_verbatim": "| **UX-04B** | Notifications policy/edit: Jira/StrongDM `DOCUMENTED` | `notifications.tsx`, templates backend **SOURCE_PRESENT**, but reported concurrent template 200/200 silent overwrite **UX_DEFECT** | Admin loses other editor's templates, misleading success. **Grant M3** versioned template edit + conflict UI | **P0**; two-admin editable nine-event sets and notification verification tests; protected backend scope **WAITING_BLOCKER** |",
+      "wbs": [
+        "U2.03",
+        "U5.04",
+        "U8.05"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UX-05A",
+      "source": "docs/GRANT_UI_UX_GAP_MATRIX.md",
+      "line": 54,
+      "source_row_verbatim": "| **UX-05A** | Request detail + activity: ServiceNow/Entra/StrongDM `DOCUMENTED` | `requests.tsx`, `request_action_summary.tsx`, `request_evidence.tsx`, `audit_explorer.tsx`: **SOURCE_PRESENT**, not proof of live user screen parity | Progressive exact action → approval seats → delivery → execution/result → audit. **Grant M1/M5**, preserve original routes | **P1** after UX-01..04; allowed focused layout/unit tests + direct installed user scenario M7; don't rebuild audit engine |",
+      "wbs": [
+        "U8.03",
+        "U8.06"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UX-05B",
+      "source": "docs/GRANT_UI_UX_GAP_MATRIX.md",
+      "line": 55,
+      "source_row_verbatim": "| **UX-05B** | Request status/approval vs effect: Teleport/Entra `DOCUMENTED` but different execution models | Grant `execution_state`, `RequestEvidence` **SOURCE_PRESENT**, customer-side external Control/Stellar effect **UNKNOWN** | Never show email delivery or approval as executed product operation; **Grant M6/M7** product-owned readback | **P0 actual release gate** (not a screen rewrite). Separate one durable Control effect, independent Stellar receiver, real user E2E, then release |",
+      "wbs": [
+        "U8.03",
+        "U7.05"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "acceptance": "NOT_RUN"
+    }
+  ],
+  "historical_structured_findings": [
+    {
+      "id": "review-task-queue",
+      "source": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "feature_verbatim": "Assigned pending approvals in dedicated role-aware review queue",
+      "recommendation_verbatim": "Preserve existing Grant My approvals queue and server scope; fix real overdue/current decision contradiction before cosmetic work.",
+      "wbs": [
+        "U8.02"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "owner": "Grant",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "review-action-context",
+      "source": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "feature_verbatim": "Focused request detail and one-click entry to explicit approve or deny",
+      "recommendation_verbatim": "Keep reviewer-seat votes and immutable action first; never treat submitted approval as product execution.",
+      "wbs": [
+        "U8.03",
+        "U8.06"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "owner": "Grant",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "review-expiry",
+      "source": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "feature_verbatim": "Approver queue distinguishes pending decision and expired prior approval",
+      "recommendation_verbatim": "Prior synthetic Grant API found already-approved execution-grant expiry falsely in approver overdue list; require backend/Home parity before new UI.",
+      "wbs": [
+        "U8.02"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "owner": "Grant",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "email-approval-options",
+      "source": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "feature_verbatim": "Email notification can link to request or offer approval actions",
+      "recommendation_verbatim": "Mount Grant secure anonymous read-only PIN landing; vendor email mechanisms are NOT evidence of equivalent PIN or MFA.",
+      "wbs": [
+        "U3.04",
+        "U7.05"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "owner": "Grant",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "email-pin-mfa-parity",
+      "source": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "feature_verbatim": "Loginless 4-digit PIN optional OTP fresh Grant TOTP and final POST",
+      "recommendation_verbatim": "Grant specific security product requirement; existing backend/standalone portal present but actual public route missing. Do not infer competitor verification controls.",
+      "wbs": [
+        "U3.06",
+        "U7.05"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "owner": "Grant",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "admin-navigation",
+      "source": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "feature_verbatim": "Role-appropriate administration navigation and bounded task panels",
+      "recommendation_verbatim": "Resolve two member capability contradictions in shared Foundation/Grant Administration; preserve configured admin ownership and no fake SMTP editor.",
+      "wbs": [
+        "U8.07"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "owner": "Foundation",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "mobile-centered-auth",
+      "source": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "feature_verbatim": "Centered responsive auth and 320px/375px first-viewport navigation",
+      "recommendation_verbatim": "Owner screenshots and prior Grant source research show concern; vendor docs do not prove mobile parity. Need permitted direct browser visual/a11y E2E.",
+      "wbs": [
+        "U8.07",
+        "U7.03"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "owner": "Foundation",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "policy-review-steps",
+      "source": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "feature_verbatim": "Approval policies expose actors groups threshold and review steps",
+      "recommendation_verbatim": "Grant already supports SINGLE/ANY_ONE/ALL/N_OF_M/SEQUENTIAL; protect stale multi-admin editor save and explicit review lifecycle.",
+      "wbs": [
+        "U8.04"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "owner": "Grant",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "notification-policy",
+      "source": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "feature_verbatim": "Administrative email approval notifications and policy-bound template choices",
+      "recommendation_verbatim": "Compare saved templates/approval policies as separate modules; fix two-admin lost update, never copy chat bot flow or make unapproved real SMTP send.",
+      "wbs": [
+        "U2.03",
+        "U5.04",
+        "U8.05"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "owner": "Grant",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "task-details-activity",
+      "source": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "feature_verbatim": "Request detail places decision context and activity history side by side or in separate panels",
+      "recommendation_verbatim": "Progressively display Request Action, decision seats, delivery/effect and audit. Existing Grant RequestEvidence is source present, user screen acceptance not proven.",
+      "wbs": [
+        "U8.03",
+        "U8.06"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "owner": "Grant",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "request-status-history",
+      "source": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "feature_verbatim": "Clear separation of requester history and approver pending work",
+      "recommendation_verbatim": "Keep My requests and My approvals separate; label Grant reported execution not independently verified.",
+      "wbs": [
+        "U8.01",
+        "U8.02"
+      ],
+      "disposition": "MANDATORY_CURRENT_VERIFICATION_PENDING",
+      "owner": "Grant",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "external-iam-catalog",
+      "source": "docs/GRANT_UI_UX_COMPETITOR_STUDY_20261010.json",
+      "feature_verbatim": "Enterprise access catalogs roles and automatic approval/escalation product scope",
+      "recommendation_verbatim": "Do NOT add IAM catalog, auto approval, RMM, generic workflow engine or silent execution to Grant 1.0.",
+      "wbs": [],
+      "disposition": "ORIGINAL_EXPLICIT_DEFERRED_NOT_NEW_SCOPE",
+      "owner": "Grant",
+      "acceptance": "NOT_RUN"
+    }
+  ],
+  "original_id_mapping_complete": true,
+  "all_historical_narrative_requirements_reconciled": false,
+  "product_acceptance": false,
+  "remaining_reconciliation": [
+    "Original S02 retained UI reanalysis artifact and S03 audit comments must be tied to exact source rows.",
+    "Narrative P0-2A..G, UX-A..E, G-CI/B2..B5 and scope overrides must be atomized against U8, not blanket marked complete.",
+    "Attach exact current source/test/commit evidence to mapped acceptance rows; no original real-person scenario was run."
+  ]
+}

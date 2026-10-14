@@ -24,8 +24,14 @@ export async function notificationsFixture(page:Page){
   if(pathname==='/api/v1/notification-template-sets'&&method==='GET'){await route.fulfill({json:state.rows});return;}
   if(pathname.endsWith('/notification-variables')){await route.fulfill({json:{variables:['request_title','request_url','external_id','action_kind','target','reason','deadline','decision_state','execution_state']}});return;}
   if(pathname.endsWith('/notification-branding')){await route.fulfill({json:{brand_name:'DataRelay Grant',sender_display_name:'DataRelay Grant',logo_asset:''}});return;}
+  if(pathname==='/api/v1/notification-template-defaults'&&method==='GET'){
+   const locale=url.searchParams.get('locale')==='ko'?'ko':'en';
+   const value=await new Promise<string>((resolve,reject)=>execFile('uv',['run','--frozen','python','-c','import json,sys; from grant.email_localization import event_defaults; print(json.dumps({"locale":sys.argv[1],"templates":event_defaults(sys.argv[1])}))',locale],{cwd:root,timeout:15000},(error,stdout)=>error?reject(error):resolve(stdout)));
+   await route.fulfill({json:JSON.parse(value)});return;
+  }
   if(pathname.endsWith('/preview')){
-   const payload=route.request().postDataJSON(),row=state.rows[0];
+   const match=pathname.match(/^\/api\/v1\/notification-template-sets\/([^/]+)\/preview$/);
+   const payload=route.request().postDataJSON(),row=match?state.rows.find(item=>item.id===decodeURIComponent(match[1]))!:state.rows[0];
    const result=await renderSyntheticEmail({...payload,template:payload.template??{name:row.name,templates:row.templates,design:row.design}});
    await route.fulfill({json:{...result,transport_accepted:false,receipt_confirmed:false,execution_allowed:false}});return;
   }
