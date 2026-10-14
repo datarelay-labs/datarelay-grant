@@ -81,6 +81,14 @@ export function NotificationRequestLink({ requestId }: { requestId: string }) {
 }
 
 
+export type EmailPreviewSimulation='normal'|'images_off'|'dark_approximation';
+export function simulatedEmailDocument(html:string,simulation:EmailPreviewSimulation):string {
+ // Images-off is an intentionally stricter local simulation: image elements are
+ // removed before the existing inert-document gate and therefore cannot fetch.
+ if(simulation==='images_off')html=html.replace(/<\s*img\b[^>]*>/gi,'<span>[Image hidden]</span>');
+ return inertEmailDocument(html);
+}
+
 export function inertEmailDocument(html:string):string {
  // Reject active/resource elements before iframe parsing. CSP remains defense
  // in depth; even browser-observable blocked resource attempts are unnecessary.
@@ -98,7 +106,8 @@ export function NotificationRenderedPreview({rendered,selectedBlock,onSelectBloc
   const interactive=!!onSelectBlock;
   const [mode,setMode]=useState<'canvas'|'html'|'text'|'source'>(interactive?'canvas':'html');
   const [width,setWidth]=useState('600');
-  const document=inertEmailDocument(rendered.html??'');
+  const [simulation,setSimulation]=useState<EmailPreviewSimulation>('normal');
+  const document=simulatedEmailDocument(rendered.html??'',simulation);
   return <section aria-label="Rendered email preview">
     <div className="grant-actions" role="group" aria-label="Preview format">
       {(interactive?(['canvas','html','text','source'] as const):(['html','text','source'] as const)).map(item=><Button key={item} variant="secondary"
@@ -108,9 +117,14 @@ export function NotificationRenderedPreview({rendered,selectedBlock,onSelectBloc
       <option value="600">Desktop · 600px</option><option value="390">Mobile · 390px</option>
       <option value="375">Mobile · 375px</option><option value="320">Mobile · 320px</option>
     </select></label>
+    <div className="grant-actions" role="group" aria-label="Layout preview simulation">
+      {([['normal','Normal'],['images_off','Images off'],['dark_approximation','Dark-mode approximation']] as const).map(([key,label])=><Button key={key} variant="secondary"
+       aria-pressed={simulation===key} onClick={()=>{setSimulation(key);if(interactive)setMode('html');}}>{label}</Button>)}
+    </div>
+    <p role="note">Simulation affects only this inert local layout view. It is not Gmail, Outlook, Apple Mail or mobile-client acceptance.</p>
     {mode==='canvas'&&interactive&&rendered.html?<div className="grant-email-canvas-size" style={{width:width+'px',maxWidth:'100%'}}><EmailCanvasProjection html={rendered.html} selected={selectedBlock??'message'} onSelect={onSelectBlock!}/></div>:mode==='html'&&rendered.html?<iframe title="Inert approval email preview" sandbox=""
-      referrerPolicy="no-referrer" srcDoc={document}
-      style={{width:width+'px',maxWidth:'100%',height:'700px',border:0}}/>:
+      referrerPolicy="no-referrer" srcDoc={document} data-preview-simulation={simulation}
+      style={{width:width+'px',maxWidth:'100%',height:'700px',border:0,...(simulation==='dark_approximation'?{filter:'invert(0.88) hue-rotate(180deg)',background:'#111827'}:{})}}/>:
       <pre className="grant-mono" style={{whiteSpace:'pre-wrap',overflowWrap:'anywhere'}}>{mode==='source'?rendered.html??'HTML unavailable':rendered.body}</pre>}
     <p>Sample links and PIN are inert. This preview does not prove inbox delivery or mail-client compatibility.</p>
   </section>;

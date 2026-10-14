@@ -1258,8 +1258,8 @@
       "verification_id": "V-U4.05",
       "pass_criterion": "V-U4.05: same current revision in each view; required content/actions readable without clipping; text fallback usable; simulations never display Gmail/Outlook acceptance PASS.",
       "status": "OPEN",
-      "source": "IN_PROGRESS",
-      "interaction": "IN_PROGRESS",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1277,6 +1277,24 @@
           "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
           "observed_at": "2026-10-14T07:30:10.564690+00:00",
           "result": "320/375/390/600 widths and exact plain/HTML source views PASS. Explicit images-off and dark-mode labeled simulations remain OPEN and are not inferred."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "web/src/notification_preview.tsx",
+          "source_head": "3f5ac85f94ee894946acbdff45831b52a9658f20",
+          "test_id": "V-U4.05",
+          "observed_at": "2026-10-14T07:32:25.239474+00:00",
+          "result_detail": "Inert preview now exposes explicit Normal / Images off / Dark-mode approximation controls. Simulations affect preview only and state clearly they are not Gmail/Outlook/Apple acceptance."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u4-preview-final-results.json",
+          "source_head": "3f5ac85f94ee894946acbdff45831b52a9658f20",
+          "test_id": "V-U4.05",
+          "observed_at": "2026-10-14T07:32:25.239474+00:00",
+          "result_detail": "Mounted preview contract 5/5 PASS including 320/375/390/600 widths, exact source/text, images-off resource suppression, dark-mode approximation labeling, stale/failure recovery and live-vs-saved distinction. Full Web 736/736 + type/build PASS."
         }
       ],
       "blocker": null

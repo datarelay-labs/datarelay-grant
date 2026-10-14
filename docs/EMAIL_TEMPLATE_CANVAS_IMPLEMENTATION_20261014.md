@@ -722,3 +722,19 @@ Evidence: `.dev/u4-preview-exact-focus.txt`,
 `.dev/u4-web-check.txt`. U4.05 remains OPEN for explicitly labeled images-off and
 dark-mode simulation; these passes are not substituted for actual Gmail/Outlook/
 Apple/iOS acceptance.
+
+
+### U4.05 explicit preview simulations
+
+The isolated layout preview now offers explicit **Normal**, **Images off** and
+**Dark-mode approximation** controls. Images-off removes image elements before
+the inert iframe/resource gate and preserves visible fallback text. The dark
+approximation is a local visual filter only. A permanent note states that these
+simulations are not Gmail, Outlook or Apple Mail acceptance; no network image,
+mailbox or account action is performed.
+
+Current mounted preview suite 5/5 PASS, including prior stale/failure/exact-field
+recovery and live-versus-saved distinction. Full Web unit suite 736/736 and
+TypeScript/Vite build PASS. Evidence: `.dev/u4-preview-final.txt`,
+`.dev/u4-preview-final-results.json`, `.dev/u4-05-web-full.txt`,
+`.dev/u4-05-web-check.txt`. Real mail-client qualification remains U7.04.
