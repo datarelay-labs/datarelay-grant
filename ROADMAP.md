@@ -8,15 +8,16 @@
 Canonical detailed execution plan: [10 milestones / 68 registered WBS tasks](docs/COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md).
 Per-task evidence: [UI evidence ledger](docs/COMPETITOR_UI_EVIDENCE_20261014.json).
 
-Current product source is `4fe71b4b96c66ed80e7c67138c784e17b0714435`; latest evidence coordination is `f2d77409e4785d12137b0e639e1e340dd765699f`.
+Current product source remains `4fe71b4b96c66ed80e7c67138c784e17b0714435`. Exact mutable evidence/coordination HEAD and CI are intentionally tracked in GitHub Roadmap #37, ACTIVE Work Packet #67 and Draft PR #100 rather than pinned here, so evidence-only commits do not make this file falsely stale.
 - U1–U5, U6.01–U6.05, U7.01–U7.03 and U8.01–U8.07 have source + mounted interaction PASS evidence.
-- Current focused mounted editor/Notifications 6/6 PASS; qualification keyboard/focus/touch 3/3 PASS; full Web unit 738/738 PASS; TypeScript + production build PASS.
-- U0.04 preservation and U0.05 evidence-model gates PASS. Original G12 and stash remain protected.
-- U0.01/U0.03/U8.08 are blocked on retained historical source S02, which remains unavailable after the already-completed permitted searches. Do not invent it or repeat competitor research.
-- U6.06 and U7.04–U7.06 require approved real receipt/mail-client/independent-person/usability conditions. U7.07 has exact dev deployment provenance but authenticated deployed-task interaction remains unrun.
-- U9.01/U9.02 therefore cannot close and the exclusive priority lock remains active.
+- Focused mounted editor/Notifications 6/6 PASS; qualification keyboard/focus/touch 3/3 PASS; full Web unit 738/738 PASS; TypeScript + production build PASS.
+- U0.02 coordination, U0.04 preservation and U0.05 evidence-model gates PASS. Original G12 and stash remain protected.
+- U0.01/U0.03/U8.08 are blocked on retained historical source S02, unavailable after the already-completed permitted searches. Do not invent it or repeat competitor research.
+- Current development HTTPS preview serves the current Web build with independent byte-matched readback; U7.07 source + dev deployment PASS, while authenticated same-UI-task interaction remains blocked without an authorized persona/credential path.
+- U6.06 and U7.04–U7.06 have explicit external acceptance blockers: authorized real SMTP/mailbox receipt, actual Gmail/Outlook/Apple/iOS clients, independently acting real users/mailboxes, and a measured novice participant.
+- U9.01/U9.02 therefore remain OPEN; U9.03/U9.04 cannot close until those dependencies do. The exclusive priority lock remains active.
 
-**Next action:** continue only dependency-ready evidence/acceptance work in this lane. Align current GitHub Work Packet/PR coordination, then attempt only legitimately available deployed/authenticated acceptance. If S02 or approved real actors/mailboxes/clients are unavailable, record the exact blocker; do not create replacement research, fixture acceptance or unrelated work.
+**Next action:** no safe dependency-ready product implementation remains in this lane. Resume only when retained S02 or one of the explicitly required approved real acceptance/authenticated-persona conditions becomes available. Do not create replacement research, fixture acceptance, browser-emulation acceptance or unrelated work. Exact current HEAD/CI must be read from #37/#67/PR100 before any resumed action.
 
 Source / mounted interaction / development deployment / actual acceptance are independent evidence levels. A required blocked or unrun gate stays incomplete. Existing machine evidence never substitutes for real mail-client, independent-person or novice-usability acceptance.
 
