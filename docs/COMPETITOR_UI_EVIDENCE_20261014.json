@@ -2691,13 +2691,32 @@
       "depends_on": "U0.03, U8.01–U8.07",
       "verification_id": "V-U8.08",
       "pass_criterion": "V-U8.08: reconcile each original ID, outcome, implementation and exact test evidence; implement any unmatched accepted behavior in explicit child WBS rows; no invented B2–B5 mapping, blanket historic completion or repeated accepted work.",
-      "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "status": "BLOCKED",
+      "source": "IN_PROGRESS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
-      "blocker": null
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "IN_PROGRESS",
+          "artifact": "docs/COMPETITOR_UI_ORIGINAL_CROSSWALK_20261014.json",
+          "source_head": "4052ee049fb9b25d40269e5c1c91b013d3fe590d",
+          "test_id": "V-U8.08",
+          "observed_at": "2026-10-14T08:58:51.237074+00:00",
+          "result_detail": "Machine-validated exact-span atomization now covers 32 retained P0-2A..G, UX-A..E, G-CI-1..5, B2-B5 section, licensed Keycloak REA and explicit scope-boundary atoms. One original source identity remains unresolved: S02 is not recoverable from current project/library/repo searches."
+        },
+        {
+          "gate": "interaction",
+          "result": "IN_PROGRESS",
+          "artifact": ".dev/u8-native-browser-45-final.txt",
+          "source_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+          "test_id": "V-U8.08",
+          "observed_at": "2026-10-14T08:58:51.237074+00:00",
+          "result_detail": "Official isolated native browser suite 45/45 PASS and exact narrative atom test references validate all currently mapped mounted scenarios. This does not fill missing S02 or required independent-human/mail-client/external-effect acceptance."
+        }
+      ],
+      "blocker": "Original S02 retained UI reanalysis artifact remains unlocated after exact Files/Library and bounded repository searches. Do not invent the missing source or repeat competitor research. Real-person/mail-client/external acceptance also remains separately open."
     },
     {
       "id": "U9.01",
