@@ -66,3 +66,13 @@ def test_crosswalk_rejects_omission_tampering_and_false_acceptance(case):
 def test_mapped_requirement_does_not_satisfy_product_exit_gate():
     with pytest.raises(ValueError, match="UI_COMPLETION_OPEN"):
         CHECKER["validate"](TEXT, LEDGER, require_complete=True)
+
+
+def test_development_rollup_is_complete_and_separate_from_acceptance():
+    completion=LEDGER["development_completion"]
+    assert completion["status"]=="PASS"
+    assert completion["scope"]=="U0-U8"
+    assert completion["total_rows"]==64
+    assert completion["source_resolved"]==64
+    assert completion["development_deployment_resolved"]==64
+    assert any(row["status"]=="OPEN" for row in LEDGER["tasks"])

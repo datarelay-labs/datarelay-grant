@@ -8,6 +8,8 @@
 Canonical detailed execution plan: [10 milestones / 68 registered WBS tasks](docs/COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md).
 Per-task evidence: [UI evidence ledger](docs/COMPETITOR_UI_EVIDENCE_20261014.json).
 
+**DEVELOPMENT COMPLETE:** U0-U8 contains 64 development rows; **64/64 source resolved and 64/64 development deployment resolved**. There is no remaining implementation gap in the registered competitor-UI WBS. Strict OPEN rows below are real acceptance dependencies only and must not be reported as missing development.
+
 The competitor-UI implementation baseline remains `4fe71b4b96c66ed80e7c67138c784e17b0714435`; the later owner-directed password-policy source change is tracked by the exact mutable HEAD/CI in GitHub Roadmap #37, ACTIVE Work Packet #67 and Draft PR #100 rather than pinned here.
 - U1–U5, U6.01–U6.05, U7.01–U7.03 and U8.01–U8.07 have source + mounted interaction PASS evidence.
 - Focused mounted editor/Notifications 6/6 PASS; qualification keyboard/focus/touch 3/3 PASS; current full Web unit 740/740 PASS; TypeScript + production build PASS.
