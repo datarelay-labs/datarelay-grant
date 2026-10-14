@@ -31,7 +31,12 @@ test('real Notifications composition opens inventory and saves only the reviewed
  await expect(page.getByLabel('Email template inventory')).toContainText('Used by 2 active policies');
  await page.getByRole('button',{name:'Edit draft',exact:true}).click();
  await expect(page.getByLabel('Canvas-first email editor')).toBeVisible();
+ await expect(page.getByLabel('Selectable email canvas')).toHaveCount(1);
+ await expect(page.getByRole('navigation',{name:'Email blocks'})).toHaveCount(1);
+ await expect(page.getByLabel('Event',{exact:true})).toHaveCount(1);
  await expect(page.locator('[data-email-block="message"]')).toBeVisible();
+ await expect(page.getByRole('button',{name:'Save draft',exact:true})).toBeVisible();
+ await page.screenshot({path:'../.dev/u1-notifications-desktop.png',fullPage:true});
  await page.getByLabel('Event body').fill('Reviewed integration change.');
  await page.getByRole('button',{name:'Save draft',exact:true}).click();
  await expect(page.getByText('Review notification template set',{exact:true})).toBeVisible();expect(writes).toEqual([]);

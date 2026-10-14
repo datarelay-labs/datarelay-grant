@@ -23,9 +23,13 @@ const outline=(page:Page)=>page.getByRole('navigation',{name:'Email blocks'});
 
 test('selects actual email blocks, edits copy and button style without navigation or effects',async({page})=>{
  const effects=await installPreview(page);
- await page.locator('[data-email-block="message"]').click();
+ const message=page.locator('[data-email-block="message"]');await message.click();
+ await expect(outline(page).getByRole('button',{name:'Message',exact:true})).toHaveAttribute('aria-pressed','true');
  await page.getByLabel('Event body').fill('Our custom change explanation.');
- await page.locator('[data-email-block="actions"]').first().click();
+ await expect(message).toContainText('Our custom change explanation.');
+ const actions=page.locator('[data-email-block="actions"]').first();
+ await actions.getByText('Approve',{exact:false}).first().click();
+ await expect(outline(page).getByRole('button',{name:/^Approval buttons/})).toHaveAttribute('aria-pressed','true');
  await page.getByRole('group',{name:'Button size',exact:true}).getByRole('button').filter({hasText:'L'}).click();
  await expect.poll(async()=>(await draft(page)).design.button_size).toBe('L');
  await page.getByLabel('Language',{exact:true}).selectOption('ko');
@@ -84,8 +88,11 @@ test('canvas projection drops active tags, URLs and navigation attributes',async
 test('390px canvas supports keyboard block selection and unclipped properties',async({page})=>{
  await page.setViewportSize({width:390,height:844});await installPreview(page);
  const heading=outline(page).getByRole('button',{name:'Heading',exact:true});await heading.focus();await page.keyboard.press('Enter');
+ await expect(heading).toHaveAttribute('aria-pressed','true');
  await expect(page.getByLabel('Event heading')).toBeVisible();await page.getByLabel('Event heading').fill('새로운 승인 요청 제목');
- await page.getByRole('button',{name:'Close settings'}).click();await expect(page.getByLabel('Event heading')).not.toBeVisible();
+ await page.getByRole('button',{name:'Close settings'}).click();await expect(page.getByLabel('Event heading')).not.toBeVisible();await expect(heading).toBeFocused();
+ await page.locator('[data-email-block="heading"]').click();await expect(page.getByLabel('Event heading')).toBeFocused();
+ await page.keyboard.press('Escape');await expect(page.getByLabel('Event heading')).not.toBeVisible();await expect(heading).toBeFocused();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
  await page.screenshot({path:'../.dev/email-canvas-mobile.png',fullPage:true});
 });

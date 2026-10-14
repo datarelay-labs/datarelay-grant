@@ -73,9 +73,10 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,reviewOpe
   if(focus)requestAnimationFrame(()=>{
    const panel=inspector.current;if(!panel)return;
    const label=fieldLabel?Array.from(panel.querySelectorAll<HTMLLabelElement>('label')).find(item=>item.textContent?.trim()===fieldLabel):undefined;
-   const target=label?.control instanceof HTMLElement?label.control:panel.querySelector<HTMLElement>('input:not([type=color]),textarea,select,button');
-   for(let parent=target?.parentElement;parent&&parent!==panel;parent=parent.parentElement){if(parent instanceof HTMLDetailsElement)parent.open=true;}
-   target?.focus();
+   const target=label?.control instanceof HTMLElement?label.control:
+    panel.querySelector<HTMLElement>('[data-email-wording],input:not([type=color]),textarea,select,button:not(.grant-email-close-properties)')??panel;
+   for(let parent=target.parentElement;parent&&parent!==panel;parent=parent.parentElement){if(parent instanceof HTMLDetailsElement)parent.open=true;}
+   target.focus();
   });
  }
  function closeInspector(){
@@ -169,7 +170,7 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,reviewOpe
    <div className="grant-email-central-canvas"><p className="grant-email-canvas-hint">Select a message or button to edit its appearance. No approval or navigation is performed.</p>
     <LiveEmailPreview draft={draft} event={event} selectedBlock={selected} onSelectBlock={(block,fieldLabel)=>select(block,true,fieldLabel)} onPreviewState={onPreviewState}/>
    </div>
-   <section id="grant-email-properties" ref={inspector} className={'grant-email-properties'+(inspectorOpen?' is-open':'')} aria-label="Selected block properties"
+   <section id="grant-email-properties" ref={inspector} tabIndex={-1} className={'grant-email-properties'+(inspectorOpen?' is-open':'')} aria-label="Selected block properties"
     onFocusCapture={e=>capture(e.target)} onSelect={e=>capture(e.target)}
     onKeyDown={e=>{if(e.key==='Escape'){e.preventDefault();closeInspector();}}}>
     <div className="grant-email-property-heading"><h3>{blockLabels[selected]}</h3><Button className="grant-email-close-properties" type="button" variant="ghost" onClick={closeInspector}>Close settings</Button></div>
