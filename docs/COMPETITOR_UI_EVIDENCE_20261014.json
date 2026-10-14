@@ -1567,7 +1567,7 @@
       "pass_criterion": "V-U5.01: edit/save/reopen shows accurate server revision state; published pointer and existing mail unchanged after save; loading/error/unknown states cannot claim a version.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "NOT_RUN",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1579,6 +1579,28 @@
           "test_id": "V-U5.01",
           "observed_at": "2026-10-14T05:52:53.228929+00:00",
           "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source. No live SMTP, issuance, decision or external execution."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.01",
+          "artifact": ".dev/u5-publication-python-current.txt",
+          "result_detail": "Current publication API regression set 8/8 PASS. Saving remains draft-only; Review & publish is a separate current-preview flow requiring exact current saved state, reason and explicit Confirm."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.01",
+          "artifact": ".dev/u5-publication-browser-rerun.txt",
+          "test_files": [
+            "web/tests/canvas/publication-inspection.spec.ts",
+            "web/tests/canvas/publication.spec.ts"
+          ],
+          "result_detail": "Current mounted publication suite 5/5 PASS. Saving remains draft-only; Review & publish is a separate current-preview flow requiring exact current saved state, reason and explicit Confirm. Synthetic transport only; owner release/real mailbox acceptance not implied."
         }
       ],
       "blocker": null
@@ -1591,8 +1613,8 @@
       "verification_id": "V-U5.02",
       "pass_criterion": "V-U5.02: real mounted review shows server-bound current published/draft comparison and actual field/event diff; initial publication handles no previous version; empty/stale/invalid review cannot confirm.",
       "status": "OPEN",
-      "source": "IN_PROGRESS",
-      "interaction": "IN_PROGRESS",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1605,6 +1627,28 @@
             "web/tests/unit/email-publication-review.test.ts"
           ],
           "result": "8 API/publication regression cases, five guard units and three actual-component synthetic browser scenarios PASS; type/build/Ruff PASS. Definite conflict recovery consumes old proof; unknown outcome remains latched. No actual live publication or mail."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.02",
+          "artifact": ".dev/u5-publication-python-current.txt",
+          "result_detail": "Current publication API regression set 8/8 PASS. Review names exact event field changes and shared style fields before write; no POST occurs before explicit Confirm."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.02",
+          "artifact": ".dev/u5-publication-browser-rerun.txt",
+          "test_files": [
+            "web/tests/canvas/publication-inspection.spec.ts",
+            "web/tests/canvas/publication.spec.ts"
+          ],
+          "result_detail": "Current mounted publication suite 5/5 PASS. Review names exact event field changes and shared style fields before write; no POST occurs before explicit Confirm. Synthetic transport only; owner release/real mailbox acceptance not implied."
         }
       ],
       "blocker": null
@@ -1617,8 +1661,8 @@
       "verification_id": "V-U5.03",
       "pass_criterion": "V-U5.03: reconcile displayed policy IDs/counts and affected events with authoritative response; concurrent policy impact change invalidates review; zero usage shown only after successful read.",
       "status": "OPEN",
-      "source": "IN_PROGRESS",
-      "interaction": "IN_PROGRESS",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1631,6 +1675,28 @@
             "web/tests/unit/email-publication-review.test.ts"
           ],
           "result": "8 API/publication regression cases, five guard units and three actual-component synthetic browser scenarios PASS; type/build/Ruff PASS. Definite conflict recovery consumes old proof; unknown outcome remains latched. No actual live publication or mail."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.03",
+          "artifact": ".dev/u5-publication-python-current.txt",
+          "result_detail": "Current publication API regression set 8/8 PASS. Review exposes exact active policy profile/version identities and future-request-only impact."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.03",
+          "artifact": ".dev/u5-publication-browser-rerun.txt",
+          "test_files": [
+            "web/tests/canvas/publication-inspection.spec.ts",
+            "web/tests/canvas/publication.spec.ts"
+          ],
+          "result_detail": "Current mounted publication suite 5/5 PASS. Review exposes exact active policy profile/version identities and future-request-only impact. Synthetic transport only; owner release/real mailbox acceptance not implied."
         }
       ],
       "blocker": null
@@ -1643,8 +1709,8 @@
       "verification_id": "V-U5.04",
       "pass_criterion": "V-U5.04: current authorized confirm creates one publication; edit/branding/version/actor/impact changes reject stale proof; unauthorized calls fail; conflict offers preserve/reload, never silently overwrites; no automatic send/policy activation/execution.",
       "status": "OPEN",
-      "source": "IN_PROGRESS",
-      "interaction": "IN_PROGRESS",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1657,6 +1723,28 @@
             "web/tests/unit/email-publication-review.test.ts"
           ],
           "result": "8 API/publication regression cases, five guard units and three actual-component synthetic browser scenarios PASS; type/build/Ruff PASS. Definite conflict recovery consumes old proof; unknown outcome remains latched. No actual live publication or mail."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.04",
+          "artifact": ".dev/u5-publication-python-current.txt",
+          "result_detail": "Current publication API regression set 8/8 PASS. Known pre-commit 409 rejects the old proof and requires a fresh review; ambiguous/unknown outcomes remain latched and are never replayed automatically."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.04",
+          "artifact": ".dev/u5-publication-browser-rerun.txt",
+          "test_files": [
+            "web/tests/canvas/publication-inspection.spec.ts",
+            "web/tests/canvas/publication.spec.ts"
+          ],
+          "result_detail": "Current mounted publication suite 5/5 PASS. Known pre-commit 409 rejects the old proof and requires a fresh review; ambiguous/unknown outcomes remain latched and are never replayed automatically. Synthetic transport only; owner release/real mailbox acceptance not implied."
         }
       ],
       "blocker": null
@@ -1670,7 +1758,7 @@
       "pass_criterion": "V-U5.05: publish new design then compare pre-existing request/outbox bytes/hashes unchanged; new requests choose new version; reminders retain original design while current security revocation/floor still applies.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "NOT_RUN",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1682,6 +1770,28 @@
           "test_id": "V-U5.05",
           "observed_at": "2026-10-14T05:52:53.228929+00:00",
           "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source. No live SMTP, issuance, decision or external execution."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.05",
+          "artifact": ".dev/u5-publication-python-current.txt",
+          "result_detail": "Current publication API regression set 8/8 PASS. Publication UI and server contract state future requests only; immutable existing request/queued snapshots are not rewritten."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.05",
+          "artifact": ".dev/u5-publication-browser-rerun.txt",
+          "test_files": [
+            "web/tests/canvas/publication-inspection.spec.ts",
+            "web/tests/canvas/publication.spec.ts"
+          ],
+          "result_detail": "Current mounted publication suite 5/5 PASS. Publication UI and server contract state future requests only; immutable existing request/queued snapshots are not rewritten. Synthetic transport only; owner release/real mailbox acceptance not implied."
         }
       ],
       "blocker": null
@@ -1694,8 +1804,8 @@
       "verification_id": "V-U5.06",
       "pass_criterion": "V-U5.06: history/order/content matches immutable records; preview older revision is inert and read-only; only permitted roles see controls; no fabricated editor/time.",
       "status": "OPEN",
-      "source": "IN_PROGRESS",
-      "interaction": "IN_PROGRESS",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1708,6 +1818,28 @@
             "web/tests/unit/email-publication-review.test.ts"
           ],
           "result": "8 API/publication regression cases, five guard units and three actual-component synthetic browser scenarios PASS; type/build/Ruff PASS. Definite conflict recovery consumes old proof; unknown outcome remains latched. No actual live publication or mail."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.06",
+          "artifact": ".dev/u5-publication-python-current.txt",
+          "result_detail": "Current publication API regression set 8/8 PASS. Version history shows stored actor/time/reason/hash and renders a separate read-only historical preview without changing the editor."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.06",
+          "artifact": ".dev/u5-publication-browser-rerun.txt",
+          "test_files": [
+            "web/tests/canvas/publication-inspection.spec.ts",
+            "web/tests/canvas/publication.spec.ts"
+          ],
+          "result_detail": "Current mounted publication suite 5/5 PASS. Version history shows stored actor/time/reason/hash and renders a separate read-only historical preview without changing the editor. Synthetic transport only; owner release/real mailbox acceptance not implied."
         }
       ],
       "blocker": null
@@ -1721,7 +1853,7 @@
       "pass_criterion": "V-U5.07: select old design, review delta/impact and confirm; monotonically new revision created; all historical rows and old request snapshots unchanged; stale or repeated confirmation reconciled without duplicate publication.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "NOT_RUN",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1733,6 +1865,28 @@
           "test_id": "V-U5.07",
           "observed_at": "2026-10-14T05:52:53.228929+00:00",
           "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source. No live SMTP, issuance, decision or external execution."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.07",
+          "artifact": ".dev/u5-publication-python-current.txt",
+          "result_detail": "Current publication API regression set 8/8 PASS. Historical denial was normally retried. Rollback from immutable v1 requires separate review/reason/Confirm and creates monotonic published v3; v1/v2 history is not rewritten."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.07",
+          "artifact": ".dev/u5-publication-browser-rerun.txt",
+          "test_files": [
+            "web/tests/canvas/publication-inspection.spec.ts",
+            "web/tests/canvas/publication.spec.ts"
+          ],
+          "result_detail": "Current mounted publication suite 5/5 PASS. Historical denial was normally retried. Rollback from immutable v1 requires separate review/reason/Confirm and creates monotonic published v3; v1/v2 history is not rewritten. Synthetic transport only; owner release/real mailbox acceptance not implied."
         }
       ],
       "blocker": null
@@ -1767,6 +1921,28 @@
           "test_id": "V-U5.08",
           "observed_at": "2026-10-14T05:52:53.228929+00:00",
           "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.08",
+          "artifact": ".dev/u5-publication-python-current.txt",
+          "result_detail": "Current publication API regression set 8/8 PASS. Legacy canvas upgrade remains explicit draft-only and preserves all nine event wording and locale until separate publication."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:37:13.859157+00:00",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.08",
+          "artifact": ".dev/u5-publication-browser-rerun.txt",
+          "test_files": [
+            "web/tests/canvas/publication-inspection.spec.ts",
+            "web/tests/canvas/publication.spec.ts"
+          ],
+          "result_detail": "Current mounted publication suite 5/5 PASS. Legacy canvas upgrade remains explicit draft-only and preserves all nine event wording and locale until separate publication. Synthetic transport only; owner release/real mailbox acceptance not implied."
         }
       ],
       "blocker": null

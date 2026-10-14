@@ -769,3 +769,30 @@ remain empty. Evidence: `.dev/u4-python-contract.txt`,
 `.dev/u4-preview-final.txt`, `.dev/u4-preview-final-results.json`,
 `.dev/u4-web-full.txt`, `.dev/u4-web-check.txt`. No deployed-development or
 real-client/person acceptance is inferred.
+
+
+### U5 publication/history interaction completion including rollback retry
+
+The previously denied U5.07 mounted rollback qualification was retried normally
+on the same dev-atlas target and is now green. The publication panel keeps Save
+draft distinct from Review & publish, requires a current preview plus exact saved
+revision, shows event-level and shared-field changes, lists exact active policy
+profile/version identities, and requires an explicit bounded reason plus Confirm.
+The known pre-commit conflict path consumes the rejected proof and requires a
+fresh review; ambiguous outcomes remain latched for reconciliation and are never
+replayed.
+
+Version history exposes the stored revision, actor, time, reason and snapshot
+hash; historical preview is read-only and separate from the working draft. A
+rollback from immutable v1 is reviewed as a source revision and explicit Confirm
+creates v3 while v1/v2 remain history rather than being rewritten. Publication
+continues to state and enforce future-requests-only behavior.
+
+Current server publication regression set **8/8 PASS** and mounted
+`publication-inspection.spec.ts` + `publication.spec.ts` **5/5 PASS**, including
+U5.02/U5.03 field+policy impact, U5.04 fresh-review conflict recovery, U5.06
+immutable historical preview, U5.07 monotonic rollback and the baseline
+reason/Confirm contract. Evidence `.dev/u5-publication-python-current.txt`,
+`.dev/u5-publication-browser-rerun.txt`, `.dev/u5-publication-green-results.json`
+when retained. These are isolated/synthetic tests; owner release and real-mailbox
+acceptance remain outside this PASS.
