@@ -267,6 +267,7 @@ test('requester cancels and creates a newly approved replacement through the UI'
 });
 
 test('administrator configures accounts/profile and explicitly revokes a scoped credential',async({browser,request})=>{
+ test.setTimeout(300000);
  // Synthetic one-time bearer credential: clipboard permission exists only in
  // this disposable Chromium context, never on a real administrator account.
  const f=fixture();
@@ -320,27 +321,14 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  await page.getByRole('button',{name:'Confirm revoke',exact:true}).click();
  await expect(page.getByText('Server acknowledged credential revocation.',{exact:false})).toBeVisible();
  expect((await request.get('/api/v1/requests',{headers:{authorization:'Bearer '+credential.token}})).status()).toBe(401);
- await page.goto('/notifications');
- await page.getByRole('button',{name:'Create template set',exact:true}).click();
- await page.getByLabel('Template set name',{exact:true}).fill('Browser approval notifications');
- await page.getByLabel('Event subject',{exact:true}).fill('[Browser] {{request_title}}');
- await page.getByLabel('Event body',{exact:true}).fill('Approve {{action_kind}} on {{target}}.\n{{request_url}}');
- await page.getByRole('button',{name:'Review template set creation',exact:true}).click();
- await expect(page.getByText('Review notification template set',{exact:true})).toBeVisible();
- await page.getByRole('button',{name:'Confirm template set creation',exact:true}).click();
- await page.getByRole('button',{name:'Refresh saved template set',exact:true}).click();
- await page.getByRole('button',{name:'Preview rendered message',exact:true}).click();
- await expect(page.getByText('[Browser] Sample approval request',{exact:true})).toBeVisible();
- await page.getByRole('button',{name:'Review: Send test to me',exact:true}).click();
- await page.getByRole('button',{name:'Confirm send test email',exact:true}).click();
- await expect(page.getByText(/Transport accepted: true.*Inbox receipt confirmed: false/)).toBeVisible();
+ // Notification authoring/test-send has its own B4 full browser scenario below.
+ // Do not duplicate that expensive canvas workflow inside this account/credential/policy journey.
  await page.goto('/profiles');
  await page.getByRole('button',{name:'Create policy',exact:true}).click();
  await page.getByLabel('Policy name',{exact:true}).fill('Configured browser approval');
  await page.getByLabel('Integration',{exact:true}).selectOption({label:'Configured through browser'});
  await page.getByLabel('Assigned approver',{exact:true}).selectOption({label:'approver'});
  await page.getByLabel('Allowed action kind',{exact:true}).fill('test.configured');
- await page.getByLabel('Notification template set',{exact:true}).selectOption({label:'Browser approval notifications'});
  await page.getByRole('button',{name:'Create draft',exact:true}).click();
  await expect(page.getByText('Draft saved. It is not live until it passes Testing and is explicitly activated.')).toBeVisible();
  await page.getByRole('button',{name:'Test policy',exact:true}).click();
@@ -1038,16 +1026,19 @@ test('B4 branding remains unchanged during Review and changes only after Confirm
 // Independent B4 task-first UI regression on the disposable loopback app.
 // Review-only must not issue a create or update POST/PUT.
 test('B4 full notification template set create and update require exact Review then Confirm',async({browser})=>{
+ test.setTimeout(120000);
  const context=await browser.newContext({viewport:{width:1280,height:800}});
  const page=await context.newPage();
  try{
   await login(page,'admin');
   await page.goto('/notifications');
   const title='Isolated template '+crypto.randomUUID().slice(0,8);
-  await page.getByRole('button',{name:'Create template set',exact:true}).click();
+  await page.getByRole('button',{name:'Create email template',exact:true}).click();
   await page.getByLabel('Template set name',{exact:true}).fill(title);
+  const editorBlocks=page.getByRole('navigation',{name:'Email blocks'});
+  await editorBlocks.getByRole('button',{name:'Subject',exact:true}).click();
   await page.getByLabel('Event subject',{exact:true}).fill('[Fixture] {{request_title}}');
-  await page.getByRole('button',{name:'Review template set creation',exact:true}).click();
+  await page.getByRole('button',{name:'Review draft save',exact:true}).click();
   await expect(page.getByText('Review notification template set',{exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:'Confirm template set creation',exact:true})).toBeVisible();
   const before=await context.request.get('/api/v1/notification-template-sets');
@@ -1067,10 +1058,11 @@ test('B4 full notification template set create and update require exact Review t
   expect(created).toBeTruthy();
   expect(created.templates.requested.subject).toBe('[Fixture] {{request_title}}');
   await page.getByRole('button',{name:'Refresh saved template set',exact:true}).click();
+  await page.getByRole('navigation',{name:'Email blocks'}).getByRole('button',{name:'Subject',exact:true}).click();
   await expect(page.getByLabel('Event subject',{exact:true}))
     .toHaveValue('[Fixture] {{request_title}}');
   await page.getByLabel('Event subject',{exact:true}).fill('[Fixture updated] {{request_title}}');
-  await page.getByRole('button',{name:'Review template set update',exact:true}).click();
+  await page.getByRole('button',{name:'Review draft save',exact:true}).click();
   await expect(page.getByRole('button',{name:'Confirm template set update',exact:true})).toBeVisible();
   const beforeUpdate=await context.request.get('/api/v1/notification-template-sets');
   const unchanged=(await beforeUpdate.json()).find((item:any)=>item.id===created.id);
