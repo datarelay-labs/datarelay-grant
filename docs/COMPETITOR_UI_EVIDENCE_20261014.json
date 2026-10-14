@@ -2420,11 +2420,30 @@
       "verification_id": "V-U7.07",
       "pass_criterion": "V-U7.07: record source HEAD, build hash, deployed asset hash and actual GET/readback; screenshot the real candidate, validate same UI task, preserve dev state/rollback and disabled unapproved live effects. Config inspection alone is not deployment/browser proof.",
       "status": "OPEN",
-      "source": "NOT_RUN",
+      "source": "PASS",
       "interaction": "NOT_RUN",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": ".dev/u7-07-exact-web-check.txt",
+          "source_head": "7bf377b158bd8cddef514fdf77d7a2e6626328cd",
+          "test_id": "V-U7.07",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Exact source production Web typecheck/build PASS at the deployed product head. No Foundation source change and no live effect."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": ".dev/u7-07-deployment-provenance.txt",
+          "source_head": "7bf377b158bd8cddef514fdf77d7a2e6626328cd",
+          "test_id": "V-U7.07",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Nonproduction dev preview serves the exact tested build at https://221.139.249.116:18443/: HTTP 200; index/JS/CSS SHA256 values equal the staged build; fresh Chromium login screenshot recorded. Worker disabled and no live effect exercised. Authenticated same-UI-task deployment interaction remains NOT_RUN, so acceptance is not implied."
+        }
+      ],
       "blocker": null
     },
     {
@@ -2435,11 +2454,30 @@
       "verification_id": "V-U8.01",
       "pass_criterion": "V-U8.01: actual authorized personas reach correct task from Home; loading/error/empty/permission states truthful; no unauthorized control/false success; preserve existing implementation and fix only observed gaps.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": ".dev/u8-web-full-head7bf377b.txt",
+          "source_head": "7bf377b158bd8cddef514fdf77d7a2e6626328cd",
+          "test_id": "V-U8.01",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Exact product source Web unit suite 99 files / 738 tests PASS plus production typecheck/build PASS. Application source is the deployed 7bf377b product head; later 3cb5eef contains only exact browser qualification plus evidence repair, not product source changes."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u8-native-browser-45-final.txt",
+          "source_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+          "test_id": "V-U8.01",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Official isolated native Grant browser qualification 45/45 PASS. New mounted scenario independently logs in requester, approver and admin fixture personas from Home and resolves New Request, approval queue and Approval policies routes; existing Home paging/overdue scenarios also pass. This is automated interaction evidence, not independent-human acceptance."
+        }
+      ],
       "blocker": null
     },
     {
@@ -2450,11 +2488,30 @@
       "verification_id": "V-U8.02",
       "pass_criterion": "V-U8.02: queue/selection/detail/deadline and next eligible assigned request match server; stale/ineligible/self/closed cases cannot decide; explicit review/final Confirm unchanged; filters/actions/mobile and original B1 cases mapped and pass.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": ".dev/u8-web-full-head7bf377b.txt",
+          "source_head": "7bf377b158bd8cddef514fdf77d7a2e6626328cd",
+          "test_id": "V-U8.02",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Exact product source Web unit suite 99 files / 738 tests PASS plus production typecheck/build PASS. Application source is the deployed 7bf377b product head; later 3cb5eef contains only exact browser qualification plus evidence repair, not product source changes."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u8-native-browser-45-final.txt",
+          "source_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+          "test_id": "V-U8.02",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Official isolated native Grant browser qualification 45/45 PASS covers approver Inbox needs/held/recent, Entra-style selected context, deadlines, mobile 320/375 keyboard queue controls, delegation and decision journeys. Server-scoped fixture authority is exercised; real-person acceptance remains separate."
+        }
+      ],
       "blocker": null
     },
     {
@@ -2465,11 +2522,30 @@
       "verification_id": "V-U8.03",
       "pass_criterion": "V-U8.03: first-time user completes policy/title/target/reason and review; advanced JSON stays optional; detail separates human/transport/external-execution state; failures unknown/loading not misreported as completed effects.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": ".dev/u8-web-full-head7bf377b.txt",
+          "source_head": "7bf377b158bd8cddef514fdf77d7a2e6626328cd",
+          "test_id": "V-U8.03",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Exact product source Web unit suite 99 files / 738 tests PASS plus production typecheck/build PASS. Application source is the deployed 7bf377b product head; later 3cb5eef contains only exact browser qualification plus evidence repair, not product source changes."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u8-native-browser-45-final.txt",
+          "source_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+          "test_id": "V-U8.03",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Official isolated native Grant browser qualification 45/45 PASS covers requester create/review/confirm, replacement request, progressive Request Detail activity, deadline truth and approved-grant-vs-execution separation. No external production effect is claimed."
+        }
+      ],
       "blocker": null
     },
     {
@@ -2480,11 +2556,30 @@
       "verification_id": "V-U8.04",
       "pass_criterion": "V-U8.04: create/edit/reopen policy and groups through mounted UI, existing validation and role/CAS gates preserved; assigned templates/policy state match backend; no policy/security semantic change merely for presentation.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": ".dev/u8-web-full-head7bf377b.txt",
+          "source_head": "7bf377b158bd8cddef514fdf77d7a2e6626328cd",
+          "test_id": "V-U8.04",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Exact product source Web unit suite 99 files / 738 tests PASS plus production typecheck/build PASS. Application source is the deployed 7bf377b product head; later 3cb5eef contains only exact browser qualification plus evidence repair, not product source changes."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u8-native-browser-45-final.txt",
+          "source_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+          "test_id": "V-U8.04",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Official isolated native Grant browser qualification 45/45 PASS covers policy selector lifecycle, approver-group saved identity/coverage, policy mobile 320/375, exact review/confirm and retained role/CAS boundaries. Synthetic fixture interaction only."
+        }
+      ],
       "blocker": null
     },
     {
@@ -2495,11 +2590,30 @@
       "verification_id": "V-U8.05",
       "pass_criterion": "V-U8.05: register connection -> choose approvers -> draft policy -> test/activate guidance resolves real routes; API incomplete state is Checking/error not zero; delivery accepted/received/executed remain separate.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": ".dev/u8-web-full-head7bf377b.txt",
+          "source_head": "7bf377b158bd8cddef514fdf77d7a2e6626328cd",
+          "test_id": "V-U8.05",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Exact product source Web unit suite 99 files / 738 tests PASS plus production typecheck/build PASS. Application source is the deployed 7bf377b product head; later 3cb5eef contains only exact browser qualification plus evidence repair, not product source changes."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u8-native-browser-45-final.txt",
+          "source_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+          "test_id": "V-U8.05",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Official isolated native Grant browser qualification 45/45 PASS. New first-run admin scenario resolves integrations, approvers and new Draft policy routes and proves unsaved new policy exposes neither Test nor Activate; existing branding/template/delivery/mail-test scenarios preserve accepted/received/executed distinctions."
+        }
+      ],
       "blocker": null
     },
     {
@@ -2510,11 +2624,30 @@
       "verification_id": "V-U8.06",
       "pass_criterion": "V-U8.06: current source and actual route show required ordering, status, drill-down and detail; values match server; no token/PIN/secret disclosure or mock native effect reported as verified; only genuine missing UI is implemented.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": ".dev/u8-web-full-head7bf377b.txt",
+          "source_head": "7bf377b158bd8cddef514fdf77d7a2e6626328cd",
+          "test_id": "V-U8.06",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Exact product source Web unit suite 99 files / 738 tests PASS plus production typecheck/build PASS. Application source is the deployed 7bf377b product head; later 3cb5eef contains only exact browser qualification plus evidence repair, not product source changes."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u8-native-browser-45-final.txt",
+          "source_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+          "test_id": "V-U8.06",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Official isolated native Grant browser qualification 45/45 PASS covers audit search/export and role rejection, Operations exact exception queues, integration health/diagnostics role scope, progressive request evidence and sign-out revocation. No secrets or verified native business effect are asserted."
+        }
+      ],
       "blocker": null
     },
     {
@@ -2525,11 +2658,30 @@
       "verification_id": "V-U8.07",
       "pass_criterion": "V-U8.07: no Foundation common changes; supported/read-only/unavailable states match real Grant destinations; missing upstream common ACL/MFA/admin features are dependency records, not locally reimplemented or marked supported. No privileged host change from this WBS.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": ".dev/u8-web-full-head7bf377b.txt",
+          "source_head": "7bf377b158bd8cddef514fdf77d7a2e6626328cd",
+          "test_id": "V-U8.07",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Exact product source Web unit suite 99 files / 738 tests PASS plus production typecheck/build PASS. Application source is the deployed 7bf377b product head; later 3cb5eef contains only exact browser qualification plus evidence repair, not product source changes."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u8-native-browser-45-final.txt",
+          "source_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+          "test_id": "V-U8.07",
+          "observed_at": "2026-10-14T08:51:46.415535+00:00",
+          "result_detail": "Official isolated native Grant browser qualification 45/45 PASS covers shared Foundation login/grouped shell, member Account & security, admin shortcuts, mobile adapter and role/capability truth while Grant consumes Foundation unchanged. Missing upstream common features remain dependency scope, not local reimplementation."
+        }
+      ],
       "blocker": null
     },
     {
