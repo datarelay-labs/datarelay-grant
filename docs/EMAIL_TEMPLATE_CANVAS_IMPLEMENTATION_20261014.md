@@ -470,3 +470,43 @@ PASS. Pillow dependency pinned 12.3.0. Evidence .dev/u6-assets-qualified.txt,
 present (final compatibility GREEN is included in u6-logo-final-api.txt),
 .dev/u6-assets-package.txt. U6 frontend upload/render integration remains
 explicitly BLOCKED and is not included in this commit or called accepted UI.
+
+### U6.04 / U6.05 reviewed test-send checkpoint — `86badc1f1cc0c028106cd933e69121db946966e0`
+
+The existing preview/review UI is now bound end-to-end to a server-verifiable
+saved-template proof and a durable one-shot attempt ID. Preview returns the exact
+saved `updated_at` plus a SHA-256 review proof over actor, own registered mailbox,
+template snapshot, sample inputs and rendered output. Confirmation POST carries
+that proof and a fresh attempt ID; the server re-reads authority, transport pause,
+recipient, saved template including immutable logo bytes, sample/rendering and
+proof before it inserts the attempt claim. The claim commits before SMTP, so a
+concurrent duplicate or retry with the same attempt ID cannot send twice.
+
+Database schema v14 adds only `notification_test_attempts`; the v13->v14 migration
+is additive and preserves existing users/templates/publications/assets/audit
+rows. Current-schema assertions and backup/restore qualification were updated to
+v14. `ATTEMPTED`, `ACCEPTED` and `UNKNOWN` are distinct durable states. A test-send
+status GET is scoped to the current admin actor, template and attempt ID. SMTP
+success means transport accepted only; it never claims inbox receipt. A transport
+exception records `UNKNOWN`, and the same attempt cannot be replayed. The UI
+remains latched while `ATTEMPTED`; explicit status reconciliation releases a
+terminal ACCEPTED/UNKNOWN attempt, after which any new message requires a fresh
+preview/review and a new attempt ID. A definite pre-transport stale-proof/rate-
+limit rejection can release the local claim but is never automatically retried.
+
+Qualification used only disposable test databases, monkeypatched/Fake SMTP and
+synthetic intercepted browser transport; no actual email was sent. Focused server
+review/replay/status/migration/recovery tests PASS; 13/13 client guard/review units
+PASS. Three actual Notifications component browser scenarios PASS: successful
+one-shot + ACCEPTED reconciliation, ambiguous transport + UNKNOWN reconciliation
+with a fresh subsequent review, and ATTEMPTED remaining locked until a later
+terminal read. The first two browser-authoring attempts exposed harness-only gaps
+(collapsed saved-preview section, then missing synthetic `event`/default
+verification-mode fields); after correcting the harness, 3/3 scenarios PASS.
+Full Web units at this checkpoint: 731/731 across 97 files; TypeScript/Vite,
+scoped Ruff/diff hygiene and immutable renderer reproduction PASS. Evidence:
+`.dev/u6-reviewed-send-{red,backend-green,web-unit,api-regression,web-full,build,ruff,renderer}.txt`,
+`.dev/u6-reviewed-send-browser-green-results.json`. GitHub exact-head CI was
+queued/in progress when this evidence note was written; it is not pre-claimed.
+U6.06 actual self-mail receipt remains NOT_RUN and requires its real authorized
+environment/effect. No production, merge or release action was performed.

@@ -1282,11 +1282,30 @@
       "verification_id": "V-U6.04",
       "pass_criterion": "V-U6.04: compare retained patch with current source before applying; edit/unsaved/revision/digest mismatch invalidates review; no arbitrary recipient/CC/BCC; sample cannot authorize. Synthetic tests first; no live send from this roadmap update.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "test_id": "V-U6.04",
+          "observed_at": "2026-10-14T05:00:51.941052+00:00",
+          "source_head": "86badc1f1cc0c028106cd933e69121db946966e0",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "scope": "Server/client reviewed proof, durable attempt state and additive schema v14 committed. No real SMTP/user/deployed acceptance."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "test_id": "V-U6.04",
+          "observed_at": "2026-10-14T05:00:51.941052+00:00",
+          "source_head": "86badc1f1cc0c028106cd933e69121db946966e0",
+          "artifact": ".dev/u6-reviewed-send-browser-green-results.json",
+          "scope": "3/3 mounted actual Notifications component scenarios with synthetic intercepted transport; accepted/unknown/attempted reconciliation and no automatic replay. No real mailbox."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1297,11 +1316,30 @@
       "verification_id": "V-U6.05",
       "pass_criterion": "V-U6.05: duplicate-click/retry/timeout tests produce no duplicate unreviewed mail; ambiguous result remains latched until reconciled; transport acceptance never masquerades as actual inbox receipt; both failed and successful outcomes retain safe UI.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "test_id": "V-U6.05",
+          "observed_at": "2026-10-14T05:00:51.941052+00:00",
+          "source_head": "86badc1f1cc0c028106cd933e69121db946966e0",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "scope": "Server/client reviewed proof, durable attempt state and additive schema v14 committed. No real SMTP/user/deployed acceptance."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "test_id": "V-U6.05",
+          "observed_at": "2026-10-14T05:00:51.941052+00:00",
+          "source_head": "86badc1f1cc0c028106cd933e69121db946966e0",
+          "artifact": ".dev/u6-reviewed-send-browser-green-results.json",
+          "scope": "3/3 mounted actual Notifications component scenarios with synthetic intercepted transport; accepted/unknown/attempted reconciliation and no automatic replay. No real mailbox."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1316,7 +1354,15 @@
       "interaction": "NOT_RUN",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "CURRENT_SCOPE_BOUNDARY",
+          "source_head": "86badc1f1cc0c028106cd933e69121db946966e0",
+          "observed_at": "2026-10-14T05:00:51.941052+00:00",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "result": "NOT_RUN: no live self-mail was authorized or sent; transport acceptance and mailbox receipt remain distinct."
+        }
+      ],
       "blocker": null
     },
     {
