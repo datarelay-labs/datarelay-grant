@@ -494,7 +494,7 @@
       "pass_criterion": "V-U2.02: choose each thumbnail, verify distinct expected styles/render; switching preset preserves all subject/body/headings/footer/locale/suffixes and bindings; new template opens usable sample without publishing.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -515,6 +515,20 @@
           ],
           "scope": "Five unique new scenario outcomes PASS across original restore test and four corrected selector tests. No product source changed for this verification. Preheader remains absent; real-person/deployed acceptance NOT_RUN.",
           "real_user_acceptance": false
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:22:50.126555+00:00",
+          "source_head": "3537aa088aaeed6deb21fcf7a636e07b93653ed3",
+          "test_id": "V-U2.02",
+          "artifact": ".dev/u2-authoring-qualification-results.json",
+          "test_files": [
+            "web/tests/canvas/authoring-contract.spec.ts",
+            "web/tests/canvas/preheader.spec.ts",
+            "web/tests/canvas/preview-contract.spec.ts"
+          ],
+          "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. Preset thumbnails and scoped appearance reset preserve all edited content fields. No real person/mail-client acceptance."
         }
       ],
       "blocker": null
@@ -528,7 +542,7 @@
       "pass_criterion": "V-U2.03: edit requested, switch through all nine events and return; changed fields persist only at intended event; every exposed field renders and survives save/reopen; preheader requires a minimal versioned schema path, not an ignored control.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -573,6 +587,20 @@
             38509732466
           ],
           "scope": "Versioned event preheader and nine-event copy/heading persistence source verified; current v5 preserves it. Actual deployed/user acceptance NOT_RUN."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:22:50.126555+00:00",
+          "source_head": "3537aa088aaeed6deb21fcf7a636e07b93653ed3",
+          "test_id": "V-U2.03",
+          "artifact": ".dev/u2-authoring-qualification-results.json",
+          "test_files": [
+            "web/tests/canvas/authoring-contract.spec.ts",
+            "web/tests/canvas/preheader.spec.ts",
+            "web/tests/canvas/preview-contract.spec.ts"
+          ],
+          "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. Nine-event subject/body/heading plus event preheader and focused variable insertion persist through save/reopen. No real person/mail-client acceptance."
         }
       ],
       "blocker": null
@@ -586,7 +614,7 @@
       "pass_criterion": "V-U2.04: event edit affects one event, shared style/footer affects intended set, policy-only controls are not editable; verify before/after outputs across events and scope labels at point of change.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -607,6 +635,20 @@
           ],
           "scope": "Five unique new scenario outcomes PASS across original restore test and four corrected selector tests. No product source changed for this verification. Preheader remains absent; real-person/deployed acceptance NOT_RUN.",
           "real_user_acceptance": false
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:22:50.126555+00:00",
+          "source_head": "3537aa088aaeed6deb21fcf7a636e07b93653ed3",
+          "test_id": "V-U2.04",
+          "artifact": ".dev/u2-authoring-qualification-results.json",
+          "test_files": [
+            "web/tests/canvas/authoring-contract.spec.ts",
+            "web/tests/canvas/preheader.spec.ts",
+            "web/tests/canvas/preview-contract.spec.ts"
+          ],
+          "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. Event-vs-shared-vs-policy scope is visible at the point of edit and behavior matches the label. No real person/mail-client acceptance."
         }
       ],
       "blocker": null
@@ -620,7 +662,7 @@
       "pass_criterion": "V-U2.05: select text in subject/body/supported heading, search and insert allowlisted variable, assert exact cursor/value and length limits; invalid/unknown variable blocked server-side; optional fallback cannot hide mandatory context.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -641,6 +683,20 @@
           ],
           "scope": "Five unique new scenario outcomes PASS across original restore test and four corrected selector tests. No product source changed for this verification. Preheader remains absent; real-person/deployed acceptance NOT_RUN.",
           "real_user_acceptance": false
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:22:50.126555+00:00",
+          "source_head": "3537aa088aaeed6deb21fcf7a636e07b93653ed3",
+          "test_id": "V-U2.05",
+          "artifact": ".dev/u2-authoring-qualification-results.json",
+          "test_files": [
+            "web/tests/canvas/authoring-contract.spec.ts",
+            "web/tests/canvas/preheader.spec.ts",
+            "web/tests/canvas/preview-contract.spec.ts"
+          ],
+          "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. Searchable human variable picker inserts at the active selection and refuses over-limit insertion. No real person/mail-client acceptance."
         }
       ],
       "blocker": null
@@ -654,7 +710,7 @@
       "pass_criterion": "V-U2.06: modify every content field and style then reset selected appearance; only allowed style keys change; cancel wording restore is no-op; confirm replaces selected event only, never saves/publishes.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -675,6 +731,20 @@
           ],
           "scope": "Five unique new scenario outcomes PASS across original restore test and four corrected selector tests. No product source changed for this verification. Preheader remains absent; real-person/deployed acceptance NOT_RUN.",
           "real_user_acceptance": false
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:22:50.126555+00:00",
+          "source_head": "3537aa088aaeed6deb21fcf7a636e07b93653ed3",
+          "test_id": "V-U2.06",
+          "artifact": ".dev/u2-authoring-qualification-results.json",
+          "test_files": [
+            "web/tests/canvas/authoring-contract.spec.ts",
+            "web/tests/canvas/preheader.spec.ts",
+            "web/tests/canvas/preview-contract.spec.ts"
+          ],
+          "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. Scoped appearance reset preserves wording/locale; reviewed restore cancel is inert and confirm changes only selected event. No real person/mail-client acceptance."
         }
       ],
       "blocker": null
@@ -688,7 +758,7 @@
       "pass_criterion": "V-U2.07: alternate copy/style/preset/variable changes then undo/redo exact snapshots; new branch invalidates redo; switching template cannot import previous history; persistence uses current snapshot only.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -709,6 +779,20 @@
           ],
           "scope": "Five unique new scenario outcomes PASS across original restore test and four corrected selector tests. No product source changed for this verification. Preheader remains absent; real-person/deployed acceptance NOT_RUN.",
           "real_user_acceptance": false
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:22:50.126555+00:00",
+          "source_head": "3537aa088aaeed6deb21fcf7a636e07b93653ed3",
+          "test_id": "V-U2.07",
+          "artifact": ".dev/u2-authoring-qualification-results.json",
+          "test_files": [
+            "web/tests/canvas/authoring-contract.spec.ts",
+            "web/tests/canvas/preheader.spec.ts",
+            "web/tests/canvas/preview-contract.spec.ts"
+          ],
+          "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. Whole-draft undo/redo restores exact copy/style snapshots, invalidates redo on branch and is template-isolated. No real person/mail-client acceptance."
         }
       ],
       "blocker": null
@@ -722,7 +806,7 @@
       "pass_criterion": "V-U2.08: exercise both languages and all nine events; long copy and absent optional values remain valid; custom wording never overwritten by locale/preset/reset; restore locale wording is an explicit reviewed edit.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -743,6 +827,20 @@
           ],
           "scope": "Five unique new scenario outcomes PASS across original restore test and four corrected selector tests. No product source changed for this verification. Preheader remains absent; real-person/deployed acceptance NOT_RUN.",
           "real_user_acceptance": false
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:22:50.126555+00:00",
+          "source_head": "3537aa088aaeed6deb21fcf7a636e07b93653ed3",
+          "test_id": "V-U2.08",
+          "artifact": ".dev/u2-authoring-qualification-results.json",
+          "test_files": [
+            "web/tests/canvas/authoring-contract.spec.ts",
+            "web/tests/canvas/preheader.spec.ts",
+            "web/tests/canvas/preview-contract.spec.ts"
+          ],
+          "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. All nine event copy plus EN/KO locale survives save/reopen without silent translation; long/missing-optional sample paths remain valid. No real person/mail-client acceptance."
         }
       ],
       "blocker": null

@@ -656,3 +656,23 @@ with zero writes. Evidence `.dev/u2-01-api.txt`, `.dev/u2-01-python-regression.t
 `.dev/u2-01-unit.txt`, `.dev/u2-01-browser-results.json`,
 `.dev/u2-01-web-full.txt`, `.dev/u2-01-web-check.txt`. No deployed-development or
 real-person acceptance is inferred.
+
+
+### U2.02–U2.08 authoring interaction qualification
+
+At committed source `3537aa088aaeed6deb21fcf7a636e07b93653ed3`, the
+remaining authoring interaction gates were executed without reopening competitor
+research. `authoring-contract.spec.ts`, `preheader.spec.ts` and the current preview
+contract ran **10/10 PASS** with actual Grant Notifications components and
+synthetic route transport. The suite covers all three preset thumbnails and
+scoped reset; all nine event subject/body/heading persistence; event preheaders
+and focused variable insertion; explicit This event / shared set / policy-owned
+scope behavior; searchable human variables and length refusal; explicit
+locale/event wording restore; whole-draft undo/redo and template isolation; EN/KO
+without silent translation; long English/Korean and missing-optional synthetic
+inputs; and current-generation preview switching.
+
+Evidence: `.dev/u2-authoring-qualification.txt` and
+`.dev/u2-authoring-qualification-results.json`. These are mounted interaction
+passes only; deployment, actual mailbox/client and independent-person acceptance
+remain separate.
