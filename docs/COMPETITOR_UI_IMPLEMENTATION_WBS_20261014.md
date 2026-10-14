@@ -212,6 +212,24 @@ These rows retain the known prior product-wide requirements. They are not an ass
 | U9.03 | ROADMAP/WP/PR/STATUS and deployed version are coherent and report actual remaining work. | Canonical repo/GitHub records | U9.01–U9.02 | V-U9.03: fresh readback of exact branch/HEAD/PR/CI/dev hashes; no contradictory current priority or stale first action; historical records explicitly labeled; user sees real screens/results rather than only test totals. |
 | U9.04 | Exit the exclusive UI lane only after final required acceptance; do not merge/release automatically. | Roadmap decision and owner report | U9.01–U9.03 | V-U9.04: all mandatory scope accepted and zero unmatched requirements, with owner acknowledgement recorded where required; only then remove priority lock. Production/merge/release still require separate permission. |
 
+## 4.1 Development completion matrix
+
+Development completion is tracked separately from real acceptance. A row is Development PASS when its source evidence and development-deployment evidence are resolved as PASS or justified N/A. By this definition, every registered implementation milestone is complete:
+
+| Milestone | Development status | Rows |
+| --- | --- | ---: |
+| U0 — coverage and control | PASS | 5/5 |
+| U1 — selected-block authoring | PASS | 7/7 |
+| U2 — inventory/content/presets/history | PASS | 8/8 |
+| U3 — recipient hierarchy/protected styling | PASS | 7/7 |
+| U4 — same-render live preview | PASS | 8/8 |
+| U5 — draft/publication lifecycle | PASS | 8/8 |
+| U6 — assets/reviewed test email implementation | PASS | 6/6 |
+| U7 — exact-candidate source/deployment qualification | PASS | 7/7 |
+| U8 — retained competitor-derived commitments | PASS | 8/8 |
+
+Total development: 64/64 PASS. U9 is a closure/acceptance gate, not a feature-implementation milestone. Strict row status can remain OPEN when real acceptance is blocked; that OPEN state must not be reported as unfinished development.
+
 ## 5. Evidence model and how PASS is decided
 
 Each WBS row is mandatory except the explicitly retained optional ideas in section 8. Attach `source_id/section`, `test_id`, actual test path/command, source commit, build hash, event/persona/sample, actual/expected result, timestamp and artifact reference. Never attach credentials, live tokens/PINs or private message content. A planned V-U* scenario ID is not an executed test.

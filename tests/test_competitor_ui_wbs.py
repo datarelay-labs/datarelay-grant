@@ -76,3 +76,16 @@ def test_development_rollup_is_complete_and_separate_from_acceptance():
     assert completion["source_resolved"]==64
     assert completion["development_deployment_resolved"]==64
     assert any(row["status"]=="OPEN" for row in LEDGER["tasks"])
+
+
+def test_each_u0_u8_row_is_development_pass():
+    feature_rows=[row for row in LEDGER["tasks"] if not row["id"].startswith("U9.")]
+    assert len(feature_rows)==64
+    assert all(row["development_status"]=="PASS" for row in feature_rows)
+    assert LEDGER["development_completion"]["milestones"]=={f"U{i}":"PASS" for i in range(9)}
+
+
+def test_u9_is_explicitly_closure_not_feature_development():
+    closure=[row for row in LEDGER["tasks"] if row["id"].startswith("U9.")]
+    assert len(closure)==4
+    assert all(row["development_status"]=="NOT_APPLICABLE_CLOSURE_GATE" for row in closure)

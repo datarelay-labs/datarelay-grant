@@ -70,7 +70,7 @@
   "original_user_scenario_count": 121,
   "original_checks_reconciled": true,
   "product_acceptance_claimed": false,
-  "document_sha256": "570479aca1170b33ae1760abf9ae477e80c4fec040da9fa2faf8305b50fa3439",
+  "document_sha256": "2a11d0fc578daad6ba91233c3dcc4a9584e67910f3c12ae5100272108ed16559",
   "created_at": "2026-10-14T02:49:16.228933+00:00",
   "tasks": [
     {
@@ -108,7 +108,8 @@
           "result_detail": "R2 owner disposition fixes the unavailable raw S02 identity without pretending recovery: all 20 family adaptations, 16 retained mandatory S02 promise groups and seven S03 audit IDs have explicit WBS coverage; material raw-S02 delta later reopens this gate."
         }
       ],
-      "blocker": null
+      "blocker": null,
+      "development_status": "PASS"
     },
     {
       "id": "U0.02",
@@ -145,7 +146,8 @@
           "justification": "U0.02 is a coordination control and requires no persona or mail-client acceptance."
         }
       ],
-      "blocker": null
+      "blocker": null,
+      "development_status": "PASS"
     },
     {
       "id": "U0.03",
@@ -196,7 +198,8 @@
           "result_detail": "R2 establishes a 241-unit historical traceability denominator and marks all retained narrative requirements reconciled. Exact ET-T01-T24, 121 user scenarios, gaps/findings/audit/narrative atoms stay pinned; S02 is owner-dispositioned rather than reconstructed."
         }
       ],
-      "blocker": null
+      "blocker": null,
+      "development_status": "PASS"
     },
     {
       "id": "U0.04",
@@ -237,7 +240,8 @@
           "justification": "U0.04 requires no persona or mail-client acceptance."
         }
       ],
-      "blocker": null
+      "blocker": null,
+      "development_status": "PASS"
     },
     {
       "id": "U0.05",
@@ -278,7 +282,8 @@
           "justification": "U0.05 prevents synthetic evidence from becoming acceptance and has no independent persona/mail-client acceptance action."
         }
       ],
-      "blocker": null
+      "blocker": null,
+      "development_status": "PASS"
     },
     {
       "id": "U1.01",
@@ -348,7 +353,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U1.02",
@@ -418,7 +424,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U1.03",
@@ -479,7 +486,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U1.04",
@@ -540,7 +548,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U1.05",
@@ -607,7 +616,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U1.06",
@@ -677,7 +687,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U1.07",
@@ -758,7 +769,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U2.01",
@@ -822,7 +834,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U2.02",
@@ -888,7 +901,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U2.03",
@@ -978,7 +992,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U2.04",
@@ -1044,7 +1059,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U2.05",
@@ -1110,7 +1126,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U2.06",
@@ -1176,7 +1193,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U2.07",
@@ -1242,7 +1260,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U2.08",
@@ -1308,7 +1327,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U3.01",
@@ -1386,7 +1406,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U3.02",
@@ -1438,7 +1459,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U3.03",
@@ -1512,7 +1534,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U3.04",
@@ -1564,7 +1587,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U3.05",
@@ -1616,7 +1640,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U3.06",
@@ -1668,7 +1693,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U3.07",
@@ -1720,7 +1746,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U4.01",
@@ -1785,7 +1812,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U4.02",
@@ -1857,7 +1885,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U4.03",
@@ -1929,7 +1958,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U4.04",
@@ -1999,7 +2029,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U4.05",
@@ -2087,7 +2118,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U4.06",
@@ -2152,7 +2184,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U4.07",
@@ -2224,7 +2257,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U4.08",
@@ -2296,7 +2330,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U5.01",
@@ -2370,7 +2405,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U5.02",
@@ -2445,7 +2481,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U5.03",
@@ -2520,7 +2557,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U5.04",
@@ -2595,7 +2633,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U5.05",
@@ -2673,7 +2712,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U5.06",
@@ -2748,7 +2788,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U5.07",
@@ -2822,7 +2863,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U5.08",
@@ -2896,7 +2938,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U6.01",
@@ -2948,7 +2991,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U6.02",
@@ -3009,7 +3053,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U6.03",
@@ -3070,7 +3115,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U6.04",
@@ -3122,7 +3168,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U6.05",
@@ -3174,7 +3221,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U6.06",
@@ -3286,7 +3334,8 @@
           "result_detail": "The known Grant development preview was successfully restarted after owner resume and now loads the corrected SMTP config. HTTPS root and login return 200; protected admin info returns 401 unauthenticated. SMTP host/user/password are present, smtp_from matches the authenticated sender, STARTTLS is enabled, worker remains disabled. U6.06 remains open only on the absence of an exact product-saved template revision."
         }
       ],
-      "blocker": "BLOCKED_PRECONDITION: DataRelay Grant SMTP configuration and real Gmail receipt are now verified, including corrected sender, STARTTLS, DKIM/SPF PASS and current-candidate multipart HTML/text. The only remaining U6.06 criterion is an exact product-saved template revision, but the current dev DB has zero email_templates rows; do not bypass authentication by inserting one directly."
+      "blocker": "BLOCKED_PRECONDITION: DataRelay Grant SMTP configuration and real Gmail receipt are now verified, including corrected sender, STARTTLS, DKIM/SPF PASS and current-candidate multipart HTML/text. The only remaining U6.06 criterion is an exact product-saved template revision, but the current dev DB has zero email_templates rows; do not bypass authentication by inserting one directly.",
+      "development_status": "PASS"
     },
     {
       "id": "U7.01",
@@ -3333,7 +3382,8 @@
           "justification": "U7.01 has no persona or mail-client acceptance requirement; U7.04/U7.05 own those gates."
         }
       ],
-      "blocker": null
+      "blocker": null,
+      "development_status": "PASS"
     },
     {
       "id": "U7.02",
@@ -3384,7 +3434,8 @@
           "justification": "R3: this is a mounted automated qualification row. Genuine human/mailbox acceptance is owned by U7.05 and measured novice acceptance by U7.06; this row must not duplicate or substitute those gates."
         }
       ],
-      "blocker": null
+      "blocker": null,
+      "development_status": "PASS"
     },
     {
       "id": "U7.03",
@@ -3433,7 +3484,8 @@
           "justification": "R3: this is a mounted automated qualification row. Genuine human/mailbox acceptance is owned by U7.05 and measured novice acceptance by U7.06; this row must not duplicate or substitute those gates."
         }
       ],
-      "blocker": null
+      "blocker": null,
+      "development_status": "PASS"
     },
     {
       "id": "U7.04",
@@ -3529,7 +3581,8 @@
           "result_detail": "A current-candidate Gmail message now exists and MIME content is verified, but actual-client visual acceptance is still incomplete because no direct Gmail Web/Mobile layout observation, Outlook observation, or Apple Mail/iOS observation has been captured."
         }
       ],
-      "blocker": "BLOCKED_ENVIRONMENT: Current-candidate Gmail transport/MIME subcell is verified, but Gmail Web/Mobile visual rendering has not been directly observed; Outlook Email remains unconnected and Apple Mail/iOS client sessions are unavailable. Full actual-client matrix remains incomplete."
+      "blocker": "BLOCKED_ENVIRONMENT: Current-candidate Gmail transport/MIME subcell is verified, but Gmail Web/Mobile visual rendering has not been directly observed; Outlook Email remains unconnected and Apple Mail/iOS client sessions are unavailable. Full actual-client matrix remains incomplete.",
+      "development_status": "PASS"
     },
     {
       "id": "U7.05",
@@ -3589,7 +3642,8 @@
           "result_detail": "Acceptance cannot PASS until the required real environment/participant condition is supplied. The development DB contains enabled accounts, but no two independently acting real participants with independently controlled mailboxes are available to ChatGPT for a genuine two-human pass."
         }
       ],
-      "blocker": "BLOCKED_ENVIRONMENT: The development DB contains enabled accounts, but no two independently acting real participants with independently controlled mailboxes are available to ChatGPT for a genuine two-human pass."
+      "blocker": "BLOCKED_ENVIRONMENT: The development DB contains enabled accounts, but no two independently acting real participants with independently controlled mailboxes are available to ChatGPT for a genuine two-human pass.",
+      "development_status": "PASS"
     },
     {
       "id": "U7.06",
@@ -3649,7 +3703,8 @@
           "result_detail": "Acceptance cannot PASS until the required real environment/participant condition is supplied. No authorized first-time/novice participant is available for measured action-count and elapsed-time observations."
         }
       ],
-      "blocker": "BLOCKED_ENVIRONMENT: No authorized first-time/novice participant is available for measured action-count and elapsed-time observations."
+      "blocker": "BLOCKED_ENVIRONMENT: No authorized first-time/novice participant is available for measured action-count and elapsed-time observations.",
+      "development_status": "PASS"
     },
     {
       "id": "U7.07",
@@ -3732,7 +3787,8 @@
           "result_detail": "Read-only DB join verified one active human session for username admin, email rick@rick.kr, role admin, mfa_pending=false. No session token/cookie/hash was read or reused. This resolves the prior absence-of-legitimate-owner-session fact, but does not prove the required same-UI-task interaction because ChatGPT has no authorized GUI/session-control path."
         }
       ],
-      "blocker": "BLOCKED_TOOLING: A legitimate owner-authenticated admin session now exists on the deployed development preview (admin/rick@rick.kr, MFA pending false, active session verified without reading token material). ChatGPT still has no authorized GUI/session-control path to perform the required same-UI-task interaction; owner-performed evidence or a supported browser-control path is still required."
+      "blocker": "BLOCKED_TOOLING: A legitimate owner-authenticated admin session now exists on the deployed development preview (admin/rick@rick.kr, MFA pending false, active session verified without reading token material). ChatGPT still has no authorized GUI/session-control path to perform the required same-UI-task interaction; owner-performed evidence or a supported browser-control path is still required.",
+      "development_status": "PASS"
     },
     {
       "id": "U8.01",
@@ -3784,7 +3840,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U8.02",
@@ -3836,7 +3893,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U8.03",
@@ -3888,7 +3946,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U8.04",
@@ -3940,7 +3999,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U8.05",
@@ -3992,7 +4052,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U8.06",
@@ -4044,7 +4105,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U8.07",
@@ -4096,7 +4158,8 @@
           "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable.",
+      "development_status": "PASS"
     },
     {
       "id": "U8.08",
@@ -4156,7 +4219,8 @@
           "justification": "U8.08 is a traceability/coverage audit. Actual user/mail-client acceptance remains owned by U6.06/U7.04-U7.07 and U9.02."
         }
       ],
-      "blocker": null
+      "blocker": null,
+      "development_status": "PASS"
     },
     {
       "id": "U9.01",
@@ -4193,7 +4257,8 @@
           "justification": "U9.01 does not waive real acceptance; U9.02 owns complete applicable acceptance evidence."
         }
       ],
-      "blocker": null
+      "blocker": null,
+      "development_status": "NOT_APPLICABLE_CLOSURE_GATE"
     },
     {
       "id": "U9.02",
@@ -4208,7 +4273,8 @@
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [],
-      "blocker": "R3_BLOCKED: applicable real acceptance remains blocked at U6.06/U7.04/U7.05/U7.06/U7.07."
+      "blocker": "R3_BLOCKED: applicable real acceptance remains blocked at U6.06/U7.04/U7.05/U7.06/U7.07.",
+      "development_status": "NOT_APPLICABLE_CLOSURE_GATE"
     },
     {
       "id": "U9.03",
@@ -4223,7 +4289,8 @@
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [],
-      "blocker": "Depends on U9.02 real-acceptance closure."
+      "blocker": "Depends on U9.02 real-acceptance closure.",
+      "development_status": "NOT_APPLICABLE_CLOSURE_GATE"
     },
     {
       "id": "U9.04",
@@ -4238,7 +4305,8 @@
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [],
-      "blocker": "Depends on U9.02/U9.03 and final owner acknowledgement; merge/release remain separate."
+      "blocker": "Depends on U9.02/U9.03 and final owner acknowledgement; merge/release remain separate.",
+      "development_status": "NOT_APPLICABLE_CLOSURE_GATE"
     }
   ],
   "documentation_validation": {
@@ -4270,6 +4338,17 @@
     "total_rows": 64,
     "source_resolved": 64,
     "development_deployment_resolved": 64,
-    "note": "Development completion is separate from strict real acceptance. OPEN strict rows are acceptance dependencies, not missing implementation."
+    "note": "Development completion is separate from strict real acceptance. OPEN strict rows are acceptance dependencies, not missing implementation.",
+    "milestones": {
+      "U0": "PASS",
+      "U1": "PASS",
+      "U2": "PASS",
+      "U3": "PASS",
+      "U4": "PASS",
+      "U5": "PASS",
+      "U6": "PASS",
+      "U7": "PASS",
+      "U8": "PASS"
+    }
   }
 }
