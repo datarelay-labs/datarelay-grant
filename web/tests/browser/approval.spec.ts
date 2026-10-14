@@ -932,6 +932,48 @@ test('G12 a queue preset survives Clear filters outside the Home deep link',asyn
  }finally{await context.close();}
 });
 
+test('U8.01 role-guided Home routes requester approver and administrator to the intended safe task',async({browser})=>{
+ for(const role of ['requester','approver','admin'] as const){
+  const context=await browser.newContext({viewport:{width:1280,height:800}});const page=await context.newPage();
+  try{
+   await login(page,role);await page.goto('/home');
+   await expect(page.getByRole('heading',{name:'What would you like to do?',exact:true})).toBeVisible();
+   await expect(page.getByRole('button').filter({hasText:'Create approval request'})).toBeVisible();
+   await expect(page.getByRole('button').filter({hasText:'Review assigned work'})).toBeVisible();
+   await expect(page.getByRole('button').filter({hasText:'Track my requests'})).toBeVisible();
+   if(role==='requester'){
+    await page.getByRole('button').filter({hasText:'Create approval request'}).click();
+    await expect(page).toHaveURL(/\/requests\/new$/);await expect(page.getByText('Step 1 · Choose what needs approval',{exact:true})).toBeVisible();
+   }else if(role==='approver'){
+    await page.getByRole('button').filter({hasText:'Review assigned work'}).click();
+    await expect(page).toHaveURL(/\/approvals$/);await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('needs');
+   }else{
+    const setup=page.getByRole('button',{name:/Administrator\? Set up approval policies/});await expect(setup).toBeVisible();await setup.click();
+    await expect(page).toHaveURL(/\/profiles$/);await expect(page.locator('#grant-policies-title')).toHaveText('Approval policies');
+   }
+  }finally{await context.close();}
+ }
+});
+
+test('U8.05 administrator first-run guide resolves real setup routes and never skips draft/test activation gates',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});const page=await context.newPage();
+ try{
+  await login(page,'admin');await page.goto('/profiles');
+  const guide=page.locator('section.grant-admin-setup');
+  await expect(guide.getByRole('heading',{name:'Set up your first approval workflow',exact:true})).toBeVisible();
+  await expect(guide).toContainText('not a verified connection');await expect(guide).toContainText('drafts do not authorize requests');
+  await guide.getByRole('link',{name:/Open integrations/}).click();await expect(page).toHaveURL(/\/integrations$/);
+  await page.goto('/profiles');await expect(page.locator('section.grant-admin-setup')).toBeVisible();
+  await page.locator('section.grant-admin-setup').getByRole('link',{name:/Manage approvers/}).click();await expect(page).toHaveURL(/\/approvers$/);
+  await page.goto('/profiles');const current=page.locator('section.grant-admin-setup');
+  const create=current.getByRole('button',{name:/Create draft policy/});await expect(create).toBeEnabled();await create.click();
+  await expect(page.getByRole('heading',{name:'New policy',exact:true})).toBeVisible();
+  await expect(page.getByText('Create a draft. Saving alone never makes a policy live.',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Activate policy',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Test policy',exact:true})).toHaveCount(0);
+ }finally{await context.close();}
+});
+
 // B1 responsive/keyboard SOURCE qualification on loopback disposable fixture.
 // Two viewport sizes are tested; this is not two independent real people.
 test('B1 approver Inbox task-first mobile 320/375 and keyboard queue controls',async({browser})=>{

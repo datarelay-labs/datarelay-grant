@@ -332,7 +332,8 @@
             "tests/test_email_optional_content.py",
             "web/tests/unit/email-optional-content.test.ts"
           ],
-          "result_detail": "Historical denial was normally retried on the same dev-atlas tool/target and source implementation succeeded. Immutable layout 7 supports at most three optional explanatory blocks only between Message and protected Request details; direct malformed/rebound/protected-block JSON is rejected. Focused Python 16/16, Web unit 2/2, full Web 733/733, type/build/Ruff/compiler reproduction/wheel 1..7 exact PASS."
+          "result_detail": "Historical denial was normally retried on the same dev-atlas tool/target and source implementation succeeded. Immutable layout 7 supports at most three optional explanatory blocks only between Message and protected Request details; direct malformed/rebound/protected-block JSON is rejected. Focused Python 16/16, Web unit 2/2, full Web 733/733, type/build/Ruff/compiler reproduction/wheel 1..7 exact PASS.",
+          "source_head": "ef554b2ac8cb3a169b831f2eca80b4eb0d8c974f"
         },
         {
           "gate": "interaction",
@@ -341,7 +342,8 @@
           "artifact": ".dev/u1-05-browser-green2-results.json",
           "test_id": "V-U1.05",
           "test_file": "web/tests/canvas/optional-content.spec.ts",
-          "result_detail": "1/1 mounted Notifications PASS: add/edit two blocks, explicit move, protected ordering, remove, identity reuse, variable expansion, save, authoritative refresh and reopen exact order; one synthetic PUT; published revision unchanged; no real user/mail acceptance."
+          "result_detail": "1/1 mounted Notifications PASS: add/edit two blocks, explicit move, protected ordering, remove, identity reuse, variable expansion, save, authoritative refresh and reopen exact order; one synthetic PUT; published revision unchanged; no real user/mail acceptance.",
+          "source_head": "ef554b2ac8cb3a169b831f2eca80b4eb0d8c974f"
         }
       ],
       "blocker": null
@@ -423,7 +425,8 @@
             "web/src/notifications.tsx"
           ],
           "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
-          "result_detail": "Historical app/history extension denial was normally retried on the same dev-atlas target and succeeded. Grant-owned SPA navigation now exposes one bounded dirty-editor blocker; Foundation source unchanged. Full Web 733/733 plus TypeScript/Vite PASS."
+          "result_detail": "Historical app/history extension denial was normally retried on the same dev-atlas target and succeeded. Grant-owned SPA navigation now exposes one bounded dirty-editor blocker; Foundation source unchanged. Full Web 733/733 plus TypeScript/Vite PASS.",
+          "source_head": "cfb618aa61333ea3bb79384a4a782eca05fd57f4"
         },
         {
           "gate": "interaction",
@@ -436,7 +439,8 @@
             "web/tests/canvas/draft-exit.spec.ts",
             "web/tests/canvas/notifications.spec.ts"
           ],
-          "result_detail": "8/8 mounted synthetic browser cases PASS: editor Back, section exit, beforeunload, failed/lost-response reconciliation, new unsaved mobile, Grant shell push navigation Keep/Discard, browser Back restoration and one-time discard traversal. No automatic save/publish/send."
+          "result_detail": "8/8 mounted synthetic browser cases PASS: editor Back, section exit, beforeunload, failed/lost-response reconciliation, new unsaved mobile, Grant shell push navigation Keep/Discard, browser Back restoration and one-time discard traversal. No automatic save/publish/send.",
+          "source_head": "cfb618aa61333ea3bb79384a4a782eca05fd57f4"
         }
       ],
       "blocker": null
@@ -471,7 +475,8 @@
             "web/src/notifications.tsx"
           ],
           "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
-          "result_detail": "Historical source denial was normally retried on the same dev-atlas target and succeeded. Read-only active-policy usage is bounded/paged/admin-scoped; duplicate creates a deep-copied unpublished draft and legacy source opts into unchanged layout 1 wording. API focused 1/1 plus 11 affected Python regressions, Web unit duplicate 2/2 and full Web 735/735, type/build/Ruff PASS."
+          "result_detail": "Historical source denial was normally retried on the same dev-atlas target and succeeded. Read-only active-policy usage is bounded/paged/admin-scoped; duplicate creates a deep-copied unpublished draft and legacy source opts into unchanged layout 1 wording. API focused 1/1 plus 11 affected Python regressions, Web unit duplicate 2/2 and full Web 735/735, type/build/Ruff PASS.",
+          "source_head": "3537aa088aaeed6deb21fcf7a636e07b93653ed3"
         },
         {
           "gate": "interaction",
@@ -480,7 +485,8 @@
           "test_id": "V-U2.01",
           "artifact": ".dev/u2-01-browser-results.json",
           "test_file": "web/tests/canvas/inventory-actions.spec.ts",
-          "result_detail": "2/2 mounted Notifications PASS: duplicate copies full wording/design into a distinct unpublished draft then save/refresh/reopen while source remains unchanged; policy-usage drill-down shows exact version/profile identity and saved updated metadata with zero writes."
+          "result_detail": "2/2 mounted Notifications PASS: duplicate copies full wording/design into a distinct unpublished draft then save/refresh/reopen while source remains unchanged; policy-usage drill-down shows exact version/profile identity and saved updated metadata with zero writes.",
+          "source_head": "3537aa088aaeed6deb21fcf7a636e07b93653ed3"
         }
       ],
       "blocker": null
@@ -978,7 +984,9 @@
             "web/src/email_palette_controls.tsx",
             "tests/test_email_presentation_v5.py"
           ],
-          "result_detail": "Historical palette mobile/polish denial retried normally on same dev-atlas target and succeeded. Palette operations preserve layout >=5 including v7 optional content; curated controls are compact 3-column; custom controls stay collapsed. Server rejects unreadable, non-hex, injected/extra palette data. Full Web 735/735 and type/build PASS."
+          "result_detail": "Historical palette mobile/polish denial retried normally on same dev-atlas target and succeeded. Palette operations preserve layout >=5 including v7 optional content; curated controls are compact 3-column; custom controls stay collapsed. Server rejects unreadable, non-hex, injected/extra palette data. Full Web 735/735 and type/build PASS.",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "artifact": ".dev/u3-palette-web-check.txt"
         },
         {
           "gate": "interaction",
@@ -987,7 +995,8 @@
           "test_id": "V-U3.03",
           "artifact": ".dev/u3-01-03-browser-results.json",
           "test_file": "web/tests/canvas/mail-palette.spec.ts",
-          "result_detail": "3/3 palette scenarios PASS: desktop save/reopen, 390px custom contrast failure -> stale preview -> curated recovery/reset with no overflow, and v7 optional-content palette edit never downgrades layout. No app/Foundation theme change."
+          "result_detail": "3/3 palette scenarios PASS: desktop save/reopen, 390px custom contrast failure -> stale preview -> curated recovery/reset with no overflow, and v7 optional-content palette edit never downgrades layout. No app/Foundation theme change.",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30"
         }
       ],
       "blocker": null
@@ -1169,7 +1178,8 @@
             "web/tests/canvas/preview-contract.spec.ts",
             "web/tests/canvas/preview-distinction.spec.ts"
           ],
-          "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Python renderer/preview workflow 30/30 PASS proves unsaved/saved preview and structured MIME use the same pure versioned renderer contract; mounted preview source/text/layout inspection is current-generation exact output."
+          "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Python renderer/preview workflow 30/30 PASS proves unsaved/saved preview and structured MIME use the same pure versioned renderer contract; mounted preview source/text/layout inspection is current-generation exact output.",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff"
         }
       ],
       "blocker": null
@@ -1445,7 +1455,8 @@
             "web/tests/canvas/preview-contract.spec.ts",
             "web/tests/canvas/preview-distinction.spec.ts"
           ],
-          "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Unsaved preview is admin-scoped/read-only/inert with zero save/issuance/outbox/decision writes; iframe sandbox/CSP and synthetic sample material remain nonauthorizing."
+          "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Unsaved preview is admin-scoped/read-only/inert with zero save/issuance/outbox/decision writes; iframe sandbox/CSP and synthetic sample material remain nonauthorizing.",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff"
         }
       ],
       "blocker": null
@@ -2343,6 +2354,15 @@
           "test_id": "V-U7.03",
           "observed_at": "2026-10-14T07:55:58.190497+00:00",
           "result_detail": "Mounted U7 accessibility interaction 3/3 PASS: keyboard focus recovery, 320/375/390 narrow layout, 375px hasTouch tap path, >=44px close target, no horizontal overflow, and screenshot artifacts. This is automated component evidence; no real-person standards or usability acceptance is claimed."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": ".dev/u7-07-exact-web-check.txt",
+          "source_head": "7bf377b158bd8cddef514fdf77d7a2e6626328cd",
+          "test_id": "V-U7.03",
+          "observed_at": "2026-10-14T08:35:35.139804+00:00",
+          "result_detail": "Exact current source typecheck and production Web build PASS. Grant-owned inspector/focus/mobile source is unchanged from the c5c5566 interaction-qualified candidate; 7bf377b changes only qualification tests/docs and adds 320/375/390 keyboard/touch evidence. Foundation source remains unchanged."
         }
       ],
       "blocker": null
