@@ -1,7 +1,9 @@
 """Synthetic browser-test helper for the real bounded logo normalizer."""
+
 import base64
 import json
 import sys
+
 from grant.email_assets import normalize_logo
 
 payload=json.load(sys.stdin)
