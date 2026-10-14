@@ -1601,6 +1601,15 @@
             "web/tests/canvas/publication.spec.ts"
           ],
           "result_detail": "Current mounted publication suite 5/5 PASS. Saving remains draft-only; Review & publish is a separate current-preview flow requiring exact current saved state, reason and explicit Confirm. Synthetic transport only; owner release/real mailbox acceptance not implied."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u5-publication-final4-results.json",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.01",
+          "observed_at": "2026-10-14T07:41:20.470147+00:00",
+          "result_detail": "Mounted Notifications publication-inspection 5/5 PASS: draft save does not publish, exact diff/policy impact review, read-only historical preview, conflict fresh-review recovery, and rollback as new monotonic revision. Synthetic transport only."
         }
       ],
       "blocker": null
@@ -1649,6 +1658,15 @@
             "web/tests/canvas/publication.spec.ts"
           ],
           "result_detail": "Current mounted publication suite 5/5 PASS. Review names exact event field changes and shared style fields before write; no POST occurs before explicit Confirm. Synthetic transport only; owner release/real mailbox acceptance not implied."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u5-publication-final4-results.json",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.02",
+          "observed_at": "2026-10-14T07:41:20.470147+00:00",
+          "result_detail": "Mounted Notifications publication-inspection 5/5 PASS: draft save does not publish, exact diff/policy impact review, read-only historical preview, conflict fresh-review recovery, and rollback as new monotonic revision. Synthetic transport only."
         }
       ],
       "blocker": null
@@ -1697,6 +1715,15 @@
             "web/tests/canvas/publication.spec.ts"
           ],
           "result_detail": "Current mounted publication suite 5/5 PASS. Review exposes exact active policy profile/version identities and future-request-only impact. Synthetic transport only; owner release/real mailbox acceptance not implied."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u5-publication-final4-results.json",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.03",
+          "observed_at": "2026-10-14T07:41:20.470147+00:00",
+          "result_detail": "Mounted Notifications publication-inspection 5/5 PASS: draft save does not publish, exact diff/policy impact review, read-only historical preview, conflict fresh-review recovery, and rollback as new monotonic revision. Synthetic transport only."
         }
       ],
       "blocker": null
@@ -1745,6 +1772,15 @@
             "web/tests/canvas/publication.spec.ts"
           ],
           "result_detail": "Current mounted publication suite 5/5 PASS. Known pre-commit 409 rejects the old proof and requires a fresh review; ambiguous/unknown outcomes remain latched and are never replayed automatically. Synthetic transport only; owner release/real mailbox acceptance not implied."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u5-publication-final4-results.json",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.04",
+          "observed_at": "2026-10-14T07:41:20.470147+00:00",
+          "result_detail": "Mounted Notifications publication-inspection 5/5 PASS: draft save does not publish, exact diff/policy impact review, read-only historical preview, conflict fresh-review recovery, and rollback as new monotonic revision. Synthetic transport only."
         }
       ],
       "blocker": null
@@ -1758,7 +1794,7 @@
       "pass_criterion": "V-U5.05: publish new design then compare pre-existing request/outbox bytes/hashes unchanged; new requests choose new version; reminders retain original design while current security revocation/floor still applies.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "PASS",
+      "interaction": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1792,6 +1828,19 @@
             "web/tests/canvas/publication.spec.ts"
           ],
           "result_detail": "Current mounted publication suite 5/5 PASS. Publication UI and server contract state future requests only; immutable existing request/queued snapshots are not rewritten. Synthetic transport only; owner release/real mailbox acceptance not implied."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_publication.py",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.05",
+          "observed_at": "2026-10-14T07:41:20.470147+00:00",
+          "result_detail": "Disposable API test proves pre-existing request/outbox/issuance/profile rows and mail snapshot unchanged across new publication; new request takes new design; rollback creates new revision."
+        },
+        {
+          "gate": "interaction",
+          "justification": "U5.05 is an immutable server snapshot invariant across requests/outbox/reminders/reissues; the authoritative proof is disposable API/database byte/state comparison. Publication UI interaction is separately qualified by U5.02-U5.04/U5.07."
         }
       ],
       "blocker": null
@@ -1840,6 +1889,15 @@
             "web/tests/canvas/publication.spec.ts"
           ],
           "result_detail": "Current mounted publication suite 5/5 PASS. Version history shows stored actor/time/reason/hash and renders a separate read-only historical preview without changing the editor. Synthetic transport only; owner release/real mailbox acceptance not implied."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u5-publication-final4-results.json",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.06",
+          "observed_at": "2026-10-14T07:41:20.470147+00:00",
+          "result_detail": "Mounted Notifications publication-inspection 5/5 PASS: draft save does not publish, exact diff/policy impact review, read-only historical preview, conflict fresh-review recovery, and rollback as new monotonic revision. Synthetic transport only."
         }
       ],
       "blocker": null
@@ -1887,6 +1945,15 @@
             "web/tests/canvas/publication.spec.ts"
           ],
           "result_detail": "Current mounted publication suite 5/5 PASS. Historical denial was normally retried. Rollback from immutable v1 requires separate review/reason/Confirm and creates monotonic published v3; v1/v2 history is not rewritten. Synthetic transport only; owner release/real mailbox acceptance not implied."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u5-publication-final4-results.json",
+          "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff",
+          "test_id": "V-U5.07",
+          "observed_at": "2026-10-14T07:41:20.470147+00:00",
+          "result_detail": "Mounted Notifications publication-inspection 5/5 PASS: draft save does not publish, exact diff/policy impact review, read-only historical preview, conflict fresh-review recovery, and rollback as new monotonic revision. Synthetic transport only."
         }
       ],
       "blocker": null

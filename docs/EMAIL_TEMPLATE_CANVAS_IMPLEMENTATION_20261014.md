@@ -796,3 +796,25 @@ reason/Confirm contract. Evidence `.dev/u5-publication-python-current.txt`,
 `.dev/u5-publication-browser-rerun.txt`, `.dev/u5-publication-green-results.json`
 when retained. These are isolated/synthetic tests; owner release and real-mailbox
 acceptance remain outside this PASS.
+
+
+### U5 publication/history completion of source + mounted interaction gates
+
+Current publication qualification now covers the complete U5 interaction lane
+without real SMTP or production effects. Mounted `publication-inspection.spec.ts`
+5/5 PASS: saving a changed draft advances Draft v1→v2 while Published stays v1
+and survives refresh/reopen; review shows exact changed event fields, shared
+fields and policy/version IDs before one explicit Confirm; immutable historical
+preview exposes stored actor/time/hash read-only; a definite pre-commit conflict
+requires a fresh review and never replays the old proof; selecting published v1
+while v2 is current reviews rollback and Confirm creates **v3**, never rewriting
+v1/v2. Evidence `.dev/u5-publication-final4.txt` and JSON results.
+
+Current API publication qualification is 8/8 PASS. The immutable snapshot test
+compares pre-existing request/outbox/decision issuance/profile-version rows and
+mail-template bytes before and after publishing a changed design, proves the old
+request retains the old style while a new request receives the new version, and
+proves rollback is another monotonically new publication. That backend invariant
+has no separate meaningful UI interaction gate; the related reviewed UI is
+covered by U5.02-U5.04/U5.07. Real-user, real-mail and deployed acceptance remain
+separate and NOT RUN.
