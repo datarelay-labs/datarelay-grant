@@ -182,3 +182,11 @@ def test_canonical_suffix_rich_text_and_full_width_never_accept_html_or_hidden_c
         EmailDesign(button_suffixes={"deny": "\u202eApprove"})
     with pytest.raises(ValidationError):
         EmailDesign(shared_layout_revision=1, rich_text=True)
+
+
+@pytest.mark.parametrize("field", ["schema_version", "renderer_contract_version", "shared_layout_revision"])
+def test_schema_versions_require_integer_not_boolean(field):
+    from grant.email_design import EmailDesign
+
+    with pytest.raises(ValidationError):
+        EmailDesign.model_validate({field: True})

@@ -56,4 +56,3 @@ def test_unsaved_preview_rejects_non_admin_and_invalid_design(env):
     assert env.human("approver").post("/api/v1/notification-template-drafts/preview", json=payload).status_code == 403
     payload["template"]["design"]["styles"]["button_font_size"] = 0
     assert env.human("admin").post("/api/v1/notification-template-drafts/preview", json=payload).status_code == 422
-

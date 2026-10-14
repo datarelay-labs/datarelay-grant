@@ -72,6 +72,13 @@ class EmailDesign(StrictDesign):
     paragraph_alignment: Literal["left", "center", "right"] = "left"
     button_suffixes: ButtonSuffixes = Field(default_factory=ButtonSuffixes)
 
+    @field_validator("schema_version", "renderer_contract_version", "shared_layout_revision", mode="before")
+    @classmethod
+    def integer_version(cls, value):
+        if type(value) is not int:
+            raise ValueError("Email schema and layout versions must be integers")
+        return value
+
     @model_validator(mode="after")
     def immutable_legacy_layout(self):
         if self.shared_layout_revision == 1 and (self.rich_text

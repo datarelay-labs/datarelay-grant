@@ -95,3 +95,21 @@ def test_branding_change_invalidates_publication_review(env):
     response = admin.post(prefix + "/publish", json={"expected_updated_at": data["expected_updated_at"],
                                                     "review_hash": data["review_hash"], "reason": "Stale review"})
     assert response.status_code == 409
+
+
+def test_active_policy_impact_change_invalidates_prior_publication_review(env):
+    admin = env.human("admin")
+    saved = template(admin)
+    assert publish(admin, saved["id"]).status_code == 200
+    policy = admin.post("/api/v1/profiles", json=policy_payload(env, saved["id"])).json()
+    activate(admin, policy["id"])
+    prefix = "/api/v1/notification-template-sets/" + saved["id"]
+    review = admin.post(prefix + "/publication-review", json={}).json()
+    assert len(review["active_policies"]) == 1
+    with env.db.transaction() as conn:
+        conn.execute("UPDATE profile_versions SET updated_at=updated_at+1 WHERE profile_id=? AND lifecycle='ACTIVE'", (policy["id"],))
+    result = admin.post(prefix + "/publish", json={
+        "expected_updated_at": review["expected_updated_at"], "review_hash": review["review_hash"], "reason": "Old impact review",
+    })
+    assert result.status_code == 409
+    assert len(admin.get(prefix + "/versions").json()) == 1
