@@ -306,9 +306,9 @@
       "depends_on": "U1.03",
       "verification_id": "V-U1.05",
       "pass_criterion": "V-U1.05: add/reorder an allowed optional explanatory block; required request/action/verification blocks cannot be deleted, duplicated, hidden or moved after an unsafe hierarchy; direct invalid JSON rejected. No dead advertised control.",
-      "status": "BLOCKED",
-      "source": "BLOCKED",
-      "interaction": "NOT_RUN",
+      "status": "OPEN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -321,16 +321,30 @@
             ".dev/u1-05-web-red.txt"
           ],
           "result": "3 positive Python failures, 13 negative cases already rejected; 2 missing-model-helper Web failures. Not implemented/PASS."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:10:37.408917+00:00",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "test_id": "V-U1.05",
+          "test_files": [
+            "tests/test_email_optional_content.py",
+            "web/tests/unit/email-optional-content.test.ts"
+          ],
+          "result_detail": "Historical denial was normally retried on the same dev-atlas tool/target and source implementation succeeded. Immutable layout 7 supports at most three optional explanatory blocks only between Message and protected Request details; direct malformed/rebound/protected-block JSON is rejected. Focused Python 16/16, Web unit 2/2, full Web 733/733, type/build/Ruff/compiler reproduction/wheel 1..7 exact PASS."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:10:37.408917+00:00",
+          "artifact": ".dev/u1-05-browser-green2-results.json",
+          "test_id": "V-U1.05",
+          "test_file": "web/tests/canvas/optional-content.spec.ts",
+          "result_detail": "1/1 mounted Notifications PASS: add/edit two blocks, explicit move, protected ordering, remove, identity reuse, variable expansion, save, authoritative refresh and reopen exact order; one synthetic PUT; published revision unchanged; no real user/mail acceptance."
         }
       ],
-      "blocker": {
-        "class": "PLATFORM_SAFETY_DENIAL",
-        "tool": "Remote_Desktop_Commander.start_process",
-        "target": "dev-atlas /home/aella/datarelay-grant-g10a-g0-integration-dev: optional-content schema/renderer/compiler/editor source batch",
-        "message": "요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.",
-        "effect": "U1.05 source was not written; normal readback confirms old source remains. No reroute or reformulated write.",
-        "bypassed": false
-      }
+      "blocker": null
     },
     {
       "id": "U1.06",

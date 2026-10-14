@@ -7,7 +7,7 @@ import {createEmailDesign,withButtonSize,type EmailDesign,type EmailStyles} from
 import {LiveEmailPreview,type EmailPreviewState} from './email_live_preview';
 import {inertEmailDocument,type TemplateDraft} from './notification_preview';
 import {syntheticEmailSample} from './email_preview_model';
-import {applyEmailPreset,resetEmailAppearance,createEmailHistory,insertEmailVariable,emailVariableOptions,editableEmailBlocks,blockLabels,blockScope,type EmailBlock} from './email_canvas_model';
+import {addEmailContent,moveEmailContent,removeEmailContent,applyEmailPreset,resetEmailAppearance,createEmailHistory,insertEmailVariable,emailVariableOptions,editableEmailBlocks,optionalEmailBlocks,blockLabels,blockScope,type EmailBlock,type EmailContentBlock} from './email_canvas_model';
 import type {NotificationEvent,NotificationEventTemplate} from './types';
 import './email-template-editor.css';
 
@@ -55,6 +55,10 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,reviewOpe
  const outline=useRef<HTMLElement>(null);
  const field=useRef<HTMLInputElement|HTMLTextAreaElement|null>(null);
  const design=draft.design??null,visual=!!design&&design.shared_layout_revision>=3;
+ const selectedContent=optionalEmailBlocks.includes(selected as EmailContentBlock)?selected as EmailContentBlock:null;
+ const outlineBlocks:EmailBlock[]=design
+  ?['subject',...design.blocks.filter(block=>editableEmailBlocks.includes(block as EmailBlock)).map(block=>block as EmailBlock)]
+  :editableEmailBlocks.filter(block=>!optionalEmailBlocks.includes(block as EmailContentBlock));
  useEffect(()=>{if(reviewOpen)setInspectorOpen(false);},[reviewOpen]);
  const busy=disabled||restoring;
  function change(next:TemplateDraft){if(busy)return;history.current.push(draft);setLocalError('');onChange(next);}
@@ -74,18 +78,19 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,reviewOpe
  function insert(key:string){
   const element=field.current?.isConnected?field.current:null;
   const inPreheader=selected==='subject'&&!!design&&!!element?.hasAttribute('data-email-preheader');
-  const max=inPreheader?200:selected==='message'?8000:selected==='footer'?1000:250;
-  const value=inPreheader?(design?.event_preheaders?.[event]??''):selected==='subject'?draft.templates[event].subject:selected==='message'?draft.templates[event].body:selected==='heading'?(design?.event_headings?.[event]??design?.heading??''):design?.footer??'';
+  const max=inPreheader?200:selectedContent?2000:selected==='message'?8000:selected==='footer'?1000:250;
+  const value=inPreheader?(design?.event_preheaders?.[event]??''):selectedContent?(design?.optional_content?.[selectedContent]??''):selected==='subject'?draft.templates[event].subject:selected==='message'?draft.templates[event].body:selected==='heading'?(design?.event_headings?.[event]??design?.heading??''):design?.footer??'';
   try{
    const next=insertEmailVariable(value,element?.selectionStart??value.length,element?.selectionEnd??value.length,key,variables,max);
    if(inPreheader&&design)designChange({...design,shared_layout_revision:design.shared_layout_revision>=4?design.shared_layout_revision:4,event_preheaders:{...design.event_preheaders,[event]:next.value}});
+   else if(selectedContent&&design)designChange({...design,shared_layout_revision:7,optional_content:{...design.optional_content,[selectedContent]:next.value}});
    else if(selected==='subject'||selected==='message')copyChange(selected==='subject'?'subject':'body',next.value);
    else if(design)designChange(selected==='heading'?{...design,event_headings:{...design.event_headings,[event]:next.value}}:{...design,footer:next.value});
    requestAnimationFrame(()=>{const target=element??inspector.current?.querySelector<HTMLInputElement|HTMLTextAreaElement>('[data-email-wording]');target?.focus();target?.setSelectionRange(next.cursor,next.cursor);});
   }catch(error){setLocalError(error instanceof Error?error.message:'Unable to insert this variable.');}
  }
  function style<K extends keyof EmailStyles>(key:K,value:EmailStyles[K]){if(design)designChange({...design,styles:{...design.styles,[key]:value}});}
- const wording=['subject','heading','message','footer'].includes(selected)&&(visual||selected==='subject'||selected==='message');
+ const wording=(['subject','heading','message','footer'].includes(selected)||!!selectedContent)&&(visual||selected==='subject'||selected==='message');
  const variablePicker=wording?<details className="grant-email-variable-picker"><summary>Insert variable</summary>
   <TextField label="Find a variable" value={variableQuery} onChange={e=>setVariableQuery(e.target.value)} disabled={busy}/>
   <div className="grant-email-variable-options">{emailVariableOptions(variables,variableQuery).map(item=><Button key={item.key} type="button" variant="ghost" disabled={busy} onClick={()=>insert(item.key)}>
@@ -116,6 +121,12 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,reviewOpe
  else if(selected==='heading')properties=visual?<><TextField data-email-wording label="Event heading" value={design.event_headings?.[event]??design.heading} required maxLength={250} disabled={busy}
   onChange={e=>designChange({...design,event_headings:{...design.event_headings,[event]:e.target.value}})}/><p>Only {labels[event].toLowerCase()} changes.</p></>:<p>Enable the canvas layout to edit a heading for this event. The current shared heading is preserved.</p>;
  else if(selected==='footer')properties=visual?<TextField data-email-wording label="Additional footer wording" value={design.footer} maxLength={1000} disabled={busy} onChange={e=>designChange({...design,footer:e.target.value})}/>:<p>Enable visual editing to add footer wording.</p>;
+ else if(selectedContent)properties=visual&&design?<><TextField data-email-wording label="Content block wording" value={design.optional_content?.[selectedContent]??''} required maxLength={2000} disabled={busy} onChange={e=>designChange({...design,shared_layout_revision:7,optional_content:{...design.optional_content,[selectedContent]:e.target.value}})}/>
+  <p>Optional explanatory wording shared by all events. It can move only between Message and protected Request details.</p>
+  <div className="grant-actions"><Button type="button" variant="secondary" disabled={busy||design.blocks.indexOf(selectedContent)===3} onClick={()=>designChange(moveEmailContent(design,selectedContent,-1))}>Move content earlier</Button>
+   <Button type="button" variant="secondary" disabled={busy||design.blocks.indexOf(selectedContent)===design.blocks.indexOf('request_context')-1} onClick={()=>designChange(moveEmailContent(design,selectedContent,1))}>Move content later</Button>
+   <Button type="button" variant="secondary" disabled={busy} onClick={()=>{designChange(removeEmailContent(design,selectedContent));setSelected('message');setInspectorOpen(false);}}>Remove content block</Button></div>
+ </>:<p>Enable visual editing to manage optional content.</p>;
  else if(selected==='brand')properties=<><strong>Text brand</strong><p>Brand and sender names are managed in Notifications → Branding. No account or sender settings are changed here.</p><p>Logo upload is not available. The text brand remains visible.</p></>;
  else if(selected==='request_context')properties=<><strong>Protected request details</strong><p>Title, action, target, reference and deadline remain visible before the decisions. These values come from the request; they cannot be removed or rebound.</p></>;
  else if(selected==='verification')properties=<><strong>Verification requirements</strong><p>The approval policy determines PIN, OTP and sign-in MFA. The final Confirm remains mandatory. Change Sample data to inspect each mode; previewing never changes policy.</p></>;
@@ -145,9 +156,9 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,reviewOpe
   </Alert>}
   {visual&&<EmailPresetPicker value={design} onChange={designChange} disabled={busy} events={Object.keys(draft.templates) as NotificationEvent[]}/>}
   <div className="grant-email-authoring-grid">
-   <nav ref={outline} className="grant-email-outline" aria-label="Email blocks">{editableEmailBlocks.map(block=><button key={block} type="button" aria-pressed={selected===block} aria-controls="grant-email-properties" onClick={()=>select(block,false)}>
+   <nav ref={outline} className="grant-email-outline" aria-label="Email blocks">{outlineBlocks.map(block=><button key={block} type="button" aria-pressed={selected===block} aria-controls="grant-email-properties" onClick={()=>select(block,false)}>
     {blockLabels[block]}{['request_context','actions','verification'].includes(block)&&<small>Protected</small>}
-   </button>)}</nav>
+   </button>)}{visual&&design&&<Button type="button" variant="secondary" disabled={busy||Object.keys(design.optional_content??{}).length>=3} onClick={()=>{try{const next=addEmailContent(design);const id=optionalEmailBlocks.find(item=>!design.blocks.includes(item))!;designChange(next);setSelected(id);setInspectorOpen(true);}catch(error){setLocalError(error instanceof Error?error.message:'Unable to add content.');}}}>Add content block</Button>}</nav>
    <div className="grant-email-central-canvas"><p className="grant-email-canvas-hint">Select a message or button to edit its appearance. No approval or navigation is performed.</p>
     <LiveEmailPreview draft={draft} event={event} selectedBlock={selected} onSelectBlock={block=>select(block)} onPreviewState={onPreviewState}/>
    </div>

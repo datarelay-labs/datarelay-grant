@@ -15,13 +15,13 @@ from importlib.resources import files
 from urllib.parse import urlsplit
 
 LAYOUT_REGISTRY = {}
-for _revision in (1, 2, 3, 4, 5, 6):
+for _revision in (1, 2, 3, 4, 5, 6, 7):
     _bytes = files("grant").joinpath(f"email_layout_v{_revision}.json").read_bytes()
     LAYOUT_REGISTRY[_revision] = {"sha256": hashlib.sha256(_bytes).hexdigest(),
                                    "layouts": json.loads(_bytes)["layouts"]}
 LAYOUT_DIGEST = LAYOUT_REGISTRY[1]["sha256"]
 LAYOUTS = LAYOUT_REGISTRY[1]["layouts"]
-SLOT = re.compile(r"@@GRANT_([A-Z_]+)@@")
+SLOT = re.compile(r"@@GRANT_([A-Z0-9_]+)@@")
 OUTCOMES = ("APPROVED", "HELD", "DENIED")
 MODES = ("EMAIL_PIN", "EMAIL_PIN_PLUS_OTP", "EMAIL_PIN_PLUS_MFA")
 PREVIEW_ORIGIN = "https://example.invalid/grant-preview/"
@@ -189,6 +189,18 @@ def compose_email(
         if eligible:
             segments += [values["GUIDANCE"], values["PIN"]]
         segments += [values["FOOTER"]]
+    optional_ids = []
+    if design and revision >= 7:
+        optional_ids = [block for block in design["blocks"] if block.startswith("content_")]
+        optional_values = []
+        for index, block in enumerate(optional_ids, 1):
+            value = TOKEN.sub(lambda match: context[match[1]], design["optional_content"][block])
+            values[f"OPTIONAL_{index}"] = value
+            values[f"OPTIONAL_{index}_ID"] = block
+            optional_values.append(value)
+        # Revision 5+ segments are status,title,body,context,...; explanatory
+        # content is bounded to the one legal region before protected context.
+        segments[3:3] = optional_values
     if design and revision >= 4:
         preheader = TOKEN.sub(lambda match: context[match[1]], design["event_preheaders"].get(event, ""))
         if len(preheader) > 2048 or any(ord(c) < 32 or ord(c) == 127 for c in preheader):
@@ -198,6 +210,8 @@ def compose_email(
             segments.insert(0, preheader)
     inline_images = []
     layout_key = "decision" if eligible else "notice"
+    if optional_ids:
+        layout_key += f"_optional_{len(optional_ids)}"
     if design and revision >= 6 and design["logo_asset_id"]:
         from .email_assets import validate_snapshot_logo
 
@@ -209,7 +223,7 @@ def compose_email(
         inline_images = [{**logo, "cid": cid}]
         layout_key += "_logo"
     escaped = {key: html.escape(value, quote=True) for key, value in values.items()}
-    for key in ("BODY", "CONTEXT", "GUIDANCE", "PIN", "FOOTER"):
+    for key in ("BODY", "CONTEXT", "GUIDANCE", "PIN", "FOOTER", *[f"OPTIONAL_{index}" for index in range(1, len(optional_ids) + 1)]):
         if key in escaped:
             escaped[key] = escaped[key].replace("\n", "<br>")
     if design and revision >= 2 and design["rich_text"]:

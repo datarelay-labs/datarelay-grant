@@ -1,8 +1,30 @@
 import {createEmailDesign,type EmailDesign} from './email_design';
-export const editableEmailBlocks=['subject','brand','heading','message','request_context','actions','verification','footer'] as const;
+export const optionalEmailBlocks=['content_1','content_2','content_3'] as const;
+export type EmailContentBlock=typeof optionalEmailBlocks[number];
+export const editableEmailBlocks=['subject','brand','heading','message',...optionalEmailBlocks,'request_context','actions','verification','footer'] as const;
 export type EmailBlock=typeof editableEmailBlocks[number];
-export const blockLabels:Record<EmailBlock,string>={subject:'Subject',brand:'Brand',heading:'Heading',message:'Message',request_context:'Request details',actions:'Approval buttons',verification:'Verification',footer:'Footer'};
-export const blockScope:Record<EmailBlock,string>={subject:'This event',brand:'All future notification snapshots',heading:'This event',message:'This event',request_context:'Controlled by approval policy',actions:'All events in this template set',verification:'Controlled by approval policy',footer:'All events in this template set'};
+export const blockLabels:Record<EmailBlock,string>={subject:'Subject',brand:'Brand',heading:'Heading',message:'Message',content_1:'Content 1',content_2:'Content 2',content_3:'Content 3',request_context:'Request details',actions:'Approval buttons',verification:'Verification',footer:'Footer'};
+export const blockScope:Record<EmailBlock,string>={subject:'This event',brand:'All future notification snapshots',heading:'This event',message:'This event',content_1:'All events in this template set',content_2:'All events in this template set',content_3:'All events in this template set',request_context:'Controlled by approval policy',actions:'All events in this template set',verification:'Controlled by approval policy',footer:'All events in this template set'};
+export function addEmailContent(value:EmailDesign):EmailDesign {
+ const used=new Set(Object.keys(value.optional_content??{}));const id=optionalEmailBlocks.find(item=>!used.has(item));
+ if(!id)throw Error('Only three optional content blocks are supported.');
+ const blocks=[...value.blocks],context=blocks.indexOf('request_context');if(context<0)throw Error('Protected request context is required.');
+ blocks.splice(context,0,id);
+ return {...structuredClone(value),shared_layout_revision:7,blocks,optional_content:{...value.optional_content,[id]:'Additional context.'}};
+}
+export function moveEmailContent(value:EmailDesign,id:EmailBlock,direction:-1|1):EmailDesign {
+ if(!optionalEmailBlocks.includes(id as EmailContentBlock))throw Error('Protected blocks cannot be moved.');
+ const optionals=value.blocks.filter(block=>optionalEmailBlocks.includes(block as EmailContentBlock));const current=optionals.indexOf(id);const target=current+direction;
+ if(current<0)throw Error('Optional content block is not present.');if(target<0||target>=optionals.length)return structuredClone(value);
+ [optionals[current],optionals[target]]=[optionals[target]!,optionals[current]!];
+ return {...structuredClone(value),blocks:['brand','heading','message',...optionals,'request_context','actions','verification','footer']};
+}
+export function removeEmailContent(value:EmailDesign,id:EmailBlock):EmailDesign {
+ if(!optionalEmailBlocks.includes(id as EmailContentBlock))throw Error('Protected blocks cannot be removed.');
+ if(!value.blocks.includes(id))throw Error('Optional content block is not present.');
+ const content={...value.optional_content};delete content[id as EmailContentBlock];
+ return {...structuredClone(value),blocks:value.blocks.filter(block=>block!==id),optional_content:content};
+}
 export function applyEmailPreset(value:EmailDesign,preset:EmailDesign['preset']):EmailDesign {
  const defaults=createEmailDesign(preset);
  return {...structuredClone(value),preset,button_size:defaults.button_size,styles:defaults.styles,paragraph_alignment:defaults.paragraph_alignment};

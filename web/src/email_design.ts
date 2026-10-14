@@ -5,12 +5,12 @@ export type EmailStyles = {
   button_gap:number;button_radius:number;approve_color:string;hold_color:string;deny_color:string;
 };
 export type EmailDesign = {
-  schema_version:1;renderer_contract_version:1;shared_layout_revision:1|2|3|4|5;
+  schema_version:1;renderer_contract_version:1;shared_layout_revision:1|2|3|4|5|6|7;
   locale:'en'|'ko';preset:'standard'|'compact'|'high_visibility';button_size:'S'|'M'|'L';
   event_headings?:Partial<Record<import("./types").NotificationEvent,string>>;
   palette?:EmailPalette;
   event_preheaders?:Partial<Record<import("./types").NotificationEvent,string>>;
-  heading:string;footer:string;logo_asset_id:null;blocks:string[];styles:EmailStyles;
+  heading:string;footer:string;optional_content?:Partial<Record<'content_1'|'content_2'|'content_3',string>>;logo_asset_id:string|null;logo_width?:number;blocks:string[];styles:EmailStyles;
   rich_text?:boolean;paragraph_alignment?:'left'|'center'|'right';
   button_suffixes?:{approve:string;hold:string;deny:string;details:string};
 };
@@ -34,7 +34,7 @@ export function designSignature(value:EmailDesign|null|undefined):string|null {
   if(value==null)return null;
   const stable=(v:unknown):unknown=>Array.isArray(v)?v.map(stable):
     v!==null&&typeof v==='object'?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b)).map(([k,x])=>[k,stable(x)])):v;
-  return JSON.stringify(stable({...value,palette:value.palette??emailPalettes.light,event_preheaders:value.event_preheaders??{},rich_text:value.rich_text??false,paragraph_alignment:value.paragraph_alignment??'left',button_suffixes:{approve:'',hold:'',deny:'',details:'',...value.button_suffixes}}));
+  return JSON.stringify(stable({...value,palette:value.palette??emailPalettes.light,event_preheaders:value.event_preheaders??{},optional_content:value.optional_content??{},rich_text:value.rich_text??false,paragraph_alignment:value.paragraph_alignment??'left',button_suffixes:{approve:'',hold:'',deny:'',details:'',...value.button_suffixes}}));
 }
 
 export function formatEmailText(value:string,start:number,end:number,mark:'bold'|'italic'|'list'|'insert',insert=''){

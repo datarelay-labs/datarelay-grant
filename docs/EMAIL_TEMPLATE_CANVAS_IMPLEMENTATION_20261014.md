@@ -559,3 +559,37 @@ These results close source/interaction evidence only. Deployed-development,
 real-mail-client and independently operated persona gates remain separate. The
 previously recorded U3.03 palette mobile denial and U4.04 exact-focus denial are
 not bypassed or relabeled by these independent passes.
+
+
+### U1.05 normal retry completed — immutable optional content layout 7
+
+The previously denied U1.05 source operation was retried normally on the same
+`Remote_Desktop_Commander.start_process` / dev-atlas worktree after a later owner
+resume. This retry succeeded; no alternate executor, host or bypass was used.
+The current implementation introduces immutable shared layout revision 7 with
+at most three server-allowlisted `content_1`..`content_3` explanatory blocks.
+Their only legal region is after Message and before the protected Request details;
+required brand/heading/message/request/actions/verification/footer identities
+cannot be removed, duplicated, hidden, rebound or moved. Optional wording is
+bounded to 1..2000 characters, uses the existing approved variable grammar and
+is escaped by the same pure renderer. Existing layouts 1..6 remain byte-identical.
+
+The browser outline is derived from persisted `design.blocks`, so explicit Move
+controls change both rendered and editor order rather than merely renaming a
+selection. Removal cannot target protected blocks; adding after removal reuses a
+free optional identity without touching event wording, publication, approval
+authority or policy verification.
+
+Qualification: focused optional-content Python 16/16 PASS; model Web 2/2 PASS;
+full Web unit suite 733/733 PASS; TypeScript/Vite, scoped Ruff and compiler
+`--check` PASS. One mounted actual Notifications scenario with synthetic route
+transport PASS: add/edit two blocks, move Content 2 before Content 1, remove
+Content 1, re-add/reword it with a variable, save through Review/Confirm,
+authoritatively refresh, return to inventory and reopen exact persisted order.
+Only one synthetic PUT occurred and published revision remained unchanged.
+Evidence: `.dev/u1-05-python.txt`, `.dev/u1-05-python-regression.txt`,
+`.dev/u1-05-web-unit.txt`, `.dev/u1-05-web-full.txt`,
+`.dev/u1-05-browser-green2-results.json`, `.dev/u1-05-web-check.txt`,
+`.dev/u1-05-package.txt`. Wheel assets 1..7 are byte-exact; layout 7 SHA256 is
+`fc36a6c6a811509379a39fd739e75a5c80589ae080934cb47e126c7d76fabb81`.
+No deployed-development, real-person or mail-client acceptance is claimed.

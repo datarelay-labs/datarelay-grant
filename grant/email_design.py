@@ -16,6 +16,7 @@ from pydantic import (
 from .email_palette import DEFAULT_PALETTE, EmailPalette
 
 BLOCKS = ["brand", "heading", "message", "request_context", "actions", "verification", "footer"]
+OPTIONAL_BLOCKS = ["content_1", "content_2", "content_3"]
 
 
 class StrictDesign(BaseModel):
@@ -68,7 +69,7 @@ class ButtonSuffixes(StrictDesign):
 class EmailDesign(StrictDesign):
     schema_version: Literal[1] = 1
     renderer_contract_version: Literal[1] = 1
-    shared_layout_revision: Literal[1, 2, 3, 4, 5, 6] = 2
+    shared_layout_revision: Literal[1, 2, 3, 4, 5, 6, 7] = 2
     locale: Literal["en", "ko"] = "en"
     preset: Literal["standard", "compact", "high_visibility"] = "standard"
     button_size: Literal["S", "M", "L"] = "M"
@@ -76,7 +77,8 @@ class EmailDesign(StrictDesign):
     event_headings: dict[str, str] = Field(default_factory=dict, max_length=9)
     event_preheaders: dict[str, str] = Field(default_factory=dict, max_length=9)
     footer: str = Field(default="", max_length=1000)
-    blocks: list[str] = Field(default_factory=lambda: list(BLOCKS), min_length=7, max_length=7)
+    optional_content: dict[str, str] = Field(default_factory=dict, max_length=3)
+    blocks: list[str] = Field(default_factory=lambda: list(BLOCKS), min_length=7, max_length=10)
     styles: EmailStyles = Field(default_factory=EmailStyles)
     palette: EmailPalette = Field(default_factory=EmailPalette)
     logo_asset_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
@@ -105,6 +107,11 @@ class EmailDesign(StrictDesign):
             raise ValueError("Mail color palettes require shared layout revision 5")
         if self.shared_layout_revision < 6 and (self.logo_asset_id or self.logo_width != 160):
             raise ValueError("Immutable uploaded logos require shared layout revision 6")
+        optional_blocks = [block for block in self.blocks if block in OPTIONAL_BLOCKS]
+        if self.shared_layout_revision < 7 and (optional_blocks or self.optional_content):
+            raise ValueError("Optional explanatory blocks require shared layout revision 7")
+        if set(optional_blocks) != set(self.optional_content):
+            raise ValueError("Optional content identities must match the optional block list exactly")
         return self
 
     @model_serializer(mode="wrap")
@@ -114,6 +121,8 @@ class EmailDesign(StrictDesign):
         # has no meaning in immutable layouts 1..5 and is emitted only for v6.
         if self.shared_layout_revision < 6:
             value.pop("logo_width", None)
+        if self.shared_layout_revision < 7 and not self.optional_content:
+            value.pop("optional_content", None)
         return value
 
     @field_validator("event_preheaders")
@@ -127,6 +136,17 @@ class EmailDesign(StrictDesign):
             if any(ord(c) < 32 or ord(c) == 127 or 0x200B <= ord(c) <= 0x200F
                     or 0x2028 <= ord(c) <= 0x202E or 0x2066 <= ord(c) <= 0x2069 for c in value):
                 raise ValueError("Preheaders must be one-line text without control characters")
+            cls.safe_text(value)
+        return values
+
+    @field_validator("optional_content")
+    @classmethod
+    def safe_optional_content(cls, values: dict[str, str]) -> dict[str, str]:
+        if any(key not in OPTIONAL_BLOCKS for key in values):
+            raise ValueError("Only three bounded optional content identities are supported")
+        for value in values.values():
+            if not 1 <= len(value) <= 2000:
+                raise ValueError("Optional content must contain 1 to 2000 characters")
             cls.safe_text(value)
         return values
 
@@ -144,8 +164,10 @@ class EmailDesign(StrictDesign):
     @field_validator("blocks")
     @classmethod
     def protected_structure(cls, value: list[str]) -> list[str]:
-        if value != BLOCKS:
-            raise ValueError("Protected email blocks cannot be removed, reordered, hidden or duplicated")
+        optional = [block for block in value if block in OPTIONAL_BLOCKS]
+        if (len(value) != len(set(value)) or any(block not in BLOCKS + OPTIONAL_BLOCKS for block in value)
+                or value != BLOCKS[:3] + optional + BLOCKS[3:]):
+            raise ValueError("Protected email blocks cannot be removed, reordered, hidden, duplicated or rebound")
         return value
 
     @field_validator("heading", "footer")
