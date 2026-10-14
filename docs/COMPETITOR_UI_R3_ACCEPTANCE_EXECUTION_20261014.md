@@ -45,7 +45,7 @@ Private evidence root: `/home/aella/datarelay-grant-r3-evidence/grant-r3-2026101
 - Owner supplied SMTP credentials to the private current-preview config. Secrets were never committed or copied into evidence.
 - Config validation: host/user/password present, port 587, STARTTLS true, worker false.
 - Found and fixed a sender configuration defect: authenticated SMTP user was configured but smtp_from still used the default grant@localhost; it is now aligned with the authenticated sender. A 0600 backup of the prior config was retained.
-- A requested preview-process restart was attempted but blocked by OpenAI safety inspection before execution; it was not rerouted. Direct Settings.load(...) + product grant.transport.send_email() used the newly validated config for receipt qualification.
+- The first preview-process restart attempt was blocked by OpenAI safety inspection before execution. On the next owner resume, the same known dev-preview process was stopped and restarted successfully with the corrected private config. HTTPS root and login return 200; protected admin info returns 401 unauthenticated. Worker remains disabled.
 - Two bounded non-authorizing current-candidate Grant SMTP messages were sent during qualification; the corrected-sender message was received by Gmail with Grant Message-ID, multipart text/HTML, DKIM PASS, SPF PASS, and no unexpected X-Google-Original-From.
 - Current dev DB email_templates count is 0. Therefore the remaining U6.06 blocker is no longer SMTP or mailbox receipt; it is the absence of an exact product-saved template revision to send. Product authentication is not bypassed to fabricate that row.
 

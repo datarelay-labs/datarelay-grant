@@ -3275,6 +3275,15 @@
           "test_id": "V-U6.06",
           "observed_at": "2026-10-14T13:04:52.527053+00:00",
           "result_detail": "Actual authorized Gmail receipt from DataRelay Grant SMTP is verified. The WBS requires the received message to be the exact saved product revision; current DB has no saved template row, so final acceptance cannot be promoted to PASS yet."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "391b12fc5861b0c07bd577a7fb660f309e131d85",
+          "test_id": "V-U6.06",
+          "observed_at": "2026-10-14T13:10:00Z",
+          "result_detail": "The known Grant development preview was successfully restarted after owner resume and now loads the corrected SMTP config. HTTPS root and login return 200; protected admin info returns 401 unauthenticated. SMTP host/user/password are present, smtp_from matches the authenticated sender, STARTTLS is enabled, worker remains disabled. U6.06 remains open only on the absence of an exact product-saved template revision."
         }
       ],
       "blocker": "BLOCKED_PRECONDITION: DataRelay Grant SMTP configuration and real Gmail receipt are now verified, including corrected sender, STARTTLS, DKIM/SPF PASS and current-candidate multipart HTML/text. The only remaining U6.06 criterion is an exact product-saved template revision, but the current dev DB has zero email_templates rows; do not bypass authentication by inserting one directly."
