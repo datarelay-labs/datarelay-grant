@@ -534,3 +534,28 @@ This is mounted synthetic interaction evidence, not a real user/mail-client PASS
 320/375 editor-width qualification, manual/touch observations, actual clients,
 independent authorized personas and measured novice timing remain separate OPEN
 gates.
+
+
+### Remaining mandatory recipient/editor WBS qualification — exact source 1f0ada8
+
+The dependency-ready recipient/editor rows were executed instead of reopening
+competitor research. `tests/test_email_remaining_wbs.py`: 32/32 PASS. This binds
+server bounds, canonical/immutable action identities, nine-event eligibility,
+EMAIL_PIN/OTP/MFA guidance, literal safe rich formatting, renderer reproducibility,
+zero-write/admin-only draft preview, save-versus-publish separation, immutable
+rollback/request history, and text-brand/footer fallback.
+
+Mounted real Notifications composition with synthetic route transport:
+`recipient-contract.spec.ts` 4/4 PASS. It verifies S/M/L 44/48/56px target math,
+custom spacing and 320/375/390 views through save/reopen; canonical
+Approve/Hold/Deny + distinct View Details and all three verification modes;
+seven terminal events expose no decisions; hostile literal markup remains text,
+rich emphasis/footer persist with the mandatory notice; explicit legacy canvas
+upgrade preserves all nine event wording + KO locale and changes only the draft.
+Artifacts: `.dev/wbs-u3-source.txt`, `.dev/wbs-u3-browser.txt`,
+`.dev/wbs-u3-browser-results.json`.
+
+These results close source/interaction evidence only. Deployed-development,
+real-mail-client and independently operated persona gates remain separate. The
+previously recorded U3.03 palette mobile denial and U4.04 exact-focus denial are
+not bypassed or relabeled by these independent passes.

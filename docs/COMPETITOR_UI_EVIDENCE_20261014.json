@@ -746,11 +746,30 @@
       "verification_id": "V-U3.02",
       "pass_criterion": "V-U3.02: values change actual render and persist; S/M/L target minimum heights 44/48/56 CSS px; bounds reject invalid dimensions, no clipped labels at 320/375/390px; three decisions remain comparably usable. Real-client metrics are U7.04.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_remaining_wbs.py",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U3.02",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source; exact row-specific assertions are named in tests/test_email_remaining_wbs.py."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/wbs-u3-browser-results.json",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U3.02",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        }
+      ],
       "blocker": null
     },
     {
@@ -800,11 +819,30 @@
       "verification_id": "V-U3.04",
       "pass_criterion": "V-U3.04: remove/duplicate/rebind/replace-canonical-label attempts fail; suffix cannot inject URLs/variables/bidi control; details navigates only through its separate legitimate read-only boundary in real mail, never votes.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_remaining_wbs.py",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U3.04",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source; exact row-specific assertions are named in tests/test_email_remaining_wbs.py."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/wbs-u3-browser-results.json",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U3.04",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        }
+      ],
       "blocker": null
     },
     {
@@ -815,11 +853,30 @@
       "verification_id": "V-U3.05",
       "pass_criterion": "V-U3.05: all nine events with eligible/ineligible/revoked/expired seats; exact expected action count and semantics in HTML/text; old design snapshot never overrides current revocation.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_remaining_wbs.py",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U3.05",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source; exact row-specific assertions are named in tests/test_email_remaining_wbs.py."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/wbs-u3-browser-results.json",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U3.05",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        }
+      ],
       "blocker": null
     },
     {
@@ -830,11 +887,30 @@
       "verification_id": "V-U3.06",
       "pass_criterion": "V-U3.06: all three modes show policy-correct guidance; base EMAIL_PIN does not require false login; same-email PIN/OTP is not called MFA; style cannot hide instructions, weaken verification or imply approval itself executes an action.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_remaining_wbs.py",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U3.06",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source; exact row-specific assertions are named in tests/test_email_remaining_wbs.py."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/wbs-u3-browser-results.json",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U3.06",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        }
+      ],
       "blocker": null
     },
     {
@@ -845,11 +921,30 @@
       "verification_id": "V-U3.07",
       "pass_criterion": "V-U3.07: bounded long EN/KO and malformed Unicode/markup tested; header injection, scripts, arbitrary HTML/CSS/JS, unsafe links/includes/template code fail safely; accepted formatting is identical in editor preview and delivered renderer.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_remaining_wbs.py",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U3.07",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source; exact row-specific assertions are named in tests/test_email_remaining_wbs.py."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/wbs-u3-browser-results.json",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U3.07",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        }
+      ],
       "blocker": null
     },
     {
@@ -860,11 +955,21 @@
       "verification_id": "V-U4.01",
       "pass_criterion": "V-U4.01: identical synthetic design/context yields same expected content/style semantics through all paths; classify only intended issuance differences; no brittle literal body split; golden output/version reproduction passes.",
       "status": "OPEN",
-      "source": "NOT_RUN",
+      "source": "PASS",
       "interaction": "NOT_RUN",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_remaining_wbs.py",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U4.01",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source. No live SMTP, issuance, decision or external execution."
+        }
+      ],
       "blocker": null
     },
     {
@@ -976,11 +1081,21 @@
       "verification_id": "V-U4.06",
       "pass_criterion": "V-U4.06: database and request interception show zero save/issuance/outbox/OTP/decision writes; no real PIN/token/recipient or remote asset fetch; role isolation, resource limits and error redaction verified.",
       "status": "OPEN",
-      "source": "NOT_RUN",
+      "source": "PASS",
       "interaction": "NOT_RUN",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_remaining_wbs.py",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U4.06",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source. No live SMTP, issuance, decision or external execution."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1039,11 +1154,21 @@
       "verification_id": "V-U5.01",
       "pass_criterion": "V-U5.01: edit/save/reopen shows accurate server revision state; published pointer and existing mail unchanged after save; loading/error/unknown states cannot claim a version.",
       "status": "OPEN",
-      "source": "NOT_RUN",
+      "source": "PASS",
       "interaction": "NOT_RUN",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_remaining_wbs.py",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U5.01",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source. No live SMTP, issuance, decision or external execution."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1132,11 +1257,21 @@
       "verification_id": "V-U5.05",
       "pass_criterion": "V-U5.05: publish new design then compare pre-existing request/outbox bytes/hashes unchanged; new requests choose new version; reminders retain original design while current security revocation/floor still applies.",
       "status": "OPEN",
-      "source": "NOT_RUN",
+      "source": "PASS",
       "interaction": "NOT_RUN",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_remaining_wbs.py",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U5.05",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source. No live SMTP, issuance, decision or external execution."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1173,11 +1308,21 @@
       "verification_id": "V-U5.07",
       "pass_criterion": "V-U5.07: select old design, review delta/impact and confirm; monotonically new revision created; all historical rows and old request snapshots unchanged; stale or repeated confirmation reconciled without duplicate publication.",
       "status": "OPEN",
-      "source": "NOT_RUN",
+      "source": "PASS",
       "interaction": "NOT_RUN",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_remaining_wbs.py",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U5.07",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source. No live SMTP, issuance, decision or external execution."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1188,11 +1333,30 @@
       "verification_id": "V-U5.08",
       "pass_criterion": "V-U5.08: migration preview preserves all nine subjects/bodies and locale; cancel leaves old set unchanged; save remains draft; publish affects future requests only; old layout outputs reproduce.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_remaining_wbs.py",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U5.08",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source; exact row-specific assertions are named in tests/test_email_remaining_wbs.py."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/wbs-u3-browser-results.json",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U5.08",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1203,11 +1367,30 @@
       "verification_id": "V-U6.01",
       "pass_criterion": "V-U6.01: brand/footer render and persist; mandatory notice and required sender boundary cannot be removed; text-only preset remains complete when no logo is selected.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_email_remaining_wbs.py",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U6.01",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source; exact row-specific assertions are named in tests/test_email_remaining_wbs.py."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/wbs-u3-browser-results.json",
+          "source_head": "1f0ada8f81fda16894df7672671ca0214f1270c0",
+          "test_id": "V-U6.01",
+          "observed_at": "2026-10-14T05:52:53.228929+00:00",
+          "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        }
+      ],
       "blocker": null
     },
     {
