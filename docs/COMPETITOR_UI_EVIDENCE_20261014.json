@@ -108,12 +108,34 @@
       "depends_on": "None",
       "verification_id": "V-U0.02",
       "pass_criterion": "V-U0.02: read back each saved body/current prefix; one P0_COMPETITOR_UI_ONLY priority, one canvas-first action, old instructions explicitly historical, no new issue or approval expansion.",
-      "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
-      "dev_deployment": "NOT_RUN",
-      "acceptance": "NOT_RUN",
-      "evidence": [],
+      "status": "PASS",
+      "source": "PASS",
+      "interaction": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "ROADMAP.md",
+          "source_head": "77d9d4381a65db434c8b4ed2494eb6ae5b616827",
+          "test_id": "V-U0.02",
+          "observed_at": "2026-10-14T10:30:58.880697+00:00",
+          "result_detail": "Readback verified ROADMAP and Product Standard references plus GitHub Issue #37, ACTIVE Work Packet #67 rev150 and Draft PR #100 are aligned to P0_COMPETITOR_UI_ONLY with ALLOW_UNRELATED_WORK=false and exact current HEAD 77d9d438. Prior rev142/rev148 coordination is explicitly historical; no stale active first action remains in the current headers. Exact-head Grant 38549201656 and Engineering System 38549202051 are SUCCESS."
+        },
+        {
+          "gate": "interaction",
+          "justification": "U0.02 is coordination/state alignment and defines no product-user interaction."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "U0.02 aligns source and GitHub coordination records; deployment behavior is governed by U7.07."
+        },
+        {
+          "gate": "acceptance",
+          "justification": "U0.02 is a coordination control and requires no persona or mail-client acceptance."
+        }
+      ],
       "blocker": null
     },
     {
