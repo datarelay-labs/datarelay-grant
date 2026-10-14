@@ -1137,7 +1137,7 @@
       "pass_criterion": "V-U4.01: identical synthetic design/context yields same expected content/style semantics through all paths; classify only intended issuance differences; no brittle literal body split; golden output/version reproduction passes.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "NOT_RUN",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1149,6 +1149,27 @@
           "test_id": "V-U4.01",
           "observed_at": "2026-10-14T05:52:53.228929+00:00",
           "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source. No live SMTP, issuance, decision or external execution."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "test_id": "V-U4.01",
+          "artifact": ".dev/u4-python-contract.txt",
+          "result_detail": "Python renderer/preview workflow 30/30 PASS proves unsaved/saved preview and structured MIME use the same pure versioned renderer contract; mounted preview source/text/layout inspection is current-generation exact output."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "test_id": "V-U4.01",
+          "artifact": ".dev/u4-preview-final-results.json",
+          "test_files": [
+            "web/tests/canvas/preview-contract.spec.ts",
+            "web/tests/canvas/preview-distinction.spec.ts"
+          ],
+          "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Python renderer/preview workflow 30/30 PASS proves unsaved/saved preview and structured MIME use the same pure versioned renderer contract; mounted preview source/text/layout inspection is current-generation exact output."
         }
       ],
       "blocker": null
@@ -1182,6 +1203,27 @@
           "test_id": "V-U4.02",
           "observed_at": "2026-10-14T07:30:10.564690+00:00",
           "result_detail": "Mounted Notifications preview-contract 4/4 PASS on current source: stale ordering, explicit failure recovery, sample/mode/event/width/source-text consistency. Synthetic transport only."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "test_id": "V-U4.02",
+          "artifact": ".dev/u4-python-contract.txt",
+          "result_detail": "Delayed old responses never replace current content; last valid preview is visibly stale during update/error and becomes current only after the matching response."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "test_id": "V-U4.02",
+          "artifact": ".dev/u4-preview-final-results.json",
+          "test_files": [
+            "web/tests/canvas/preview-contract.spec.ts",
+            "web/tests/canvas/preview-distinction.spec.ts"
+          ],
+          "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Delayed old responses never replace current content; last valid preview is visibly stale during update/error and becomes current only after the matching response."
         }
       ],
       "blocker": null
@@ -1215,6 +1257,27 @@
           "test_id": "V-U4.03",
           "observed_at": "2026-10-14T07:30:10.564690+00:00",
           "result_detail": "Mounted Notifications preview-contract 4/4 PASS on current source: stale ordering, explicit failure recovery, sample/mode/event/width/source-text consistency. Synthetic transport only."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "test_id": "V-U4.03",
+          "artifact": ".dev/u4-python-contract.txt",
+          "result_detail": "Normal/long EN/long KO/missing optional, all nine events and all three verification modes use only synthetic data and produce no writes."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "test_id": "V-U4.03",
+          "artifact": ".dev/u4-preview-final-results.json",
+          "test_files": [
+            "web/tests/canvas/preview-contract.spec.ts",
+            "web/tests/canvas/preview-distinction.spec.ts"
+          ],
+          "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Normal/long EN/long KO/missing optional, all nine events and all three verification modes use only synthetic data and produce no writes."
         }
       ],
       "blocker": null
@@ -1246,6 +1309,27 @@
           "test_id": "V-U4.04",
           "observed_at": "2026-10-14T07:30:10.564690+00:00",
           "result_detail": "RED->GREEN exact-field recovery: Hold contrast problem opens the existing inspector and focuses Hold button color; corrected render clears only after current validation. 4/4 mounted preview scenarios PASS; Web full 736/736 and type/build PASS."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "test_id": "V-U4.04",
+          "artifact": ".dev/u4-python-contract.txt",
+          "result_detail": "Historical exact-field focus denial retried normally and succeeded. Validation problems carry an exact human field label; Hold contrast recovery opens the existing inspector and focuses Hold button color, then clears only after corrected render."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "test_id": "V-U4.04",
+          "artifact": ".dev/u4-preview-final-results.json",
+          "test_files": [
+            "web/tests/canvas/preview-contract.spec.ts",
+            "web/tests/canvas/preview-distinction.spec.ts"
+          ],
+          "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Historical exact-field focus denial retried normally and succeeded. Validation problems carry an exact human field label; Hold contrast recovery opens the existing inspector and focuses Hold button color, then clears only after corrected render."
         }
       ],
       "blocker": null
@@ -1295,6 +1379,27 @@
           "test_id": "V-U4.05",
           "observed_at": "2026-10-14T07:32:25.239474+00:00",
           "result_detail": "Mounted preview contract 5/5 PASS including 320/375/390/600 widths, exact source/text, images-off resource suppression, dark-mode approximation labeling, stale/failure recovery and live-vs-saved distinction. Full Web 736/736 + type/build PASS."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "test_id": "V-U4.05",
+          "artifact": ".dev/u4-python-contract.txt",
+          "result_detail": "Historical simulation denial retried normally and succeeded. 320/375/390/600 views plus HTML/plain/source and clearly labeled Images off/Dark-mode approximation/Normal inert simulations PASS; UI explicitly says not Gmail/Outlook/Apple/mobile acceptance."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "test_id": "V-U4.05",
+          "artifact": ".dev/u4-preview-final-results.json",
+          "test_files": [
+            "web/tests/canvas/preview-contract.spec.ts",
+            "web/tests/canvas/preview-distinction.spec.ts"
+          ],
+          "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Historical simulation denial retried normally and succeeded. 320/375/390/600 views plus HTML/plain/source and clearly labeled Images off/Dark-mode approximation/Normal inert simulations PASS; UI explicitly says not Gmail/Outlook/Apple/mobile acceptance."
         }
       ],
       "blocker": null
@@ -1308,7 +1413,7 @@
       "pass_criterion": "V-U4.06: database and request interception show zero save/issuance/outbox/OTP/decision writes; no real PIN/token/recipient or remote asset fetch; role isolation, resource limits and error redaction verified.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "NOT_RUN",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -1320,6 +1425,27 @@
           "test_id": "V-U4.06",
           "observed_at": "2026-10-14T05:52:53.228929+00:00",
           "result_detail": "Focused remaining-WBS API/renderer suite 32/32 PASS at current exact source. No live SMTP, issuance, decision or external execution."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "test_id": "V-U4.06",
+          "artifact": ".dev/u4-python-contract.txt",
+          "result_detail": "Unsaved preview is admin-scoped/read-only/inert with zero save/issuance/outbox/decision writes; iframe sandbox/CSP and synthetic sample material remain nonauthorizing."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "test_id": "V-U4.06",
+          "artifact": ".dev/u4-preview-final-results.json",
+          "test_files": [
+            "web/tests/canvas/preview-contract.spec.ts",
+            "web/tests/canvas/preview-distinction.spec.ts"
+          ],
+          "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Unsaved preview is admin-scoped/read-only/inert with zero save/issuance/outbox/decision writes; iframe sandbox/CSP and synthetic sample material remain nonauthorizing."
         }
       ],
       "blocker": null
@@ -1353,6 +1479,27 @@
           "test_id": "V-U4.07",
           "observed_at": "2026-10-14T07:30:10.564690+00:00",
           "result_detail": "Mounted Notifications preview-contract 4/4 PASS on current source: stale ordering, explicit failure recovery, sample/mode/event/width/source-text consistency. Synthetic transport only."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "test_id": "V-U4.07",
+          "artifact": ".dev/u4-python-contract.txt",
+          "result_detail": "Diagnostics stay collapsed by default and match current renderer revision, HTML bytes/protected-action count and exact current source; inspection cannot execute HTML."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "test_id": "V-U4.07",
+          "artifact": ".dev/u4-preview-final-results.json",
+          "test_files": [
+            "web/tests/canvas/preview-contract.spec.ts",
+            "web/tests/canvas/preview-distinction.spec.ts"
+          ],
+          "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Diagnostics stay collapsed by default and match current renderer revision, HTML bytes/protected-action count and exact current source; inspection cannot execute HTML."
         }
       ],
       "blocker": null
@@ -1386,6 +1533,27 @@
           "test_id": "V-U4.08",
           "observed_at": "2026-10-14T07:30:10.564690+00:00",
           "result_detail": "Mounted distinction scenario PASS: unsaved live preview is separate from saved revision preview/test; editing invalidates and disables saved-preview/test evidence; zero writes."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30",
+          "test_id": "V-U4.08",
+          "artifact": ".dev/u4-python-contract.txt",
+          "result_detail": "Live unsaved central preview and saved-revision preview/test remain separately labeled; edits invalidate and disable saved evidence without a write."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:32:39.487335+00:00",
+          "test_id": "V-U4.08",
+          "artifact": ".dev/u4-preview-final-results.json",
+          "test_files": [
+            "web/tests/canvas/preview-contract.spec.ts",
+            "web/tests/canvas/preview-distinction.spec.ts"
+          ],
+          "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Live unsaved central preview and saved-revision preview/test remain separately labeled; edits invalidate and disable saved evidence without a write."
         }
       ],
       "blocker": null

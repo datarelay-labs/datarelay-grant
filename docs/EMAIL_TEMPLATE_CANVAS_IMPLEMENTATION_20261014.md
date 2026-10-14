@@ -738,3 +738,34 @@ recovery and live-versus-saved distinction. Full Web unit suite 736/736 and
 TypeScript/Vite build PASS. Evidence: `.dev/u4-preview-final.txt`,
 `.dev/u4-preview-final-results.json`, `.dev/u4-05-web-full.txt`,
 `.dev/u4-05-web-check.txt`. Real mail-client qualification remains U7.04.
+
+
+### U4 canonical preview contract — exact-field recovery and simulation retries completed
+
+The previously denied U4.04 exact-field recovery and U4.05 labeled simulation
+operations were retried normally on the same dev-atlas target and succeeded.
+Preview validation problems now carry an exact human field label in addition to
+the protected block. Recovery selects the existing block inspector, expands only
+the disclosure containing that field when needed, and focuses that exact input;
+for example a Hold contrast error focuses `Hold button color`, not the first
+unrelated control. Correcting it starts a new render and the stale/error state
+clears only after that matching response.
+
+The inert layout preview now has explicit Normal, Images off and Dark-mode
+approximation controls. Images-off removes image elements before the existing
+resource-denying document gate; dark mode is deliberately labeled as an
+approximation and only filters the local sandboxed iframe. The UI states that
+these simulations are **not** Gmail, Outlook, Apple Mail or mobile-client
+acceptance. No CSP/resource/auth boundary was relaxed.
+
+Qualification: renderer + preview workflow Python **30/30 PASS**; full Web units
+**736/736 PASS**; TypeScript/Vite PASS. Mounted `preview-contract.spec.ts` plus
+`preview-distinction.spec.ts` **5/5 PASS**: exact-field contrast recovery,
+out-of-order response rejection, visible stale/error recovery, four synthetic
+sample kinds, all nine events, three verification modes, 320/375/390/600 widths,
+exact HTML/plain/source views, collapsed diagnostics, labeled simulations and
+live-unsaved versus saved-preview separation. All mounted state-write ledgers
+remain empty. Evidence: `.dev/u4-python-contract.txt`,
+`.dev/u4-preview-final.txt`, `.dev/u4-preview-final-results.json`,
+`.dev/u4-web-full.txt`, `.dev/u4-web-check.txt`. No deployed-development or
+real-client/person acceptance is inferred.
