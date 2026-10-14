@@ -676,3 +676,27 @@ Evidence: `.dev/u2-authoring-qualification.txt` and
 `.dev/u2-authoring-qualification-results.json`. These are mounted interaction
 passes only; deployment, actual mailbox/client and independent-person acceptance
 remain separate.
+
+
+### U3.01 / U3.03 presentation and palette retry completion
+
+The historical U3.03 mobile/palette source operation was retried normally on the
+same dev-atlas target and succeeded. Palette changes now preserve any current
+layout revision at or above 5, so a layout-7 optional-content draft cannot be
+silently downgraded by choosing a curated or custom color. Curated Light/Warm/Dark
+controls use a compact three-column presentation at narrow widths; custom mail
+colors remain under the Advanced disclosure. This remains mail-only presentation
+and does not alter the application or Foundation theme.
+
+Server presentation tests **28/28 PASS** across all nine events in EN/KO, including
+status/title/explanation/context/action/details/verification hierarchy, readable
+palette enforcement, crafted invalid color rejection and save/reopen persistence.
+Mounted Notifications `mail-palette.spec.ts` plus recipient contracts **7/7 PASS**:
+desktop hierarchy/save/reopen, 390px contrast failure and curated recovery/reset
+with no horizontal overflow, layout-7 non-downgrade, S/M/L mobile controls,
+canonical action identity/verification guidance, safe rich wording/footer and
+legacy upgrade. Full Web **735/735 PASS**, TypeScript/Vite and scoped Ruff PASS.
+Evidence: `.dev/u3-01-03-python.txt`, `.dev/u3-01-03-browser.txt`,
+`.dev/u3-01-03-browser-results.json`, `.dev/u3-palette-web-full.txt`,
+`.dev/u3-palette-web-check.txt`. Real Gmail/Outlook/Apple/iOS rendering remains
+separate U7.04 acceptance.

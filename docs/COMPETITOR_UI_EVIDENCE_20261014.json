@@ -854,7 +854,7 @@
       "pass_criterion": "V-U3.01: golden outputs and actual rendered screenshots verify hierarchy and required fields across presets; optional metadata may reorder only within a bounded summary region; Compact never hides required context or security notice.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -881,6 +881,26 @@
             38510666077
           ],
           "scope": "Nine events EN/KO, immutable status and required hierarchy, compiler old/new byte stability; real recipients/deployed acceptance NOT_RUN."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:26:39.935018+00:00",
+          "source_head": "9bd20a85f17e90044d3a2e3201a553e2fc3df073",
+          "test_id": "V-U3.01",
+          "artifact": ".dev/u3-01-03-python.txt",
+          "test_file": "tests/test_email_presentation_v5.py",
+          "result_detail": "28/28 presentation/contrast/persistence cases PASS: all nine events in EN/KO have immutable status and required hierarchy; protected decisions/details/verification order remains server-rendered."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:26:39.935018+00:00",
+          "source_head": "9bd20a85f17e90044d3a2e3201a553e2fc3df073",
+          "test_id": "V-U3.01",
+          "artifact": ".dev/u3-01-03-browser-results.json",
+          "test_file": "web/tests/canvas/mail-palette.spec.ts",
+          "result_detail": "Mounted Notifications desktop render verifies event status, explanation, protected action-before-verification hierarchy and saved/reopened dark palette without publication. Synthetic transport; no real mail client."
         }
       ],
       "blocker": null
@@ -926,9 +946,9 @@
       "depends_on": "U3.02",
       "verification_id": "V-U3.03",
       "pass_criterion": "V-U3.03: valid palette persists; insufficient text contrast and invisible/overflow/hide styles rejected by server even through crafted JSON; decision meaning is visible in text, not color only; outgoing mail colors do not alter app/Foundation theme.",
-      "status": "BLOCKED",
-      "source": "IN_PROGRESS",
-      "interaction": "IN_PROGRESS",
+      "status": "OPEN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -947,16 +967,30 @@
             "web/tests/unit/email-palette.test.ts"
           ],
           "pending_native_browser_scenario": ".dev/u3-palette-blocked/mail-palette.spec.ts"
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:26:39.935018+00:00",
+          "test_id": "V-U3.03",
+          "source_paths": [
+            "web/src/email_palette.ts",
+            "web/src/email_palette_controls.tsx",
+            "tests/test_email_presentation_v5.py"
+          ],
+          "result_detail": "Historical palette mobile/polish denial retried normally on same dev-atlas target and succeeded. Palette operations preserve layout >=5 including v7 optional content; curated controls are compact 3-column; custom controls stay collapsed. Server rejects unreadable, non-hex, injected/extra palette data. Full Web 735/735 and type/build PASS."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:26:39.935018+00:00",
+          "test_id": "V-U3.03",
+          "artifact": ".dev/u3-01-03-browser-results.json",
+          "test_file": "web/tests/canvas/mail-palette.spec.ts",
+          "result_detail": "3/3 palette scenarios PASS: desktop save/reopen, 390px custom contrast failure -> stale preview -> curated recovery/reset with no overflow, and v7 optional-content palette edit never downgrades layout. No app/Foundation theme change."
         }
       ],
-      "blocker": {
-        "class": "PLATFORM_SAFETY_DENIAL",
-        "tool": "Remote_Desktop_Commander.start_process",
-        "target": "dev-atlas: pending mobile property-inspector test setup and compact palette-control polish",
-        "message": "요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.",
-        "effect": "Correction not written; source palette/server/desktop functionality is implemented; mobile setup remains unqualified. No bypass.",
-        "bypassed": false
-      }
+      "blocker": null
     },
     {
       "id": "U3.04",

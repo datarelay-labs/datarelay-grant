@@ -15,6 +15,6 @@ export function mailPaletteContrast(foreground:string,background:string):number 
  return (Math.max(light,dark)+.05)/(Math.min(light,dark)+.05);
 }
 export function applyEmailPalette(value:EmailDesign,palette:keyof typeof emailPalettes):EmailDesign {
- return {...structuredClone(value),shared_layout_revision:5,palette:{...emailPalettes[palette]}};
+ return {...structuredClone(value),shared_layout_revision:value.shared_layout_revision>=5?value.shared_layout_revision:5,palette:{...emailPalettes[palette]}};
 }
 export function resetEmailPalette(value:EmailDesign):EmailDesign{return applyEmailPalette(value,'light');}
