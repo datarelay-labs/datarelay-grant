@@ -1,9 +1,11 @@
 <!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 BEGIN -->
 ## Current priority and completion truth — competitor UI only
 
-The owner requires exclusive completion of the competitor-derived UI implementation before other work. [Mandatory 10-milestone / 68-task WBS](COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md) and [per-task evidence ledger](COMPETITOR_UI_EVIDENCE_20261014.json) govern current claims. The source lane reached `3c12a12` (canvas-first email authoring and reviewed publication) during this documentation update; retain that implementation and verify the first unfinished WBS behavior/evidence, not rebuild the earlier form editor.
+The mandatory 10-milestone / 68-task WBS and per-task evidence ledger remain current authority. Product source `4fe71b4b96c66ed80e7c67138c784e17b0714435` is qualified by focused mounted editor/Notifications 6/6 PASS, keyboard/focus/touch qualification 3/3 PASS, Web unit 738/738 PASS, and TypeScript/production build PASS. Source + mounted interaction evidence is complete for U1–U5, U6.01–U6.05, U7.01–U7.03 and U8.01–U8.07.
 
-This update registers and validates the plan; it does NOT certify all 68 tasks, deploy the new UI, run real mail/client/user acceptance or release anything. Full historical requirement reconciliation remains OPEN because the original document-read batch was again platform-blocked; original sources and ET-T01–24 / 121 user-case identities are retained, not guessed or waived. Separate source / interaction / dev deployment / acceptance counts; no whole-product percentage until the full denominator is reconciled. Earlier completion headings below describe their historical scope only and do not close this WBS.
+This is not full product acceptance. U0.01/U0.03/U8.08 remain blocked because retained source S02 is unavailable. U6.06 and U7.04–U7.06 require approved real receipt/mail clients/independent users/usability participant; U7.07 authenticated deployed-task interaction remains unrun. U9.01/U9.02 therefore remain OPEN. Source, interaction, dev deployment and actual acceptance stay separately reported.
+
+Historical ROADMAP/STATUS bytes used by the no-omission crosswalk are retained immutably under `docs/history/COMPETITOR_UI_ORIGINAL_*_20261014.md`; current status updates no longer mutate those original evidence bytes.
 <!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 END -->
 
 ## 2026-10-14 — Email editor source checkpoint (ET-1 through ET-5 partial)

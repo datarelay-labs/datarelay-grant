@@ -70,7 +70,7 @@
   "original_user_scenario_count": 121,
   "original_checks_reconciled": true,
   "product_acceptance_claimed": false,
-  "document_sha256": "cc5af5652fd9860002f1ddd2169c202705a3852bf56676f6e92a36345dff0ed1",
+  "document_sha256": "a1ebc771edc3be6971c3c1bc6b661bd0d0c84aca0580c3e005822b17f406c2c5",
   "created_at": "2026-10-14T02:49:16.228933+00:00",
   "tasks": [
     {
@@ -80,13 +80,26 @@
       "depends_on": "None",
       "verification_id": "V-U0.01",
       "pass_criterion": "V-U0.01: mechanically check all 20 IDs and 7 audit IDs, source references and row links; zero unassigned KNOWN accepted requirements. This is document coverage only.",
-      "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
-      "dev_deployment": "NOT_RUN",
-      "acceptance": "NOT_RUN",
-      "evidence": [],
-      "blocker": null
+      "status": "BLOCKED",
+      "source": "BLOCKED",
+      "interaction": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "evidence": [
+        {
+          "gate": "interaction",
+          "justification": "U0.01 is a historical source/traceability control and defines no product interaction."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "U0.01 is a historical source/traceability control and has no deployment action."
+        },
+        {
+          "gate": "acceptance",
+          "justification": "U0.01 is a historical source/traceability control and has no persona or mail-client acceptance action."
+        }
+      ],
+      "blocker": "Retained original S02 UI reanalysis artifact remains unavailable after the already-completed permitted Project/Library/repository searches. It must not be invented or replaced by repeated competitor research."
     },
     {
       "id": "U0.02",
@@ -110,11 +123,11 @@
       "depends_on": "Current permitted original source access",
       "verification_id": "V-U0.03",
       "pass_criterion": "V-U0.03: extract exact source IDs/sections, account for accepted/rejected/optional/upstream/previously verified items and assign every accepted item to WBS+test evidence; unmatched=0. CURRENTLY OPEN: original source retry succeeded and exact 24+121 IDs are mapped; remaining narrative/source/evidence reconciliation is not complete.",
-      "status": "OPEN",
-      "source": "IN_PROGRESS",
-      "interaction": "NOT_RUN",
-      "dev_deployment": "NOT_RUN",
-      "acceptance": "NOT_RUN",
+      "status": "BLOCKED",
+      "source": "BLOCKED",
+      "interaction": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "evidence": [
         {
           "kind": "NORMAL_ORIGINAL_TOOL_TARGET_RETRY_SUCCEEDED",
@@ -129,9 +142,21 @@
           "artifact": "tests/test_competitor_ui_wbs.py",
           "observed_at": "2026-10-14T03:45:16.052817+00:00",
           "result": "11/11 PASS; exact source row/hash/IDs and invalid WBS/tampering/false acceptance rejected; not a product completion claim."
+        },
+        {
+          "gate": "interaction",
+          "justification": "U0.03 is a historical source/traceability control and defines no product interaction."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "U0.03 is a historical source/traceability control and has no deployment action."
+        },
+        {
+          "gate": "acceptance",
+          "justification": "U0.03 is a historical source/traceability control and has no persona or mail-client acceptance action."
         }
       ],
-      "blocker": null
+      "blocker": "Retained original S02 UI reanalysis artifact remains unavailable after the already-completed permitted Project/Library/repository searches. It must not be invented or replaced by repeated competitor research."
     },
     {
       "id": "U0.04",
@@ -2915,5 +2940,5 @@
     "product_acceptance": "NOT_RUN"
   },
   "original_crosswalk_path": "docs/COMPETITOR_UI_ORIGINAL_CROSSWALK_20261014.json",
-  "original_crosswalk_sha256": "e8641116253a48193c1359e5fc7909659c265bc82acad8905107e29c02d20454"
+  "original_crosswalk_sha256": "14a594a99af591fc44c581083689ec075c44d44d77d0cf34e068654f67d5dab6"
 }

@@ -7,30 +7,22 @@
 `PRIORITY=P0_COMPETITOR_UI_ONLY`; `ALLOW_UNRELATED_WORK=false`.
 Canonical detailed execution plan: [10 milestones / 68 registered WBS tasks](docs/COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md).
 Per-task evidence: [UI evidence ledger](docs/COMPETITOR_UI_EVIDENCE_20261014.json).
-Every task states its visible outcome, implementation target, dependencies, verification ID and binary PASS criteria.
 
-| Order | Milestone / deliverable |
-| --- | --- |
-| U0 | Source-to-requirement coverage, canonical priority and evidence discipline; complete historical reconciliation is still OPEN. |
-| U1 | Canvas, outline, contextual inspector, safe selection and mobile/keyboard interaction. |
-| U2 | Inventory, thumbnails, nine-event content, variables, scope, presets/reset and whole-draft history. |
-| U3 | Required mail hierarchy, bounded styling, protected decisions/details and PIN/OTP/MFA guidance. |
-| U4 | Same-render preview, synthetic samples, stale-result safety, actionable errors and diagnostics. |
-| U5 | Draft/published distinction, before/after, authoritative policy impact, CAS, history/rollback and migration. |
-| U6 | Required brand/logo/assets/CID and exact-saved-revision reviewed self-test mail; no silent deferral. |
-| U7 | Exact-source tests/build, mounted tasks, dev visibility, accessibility, actual user/client acceptance. |
-| U8 | Earlier accepted competitor-derived Grant UI gaps; reuse verified prior work and preserve Foundation ownership. |
-| U9 | Zero unmapped accepted requirements, all mandatory evidence, coherent final status and priority-lock exit. |
+Current product source is `4fe71b4b96c66ed80e7c67138c784e17b0714435`; latest evidence coordination is `f2d77409e4785d12137b0e639e1e340dd765699f`.
+- U1–U5, U6.01–U6.05, U7.01–U7.03 and U8.01–U8.07 have source + mounted interaction PASS evidence.
+- Current focused mounted editor/Notifications 6/6 PASS; qualification keyboard/focus/touch 3/3 PASS; full Web unit 738/738 PASS; TypeScript + production build PASS.
+- U0.04 preservation and U0.05 evidence-model gates PASS. Original G12 and stash remain protected.
+- U0.01/U0.03/U8.08 are blocked on retained historical source S02, which remains unavailable after the already-completed permitted searches. Do not invent it or repeat competitor research.
+- U6.06 and U7.04–U7.06 require approved real receipt/mail-client/independent-person/usability conditions. U7.07 has exact dev deployment provenance but authenticated deployed-task interaction remains unrun.
+- U9.01/U9.02 therefore cannot close and the exclusive priority lock remains active.
 
-**Next action:** continue the existing source lane's FIRST UNFINISHED WBS/evidence task at actual current HEAD. Source advanced to `3c12a12` during planning; do not restart completed canvas/publication work or ET-1/2 because older summaries say otherwise. Reconcile its current tests/CI and missing UI outcomes against this WBS, then continue dependency order. No second worker/worktree.
+**Next action:** continue only dependency-ready evidence/acceptance work in this lane. Align current GitHub Work Packet/PR coordination, then attempt only legitimately available deployed/authenticated acceptance. If S02 or approved real actors/mailboxes/clients are unavailable, record the exact blocker; do not create replacement research, fixture acceptance or unrelated work.
 
-**PASS is not a form field or green unit count.** Track source / mounted interaction / dev deployment / actual acceptance separately. Final completion requires every applicable mandatory gate and zero unmatched historical requirements. Current historical document-read retry was platform-blocked; that coverage remains OPEN, not silently omitted. A blocked required row cannot be counted PASS or unlock unrelated work; select another dependency-ready row INSIDE this scope only.
+Source / mounted interaction / development deployment / actual acceptance are independent evidence levels. A required blocked or unrun gate stays incomplete. Existing machine evidence never substitutes for real mail-client, independent-person or novice-usability acceptance.
 
-Foundation common UI stays upstream and unchanged. Preserve G12, Inbox stash and ongoing work. Existing approvals/safety boundaries remain; this priority does not authorize production, secrets/permissions, destructive effects, live SMTP, real external execution, merge or release. Optional ET-7 and unrelated M1–M8/SM work are paused until this scope closes or the owner explicitly changes it.
-
-Document structure was checked: 68 task rows, 10 milestones, 20 family dispositions and 7 audit mappings. Five invalid-completion/missing-evidence cases were rejected by a local checker prototype.
-The checker prototype is NOT SHIPPED: static-style fixes were platform-blocked. It remains uncommitted for normal future reconciliation. Final product completion is OPEN; the per-task evidence and historical-coverage gates above remain mandatory.
-**All older priority/next-action/blanket completion statements below are historical where they conflict with this owner-directed block.**
+The immutable historical bytes formerly pinned at live ROADMAP/STATUS paths are retained under `docs/history/COMPETITOR_UI_ORIGINAL_*_20261014.md` so current coordination can advance without rewriting original traceability evidence.
+Foundation common UI stays upstream and unchanged. Preserve G12 and Inbox stash. This priority does not authorize production, secrets/permissions, destructive effects, live SMTP, real external execution, merge or release.
+All older priority/next-action/blanket completion statements below are historical where they conflict with this owner-directed block.
 <!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 END -->
 
 

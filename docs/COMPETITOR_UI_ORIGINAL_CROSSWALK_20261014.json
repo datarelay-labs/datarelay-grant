@@ -99,14 +99,14 @@
       "identical_mirror_source": "https://github.com/datarelay-labs/datarelay-grant/issues/67#issuecomment-6159373603"
     },
     {
-      "path": "ROADMAP.md",
+      "path": "docs/history/COMPETITOR_UI_ORIGINAL_ROADMAP_20261014.md",
       "sha256": "d33732dd2ac780e24488efe92839a77ed7779e2dc5c8da8599cd333665d42e20",
       "line_count": 2294,
       "access": "PASS_RETAINED_REPO_SOURCE",
       "observed_at": "2026-10-14T08:56:56.545102+00:00"
     },
     {
-      "path": "docs/STATUS.md",
+      "path": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "sha256": "922dd315b1d2c120d91e9dd13b7c5a9e81a49ae0a3e4411b15c24a21c9518d11",
       "line_count": 1640,
       "access": "PASS_RETAINED_REPO_SOURCE",
@@ -3028,7 +3028,7 @@
     },
     {
       "id": "G-CI-1",
-      "source": "ROADMAP.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_ROADMAP_20261014.md",
       "start_line": 2130,
       "end_line": 2130,
       "source_span_sha256": "fee1d4d65a9bc017a75c61a3834ce0b48580f14b1fb26c22f38a8c6f4d12c09d",
@@ -3046,7 +3046,7 @@
     },
     {
       "id": "G-CI-2",
-      "source": "ROADMAP.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_ROADMAP_20261014.md",
       "start_line": 2131,
       "end_line": 2132,
       "source_span_sha256": "1da2084fddf0453ff2f4978320076b9490cb8808c8e11b6de1207686d4f18c5b",
@@ -3065,7 +3065,7 @@
     },
     {
       "id": "G-CI-3",
-      "source": "ROADMAP.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_ROADMAP_20261014.md",
       "start_line": 2133,
       "end_line": 2133,
       "source_span_sha256": "20f3dac93bf4d0abd2d4b7eb7deb01ae98ef179b28b2967768046823d1ed9fd2",
@@ -3082,7 +3082,7 @@
     },
     {
       "id": "G-CI-4",
-      "source": "ROADMAP.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_ROADMAP_20261014.md",
       "start_line": 2135,
       "end_line": 2136,
       "source_span_sha256": "d704cab38c76e6dc97dd93afd4a08b890fbb0473f43d4beee9bda72d77bc3020",
@@ -3100,7 +3100,7 @@
     },
     {
       "id": "G-CI-5",
-      "source": "ROADMAP.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_ROADMAP_20261014.md",
       "start_line": 2137,
       "end_line": 2137,
       "source_span_sha256": "00b9aadb5ee6940394ff73709b76fc79c5da1545c5f4480bc78c736238b38415",
@@ -3115,7 +3115,7 @@
     },
     {
       "id": "B2-FOUNDATION",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 694,
       "end_line": 715,
       "source_span_sha256": "504e8609f96319194fa31050acebb831af66e095afd530ef443fc82f8b94ba82",
@@ -3132,7 +3132,7 @@
     },
     {
       "id": "B3-APPROVER-GROUP",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 291,
       "end_line": 306,
       "source_span_sha256": "f4c757e5739e8834c110fe10b6f157eb72bd10516f7f26ffd2497a332ce2f7c4",
@@ -3148,7 +3148,7 @@
     },
     {
       "id": "B3-ADMIN-CAPABILITY",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 401,
       "end_line": 428,
       "source_span_sha256": "b8967bccc76d7c38e999ea811bd9838ce6fd4c1f4b91d32aba19d6b392a6f9d0",
@@ -3164,7 +3164,7 @@
     },
     {
       "id": "B3-MAIL-TEST",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 508,
       "end_line": 521,
       "source_span_sha256": "20a376190df99c5b1333b1380100e69f7b5f9614d01e344cba1290a953da3d8a",
@@ -3182,7 +3182,7 @@
     },
     {
       "id": "B4-TEMPLATE-DELIVERY-MOBILE",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 338,
       "end_line": 357,
       "source_span_sha256": "78c36e0054504c97f59aa0e065b4b2c00ce1f833bfdae3da77ce0be40169a8fe",
@@ -3198,7 +3198,7 @@
     },
     {
       "id": "B4-POLICY-MOBILE",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 382,
       "end_line": 400,
       "source_span_sha256": "25562fcb0094933dd2a2e11daae7935188f0c11cc0d4554349731ed5c75a5d4f",
@@ -3214,7 +3214,7 @@
     },
     {
       "id": "B4-POLICY-TEMPLATE-CAS",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 444,
       "end_line": 462,
       "source_span_sha256": "ddf99103986a3f23ddb5a4af64e8e6cdd8f3ba980ee77b7caca7787a222806fe",
@@ -3232,7 +3232,7 @@
     },
     {
       "id": "B4-DELIVERY-FILTER",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 540,
       "end_line": 553,
       "source_span_sha256": "0a796e4ac032885c74366122fe278e7c71239a1a2e4e874a3aa39cad502c618a",
@@ -3248,7 +3248,7 @@
     },
     {
       "id": "B5-EXCEPTION-INTEGRATION-DIRS",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 252,
       "end_line": 272,
       "source_span_sha256": "5eeaa8919888a3f08cd73993c61a557f61183cbdd886afe2ebfd043a543ad4f3",
@@ -3265,7 +3265,7 @@
     },
     {
       "id": "B5-OPS-MOBILE",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 307,
       "end_line": 322,
       "source_span_sha256": "875c4f1a24ae4a080a8eff4cabf74763aff7d6a265305aa9d116fb5f4afb1fb3",
@@ -3281,7 +3281,7 @@
     },
     {
       "id": "B5-AUDIT-CARDS",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 323,
       "end_line": 337,
       "source_span_sha256": "e0ac0d2a1cb40709503727b18e26dd0a510bc9988e7c6640ac751d3c98431435",
@@ -3297,7 +3297,7 @@
     },
     {
       "id": "B5-BACKUP-CLI",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 429,
       "end_line": 443,
       "source_span_sha256": "583972f5d3aed1dcddd6ff51ad4d5346bd519cb5ea7176004721e702c8a8e04f",
@@ -3309,7 +3309,7 @@
     },
     {
       "id": "B5-AUDIT-WORKLIST",
-      "source": "docs/STATUS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_STATUS_20261014.md",
       "start_line": 554,
       "end_line": 570,
       "source_span_sha256": "ce4c14296afef999a07c93df8209516e31708c58719ca20b4693b84f156fdc22",
