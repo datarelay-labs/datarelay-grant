@@ -204,9 +204,38 @@ def validate_crosswalk(data: dict, wbs_ids: set[str], root: Path = ROOT) -> dict
                 candidate = (root / test_path).resolve()
                 if not candidate.is_relative_to(root.resolve()) or not candidate.is_file() or title not in candidate.read_text():
                     raise ValueError(f"{row.get('id')}: narrative test reference is not present")
+    disposition = data.get('s02_disposition') or {}
+    if (data.get('all_historical_narrative_requirements_reconciled') is not True
+            or data.get('remaining_reconciliation') != []
+            or disposition.get('raw_artifact_recovered') is not False
+            or disposition.get('owner_disposition') !=
+            'ACCEPT_RETAINED_EXTRACTED_PROMISE_COVERAGE_AS_FINAL_S02_TRACEABILITY_SCOPE'
+            or disposition.get('product_acceptance_implied') is not False
+            or disposition.get('reopen_if_raw_artifact_recovered_with_material_delta') is not True):
+        raise ValueError('S02 owner disposition is incomplete or falsely claims source/acceptance')
+    wbs_text = (root / 'docs/COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md').read_text()
+    promise_lines = [line for line in wbs_text.splitlines() if line.startswith('S02 promise coverage:')]
+    if len(promise_lines) != 1 or hashlib.sha256(promise_lines[0].encode()).hexdigest() != disposition.get('promise_coverage_sha256'):
+        raise ValueError('Retained S02 promise coverage changed without owner reconciliation')
+    s02_groups = data.get('s02_mandatory_groups', [])
+    expected_s02 = {f'S02-{i:02}' for i in range(1, 17)}
+    if (len(s02_groups) != 16 or {row.get('id') for row in s02_groups} != expected_s02
+            or disposition.get('mandatory_group_count') != 16):
+        raise ValueError('S02 mandatory retained groups are missing or duplicated')
+    for row in s02_groups:
+        links = row.get('wbs', [])
+        if (not links or len(links) != len(set(links)) or not set(links) <= wbs_ids
+                or row.get('disposition') != 'MANDATORY_RETAINED_OWNER_DISPOSITION'):
+            raise ValueError(f"{row.get('id')}: invalid S02 owner-disposition mapping")
+    optional = data.get('s02_optional_dispositions', [])
+    if (len(optional) != 1 or disposition.get('optional_group_count') != 1
+            or optional[0].get('id') != 'S02-O01'
+            or optional[0].get('raw_html_editor') != 'NOT_ADOPTED'):
+        raise ValueError('S02 optional/non-adopted disposition changed')
     return {'et_checks': 24, 'original_user_scenarios': 121,
             'historical_gap_rows': 9, 'structured_findings': len(findings), 'original_ui_audit_rows': 7,
-            'historical_narrative_atoms': len(narrative),
+            'historical_narrative_atoms': len(narrative), 's02_mandatory_groups': len(s02_groups),
+            'historical_traceability_denominator': 241,
             'traceability': 'PASS', 'product_acceptance': False}
 
 
@@ -217,6 +246,9 @@ def self_test(text: str, data: dict) -> int:
     bad_cases.append(bad)
     bad = copy.deepcopy(data)
     bad['tasks'][0]['source'] = 'PASS'
+    bad['tasks'][0]['evidence'] = [
+        item for item in bad['tasks'][0].get('evidence', []) if item.get('gate') != 'source'
+    ]
     bad_cases.append(bad)
     bad = copy.deepcopy(data)
     bad['allow_unrelated_work'] = True

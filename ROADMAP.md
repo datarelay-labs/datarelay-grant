@@ -12,13 +12,13 @@ Current product source remains `4fe71b4b96c66ed80e7c67138c784e17b0714435`. Exact
 - U1–U5, U6.01–U6.05, U7.01–U7.03 and U8.01–U8.07 have source + mounted interaction PASS evidence.
 - Focused mounted editor/Notifications 6/6 PASS; qualification keyboard/focus/touch 3/3 PASS; full Web unit 738/738 PASS; TypeScript + production build PASS.
 - U0.02 coordination, U0.04 preservation and U0.05 evidence-model gates PASS. Original G12 and stash remain protected.
-- U0.01/U0.03/U8.08 are blocked on retained historical source S02, unavailable after the already-completed permitted searches. Do not invent it or repeat competitor research.
+- **R2 S02/no-omission COMPLETE:** raw S02 remains unavailable and is not claimed recovered; owner disposition accepts the retained 16 mandatory S02 promise groups as the final S02 traceability scope with automatic reopen on material delta. U0.01/U0.03/U8.08/U9.01 PASS.
 - Current development HTTPS preview serves the current Web build with independent byte-matched readback; U7.07 source + dev deployment PASS, while authenticated same-UI-task interaction remains blocked without an authorized persona/credential path.
 - **R1 deployment reconciliation COMPLETE:** 52 implementation-qualified rows reconciled; 50 dev-deployment PASS and U7.02/U7.03 N/A because U7.07 owns deployment provenance. Acceptance remains unchanged/NOT_RUN. See docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md.
 - U6.06 and U7.04–U7.06 have explicit external acceptance blockers: authorized real SMTP/mailbox receipt, actual Gmail/Outlook/Apple/iOS clients, independently acting real users/mailboxes, and a measured novice participant.
-- U9.01/U9.02 therefore remain OPEN; U9.03/U9.04 cannot close until those dependencies do. The exclusive priority lock remains active.
+- U9.01 no-omission traceability PASS. U9.02 remains OPEN on actual acceptance; U9.03/U9.04 cannot close until U9.02 does. The exclusive priority lock remains active.
 
-**Next action:** no safe dependency-ready product implementation remains in this lane. Resume only when retained S02 or one of the explicitly required approved real acceptance/authenticated-persona conditions becomes available. Do not create replacement research, fixture acceptance, browser-emulation acceptance or unrelated work. Exact current HEAD/CI must be read from #37/#67/PR100 before any resumed action.
+**Next action (R3):** execute only approved real acceptance conditions: U6.06 self-test receipt, U7.04 real mail-client matrix, U7.05 independent real users/mailboxes, U7.06 measured novice usability, and U7.07 authenticated deployed-task interaction. Do not substitute fixtures/emulation or reopen S02 research. Exact current HEAD/CI must be read from #37/#67/PR100 before any resumed action.
 
 Source / mounted interaction / development deployment / actual acceptance are independent evidence levels. A required blocked or unrun gate stays incomplete. Existing machine evidence never substitutes for real mail-client, independent-person or novice-usability acceptance.
 

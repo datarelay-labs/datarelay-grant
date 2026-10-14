@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "scope": "EXACT_ORIGINAL_IDS_AND_WORDING_TRACEABILITY_NOT_PRODUCT_ACCEPTANCE",
-  "observed_at": "2026-10-14T08:56:56.574601+00:00",
-  "source_head": "f50a218a61b18c0155a7e22d05d27e9434c1f3bb",
+  "observed_at": "2026-10-14T11:09:25.386511+00:00",
+  "source_head": "69ffc843855b98b0fb8addd14ff630e5b03dfb1e",
   "sources": [
     {
       "path": "docs/GRANT_UI_UX_GAP_MATRIX.md",
@@ -2708,13 +2708,9 @@
     }
   ],
   "original_id_mapping_complete": true,
-  "all_historical_narrative_requirements_reconciled": false,
+  "all_historical_narrative_requirements_reconciled": true,
   "product_acceptance": false,
-  "remaining_reconciliation": [
-    "Original S02 retained UI reanalysis artifact remains unlocated after exact Files/Library and bounded repo searches; do not invent or repeat competitor research.",
-    "31 retained P0-2/UX/G-CI/B2-B5/REA/scope narrative atoms are now exact-span pinned and WBS/test mapped where applicable; synthetic/current-source evidence does not replace human/mail-client/external acceptance.",
-    "U8.08 remains open until S02 is recovered or explicitly dispositioned by the owner and all applicable real acceptance gates are completed."
-  ],
+  "remaining_reconciliation": [],
   "original_ui_audit_rows": [
     {
       "id": "UI-01",
@@ -3354,6 +3350,192 @@
       "verification_tests": [],
       "evidence_head": null,
       "verification_artifact": null
+    }
+  ],
+  "s02_disposition": {
+    "raw_artifact_identity": "grant-email-editor-ui-reanalysis-20261014.md sections 3-9",
+    "raw_artifact_recovered": false,
+    "owner_disposition": "ACCEPT_RETAINED_EXTRACTED_PROMISE_COVERAGE_AS_FINAL_S02_TRACEABILITY_SCOPE",
+    "owner_direction": "R2 implementation authorized 2026-10-14",
+    "canonical_retained_source": "docs/COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md",
+    "promise_coverage_sha256": "c68a5c30c331b5fb50a7dd11ed589cc989d83142cc9fb9a3f5eed9eb7229e3d1",
+    "mandatory_group_count": 16,
+    "optional_group_count": 1,
+    "reopen_if_raw_artifact_recovered_with_material_delta": true,
+    "product_acceptance_implied": false,
+    "observed_at": "2026-10-14T11:09:25.386511+00:00"
+  },
+  "s02_mandatory_groups": [
+    {
+      "id": "S02-01",
+      "promise": "inventory/name/thumbnail/usage/history/duplicate",
+      "wbs": [
+        "U2.01"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-02",
+      "promise": "one filled start and three presets",
+      "wbs": [
+        "U2.02"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-03",
+      "promise": "header/context/outline/canvas/inspector",
+      "wbs": [
+        "U1.01",
+        "U1.02"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-04",
+      "promise": "bounded add/move",
+      "wbs": [
+        "U1.05"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-05",
+      "promise": "pointer/keyboard/narrow drawer",
+      "wbs": [
+        "U1.02",
+        "U1.06"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-06",
+      "promise": "one state/inert canvas",
+      "wbs": [
+        "U1.03",
+        "U1.04"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-07",
+      "promise": "nine events/preheader/headings/formatting",
+      "wbs": [
+        "U2.03"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-08",
+      "promise": "scope",
+      "wbs": [
+        "U2.04"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-09",
+      "promise": "variables",
+      "wbs": [
+        "U2.05"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-10",
+      "promise": "reset/restore/history",
+      "wbs": [
+        "U2.06",
+        "U2.07"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-11",
+      "promise": "locale",
+      "wbs": [
+        "U2.08"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-12",
+      "promise": "recipient hierarchy and action parity",
+      "wbs": [
+        "U3.01",
+        "U3.02",
+        "U3.03",
+        "U3.04",
+        "U3.05",
+        "U3.06",
+        "U3.07"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-13",
+      "promise": "sample/error/stale/diagnostics/same preview",
+      "wbs": [
+        "U4.01",
+        "U4.02",
+        "U4.03",
+        "U4.04",
+        "U4.05",
+        "U4.06",
+        "U4.07",
+        "U4.08"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-14",
+      "promise": "before-after/impact/CAS/history/rollback/migration",
+      "wbs": [
+        "U5.01",
+        "U5.02",
+        "U5.03",
+        "U5.04",
+        "U5.05",
+        "U5.06",
+        "U5.07",
+        "U5.08"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-15",
+      "promise": "text-brand/logo/CID/self-test",
+      "wbs": [
+        "U6.01",
+        "U6.02",
+        "U6.03",
+        "U6.04",
+        "U6.05",
+        "U6.06"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    },
+    {
+      "id": "S02-16",
+      "promise": "client/mobile/keyboard/provenance/usability",
+      "wbs": [
+        "U7.01",
+        "U7.02",
+        "U7.03",
+        "U7.04",
+        "U7.05",
+        "U7.06",
+        "U7.07"
+      ],
+      "disposition": "MANDATORY_RETAINED_OWNER_DISPOSITION"
+    }
+  ],
+  "s02_optional_dispositions": [
+    {
+      "id": "S02-O01",
+      "promise": "Constrained inline text editing beyond required inspector-field editing",
+      "disposition": "OPTIONAL_RETAINED_AFTER_REQUIRED_INSPECTOR_EDITING",
+      "raw_html_editor": "NOT_ADOPTED"
     }
   ]
 }

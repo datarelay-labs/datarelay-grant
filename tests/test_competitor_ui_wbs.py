@@ -25,9 +25,11 @@ def test_all_original_exact_ids_and_wording_are_traceable_not_executed():
     assert CHECKER["validate_crosswalk"](CROSSWALK, WBS_IDS) == {
         "et_checks": 24, "original_user_scenarios": 121, "historical_gap_rows": 9,
         "structured_findings": 12, "original_ui_audit_rows": 7, "historical_narrative_atoms": 32,
+        "s02_mandatory_groups": 16, "historical_traceability_denominator": 241,
         "traceability": "PASS", "product_acceptance": False,
     }
-    assert CROSSWALK["all_historical_narrative_requirements_reconciled"] is False
+    assert CROSSWALK["all_historical_narrative_requirements_reconciled"] is True
+    assert CROSSWALK["remaining_reconciliation"] == []
 
 
 @pytest.mark.parametrize("case", [

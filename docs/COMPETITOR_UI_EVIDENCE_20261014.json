@@ -8,8 +8,8 @@
   "allow_unrelated_work": false,
   "baseline_head": "3c12a120d8bed86349c84cb75969fba55324d5f2",
   "registered_wbs_tasks": 68,
-  "historical_coverage_complete": false,
-  "historical_requirement_denominator": null,
+  "historical_coverage_complete": true,
+  "historical_requirement_denominator": 241,
   "known_family_ids": [
     "C01",
     "C02",
@@ -70,7 +70,7 @@
   "original_user_scenario_count": 121,
   "original_checks_reconciled": true,
   "product_acceptance_claimed": false,
-  "document_sha256": "a1ebc771edc3be6971c3c1bc6b661bd0d0c84aca0580c3e005822b17f406c2c5",
+  "document_sha256": "570479aca1170b33ae1760abf9ae477e80c4fec040da9fa2faf8305b50fa3439",
   "created_at": "2026-10-14T02:49:16.228933+00:00",
   "tasks": [
     {
@@ -80,8 +80,8 @@
       "depends_on": "None",
       "verification_id": "V-U0.01",
       "pass_criterion": "V-U0.01: mechanically check all 20 IDs and 7 audit IDs, source references and row links; zero unassigned KNOWN accepted requirements. This is document coverage only.",
-      "status": "BLOCKED",
-      "source": "BLOCKED",
+      "status": "PASS",
+      "source": "PASS",
       "interaction": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
@@ -97,9 +97,18 @@
         {
           "gate": "acceptance",
           "justification": "U0.01 is a historical source/traceability control and has no persona or mail-client acceptance action."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R2_S02_DISPOSITION_20261014.md",
+          "source_head": "69ffc843855b98b0fb8addd14ff630e5b03dfb1e",
+          "test_id": "V-U0.01",
+          "observed_at": "2026-10-14T11:09:25.386511+00:00",
+          "result_detail": "R2 owner disposition fixes the unavailable raw S02 identity without pretending recovery: all 20 family adaptations, 16 retained mandatory S02 promise groups and seven S03 audit IDs have explicit WBS coverage; material raw-S02 delta later reopens this gate."
         }
       ],
-      "blocker": "Retained original S02 UI reanalysis artifact remains unavailable after the already-completed permitted Project/Library/repository searches. It must not be invented or replaced by repeated competitor research."
+      "blocker": null
     },
     {
       "id": "U0.02",
@@ -145,8 +154,8 @@
       "depends_on": "Current permitted original source access",
       "verification_id": "V-U0.03",
       "pass_criterion": "V-U0.03: extract exact source IDs/sections, account for accepted/rejected/optional/upstream/previously verified items and assign every accepted item to WBS+test evidence; unmatched=0. CURRENTLY OPEN: original source retry succeeded and exact 24+121 IDs are mapped; remaining narrative/source/evidence reconciliation is not complete.",
-      "status": "BLOCKED",
-      "source": "BLOCKED",
+      "status": "PASS",
+      "source": "PASS",
       "interaction": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
@@ -176,9 +185,18 @@
         {
           "gate": "acceptance",
           "justification": "U0.03 is a historical source/traceability control and has no persona or mail-client acceptance action."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R2_S02_DISPOSITION_20261014.md",
+          "source_head": "69ffc843855b98b0fb8addd14ff630e5b03dfb1e",
+          "test_id": "V-U0.03",
+          "observed_at": "2026-10-14T11:09:25.386511+00:00",
+          "result_detail": "R2 establishes a 241-unit historical traceability denominator and marks all retained narrative requirements reconciled. Exact ET-T01-T24, 121 user scenarios, gaps/findings/audit/narrative atoms stay pinned; S02 is owner-dispositioned rather than reconstructed."
         }
       ],
-      "blocker": "Retained original S02 UI reanalysis artifact remains unavailable after the already-completed permitted Project/Library/repository searches. It must not be invented or replaced by repeated competitor research."
+      "blocker": null
     },
     {
       "id": "U0.04",
@@ -3458,11 +3476,11 @@
       "depends_on": "U0.03, U8.01–U8.07",
       "verification_id": "V-U8.08",
       "pass_criterion": "V-U8.08: reconcile each original ID, outcome, implementation and exact test evidence; implement any unmatched accepted behavior in explicit child WBS rows; no invented B2–B5 mapping, blanket historic completion or repeated accepted work.",
-      "status": "BLOCKED",
-      "source": "IN_PROGRESS",
-      "interaction": "IN_PROGRESS",
-      "dev_deployment": "NOT_RUN",
-      "acceptance": "NOT_RUN",
+      "status": "PASS",
+      "source": "PASS",
+      "interaction": "PASS",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "evidence": [
         {
           "gate": "source",
@@ -3481,9 +3499,35 @@
           "test_id": "V-U8.08",
           "observed_at": "2026-10-14T08:58:51.237074+00:00",
           "result_detail": "Official isolated native browser suite 45/45 PASS and exact narrative atom test references validate all currently mapped mounted scenarios. This does not fill missing S02 or required independent-human/mail-client/external-effect acceptance."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R2_S02_DISPOSITION_20261014.md",
+          "source_head": "69ffc843855b98b0fb8addd14ff630e5b03dfb1e",
+          "test_id": "V-U8.08",
+          "observed_at": "2026-10-14T11:09:25.386511+00:00",
+          "result_detail": "R2 closes the only remaining source-identity gap using the owner-approved retained 16-group S02 denominator. Existing 32 narrative atoms and B2-B5/G-CI/P0-2/REA mappings remain exact; no replacement research or invented source was used."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u8-native-browser-45-final.txt",
+          "source_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+          "test_id": "V-U8.08",
+          "observed_at": "2026-10-14T11:09:25.386511+00:00",
+          "result_detail": "Existing official isolated mapped-browser qualification 45/45 PASS remains the interaction evidence for the reconciled retained UI coverage; R2 adds no synthetic acceptance claim."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "U8.08 is a no-omission reconciliation row; deployment of its child UI behaviors is recorded by their individual WBS rows and R1."
+        },
+        {
+          "gate": "acceptance",
+          "justification": "U8.08 is a traceability/coverage audit. Actual user/mail-client acceptance remains owned by U6.06/U7.04-U7.07 and U9.02."
         }
       ],
-      "blocker": "Original S02 retained UI reanalysis artifact remains unlocated after exact Files/Library and bounded repository searches. Do not invent the missing source or repeat competitor research. Real-person/mail-client/external acceptance also remains separately open."
+      "blocker": null
     },
     {
       "id": "U9.01",
@@ -3492,12 +3536,34 @@
       "depends_on": "U0.03, U8.08",
       "verification_id": "V-U9.01",
       "pass_criterion": "V-U9.01: two-way source->WBS->test->commit and WBS->source audit; accepted items all mapped, no silent deletion or new optional classification, exact original ET-T01–24 and 121-case registry accounted for. Original source access succeeded; remaining narrative mappings and complete test/commit evidence prevent claiming this today.",
-      "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
-      "dev_deployment": "NOT_RUN",
-      "acceptance": "NOT_RUN",
-      "evidence": [],
+      "status": "PASS",
+      "source": "PASS",
+      "interaction": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R2_S02_DISPOSITION_20261014.md",
+          "source_head": "69ffc843855b98b0fb8addd14ff630e5b03dfb1e",
+          "test_id": "V-U9.01",
+          "observed_at": "2026-10-14T11:09:25.386511+00:00",
+          "result_detail": "Two-way retained source-to-WBS no-omission audit closes with the owner-approved 241-unit denominator, exact ET-T01-T24 and 121-case registry preserved, 16 S02 mandatory groups mapped, zero retained accepted requirements left unmapped. This is traceability PASS, not product acceptance."
+        },
+        {
+          "gate": "interaction",
+          "justification": "U9.01 is a no-omission traceability audit and defines no additional product interaction beyond mapped child rows."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "U9.01 audits requirement mapping; deployment evidence belongs to mapped child rows and R1."
+        },
+        {
+          "gate": "acceptance",
+          "justification": "U9.01 does not waive real acceptance; U9.02 owns complete applicable acceptance evidence."
+        }
+      ],
       "blocker": null
     },
     {
@@ -3558,5 +3624,15 @@
     "product_acceptance": "NOT_RUN"
   },
   "original_crosswalk_path": "docs/COMPETITOR_UI_ORIGINAL_CROSSWALK_20261014.json",
-  "original_crosswalk_sha256": "14a594a99af591fc44c581083689ec075c44d44d77d0cf34e068654f67d5dab6"
+  "original_crosswalk_sha256": "bc181fdb61e61254d25bc3d404cb554fb698f894fd0a1e6f94c66d8479661738",
+  "historical_requirement_denominator_breakdown": {
+    "surveyed_family_adaptations": 20,
+    "original_ui_audit_rows": 7,
+    "original_et_checks": 24,
+    "original_user_scenarios": 121,
+    "historical_gap_rows": 9,
+    "historical_structured_findings": 12,
+    "historical_narrative_atoms": 32,
+    "s02_retained_mandatory_groups": 16
+  }
 }
