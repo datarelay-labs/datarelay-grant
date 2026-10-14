@@ -45,19 +45,6 @@ test('U5.01 save keeps publication pointer unchanged and reopens the acknowledge
 });
 
 
-test('U5.01 saving an edited draft advances only draft revision and survives reopen without publication',async({page})=>{
- const state=await notificationsFixture(page);await openSyntheticEditor(page);
- await expect(page.getByLabel('Email draft publication status')).toContainText('Published v1');
- await expect(page.getByLabel('Email draft publication status')).toContainText('Draft v1');
- await page.getByLabel('Event body').fill('Saved draft only — publication pointer must stay v1.');
- await saveSyntheticDraft(page);await expect.poll(()=>state.rows[0].draft_revision).toBe(2);
- expect(state.rows[0].published_revision).toBe(1);await expect(page.getByLabel('Email draft publication status')).toContainText('Published v1');
- await page.getByRole('button',{name:'Refresh saved template set',exact:true}).click();await page.getByRole('button',{name:'Back to email templates'}).click();await openSyntheticEditor(page);
- await expect(page.getByLabel('Event body')).toHaveValue('Saved draft only — publication pointer must stay v1.');
- await expect(page.getByLabel('Email draft publication status')).toContainText('Published v1');await expect(page.getByLabel('Email draft publication status')).toContainText('Draft v2');
- expect(state.writes).toEqual(['PUT']);expect(state.errors).toEqual([]);
-});
-
 test('U5.02 U5.03 review displays exact field/event/policy identities before one explicit synthetic publication',async({page})=>{
  const {state,publication}=await publicationFixture(page);
  const reviewButton=page.getByRole('button',{name:'Review & publish',exact:true});await expect(reviewButton).toBeEnabled();await reviewButton.click();
