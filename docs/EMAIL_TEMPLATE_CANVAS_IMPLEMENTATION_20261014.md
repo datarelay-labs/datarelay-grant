@@ -847,3 +847,10 @@ delete. Evidence `.dev/u6-logo-python.txt`, `.dev/u6-logo-web-full.txt`,
 `.dev/u6-logo-web-check.txt`, `.dev/u6-logo-renderer.txt`,
 `.dev/u6-logo-browser-final3.txt` and JSON result. These are synthetic/local
 qualification only; actual Gmail/Outlook/Apple/iOS rendering remains U7.04.
+
+
+### U7.02/U7.03 mounted accessibility qualification (2026-10-14T07:55:58.190497+00:00)
+- Production source baseline: `c5c55669e158daf0866d4309a10e14998dc2ee6a`; test-only qualification extends the existing mounted Notifications harness without Foundation changes.
+- `qualification.spec.ts` **3/3 PASS** with trace disabled: keyboard-only preset/body/button-size/save/reopen; exact Hold-color error recovery returns focus to the actual field; 320/375/390 widths remain within the viewport; a real `hasTouch` 375px context opens/closes the mobile inspector with a >=44px close target.
+- Evidence: `.dev/u7-qualification-current.txt`, `.dev/u7-qualification-current-results.json`, `.dev/u7-keyboard-desktop.png`, `.dev/u7-keyboard-mobile-390.png`, `.dev/u7-keyboard-mobile-375.png`, `.dev/u7-keyboard-mobile-320.png`, `.dev/u7-error-recovery-mobile-320.png`, `.dev/u7-touch-mobile-375.png`.
+- This closes the mounted/source interaction slice only. It is **not** a WCAG certification, real-person usability result, mail-client acceptance, or U7.04/U7.05/U7.06 acceptance.

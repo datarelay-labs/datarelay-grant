@@ -2302,6 +2302,15 @@
           "test_id": "V-U7.02",
           "observed_at": "2026-10-14T05:21:43.286599+00:00",
           "result_detail": "1/1 Playwright mounted Notifications PASS: keyboard preset -> body edit -> actions -> size -> 390px -> Review/Confirm save -> authoritative refresh -> inventory -> reopen; one synthetic PUT; published v1 unchanged. Synthetic transport, not user acceptance."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u7-qualification-current-results.json",
+          "source_head": "c5c55669e158daf0866d4309a10e14998dc2ee6a",
+          "test_id": "V-U7.02",
+          "observed_at": "2026-10-14T07:55:58.190497+00:00",
+          "result_detail": "Mounted Notifications task PASS at current production source: keyboard-only preset/body/button-size/save/reopen plus 320/375/390 no-overflow screenshots."
         }
       ],
       "blocker": null
@@ -2314,8 +2323,8 @@
       "verification_id": "V-U7.03",
       "pass_criterion": "V-U7.03: complete task by keyboard without drag; clear accessible names, logical focus, no trap/overflow/clipped primary action at 390px; all rendered labels/context usable at 320/375/390; automation findings plus manual evidence, no unearned standards certification.",
       "status": "OPEN",
-      "source": "IN_PROGRESS",
-      "interaction": "IN_PROGRESS",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -2325,6 +2334,15 @@
           "source_head": "d1421320678e8b660e6d43614f175030f1ed3729",
           "observed_at": "2026-10-14T05:21:43.286599+00:00",
           "result": "Keyboard-only editor task and 390px no-overflow/mobile inspector PASS with desktop/390 screenshots. 320/375 editor widths plus manual/touch/error-focus acceptance remain OPEN; no standards-certification claim."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u7-qualification-current-results.json",
+          "source_head": "c5c55669e158daf0866d4309a10e14998dc2ee6a",
+          "test_id": "V-U7.03",
+          "observed_at": "2026-10-14T07:55:58.190497+00:00",
+          "result_detail": "Mounted U7 accessibility interaction 3/3 PASS: keyboard focus recovery, 320/375/390 narrow layout, 375px hasTouch tap path, >=44px close target, no horizontal overflow, and screenshot artifacts. This is automated component evidence; no real-person standards or usability acceptance is claimed."
         }
       ],
       "blocker": null
