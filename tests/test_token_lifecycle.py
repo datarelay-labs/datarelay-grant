@@ -90,7 +90,7 @@ def test_ended_admin_session_cannot_mutate_durable_admin_configuration(env):
         env.auth.create_user(
             "stale-admin-created",
             "stale-admin-created@example.invalid",
-            "isolated-test-password-42",
+            "Isolated-test-password-42!",
             actor=principal,
         )
     with pytest.raises(GrantError, match="AUTHENTICATION_REQUIRED"):
