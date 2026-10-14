@@ -3,7 +3,15 @@ name = "datarelay-grant"
 version = "0.1.0.dev0"
 description = "Explicit human approval between intent and execution"
 requires-python = ">=3.12"
-dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.34,<1", "argon2-cffi>=23,<26", "cryptography>=44,<47", "pyotp>=2.9,<3", "httpx>=0.28,<1"]
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.34,<1",
+    "argon2-cffi>=23,<26",
+    "cryptography>=44,<47",
+    "pyotp>=2.9,<3",
+    "httpx>=0.28,<1",
+    "pillow==12.3.0",
+]
 [dependency-groups]
 dev = [
     "pytest>=8,<10",

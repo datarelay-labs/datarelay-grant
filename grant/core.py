@@ -557,6 +557,9 @@ class Core:
                         "branding": self._branding(conn)}
             if body.template.design:
                 template["design"] = body.template.design.model_dump()
+            from .email_assets import snapshot_logo
+
+            template = snapshot_logo(conn, template)
         try:
             rendered = render_preview(template, body.event, body.sample.model_dump(),
                                       verification_mode=body.verification_mode)
@@ -567,7 +570,7 @@ class Core:
                 "execution_allowed": False, "validation": {
                     "valid": True, "html_bytes": len(rendered["html"].encode()),
                     "protected_actions": 4 if body.event in ("requested", "reminder") else 1,
-                    "mail_client_acceptance": "NOT_RUN", "logo_upload": "UNAVAILABLE",
+                    "mail_client_acceptance": "NOT_RUN", "logo_upload": "AVAILABLE",
                 }}
 
     def preview_notification(
@@ -581,7 +584,9 @@ class Core:
             row = conn.execute("SELECT * FROM email_templates WHERE id=?", (ident,)).fetchone()
             if not row:
                 raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
-            template = snapshot(row, branding=self._branding(conn))
+            from .email_assets import snapshot_logo
+
+            template = snapshot_logo(conn, snapshot(row, branding=self._branding(conn)))
             recipient = conn.execute("SELECT email FROM users WHERE id=?", (actor.id,)).fetchone()
         try:
             rendered = render_preview(template, body.event, body.sample.model_dump(),
@@ -610,7 +615,9 @@ class Core:
             row = conn.execute("SELECT * FROM email_templates WHERE id=?", (ident,)).fetchone()
             if not row:
                 raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
-            template = snapshot(row, branding=self._branding(conn))
+            from .email_assets import snapshot_logo
+
+            template = snapshot_logo(conn, snapshot(row, branding=self._branding(conn)))
             recipient_id = body.recipient_user_id or principal.id
             # No designated-safe-recipient registry exists yet. Do not let an
             # administrator turn test delivery into unsolicited mail to users.

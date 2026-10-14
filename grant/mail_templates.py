@@ -203,6 +203,10 @@ def normalize_snapshot(template: Mapping[str, object] | None) -> dict[str, objec
             if template.get("renderer", expected) != expected:
                 raise ValueError("Unsupported immutable email renderer snapshot")
             result["renderer"] = expected
+            if result["design"].get("logo_asset_id"):
+                from .email_assets import validate_snapshot_logo
+
+                result["logo"] = validate_snapshot_logo(result["design"]["logo_asset_id"], template.get("logo"))
         return result
     return {"templates": _legacy_to_events(template), "branding": dict(DEFAULT_BRANDING)}
 
@@ -291,7 +295,7 @@ def render_from_context(
     from .email_renderer import compose_email
 
     return compose_email(content, context, event, security=security, sample=sample,
-                         design=normalized.get("design"))
+                         design=normalized.get("design"), logo=normalized.get("logo"))
 
 
 def render_notification(template: Mapping[str, object], row, origin: str, *, event: str) -> dict[str, str]:

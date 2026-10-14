@@ -15,7 +15,7 @@ from importlib.resources import files
 from urllib.parse import urlsplit
 
 LAYOUT_REGISTRY = {}
-for _revision in (1, 2, 3, 4, 5):
+for _revision in (1, 2, 3, 4, 5, 6):
     _bytes = files("grant").joinpath(f"email_layout_v{_revision}.json").read_bytes()
     LAYOUT_REGISTRY[_revision] = {"sha256": hashlib.sha256(_bytes).hexdigest(),
                                    "layouts": json.loads(_bytes)["layouts"]}
@@ -65,7 +65,7 @@ def _safe_url(value: str, *, details: bool = False) -> str:
 def compose_email(
     content: Mapping[str, str], context: Mapping[str, str], event: str,
     *, security: EmailSecurity | None = None, design: Mapping | None = None,
-    sample: bool = False,
+    sample: bool = False, logo: Mapping | None = None,
 ) -> dict[str, str]:
     """Render all three MIME/preview outputs through the same pure contract."""
     subject, body = content["subject"], content["body"]
@@ -196,6 +196,18 @@ def compose_email(
         values["PREHEADER"] = preheader
         if preheader:
             segments.insert(0, preheader)
+    inline_images = []
+    layout_key = "decision" if eligible else "notice"
+    if design and revision >= 6 and design["logo_asset_id"]:
+        from .email_assets import validate_snapshot_logo
+
+        logo = validate_snapshot_logo(design["logo_asset_id"], logo)
+        cid = "grant-logo-" + logo["id"] + "@grant.local"
+        uri = "data:image/png;base64," + logo["data_base64"]
+        values["LOGO_SRC"] = uri if sample else "cid:" + cid
+        values["LOGO_WIDTH"] = str(design["logo_width"])
+        inline_images = [{**logo, "cid": cid}]
+        layout_key += "_logo"
     escaped = {key: html.escape(value, quote=True) for key, value in values.items()}
     for key in ("BODY", "CONTEXT", "GUIDANCE", "PIN", "FOOTER"):
         if key in escaped:
@@ -205,11 +217,11 @@ def compose_email(
 
         escaped["BODY"] = render_rich_text(body)
     # One substitution pass: user text resembling an internal slot is never re-evaluated.
-    rendered_html = SLOT.sub(lambda match: escaped[match[1]], LAYOUT_REGISTRY[revision]["layouts"]["decision" if eligible else "notice"])
+    rendered_html = SLOT.sub(lambda match: escaped[match[1]], LAYOUT_REGISTRY[revision]["layouts"][layout_key])
     text = "\n\n".join(segments)
     if len(rendered_html.encode("utf-8")) > 131072:
         raise ValueError("Rendered email HTML exceeds size limit")
-    return {**content, **({"preheader": values["PREHEADER"]} if design and revision >= 4 else {}),
+    return {**content, **({"inline_images": inline_images} if inline_images else {}), **({"preheader": values["PREHEADER"]} if design and revision >= 4 else {}),
             "body": text, "text": text, "html": rendered_html,
             "renderer_contract_version": "1", "renderer_revision": f"mjml-5.4.1-layout-{revision}",
             "layout_sha256": LAYOUT_REGISTRY[revision]["sha256"]}

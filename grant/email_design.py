@@ -4,7 +4,14 @@ from __future__ import annotations
 import re
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 from .email_palette import DEFAULT_PALETTE, EmailPalette
 
@@ -60,7 +67,7 @@ class ButtonSuffixes(StrictDesign):
 class EmailDesign(StrictDesign):
     schema_version: Literal[1] = 1
     renderer_contract_version: Literal[1] = 1
-    shared_layout_revision: Literal[1, 2, 3, 4, 5] = 2
+    shared_layout_revision: Literal[1, 2, 3, 4, 5, 6] = 2
     locale: Literal["en", "ko"] = "en"
     preset: Literal["standard", "compact", "high_visibility"] = "standard"
     button_size: Literal["S", "M", "L"] = "M"
@@ -68,11 +75,11 @@ class EmailDesign(StrictDesign):
     event_headings: dict[str, str] = Field(default_factory=dict, max_length=9)
     event_preheaders: dict[str, str] = Field(default_factory=dict, max_length=9)
     footer: str = Field(default="", max_length=1000)
-    # Asset pipeline is not available: fail closed, never silently ignore a logo.
-    logo_asset_id: None = None
     blocks: list[str] = Field(default_factory=lambda: list(BLOCKS), min_length=7, max_length=7)
     styles: EmailStyles = Field(default_factory=EmailStyles)
     palette: EmailPalette = Field(default_factory=EmailPalette)
+    logo_asset_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    logo_width: int = Field(default=160, ge=64, le=256)
     rich_text: bool = False
     paragraph_alignment: Literal["left", "center", "right"] = "left"
     button_suffixes: ButtonSuffixes = Field(default_factory=ButtonSuffixes)
@@ -95,7 +102,18 @@ class EmailDesign(StrictDesign):
             raise ValueError("Per-event preheaders require shared layout revision 4")
         if self.shared_layout_revision < 5 and self.palette.model_dump() != DEFAULT_PALETTE:
             raise ValueError("Mail color palettes require shared layout revision 5")
+        if self.shared_layout_revision < 6 and (self.logo_asset_id or self.logo_width != 160):
+            raise ValueError("Immutable uploaded logos require shared layout revision 6")
         return self
+
+    @model_serializer(mode="wrap")
+    def versioned_output(self, handler):
+        value = handler(self)
+        # Keep pre-logo API responses/snapshot signatures unchanged. This field
+        # has no meaning in immutable layouts 1..5 and is emitted only for v6.
+        if self.shared_layout_revision < 6:
+            value.pop("logo_width", None)
+        return value
 
     @field_validator("event_preheaders")
     @classmethod

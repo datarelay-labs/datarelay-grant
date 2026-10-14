@@ -6,15 +6,16 @@ import assert from 'node:assert/strict';
 
 export const options = {validationLevel: 'strict', ignoreIncludes: true,
   useMjmlConfigOptions: false, minify: false, beautify: false, fonts: {}};
+const trustedLogo = '<mj-image css-class="grant-mail-block-brand" src="@@GRANT_LOGO_SRC@@" alt="@@GRANT_BRAND@@" width="137px" align="center" padding="0 0 12px"/>';
 export async function compile(source) {
-  assert(!/<mj-include|<mj-image|<mj-font|<mj-style|<mj-raw/i.test(source));
+  assert(!/<mj-include|<mj-image|<mj-font|<mj-style|<mj-raw/i.test(source.replace(trustedLogo,'')));
   const result = await mjml(source, options);
   assert.equal(result.errors.length, 0);
   assert(Buffer.byteLength(result.html) <= 32768);
   assert(!/<script|<form|@import|<link\b/i.test(result.html));
   return result.html;
 }
-export function source(decisions, revision=1) {
+export function source(decisions, revision=1, logo=false) {
   const mark = id => revision >= 3 ? ' css-class="grant-mail-block-'+id+'"' : '';
   const actions = decisions ? ['APPROVE','HOLD','DENY','DETAILS'] : ['DETAILS'];
   const bodyColor=revision>=5?'#111828':'#111827',mutedColor=revision>=5?'#334156':'#334155';
@@ -22,7 +23,7 @@ export function source(decisions, revision=1) {
 
   return `<mjml><mj-head><mj-title>@@GRANT_SUBJECT@@</mj-title>${revision>=4?'<mj-preview>@@GRANT_PREHEADER@@</mj-preview>':''}</mj-head>
 <mj-body width="600px" background-color="${revision>=5?'#fefdfc':'#f3f4f6'}"><mj-section background-color="${revision>=5?'#fcfdfe':'#ffffff'}" padding="23px"><mj-column>
-<mj-text${mark("brand")} font-family="Arial, sans-serif" font-size="15px" color="${mutedColor}">@@GRANT_BRAND@@</mj-text>
+${logo&&revision>=6?trustedLogo+'\n':''}<mj-text${mark("brand")} font-family="Arial, sans-serif" font-size="15px" color="${mutedColor}">@@GRANT_BRAND@@</mj-text>
 ${status}<mj-text${mark("heading")} font-family="Arial, sans-serif" font-size="24px" color="${bodyColor}" font-weight="700">@@GRANT_TITLE@@</mj-text>
 <mj-text${mark("message")}${revision>=2?' align="right"':''} font-family="Arial, sans-serif" font-size="19px" line-height="1.6" color="${bodyColor}">@@GRANT_BODY@@</mj-text>
 <mj-text${mark("request_context")} font-family="Arial, sans-serif" font-size="16px" line-height="1.6" color="${bodyColor}">@@GRANT_CONTEXT@@</mj-text>
@@ -44,6 +45,7 @@ function slots(html, revision=1) {
   if(revision>=2) html=html.replaceAll('text-align:right','text-align:@@GRANT_ALIGN@@')
     .replaceAll('display:inline-block;background:','display:block;background:')
     .replaceAll('mso-padding-alt:13px 29px','mso-padding-alt:@@GRANT_BUTTON_Y@@px @@GRANT_BUTTON_X@@px');
+  if(revision>=6)html=html.replaceAll('137px','@@GRANT_LOGO_WIDTH@@px').replaceAll('width="137"','width="@@GRANT_LOGO_WIDTH@@"');
   if(revision>=5)for(const [value,slot] of Object.entries({'#fefdfc':'@@GRANT_PAGE_BG@@','#fcfdfe':'@@GRANT_CONTENT_BG@@','#111828':'@@GRANT_TEXT_COLOR@@','#334156':'@@GRANT_BRAND_COLOR@@'}))html=html.replaceAll(value,slot);
   if(revision>=4){
     const metadata=/(<div\b[^>]*)(>\s*@@GRANT_PREHEADER@@\s*<\/div>)/g;
@@ -52,13 +54,15 @@ function slots(html, revision=1) {
   }
   return html.replace(/<html\b/, '<html lang="@@GRANT_LOCALE@@"');
 }
-for (const revision of [1,2,3,4,5]) {
+for (const revision of [1,2,3,4,5,6]) {
   const layouts = {decision:slots(await compile(source(true,revision)),revision),
     notice:slots(await compile(source(false,revision)),revision)};
+  if(revision>=6){layouts.decision_logo=slots(await compile(source(true,revision,true)),revision);
+    layouts.notice_logo=slots(await compile(source(false,revision,true)),revision);}
   const artifact = {contract_version:1, renderer:'mjml@5.4.1', layout_revision:revision, layouts};
   const output = JSON.stringify(artifact,null,2)+'\n';
   const path = new URL('../grant/email_layout_v'+revision+'.json', import.meta.url);
-  if (process.argv.includes('--check') || revision<=4&&existsSync(path)) assert.equal(readFileSync(path,'utf8'), output);
+  if (process.argv.includes('--check') || revision<=5&&existsSync(path)) assert.equal(readFileSync(path,'utf8'), output);
   else writeFileSync(path, output);
   console.log(JSON.stringify({artifact:'grant/email_layout_v'+revision+'.json',bytes:Buffer.byteLength(output),
     sha256:createHash('sha256').update(output).digest('hex')}));

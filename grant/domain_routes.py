@@ -5,6 +5,7 @@ from typing import Literal
 from fastapi import Query, Request, Response
 from fastapi.responses import FileResponse
 
+from .email_assets import LogoUpload
 from .email_publication import (
     PublicationCommit,
     PublicationReview,
@@ -344,6 +345,18 @@ def register_domain(app, actor, human, reader):
     @app.post("/api/v1/notification-template-drafts/preview")
     def preview_notification_draft(body: NotificationDraftPreview, request: Request):
         return core.preview_notification_draft(actor(request), body)
+
+    @app.post("/api/v1/notification-assets", status_code=201)
+    def notification_logo_upload(body: LogoUpload, request: Request):
+        from .email_assets import upload_logo
+
+        return upload_logo(core, actor(request), body.data_base64)
+
+    @app.get("/api/v1/notification-assets/{ident}")
+    def notification_logo_read(ident: str, request: Request):
+        from .email_assets import read_logo
+
+        return read_logo(core, actor(request), ident)
 
     @app.get("/api/v1/notification-template-sets")
     def notification_template_sets(request: Request):

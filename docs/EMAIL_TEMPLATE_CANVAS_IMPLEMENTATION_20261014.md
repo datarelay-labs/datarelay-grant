@@ -402,3 +402,71 @@ and scoped Ruff PASS. Evidence: .dev/u5-inspection-python-final.txt,
 .dev/u5-inspection-browser-qualified-results.json, .dev/u5-conflict-{red,green}.txt,
 .dev/u5-inspection-build.txt. Existing rollback creates a new immutable published
 revision; exact old request snapshots remain governed by the original API tests.
+
+### U6 normal retry / raster normalization boundary
+
+The previous-turn logo operation is retried normally on the same dev-atlas
+worktree/tool, not through an alternative executor. Reuse the retained original
+asset tests; preserve their original bytes and rebase only version selection
+when a new immutable renderer is introduced. No changes to currently denied
+optional-block, navigation, palette-layout or exact-focus operations.
+
+Asset processing accepts only bounded PNG/JPEG (256 KiB encoded-input byte
+budget, at most 512 x 512 pixels), rejects unsupported/animated/trailing payloads,
+checks PNG framing/checksums before decoding and removes ancillary metadata
+before decompression. Decode with the official Pillow 12.3.0 release pinned in
+the project lock; re-encode fresh RGBA pixels as deterministic PNG without
+metadata. IDs hash normalized bytes. This is a new explicit admin upload only;
+no arbitrary URL, remote image fetch, SVG/GIF/script or automatic send. Existing
+notification_assets table and admin authority are reused; stored bytes are
+immutable, old issued snapshots must retain their exact asset identity/data.
+
+Implementation reference (library API only, not competitor re-research): official
+Pillow Image reference and Image file formats documentation, release 12.3.0,
+https://pillow.readthedocs.io/en/stable/reference/Image.html and
+https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html.
+The UI/CID/renderer integration and qualification remain a separate subsequent
+step; normalizer-only tests are not counted as complete U6.02 or U6.03.
+
+U6 current operation result: the normal original logo backend retry succeeded.
+The prior 256 KiB proposal was tightened to 32 KiB input AND normalized output,
+so base64 JSON stays within the existing 64 KiB HTTP request ceiling. No global
+HTTP limit or authentication policy was relaxed. JPEG framing rejects concatenated
+or trailing payloads; PNG framing/CRC rejects animation and strips ancillary
+metadata before decode. Historical snapshot validation hashes/validates stored
+normalized RGBA PNG bytes without re-encoding them, so a library upgrade cannot
+silently rewrite the historical attachment. The MIME composer binds the exact
+image source and deterministic CID, includes one related PNG and unchanged
+plain-text alternative, and rejects mismatched CID/data before opening SMTP.
+All transport tests use FakeSMTP; no actual email was sent.
+
+The independent Grant-owned upload UI/canvas/iframe rendering integration batch
+was denied before execution by Remote_Desktop_Commander.start_process on dev-atlas:
+`요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.`
+Targets: new email_logo_controls.tsx/email_logo_safety.ts and their integration
+in email_design.ts, email_palette.ts (version preservation only),
+email_palette_controls.tsx (version preservation only), email_template_workbench.tsx,
+notification_preview.tsx and email_canvas_projection.tsx. Readback shows these
+frontend writes did not occur. No alternative executor or reformulated UI
+integration was attempted. The existing image-blocking UI remains unchanged;
+U6 upload/preview UI and its browser qualification are NOT implemented/PASS.
+The immutable server asset API and mail MIME source can be independently
+qualified without weakening or bypassing this denied UI operation. Layout 6 is
+opt-in through a saved design; existing frontend still creates layout 5 and
+advertises logo upload as unavailable until the UI work can be completed.
+
+U6 backend qualification checkpoint: 84 affected API/renderer/publication cases
+PASS before the compatibility follow-up; the final focused 60-case run also
+PASS after five RED->GREEN checks ensuring layouts 1..5 API responses do not gain
+an irrelevant logo_width field. Immutable published logo previews remain byte-
+identical after the disposable test asset-table row is removed. MIME tests
+capture exactly matching related PNG bytes/CID without opening a real SMTP
+connection and reject mismatched attachment identity before transport. Original
+v1..v5 artifacts are unchanged; new v6 hash:
+50c162c380e43801e8276cb2528239da3df9f095c2aad46eb081769669ebe292.
+Compiler reproduction and exact wheel layout inclusion 1..6 PASS; scoped Ruff
+PASS. Pillow dependency pinned 12.3.0. Evidence .dev/u6-assets-qualified.txt,
+.dev/u6-logo-final-api.txt, .dev/u6-logo-{integrity,compat}-{red,green}.txt where
+present (final compatibility GREEN is included in u6-logo-final-api.txt),
+.dev/u6-assets-package.txt. U6 frontend upload/render integration remains
+explicitly BLOCKED and is not included in this commit or called accepted UI.

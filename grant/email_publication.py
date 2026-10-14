@@ -37,7 +37,9 @@ def candidate(core, conn, actor, ident, source_revision):
     if source_revision is None:
         if not row["design_json"]:
             raise GrantError("VISUAL_DRAFT_OPT_IN_REQUIRED", 409)
-        value = snapshot(row, branding=core._branding(conn))
+        from .email_assets import snapshot_logo
+
+        value = snapshot_logo(conn, snapshot(row, branding=core._branding(conn)))
     else:
         source = conn.execute("SELECT snapshot,snapshot_hash FROM email_template_revisions WHERE template_id=? AND revision=?",
                               (ident, source_revision)).fetchone()

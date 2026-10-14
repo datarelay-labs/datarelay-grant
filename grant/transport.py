@@ -105,7 +105,17 @@ def send_email(settings: Settings, destination: dict, payload: str, event_id: st
     message["Message-ID"] = f"<{event_id}@grant.local>"
     message.set_content(data["body"])
     if "html" in data:
-        message.add_alternative(data["html"], subtype="html")
+        from .email_assets import mail_inline_logo
+
+        html, images = mail_inline_logo(data.get("inline_images"), data["html"])
+        message.add_alternative(html, subtype="html")
+        for image in images:
+            message.get_payload()[-1].add_related(
+                image["data"], maintype="image", subtype="png", cid="<" + image["cid"] + ">",
+                filename="grant-logo.png", disposition="inline",
+            )
+    elif data.get("inline_images"):
+        raise ValueError("Inline logos require a matching HTML body")
     with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=10) as smtp:
         smtp.ehlo()
         if settings.smtp_starttls:
