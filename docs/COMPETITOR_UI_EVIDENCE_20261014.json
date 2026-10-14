@@ -328,7 +328,7 @@
       "pass_criterion": "V-U1.03: canvas/inspector/save use one state; versioned block extension opt-in, old v1/v2 output hashes unchanged; mutate event/style then save/reopen and compare design plus render.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -349,6 +349,15 @@
           "test_id": "V-U1.03",
           "observed_at": "2026-10-14T03:40:16.634038+00:00",
           "scope_unchanged_at": "8490ce0ba0734f511f156347bf4025c20f1cd972"
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": "web/tests/canvas/qualification.spec.ts",
+          "source_head": "fb1fb04c5f06194a21b4bffa91536625ff53d858",
+          "test_id": "V-U1.03",
+          "observed_at": "2026-10-14T10:17:49.436849+00:00",
+          "result_detail": "Current exact candidate qualification 3/3 PASS. The keyboard task mutates preset/body/button-size in one draft, explicitly Review/Confirm saves one PUT, verifies revision/published pointer and saved design/content, refreshes authoritative state, returns to inventory and reopens the same draft with the changed render visible. Existing source gate retains versioned block IDs and legacy layout reproduction evidence."
         }
       ],
       "blocker": null
@@ -362,7 +371,7 @@
       "pass_criterion": "V-U1.04: clicking any displayed decision/details only selects; assert zero navigation, decision/issuance/send calls and external resource fetch; hostile HTML cannot inject active nodes, handlers, forms or unsafe attributes.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -383,6 +392,15 @@
           "test_id": "V-U1.04",
           "observed_at": "2026-10-14T03:40:16.634038+00:00",
           "scope_unchanged_at": "8490ce0ba0734f511f156347bf4025c20f1cd972"
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": "web/tests/canvas/editor.spec.ts",
+          "source_head": "fb1fb04c5f06194a21b4bffa91536625ff53d858",
+          "test_id": "V-U1.04",
+          "observed_at": "2026-10-14T10:17:49.436849+00:00",
+          "result_detail": "Current mounted editor/Notifications suite 6/6 PASS. Clicking rendered Message and Approve/action content only changes selection/editor state; intercepted non-preview API effects remain empty and URL stays on the canvas. Hostile script/img/link/handler injection produces zero active a/img/script/iframe/form/input/svg nodes, zero href/src/onclick attributes, no window execution and no external fetch."
         }
       ],
       "blocker": null
