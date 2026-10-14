@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "scope": "EXACT_ORIGINAL_IDS_AND_WORDING_TRACEABILITY_NOT_PRODUCT_ACCEPTANCE",
-  "observed_at": "2026-10-14T03:40:16.634038+00:00",
-  "source_head": "8490ce0ba0734f511f156347bf4025c20f1cd972",
+  "observed_at": "2026-10-14T08:56:56.574601+00:00",
+  "source_head": "f50a218a61b18c0155a7e22d05d27e9434c1f3bb",
   "sources": [
     {
       "path": "docs/GRANT_UI_UX_GAP_MATRIX.md",
@@ -97,6 +97,20 @@
       "historical_status_not_current": true,
       "canonical_source": "https://github.com/datarelay-labs/datarelay-grant/issues/37#issuecomment-6159372744",
       "identical_mirror_source": "https://github.com/datarelay-labs/datarelay-grant/issues/67#issuecomment-6159373603"
+    },
+    {
+      "path": "ROADMAP.md",
+      "sha256": "d33732dd2ac780e24488efe92839a77ed7779e2dc5c8da8599cd333665d42e20",
+      "line_count": 2294,
+      "access": "PASS_RETAINED_REPO_SOURCE",
+      "observed_at": "2026-10-14T08:56:56.545102+00:00"
+    },
+    {
+      "path": "docs/STATUS.md",
+      "sha256": "922dd315b1d2c120d91e9dd13b7c5a9e81a49ae0a3e4411b15c24a21c9518d11",
+      "line_count": 1640,
+      "access": "PASS_RETAINED_REPO_SOURCE",
+      "observed_at": "2026-10-14T08:56:56.546712+00:00"
     }
   ],
   "et_checks": [
@@ -2697,9 +2711,9 @@
   "all_historical_narrative_requirements_reconciled": false,
   "product_acceptance": false,
   "remaining_reconciliation": [
-    "Original S02 retained UI reanalysis artifact remains unlocated: exact-title Files search returned no relevant file; bounded docs/.dev filename search found none. S03 original comments are now pinned and all seven exact audit rows mapped.",
-    "Narrative P0-2A..G, UX-A..E, G-CI/B2..B5 and scope overrides must be atomized against U8, not blanket marked complete.",
-    "Attach exact current source/test/commit evidence to mapped acceptance rows; no original real-person scenario was run."
+    "Original S02 retained UI reanalysis artifact remains unlocated after exact Files/Library and bounded repo searches; do not invent or repeat competitor research.",
+    "31 retained P0-2/UX/G-CI/B2-B5/REA/scope narrative atoms are now exact-span pinned and WBS/test mapped where applicable; synthetic/current-source evidence does not replace human/mail-client/external acceptance.",
+    "U8.08 remains open until S02 is recovered or explicitly dispositioned by the owner and all applicable real acceptance gates are completed."
   ],
   "original_ui_audit_rows": [
     {
@@ -2802,6 +2816,544 @@
       ],
       "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_CONTRACT_NOT_EXECUTION",
       "acceptance": "NOT_RUN"
+    }
+  ],
+  "historical_narrative_atoms": [
+    {
+      "id": "P0-2A",
+      "source": "docs/UX_COMPETITOR_SCREEN_DECISIONS_20261011.md",
+      "start_line": 40,
+      "end_line": 40,
+      "source_span_sha256": "7c5e94ec55f8a57c88b2d5c0fcd9c460162c09fdaf0fb23d16404af2f066347e",
+      "wbs": [
+        "U8.02"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::P0 Entra-style selected approval context stays tied to exact Inbox view"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "P0-2B",
+      "source": "docs/UX_COMPETITOR_SCREEN_DECISIONS_20261011.md",
+      "start_line": 44,
+      "end_line": 44,
+      "source_span_sha256": "9eda40d83c1a528a066a470e1aea3c2d11465221f911578e66983154f70711c8",
+      "wbs": [
+        "U8.02",
+        "U7.05"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_MAILBOX_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::P0-2B issued email link opens no-login PIN, explicit Confirm, then rejects replay",
+        "web/tests/browser/approval.spec.ts::P0-2B issued Deny link requires same-mailbox OTP and explicit reason/Confirm"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "P0-2C",
+      "source": "docs/UX_COMPETITOR_SCREEN_DECISIONS_20261011.md",
+      "start_line": 41,
+      "end_line": 41,
+      "source_span_sha256": "a01caba777c249355df376e4f577d95381e7cbe6b79f25f23c6dbe47bcb3a9d0",
+      "wbs": [
+        "U8.03",
+        "U8.06"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::P0-2C task-first activity stays collapsed, keyboard accessible and does not conceal human decision"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "P0-2D",
+      "source": "docs/UX_COMPETITOR_SCREEN_DECISIONS_20261011.md",
+      "start_line": 42,
+      "end_line": 42,
+      "source_span_sha256": "6aabbb0fd5082266395e4c1fa1dbc6b2c93804ee1af09d4fb2862656ba7a174d",
+      "wbs": [
+        "U8.02",
+        "U8.03"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::P0-2D role-scoped RequestDetail deadline truth and separate human confirm"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "P0-2E",
+      "source": "docs/UX_COMPETITOR_SCREEN_DECISIONS_20261011.md",
+      "start_line": 42,
+      "end_line": 42,
+      "source_span_sha256": "6aabbb0fd5082266395e4c1fa1dbc6b2c93804ee1af09d4fb2862656ba7a174d",
+      "wbs": [
+        "U8.03",
+        "U8.06"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_EXTERNAL_EFFECT_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::P0-2E approved grant scope differs from requested action and external execution"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "P0-2F",
+      "source": "docs/UX_COMPETITOR_SCREEN_DECISIONS_20261011.md",
+      "start_line": 43,
+      "end_line": 43,
+      "source_span_sha256": "cc76484fe77672cf40ea030d9ee7c8c07f49f5660a2f5bffd1eb53dba9fe0951",
+      "wbs": [
+        "U8.04",
+        "U8.07"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::P0 Approver group directory distinguishes saved IDs from enabled account coverage"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "P0-2G",
+      "source": "docs/UX_COMPETITOR_SCREEN_DECISIONS_20261011.md",
+      "start_line": 46,
+      "end_line": 67,
+      "source_span_sha256": "2fd00525e48c5ff6aec43955bfd0678c0744a44af77b7761207d871f30fd757d",
+      "wbs": [
+        "U8.04"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::B4 policy workspace mobile 320/375 uses readable cards without horizontal policy scan"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "UX-A",
+      "source": "docs/UX_SCREEN_DESIGN_GRANT_20261010.md",
+      "start_line": 23,
+      "end_line": 29,
+      "source_span_sha256": "74458c0a769af91c1c436327dcc8b7cf4838efa5186d8503b869cf23e7903fec",
+      "wbs": [
+        "U8.01",
+        "U8.02"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::G6 approver inbox needs/held/recent views reflect decisions",
+        "web/tests/browser/approval.spec.ts::B1 approver Inbox task-first mobile 320/375 and keyboard queue controls"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "UX-B",
+      "source": "docs/UX_SCREEN_DESIGN_GRANT_20261010.md",
+      "start_line": 31,
+      "end_line": 35,
+      "source_span_sha256": "0975180a34d8ce654c872d22270912ae3d17698b1c8d333ded8aeef7c410c1b4",
+      "wbs": [
+        "U8.02",
+        "U7.05"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_MAILBOX_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::P0-2B issued email link opens no-login PIN, explicit Confirm, then rejects replay"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "UX-C",
+      "source": "docs/UX_SCREEN_DESIGN_GRANT_20261010.md",
+      "start_line": 37,
+      "end_line": 49,
+      "source_span_sha256": "f84800b0bfe21a1c83b5f2227245f9d333bbc7beaf4ff67265c4f81a890d5927",
+      "wbs": [
+        "U8.07",
+        "U7.03"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_FOUNDATION_SOURCE_UNCHANGED",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::Foundation login and grouped Grant shell follow the DataRelay family layout",
+        "web/tests/browser/approval.spec.ts::Foundation administration and mobile approval page are real adapters"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "UX-D",
+      "source": "docs/UX_SCREEN_DESIGN_GRANT_20261010.md",
+      "start_line": 51,
+      "end_line": 53,
+      "source_span_sha256": "ec602466d211c1c3372ea67f518e8197de2850ec3556f49ef6e3511ce5166584",
+      "wbs": [
+        "U8.04",
+        "U8.05"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::G1 browser policy selectors create a matching request and keep latest draft on disable",
+        "web/tests/browser/approval.spec.ts::B4 full notification template set create and update require exact Review then Confirm"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "UX-E",
+      "source": "docs/UX_SCREEN_DESIGN_GRANT_20261010.md",
+      "start_line": 55,
+      "end_line": 59,
+      "source_span_sha256": "cf56ad945ad780efb77341bf42d230853074f2a32ad7ebd656544b4186270508",
+      "wbs": [
+        "U8.03",
+        "U8.06"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_EXTERNAL_EFFECT_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::P0-2C task-first activity stays collapsed, keyboard accessible and does not conceal human decision",
+        "web/tests/browser/approval.spec.ts::G9 admin audit search, CSV/JSON download and request evidence chain"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "G-CI-1",
+      "source": "ROADMAP.md",
+      "start_line": 2130,
+      "end_line": 2130,
+      "source_span_sha256": "fee1d4d65a9bc017a75c61a3834ce0b48580f14b1fb26c22f38a8c6f4d12c09d",
+      "wbs": [
+        "U8.01",
+        "U8.02",
+        "U8.06"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::U8.01 role-guided Home routes requester approver and administrator to the intended safe task"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "G-CI-2",
+      "source": "ROADMAP.md",
+      "start_line": 2131,
+      "end_line": 2132,
+      "source_span_sha256": "1da2084fddf0453ff2f4978320076b9490cb8808c8e11b6de1207686d4f18c5b",
+      "wbs": [
+        "U8.04",
+        "U8.05",
+        "U8.07"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::Foundation administration and mobile approval page are real adapters",
+        "web/tests/browser/approval.spec.ts::B4 full notification template set create and update require exact Review then Confirm"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "G-CI-3",
+      "source": "ROADMAP.md",
+      "start_line": 2133,
+      "end_line": 2133,
+      "source_span_sha256": "20f3dac93bf4d0abd2d4b7eb7deb01ae98ef179b28b2967768046823d1ed9fd2",
+      "wbs": [
+        "U8.02",
+        "U7.05"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_MAILBOX_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::P0-2B issued email link opens no-login PIN, explicit Confirm, then rejects replay"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "G-CI-4",
+      "source": "ROADMAP.md",
+      "start_line": 2135,
+      "end_line": 2136,
+      "source_span_sha256": "d704cab38c76e6dc97dd93afd4a08b890fbb0473f43d4beee9bda72d77bc3020",
+      "wbs": [
+        "U7.05",
+        "U8.06",
+        "U9.02"
+      ],
+      "disposition": "CURRENT_SYNTHETIC_INTERACTION_ONLY_REAL_EXTERNAL_AND_HUMAN_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::G8 integration health and safe export are visible without revealing credentials"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "G-CI-5",
+      "source": "ROADMAP.md",
+      "start_line": 2137,
+      "end_line": 2137,
+      "source_span_sha256": "00b9aadb5ee6940394ff73709b76fc79c5da1545c5f4480bc78c736238b38415",
+      "wbs": [
+        "U9.03",
+        "U9.04"
+      ],
+      "disposition": "RETAINED_RELEASE_SCOPE_OWNER_GATED",
+      "verification_tests": [],
+      "evidence_head": null,
+      "verification_artifact": null
+    },
+    {
+      "id": "B2-FOUNDATION",
+      "source": "docs/STATUS.md",
+      "start_line": 694,
+      "end_line": 715,
+      "source_span_sha256": "504e8609f96319194fa31050acebb831af66e095afd530ef443fc82f8b94ba82",
+      "wbs": [
+        "U8.07",
+        "U7.03"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_FOUNDATION_SOURCE_UNCHANGED",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::Foundation login and grouped Grant shell follow the DataRelay family layout"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "B3-APPROVER-GROUP",
+      "source": "docs/STATUS.md",
+      "start_line": 291,
+      "end_line": 306,
+      "source_span_sha256": "f4c757e5739e8834c110fe10b6f157eb72bd10516f7f26ffd2497a332ce2f7c4",
+      "wbs": [
+        "U8.04"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::P0 Approver group directory distinguishes saved IDs from enabled account coverage"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "B3-ADMIN-CAPABILITY",
+      "source": "docs/STATUS.md",
+      "start_line": 401,
+      "end_line": 428,
+      "source_span_sha256": "b8967bccc76d7c38e999ea811bd9838ce6fd4c1f4b91d32aba19d6b392a6f9d0",
+      "wbs": [
+        "U8.07"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::Foundation member account action reaches personal security, not Administration"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "B3-MAIL-TEST",
+      "source": "docs/STATUS.md",
+      "start_line": 508,
+      "end_line": 521,
+      "source_span_sha256": "20a376190df99c5b1333b1380100e69f7b5f9614d01e344cba1290a953da3d8a",
+      "wbs": [
+        "U8.05",
+        "U6.04",
+        "U6.05"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_MAILBOX_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::B3 Administration mail-test requires exact Review then one Confirm"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "B4-TEMPLATE-DELIVERY-MOBILE",
+      "source": "docs/STATUS.md",
+      "start_line": 338,
+      "end_line": 357,
+      "source_span_sha256": "78c36e0054504c97f59aa0e065b4b2c00ce1f833bfdae3da77ce0be40169a8fe",
+      "wbs": [
+        "U8.05"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::B4 full notification template set create and update require exact Review then Confirm"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "B4-POLICY-MOBILE",
+      "source": "docs/STATUS.md",
+      "start_line": 382,
+      "end_line": 400,
+      "source_span_sha256": "25562fcb0094933dd2a2e11daae7935188f0c11cc0d4554349731ed5c75a5d4f",
+      "wbs": [
+        "U8.04"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::B4 policy workspace mobile 320/375 uses readable cards without horizontal policy scan"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "B4-POLICY-TEMPLATE-CAS",
+      "source": "docs/STATUS.md",
+      "start_line": 444,
+      "end_line": 462,
+      "source_span_sha256": "ddf99103986a3f23ddb5a4af64e8e6cdd8f3ba980ee77b7caca7787a222806fe",
+      "wbs": [
+        "U8.04",
+        "U8.05"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_TWO_ADMIN_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::G1 browser policy selectors create a matching request and keep latest draft on disable",
+        "web/tests/browser/approval.spec.ts::B4 full notification template set create and update require exact Review then Confirm"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "B4-DELIVERY-FILTER",
+      "source": "docs/STATUS.md",
+      "start_line": 540,
+      "end_line": 553,
+      "source_span_sha256": "0a796e4ac032885c74366122fe278e7c71239a1a2e4e874a3aa39cad502c618a",
+      "wbs": [
+        "U8.05"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::B4 delivery health binds newest FAILED filter ahead of old PENDING GET"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "B5-EXCEPTION-INTEGRATION-DIRS",
+      "source": "docs/STATUS.md",
+      "start_line": 252,
+      "end_line": 272,
+      "source_span_sha256": "5eeaa8919888a3f08cd73993c61a557f61183cbdd886afe2ebfd043a543ad4f3",
+      "wbs": [
+        "U8.06"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::G7 Operations exceptions open exact role-scoped reconciliation queue",
+        "web/tests/browser/approval.spec.ts::G8 integration health and safe export are visible without revealing credentials"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "B5-OPS-MOBILE",
+      "source": "docs/STATUS.md",
+      "start_line": 307,
+      "end_line": 322,
+      "source_span_sha256": "875c4f1a24ae4a080a8eff4cabf74763aff7d6a265305aa9d116fb5f4afb1fb3",
+      "wbs": [
+        "U8.06"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::G7 Operations exceptions open exact role-scoped reconciliation queue"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "B5-AUDIT-CARDS",
+      "source": "docs/STATUS.md",
+      "start_line": 323,
+      "end_line": 337,
+      "source_span_sha256": "e0ac0d2a1cb40709503727b18e26dd0a510bc9988e7c6640ac751d3c98431435",
+      "wbs": [
+        "U8.06"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::G9 admin audit search, CSV/JSON download and request evidence chain"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "B5-BACKUP-CLI",
+      "source": "docs/STATUS.md",
+      "start_line": 429,
+      "end_line": 443,
+      "source_span_sha256": "583972f5d3aed1dcddd6ff51ad4d5346bd519cb5ea7176004721e702c8a8e04f",
+      "wbs": [],
+      "disposition": "ORIGINAL_NON_UI_SCOPE_RETAINED_NOT_UI_WBS",
+      "verification_tests": [],
+      "evidence_head": null,
+      "verification_artifact": null
+    },
+    {
+      "id": "B5-AUDIT-WORKLIST",
+      "source": "docs/STATUS.md",
+      "start_line": 554,
+      "end_line": 570,
+      "source_span_sha256": "ce4c14296afef999a07c93df8209516e31708c58719ca20b4693b84f156fdc22",
+      "wbs": [
+        "U8.06"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_REAL_USER_ACCEPTANCE_OPEN",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::G9 admin audit search, CSV/JSON download and request evidence chain"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "REA-KEYCLOAK-UI",
+      "source": "docs/UX_REA_KEYCLOAK_20261010.md",
+      "start_line": 36,
+      "end_line": 47,
+      "source_span_sha256": "d0dd1ed23bf823b2760030908e835f7d8d2a76d65ba9888806d7db77cc297505",
+      "wbs": [
+        "U8.02",
+        "U8.07"
+      ],
+      "disposition": "CURRENT_SOURCE_INTERACTION_PASS_NO_VENDOR_RUNTIME_CLAIM",
+      "verification_tests": [
+        "web/tests/browser/approval.spec.ts::Foundation login and grouped Grant shell follow the DataRelay family layout",
+        "web/tests/browser/approval.spec.ts::B1 approver Inbox task-first mobile 320/375 and keyboard queue controls"
+      ],
+      "evidence_head": "3cb5eefdfe369ad93114991f7d4ae2419d8ecfad",
+      "verification_artifact": ".dev/u8-native-browser-45-final.txt"
+    },
+    {
+      "id": "SCOPE-EXPLICIT-NON-GAPS",
+      "source": "docs/GRANT_UI_UX_GAP_MATRIX.md",
+      "start_line": 57,
+      "end_line": 61,
+      "source_span_sha256": "5cd42608f66e16499d0e8ae0ab80776ea6b523ef3957066cabfb07dbe1bb422c",
+      "wbs": [
+        "U8.08"
+      ],
+      "disposition": "RETAINED_EXPLICIT_SCOPE_BOUNDARY",
+      "verification_tests": [],
+      "evidence_head": null,
+      "verification_artifact": null
     }
   ]
 }

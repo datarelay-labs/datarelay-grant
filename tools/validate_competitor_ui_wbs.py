@@ -163,8 +163,50 @@ def validate_crosswalk(data: dict, wbs_ids: set[str], root: Path = ROOT) -> dict
             raise ValueError('Structured finding references unknown WBS')
         if original_row['priority'] == 'defer' and row.get('disposition') != 'ORIGINAL_EXPLICIT_DEFERRED_NOT_NEW_SCOPE':
             raise ValueError('Original explicit deferral was silently changed')
+    narrative_expected = {
+        'P0-2A','P0-2B','P0-2C','P0-2D','P0-2E','P0-2F','P0-2G',
+        'UX-A','UX-B','UX-C','UX-D','UX-E',
+        'G-CI-1','G-CI-2','G-CI-3','G-CI-4','G-CI-5',
+        'B2-FOUNDATION','B3-APPROVER-GROUP','B3-ADMIN-CAPABILITY','B3-MAIL-TEST',
+        'B4-TEMPLATE-DELIVERY-MOBILE','B4-POLICY-MOBILE','B4-POLICY-TEMPLATE-CAS','B4-DELIVERY-FILTER',
+        'B5-EXCEPTION-INTEGRATION-DIRS','B5-OPS-MOBILE','B5-AUDIT-CARDS','B5-BACKUP-CLI','B5-AUDIT-WORKLIST',
+        'REA-KEYCLOAK-UI','SCOPE-EXPLICIT-NON-GAPS',
+    }
+    narrative = data.get('historical_narrative_atoms', [])
+    if len(narrative) != len(narrative_expected) or {row.get('id') for row in narrative} != narrative_expected:
+        raise ValueError('Historical narrative atom IDs are missing or duplicated')
+    for row in narrative:
+        source = row.get('source')
+        if source not in loaded:
+            raise ValueError(f"{row.get('id')}: narrative source is not pinned")
+        start, end = row.get('start_line'), row.get('end_line')
+        if type(start) is not int or type(end) is not int or start < 1 or end < start or end > len(loaded[source]):
+            raise ValueError(f"{row.get('id')}: invalid narrative source span")
+        span = '\n'.join(loaded[source][start - 1:end])
+        if hashlib.sha256(span.encode()).hexdigest() != row.get('source_span_sha256'):
+            raise ValueError(f"{row.get('id')}: narrative source wording changed")
+        links = row.get('wbs', [])
+        if len(links) != len(set(links)) or not set(links) <= wbs_ids:
+            raise ValueError(f"{row.get('id')}: invalid narrative WBS mapping")
+        if not links and row.get('disposition') != 'ORIGINAL_NON_UI_SCOPE_RETAINED_NOT_UI_WBS':
+            raise ValueError(f"{row.get('id')}: narrative item lacks WBS mapping")
+        tests = row.get('verification_tests', [])
+        if len(tests) != len(set(tests)):
+            raise ValueError(f"{row.get('id')}: duplicate narrative verification test")
+        if tests:
+            if not re.fullmatch(r'[0-9a-f]{40}', row.get('evidence_head') or '') or not row.get('verification_artifact'):
+                raise ValueError(f"{row.get('id')}: narrative test evidence is not exact-head bound")
+            for test in tests:
+                try:
+                    test_path, title = test.split('::', 1)
+                except ValueError as exc:
+                    raise ValueError(f"{row.get('id')}: invalid narrative test reference") from exc
+                candidate = (root / test_path).resolve()
+                if not candidate.is_relative_to(root.resolve()) or not candidate.is_file() or title not in candidate.read_text():
+                    raise ValueError(f"{row.get('id')}: narrative test reference is not present")
     return {'et_checks': 24, 'original_user_scenarios': 121,
             'historical_gap_rows': 9, 'structured_findings': len(findings), 'original_ui_audit_rows': 7,
+            'historical_narrative_atoms': len(narrative),
             'traceability': 'PASS', 'product_acceptance': False}
 
 
