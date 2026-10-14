@@ -32,8 +32,8 @@ export async function notificationsFixture(page:Page){
   if(pathname.endsWith('/preview')){
    const match=pathname.match(/^\/api\/v1\/notification-template-sets\/([^/]+)\/preview$/);
    const payload=route.request().postDataJSON(),row=match?state.rows.find(item=>item.id===decodeURIComponent(match[1]))!:state.rows[0];
-   const result=await renderSyntheticEmail({...payload,template:payload.template??{name:row.name,templates:row.templates,design:row.design}});
-   await route.fulfill({json:{...result,transport_accepted:false,receipt_confirmed:false,execution_allowed:false}});return;
+   const result=await renderSyntheticEmail({...payload,verification_mode:payload.verification_mode??'EMAIL_PIN',template:payload.template??{name:row.name,templates:row.templates,design:row.design}});
+   await route.fulfill({json:{...result,event:payload.event,...(match?{template_set_id:row.id,template_updated_at:row.updated_at,preview_hash:'c'.repeat(64)}:{template_set_id:''}),transport_accepted:false,receipt_confirmed:false,execution_allowed:false}});return;
   }
   if(pathname==='/api/v1/notification-template-sets/synthetic-template'&&method==='PUT'){
    state.writes.push('PUT');const payload=route.request().postDataJSON();expect(payload.expected_updated_at).toBe(state.rows[0].updated_at);

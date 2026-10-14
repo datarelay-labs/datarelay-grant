@@ -451,6 +451,7 @@ export function Notifications() {
   const testSendAttempt = useRef(createNotificationTestSendAttemptGuard());
   const [testSendNeedsRefresh, setTestSendNeedsRefresh] = useState(false);
   const [testSendAttemptedId, setTestSendAttemptedId] = useState('');
+  const [testSendAttemptId, setTestSendAttemptId] = useState('');
   const [sampleTitle, setSampleTitle] = useState('Sample approval request');
   const [sampleTarget, setSampleTarget] = useState('sample-target');
   const [sampleReason, setSampleReason] = useState('Notification preview');
@@ -751,6 +752,7 @@ export function Notifications() {
     if (testSendAttempt.current.blocked()) return;
     setReviewedTestSend(null);
     setTestSendAttemptedId(reviewed.templateSetId);
+    setTestSendAttemptId(reviewed.attemptId);
     setTestSendNeedsRefresh(true);
     try {
       const result = await submitReviewedNotificationTestSend(
@@ -764,6 +766,9 @@ export function Notifications() {
           event_id: string;
         }>('/notification-template-sets/' + intent.templateSetId + '/test-send', 'POST', {
           event: intent.event, sample: intent.sample,
+          expected_updated_at: intent.expectedUpdatedAt,
+          preview_hash: intent.previewHash,
+          attempt_id: intent.attemptId,
         }),
       );
       if (result) task.setNotice(
@@ -775,26 +780,33 @@ export function Notifications() {
       // Failed pre-POST GET can be re-reviewed; a possible SMTP write latches.
       const blocked = testSendAttempt.current.blocked();
       setTestSendNeedsRefresh(blocked);
-      if (!blocked) setTestSendAttemptedId('');
+      if (!blocked) { setTestSendAttemptedId(''); setTestSendAttemptId(''); }
     }
   }
 
   async function refreshAfterTestSend() {
-    if (!testSendAttemptedId || draftDirty) {
+    if (!testSendAttemptedId || !testSendAttemptId || draftDirty) {
       throw new Error('TEST_SEND_SAVE_OR_SELECT_CURRENT_TEMPLATE_FIRST');
+    }
+    const status = await api<{state:'ATTEMPTED'|'ACCEPTED'|'UNKNOWN';transport_accepted:boolean;receipt_confirmed:boolean;execution_allowed:boolean;outcome_ambiguous:boolean}>(
+      '/notification-template-sets/' + testSendAttemptedId + '/test-send-attempts/' + testSendAttemptId,
+    );
+    if (status.state === 'ATTEMPTED') {
+      task.setNotice('The reviewed test email attempt is still in progress. It remains locked and will not be retried.');
+      return;
     }
     const latest = await api<NotificationTemplateSet[]>('/notification-template-sets');
     const current = latest.find((row) => row.id === testSendAttemptedId);
     if (!current) throw new Error('TEST_SEND_SAVED_TEMPLATE_NOT_FOUND');
-    // A changed server row must replace the editor's older saved snapshot.
     setSets(latest);
     if (editing === current.id) edit(current);
-    if (!testSendAttempt.current.readSucceeded()) {
-      throw new Error('TEST_SEND_STILL_IN_FLIGHT');
-    }
+    if (!testSendAttempt.current.readSucceeded()) throw new Error('TEST_SEND_STILL_IN_FLIGHT');
     setTestSendNeedsRefresh(false);
     setTestSendAttemptedId('');
-    task.setNotice('Saved template refreshed. Review a fresh preview before any new test email.');
+    setTestSendAttemptId('');
+    task.setNotice(status.state === 'ACCEPTED'
+      ? 'Transport acceptance is confirmed for the reviewed one-shot attempt. Inbox receipt is still not confirmed. Review again before any new test.'
+      : 'The reviewed SMTP outcome is unknown and may have delivered. The attempt will never be replayed. Check the mailbox before separately reviewing any new test.');
   }
 
   function reviewBranding(){
@@ -1092,7 +1104,7 @@ export function Notifications() {
                   is never retried automatically.
                   <Button variant="secondary" disabled={task.busy}
                     onClick={() => void task.run(refreshAfterTestSend)}>
-                    Refresh saved template
+                    Reconcile test-email attempt
                   </Button>
                 </Alert>
               )}

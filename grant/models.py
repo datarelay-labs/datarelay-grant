@@ -256,6 +256,9 @@ class NotificationDraftPreview(NotificationPreview):
 
 
 class NotificationTestSend(NotificationPreview):
+    expected_updated_at: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    preview_hash: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    attempt_id: str | None = Field(default=None, min_length=16, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
     recipient_user_id: str | None = Field(default=None, max_length=100)
 
 

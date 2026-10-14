@@ -272,11 +272,19 @@ CREATE TABLE IF NOT EXISTS email_template_revisions (
  snapshot TEXT NOT NULL, snapshot_hash TEXT NOT NULL, created_by TEXT NOT NULL,
  created_at REAL NOT NULL, reason TEXT NOT NULL, PRIMARY KEY(template_id,revision)
 );
+CREATE TABLE IF NOT EXISTS notification_test_attempts (
+ actor_id TEXT NOT NULL REFERENCES users(id), attempt_id TEXT NOT NULL,
+ template_id TEXT NOT NULL REFERENCES email_templates(id), preview_hash TEXT NOT NULL,
+ event_id TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('ATTEMPTED','ACCEPTED','UNKNOWN')),
+ created_at REAL NOT NULL, updated_at REAL NOT NULL, PRIMARY KEY(actor_id,attempt_id)
+);
+CREATE INDEX IF NOT EXISTS notification_test_attempts_recent
+ ON notification_test_attempts(actor_id,created_at);
 CREATE TABLE IF NOT EXISTS notification_assets (
  id TEXT PRIMARY KEY, media_type TEXT NOT NULL, width INTEGER NOT NULL, height INTEGER NOT NULL,
  data BLOB NOT NULL, created_by TEXT NOT NULL, created_at REAL NOT NULL
 );
-PRAGMA user_version=13;
+PRAGMA user_version=14;
 """
 
 
@@ -314,7 +322,7 @@ def _existing_installation(path: Path) -> Iterator[tuple[sqlite3.Connection, int
         raise ValueError("Installation database is missing or not a regular file")
     with closing(sqlite3.connect(f"{path.absolute().as_uri()}?mode=ro", uri=True)) as conn:
         version = conn.execute("PRAGMA user_version").fetchone()[0]
-        if version not in range(1, 14):
+        if version not in range(1, 15):
             raise ValueError("Unsupported installation database schema")
         if conn.execute("PRAGMA quick_check").fetchone()[0] != "ok":
             raise ValueError("Installation database integrity check failed")
@@ -334,7 +342,7 @@ class Database:
         _ensure_private_database_path(path)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13):
+            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14):
                 raise RuntimeError("Unsupported database schema; do not downgrade this binary")
             conn.execute("PRAGMA journal_mode=WAL")
             if version == 1:
@@ -372,6 +380,9 @@ class Database:
                 version = 12
             if version == 12:
                 self._migrate_v12_to_v13(conn)
+                version = 13
+            if version == 13:
+                self._migrate_v13_to_v14(conn)
             conn.executescript(SCHEMA)
 
     @staticmethod
@@ -789,6 +800,27 @@ class Database:
             raise
 
 
+    @staticmethod
+    def _migrate_v13_to_v14(conn: sqlite3.Connection) -> None:
+        # Add durable reviewed test-send attempt claims. Existing templates,
+        # publications, requests and outbox payloads remain byte-for-byte unchanged.
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            conn.execute("""CREATE TABLE IF NOT EXISTS notification_test_attempts (
+                actor_id TEXT NOT NULL REFERENCES users(id), attempt_id TEXT NOT NULL,
+                template_id TEXT NOT NULL REFERENCES email_templates(id), preview_hash TEXT NOT NULL,
+                event_id TEXT NOT NULL, state TEXT NOT NULL
+                 CHECK(state IN ('ATTEMPTED','ACCEPTED','UNKNOWN')),
+                created_at REAL NOT NULL, updated_at REAL NOT NULL,
+                PRIMARY KEY(actor_id,attempt_id))""")
+            conn.execute("""CREATE INDEX IF NOT EXISTS notification_test_attempts_recent
+                ON notification_test_attempts(actor_id,created_at)""")
+            conn.execute("PRAGMA user_version=14")
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
         conn.row_factory = sqlite3.Row
@@ -846,7 +878,7 @@ class Database:
         with closing(sqlite3.connect(f"{source.absolute().as_uri()}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
-            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13):
+            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14):
                 raise ValueError("Backup schema mismatch")
             with (
                 _private_sqlite_output(destination) as staged,

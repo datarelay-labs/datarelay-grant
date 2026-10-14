@@ -199,7 +199,17 @@ def test_template_set_safe_variables_preview_snapshot_and_event_delivery(env):
     )
 
 
+def _reviewed_test_send(admin, template_id, body, attempt_id):
+    preview = admin.post(f"/api/v1/notification-template-sets/{template_id}/preview", json=body)
+    assert preview.status_code == 200, preview.text
+    value = preview.json()
+    return {**body, "expected_updated_at": value["template_updated_at"],
+            "preview_hash": value["preview_hash"], "attempt_id": attempt_id}, value
+
+
 def test_notification_test_send_is_non_authorizing_and_receipt_is_not_claimed(env, monkeypatch):
+    from test_email_renderer import CONTEXT
+
     admin = env.human("admin")
     template_set = admin.post(
         "/api/v1/notification-template-sets", json=template_set_payload()
@@ -207,39 +217,22 @@ def test_notification_test_send_is_non_authorizing_and_receipt_is_not_claimed(en
     sent = {}
 
     def fake_send(settings, destination, payload, event_id):
-        sent.update(
-            {
-                "destination": destination,
-                "payload": json.loads(payload),
-                "event_id": event_id,
-            }
-        )
+        sent.update({"destination": destination, "payload": json.loads(payload), "event_id": event_id})
 
     monkeypatch.setattr("grant.transport.send_email", fake_send)
-
+    body, preview = _reviewed_test_send(
+        admin, template_set["id"], {"event": "requested", "sample": CONTEXT}, "notification-center-review-0001",
+    )
     response = admin.post(
-        f"/api/v1/notification-template-sets/{template_set["id"]}/test-send",
-        json={
-            "event": "requested",
-            "sample": {
-                "request_title": "Test only",
-                "request_url": "http://testserver/requests/test",
-                "external_id": "test-send",
-                "action_kind": "service.notify",
-                "target": "test-service",
-                "reason": "test",
-                "deadline": "2030-01-01T00:00:00+00:00",
-                "decision_state": "AWAITING",
-                "execution_state": "NOT_STARTED",
-            },
-        },
+        f"/api/v1/notification-template-sets/{template_set['id']}/test-send", json=body,
     )
     assert response.status_code == 200, response.text
-    body = response.json()
-    assert body["transport_accepted"] is True
-    assert body["receipt_confirmed"] is False
-    assert body["execution_allowed"] is False
+    result = response.json()
+    assert result["transport_accepted"] is True
+    assert result["receipt_confirmed"] is False
+    assert result["execution_allowed"] is False
     assert sent["destination"]["email"] == env.users["admin"]["email"]
+    assert sent["payload"] == preview["rendered"]
 
 
 def test_notification_test_send_revalidates_authority_before_transport(env, monkeypatch):
@@ -249,6 +242,17 @@ def test_notification_test_send_revalidates_authority_before_transport(env, monk
     ).json()
     sent = []
     monkeypatch.setattr("grant.transport.send_email", lambda *args: sent.append(args))
+    base = {
+        "event": "requested",
+        "sample": {
+            "request_title": "Revoked", "request_url": "http://testserver/requests/test",
+            "external_id": "revoked-send", "action_kind": "service.notify",
+            "target": "test-service", "reason": "test",
+            "deadline": "2030-01-01T00:00:00+00:00",
+            "decision_state": "AWAITING", "execution_state": "NOT_STARTED",
+        },
+    }
+    reviewed, _ = _reviewed_test_send(admin, template_set["id"], base, "notification-center-revoke-0001")
 
     from grant.mail_templates import render_from_context as real_render
 
@@ -261,16 +265,7 @@ def test_notification_test_send_revalidates_authority_before_transport(env, monk
     monkeypatch.setattr("grant.mail_templates.render_from_context", revoke_after_render)
     response = admin.post(
         f"/api/v1/notification-template-sets/{template_set['id']}/test-send",
-        json={
-            "event": "requested",
-            "sample": {
-                "request_title": "Revoked", "request_url": "http://testserver/requests/test",
-                "external_id": "revoked-send", "action_kind": "service.notify",
-                "target": "test-service", "reason": "test",
-                "deadline": "2030-01-01T00:00:00+00:00",
-                "decision_state": "AWAITING", "execution_state": "NOT_STARTED"
-            },
-        },
+        json=reviewed,
     )
     assert response.status_code in (401, 403)
     assert sent == []

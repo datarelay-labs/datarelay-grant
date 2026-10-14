@@ -605,62 +605,9 @@ class Core:
     def test_notification(
         self, actor: Principal, ident: str, body: NotificationTestSend
     ) -> dict:
-        from .transport import require_transport_unpaused, send_email
+        from .email_test_review import send_reviewed_sample
 
-        actor.require_admin()
-        principal = actor
-        with self.db.transaction(write=False) as conn:
-            require_current_authority(conn, principal)
-            require_transport_unpaused(conn)
-            row = conn.execute("SELECT * FROM email_templates WHERE id=?", (ident,)).fetchone()
-            if not row:
-                raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
-            from .email_assets import snapshot_logo
-
-            template = snapshot_logo(conn, snapshot(row, branding=self._branding(conn)))
-            recipient_id = body.recipient_user_id or principal.id
-            # No designated-safe-recipient registry exists yet. Do not let an
-            # administrator turn test delivery into unsolicited mail to users.
-            if recipient_id != principal.id:
-                raise GrantError("TEST_RECIPIENT_NOT_ALLOWED", 403)
-            recipient = conn.execute(
-                "SELECT id,email,enabled FROM users WHERE id=?", (recipient_id,)
-            ).fetchone()
-            if not recipient or not recipient["enabled"]:
-                raise GrantError("TEST_RECIPIENT_NOT_FOUND", 404)
-        from .mail_templates import render_preview
-
-        rendered = render_preview(template, body.event, body.sample.model_dump())
-        event_id = uid()
-        with self.db.transaction(write=False) as conn:
-            require_current_authority(conn, principal)
-            require_transport_unpaused(conn)
-        send_email(
-            self.settings,
-            {"email": recipient["email"]},
-            json_text(rendered),
-            event_id,
-        )
-        with self.db.transaction() as conn:
-            require_current_authority(conn, principal)
-            audit(
-                conn,
-                None,
-                principal.id,
-                "notification.test_accepted",
-                {
-                    "template_set_id": ident,
-                    "event": body.event,
-                    "recipient_user_id": recipient_id,
-                    "event_id": event_id,
-                },
-            )
-        return {
-            "transport_accepted": True,
-            "receipt_confirmed": False,
-            "execution_allowed": False,
-            "event_id": event_id,
-        }
+        return send_reviewed_sample(self, actor, ident, body)
 
     def notification_deliveries(
         self, actor: Principal, *,

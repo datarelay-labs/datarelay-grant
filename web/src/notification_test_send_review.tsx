@@ -1,4 +1,5 @@
 import { Alert, Button } from '@datarelay-labs/foundation';
+import { ApiError } from './api';
 import { templateDraftSignature } from './notification_preview';
 import type { NotificationEvent, NotificationTemplateSet } from './types';
 
@@ -16,6 +17,8 @@ export type NotificationTestSendSample = {
 
 export type NotificationTestSendPreview = {
   template_set_id: string;
+  template_updated_at: number;
+  preview_hash: string;
   event: NotificationEvent;
   rendered: {
     subject: string;
@@ -37,6 +40,9 @@ export type NotificationTestSendReview = {
   sample: NotificationTestSendSample;
   /** Sample editing inputs, excluding the generated deadline frozen in sample. */
   inputSignature: string;
+  expectedUpdatedAt: number;
+  previewHash: string;
+  attemptId: string;
   preview: NotificationTestSendPreview;
 };
 
@@ -51,9 +57,13 @@ export function createNotificationTestSendReview(
   sample: NotificationTestSendSample,
   inputSignature: string,
   preview: NotificationTestSendPreview,
+  attemptId = crypto.randomUUID(),
 ): NotificationTestSendReview {
   if (!saved.id || !inputSignature
       || preview.template_set_id !== saved.id || preview.event !== event
+      || preview.template_updated_at !== saved.updated_at
+      || !/^[a-f0-9]{64}$/.test(preview.preview_hash)
+      || !/^[A-Za-z0-9_-]{16,64}$/.test(attemptId)
       || preview.transport_accepted !== false
       || preview.receipt_confirmed !== false
       || preview.execution_allowed !== false
@@ -68,6 +78,9 @@ export function createNotificationTestSendReview(
     event,
     sample: { ...sample },
     inputSignature,
+    expectedUpdatedAt: preview.template_updated_at,
+    previewHash: preview.preview_hash,
+    attemptId,
     preview: {
       ...preview, rendered: { ...preview.rendered },
     },
@@ -84,6 +97,7 @@ export function isCurrentNotificationTestSendReview(
   return Boolean(reviewed && saved && !unsaved
     && reviewed.templateSetId === saved.id
     && reviewed.templateSignature === templateDraftSignature(saved)
+    && reviewed.expectedUpdatedAt === saved.updated_at
     && reviewed.event === event
     && reviewed.inputSignature === inputSignature);
 }
@@ -111,6 +125,12 @@ export function createNotificationTestSendAttemptGuard() {
     settled(): void {
       inFlight = false;
       if (!postStarted) attempted = false;
+    },
+    rejectedBeforeTransport(): boolean {
+      if (!inFlight || !postStarted) return false;
+      postStarted = false;
+      attempted = false;
+      return true;
     },
     readSucceeded(): boolean {
       if (inFlight) return false;
@@ -143,7 +163,17 @@ export async function submitReviewedNotificationTestSend<T>(
       throw new Error('TEST_SEND_SAVED_TEMPLATE_CHANGED');
     }
     guard.markPostStarted();
-    return await postOnce(reviewed);
+    try {
+      return await postOnce(reviewed);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 409
+          && ['TEST_SEND_CHANGED_REVIEW_REQUIRED','TEST_SEND_REVIEW_REQUIRED','TEST_SEND_RATE_LIMIT'].includes(error.code)) {
+        // These server rejections occur before the durable attempt row and SMTP.
+        // The reviewed proof is not replayed; the caller must create a new review.
+        guard.rejectedBeforeTransport();
+      }
+      throw error;
+    }
   } finally {
     guard.settled();
   }
@@ -172,6 +202,8 @@ export function NotificationTestSendConfirmation({
         <dt>Sample request</dt><dd>{sample.request_title}</dd>
         <dt>Sample target</dt><dd>{sample.target}</dd>
         <dt>Subject</dt><dd>{preview.rendered.subject}</dd>
+        <dt>Reviewed saved state</dt><dd>{reviewed.expectedUpdatedAt}</dd>
+        <dt>One-shot attempt</dt><dd><code>{reviewed.attemptId}</code></dd>
       </dl>
       <p><strong>Full rendered message preview</strong></p>
       <pre className="grant-mono">{preview.rendered.body}</pre>

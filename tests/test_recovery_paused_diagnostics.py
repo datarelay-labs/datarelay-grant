@@ -52,6 +52,15 @@ def _test_send_body() -> dict:
     }
 
 
+def _reviewed_test_send_body(admin, template_id: str, attempt_id: str) -> dict:
+    body = _test_send_body()
+    preview = admin.post(f"/api/v1/notification-template-sets/{template_id}/preview", json=body)
+    assert preview.status_code == 200, preview.text
+    value = preview.json()
+    return {**body, "expected_updated_at": value["template_updated_at"],
+            "preview_hash": value["preview_hash"], "attempt_id": attempt_id}
+
+
 def _pending_outbox(env) -> str:
     created = env.human("requester").post(
         "/api/v1/requests",
@@ -87,10 +96,11 @@ def test_recovery_pause_blocks_notification_template_test_send(env, monkeypatch)
     template_id = _template(admin)
     outbound = []
     monkeypatch.setattr("grant.transport.send_email", lambda *args: outbound.append(args))
+    reviewed = _reviewed_test_send_body(admin, template_id, "paused-reviewed-send-0001")
     _pause(env)
     response = admin.post(
         f"/api/v1/notification-template-sets/{template_id}/test-send",
-        json=_test_send_body(),
+        json=reviewed,
     )
     _assert_paused(response)
     assert outbound == []
@@ -153,7 +163,7 @@ def test_unpaused_manual_diagnostics_and_resend_remain_available(env, monkeypatc
     assert admin.post("/api/v1/admin/mail-test").status_code == 200
     sent = admin.post(
         f"/api/v1/notification-template-sets/{template_id}/test-send",
-        json=_test_send_body(),
+        json=_reviewed_test_send_body(admin, template_id, "unpaused-reviewed-send-0001"),
     )
     assert sent.status_code == 200, sent.text
     assert sent.json()["receipt_confirmed"] is False

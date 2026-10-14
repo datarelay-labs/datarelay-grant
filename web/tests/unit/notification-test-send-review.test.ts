@@ -30,7 +30,7 @@ const inputs = JSON.stringify(['Change window', 'isolated-node',
   'Approved lab test only', 'AWAITING', 'NOT_STARTED']);
 function preview(body = 'Review isolated-node') {
   return {
-    template_set_id: 'set-a', event,
+    template_set_id: 'set-a', template_updated_at: saved.updated_at, preview_hash: 'c'.repeat(64), event,
     rendered: {
       subject: 'Request Change window', body,
       sender_display_name: 'DataRelay Grant', brand_name: 'DataRelay Grant',

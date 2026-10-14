@@ -380,6 +380,12 @@ def register_domain(app, actor, human, reader):
     def test_notification(ident: str, body: NotificationTestSend, request: Request):
         return core.test_notification(actor(request), ident, body)
 
+    @app.get("/api/v1/notification-template-sets/{ident}/test-send-attempts/{attempt_id}")
+    def notification_test_send_attempt(ident: str, attempt_id: str, request: Request):
+        from .email_test_review import test_send_attempt_status
+
+        return test_send_attempt_status(core, actor(request), ident, attempt_id)
+
     @app.get("/api/v1/notification-variables")
     def notification_variables(request: Request):
         return core.notification_variables(actor(request))
