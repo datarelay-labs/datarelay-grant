@@ -432,6 +432,9 @@ export function Notifications() {
   const templateSaveGuard=useRef(createTemplateSaveGuard());
   const [templateNeedsRefresh,setTemplateNeedsRefresh]=useState(false);
   const [savedSignature, setSavedSignature] = useState<string | null>(null);
+  const [pendingTemplateExit,setPendingTemplateExit]=useState<NotificationView|'list'|null>(null);
+  const templateExitPrompt=useRef<HTMLDivElement>(null);
+  const templateExitOrigin=useRef<HTMLElement|null>(null);
   const previewGeneration = useRef(0);
   const [brandName, setBrandName] = useState('DataRelay Grant');
   const [senderName, setSenderName] = useState('DataRelay Grant');
@@ -470,7 +473,54 @@ export function Notifications() {
   const currentTemplate=editing
     ?sets.find(row=>row.id===editing)??null:null;
 
+  const protectTemplateUnload=view==='templates'&&templateView==='editor'
+    &&(!editing||draftDirty||templateNeedsRefresh);
+  useEffect(()=>{
+    if(!protectTemplateUnload)return;
+    const preventLoss=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue='';};
+    window.addEventListener('beforeunload',preventLoss);
+    return()=>window.removeEventListener('beforeunload',preventLoss);
+  },[protectTemplateUnload]);
+  useEffect(()=>{
+    if(pendingTemplateExit!==null)templateExitPrompt.current?.querySelector<HTMLButtonElement>('[data-keep-editing]')?.focus();
+  },[pendingTemplateExit]);
+  function completeTemplateExit(next:NotificationView|'list'){
+    setPendingTemplateExit(null);
+    templateViewRef.current='list';
+    setReviewedTemplateSave(null);
+    setTemplateView('list');
+    invalidatePreview();
+    if(next!=='list'){
+      activeViewRef.current=next;
+      setReviewedBranding(null);
+      setView(next);
+    }
+  }
+  function requestTemplateExit(next:NotificationView|'list'){
+    if(task.busy||templateSaveGuard.current.blocked()){
+      task.setNotice('Resolve the current save first. Refresh saved template set to reconcile its outcome; your local changes are retained.');
+      return;
+    }
+    if(!editing||draftDirty){
+      templateExitOrigin.current=document.activeElement as HTMLElement|null;
+      setPendingTemplateExit(next);
+      return;
+    }
+    completeTemplateExit(next);
+  }
+  function keepTemplateEditing(){
+    setPendingTemplateExit(null);
+    requestAnimationFrame(()=>templateExitOrigin.current?.focus());
+  }
+  function discardTemplateExit(){
+    if(pendingTemplateExit===null||task.busy||templateSaveGuard.current.blocked())return;
+    completeTemplateExit(pendingTemplateExit);
+  }
   function switchSection(next:NotificationView){
+    if(next===activeViewRef.current)return;
+    if(activeViewRef.current==='templates'&&templateViewRef.current==='editor'){
+      requestTemplateExit(next);return;
+    }
     activeViewRef.current=next;
     setReviewedBranding(null);
     setReviewedTemplateSave(null);
@@ -626,20 +676,20 @@ export function Notifications() {
     selectedTemplateRef.current=target.id;
     setSets(latest);
     setEditing(target.id);
-    setName(target.name);
-    setEnabled(target.enabled);
-    setDraftTemplates(structuredClone(target.templates));
-    setDraftDesign(target.design?structuredClone(target.design):null);
+    // Reconcile the authoritative saved baseline, not a destructive reload.
+    // A failed/ambiguous write may leave a valuable local draft that differs.
+    if(!draftDirty){
+      setName(target.name);
+      setEnabled(target.enabled);
+      setDraftTemplates(structuredClone(target.templates));
+      setDraftDesign(target.design?structuredClone(target.design):null);
+    }
     setSavedSignature(templateDraftSignature(target));
     invalidatePreview();
     if(templateSaveGuard.current.readSucceeded(attempted))setTemplateNeedsRefresh(false);
-    task.setNotice('The originally attempted template set was refreshed from the current administrator-scoped server list. Review again for a separate change.');
+    task.setNotice('The originally attempted template set was refreshed from the current administrator-scoped server list. Your local wording is retained; review any remaining unsaved differences before a separate save.');
   }
-  function leaveTemplateEditor(){
-    templateViewRef.current='list';
-    setReviewedTemplateSave(null);
-    setTemplateView('list');
-  }
+  function leaveTemplateEditor(){requestTemplateExit('list');}
 
   function sample(): NotificationTestSendSample {
     return {
@@ -836,6 +886,17 @@ export function Notifications() {
         </button>
       </nav>
 
+      {pendingTemplateExit!==null&&<div ref={templateExitPrompt} role="alertdialog" aria-label="Discard unsaved template changes?"
+        onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();keepTemplateEditing();}}}>
+        <Alert tone="warning" title="Discard unsaved changes?">
+          <p>Your draft has changes that are not saved. Keep editing to preserve them, or explicitly discard and leave. Nothing will be saved, published or sent.</p>
+          <div className="grant-actions">
+            <Button type="button" variant="secondary" data-keep-editing onClick={keepTemplateEditing}>Keep editing</Button>
+            <Button type="button" disabled={task.busy||templateSaveGuard.current.blocked()} onClick={discardTemplateExit}>Discard unsaved changes</Button>
+          </div>
+        </Alert>
+      </div>}
+
       {view === 'templates' && templateView === 'list' ? (
         <Card
           title="Email Templates"
@@ -870,7 +931,7 @@ export function Notifications() {
               <h2>{editing ? name || 'Email template' : 'New email template'}</h2>
               <p aria-label="Email draft publication status">{currentTemplate?.published_revision?'Published v'+currentTemplate.published_revision:'Not published'}
                 {' · '}{currentTemplate?.draft_revision?'Draft v'+currentTemplate.draft_revision:'New draft'}
-                {' · '}{!editing||draftDirty?'Unsaved changes':'Saved draft'}</p>
+                {' · '}{task.busy&&templateNeedsRefresh?'Saving draft…':templateNeedsRefresh&&draftDirty?'Save outcome unverified · unsaved changes retained':!editing||draftDirty?'Unsaved changes':'Saved draft'}</p>
               <Button type="submit" form="grant-email-draft-form" disabled={task.busy||templateSaveGuard.current.blocked()||!draftPreviewReady}>Save draft</Button>
               <p>
                 Edit one event at a time. Preview and test use the same render contract as

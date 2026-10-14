@@ -163,11 +163,23 @@
       "verification_id": "V-U1.01",
       "pass_criterion": "V-U1.01: enter the real Notifications editor; see one primary canvas/event selector, version/save controls and outline, not a long all-properties form or second competing editor. Desktop screenshot and mounted route assertions required.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "REUSED_SOURCE_AND_SYNTHETIC_CHECKPOINT",
+          "commit": "3c12a120d8bed86349c84cb75969fba55324d5f2",
+          "reference": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "tests": [
+            "web/tests/canvas/editor.spec.ts",
+            "web/tests/canvas/notifications.spec.ts",
+            "tests/test_email_canvas_layout.py"
+          ],
+          "scope": "Existing implementation retained; prior 7-case synthetic component evidence. Required deployed/persona acceptance remains NOT_RUN; no repeated research or reimplementation."
+        }
+      ],
       "blocker": null
     },
     {
@@ -178,11 +190,23 @@
       "verification_id": "V-U1.02",
       "pass_criterion": "V-U1.02: pointer and keyboard select each block; assert selected IDs, focus, matching inspector and updated render after input; no form-only substitute and no string-presence-only PASS.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "REUSED_SOURCE_AND_SYNTHETIC_CHECKPOINT",
+          "commit": "3c12a120d8bed86349c84cb75969fba55324d5f2",
+          "reference": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "tests": [
+            "web/tests/canvas/editor.spec.ts",
+            "web/tests/canvas/notifications.spec.ts",
+            "tests/test_email_canvas_layout.py"
+          ],
+          "scope": "Existing implementation retained; prior 7-case synthetic component evidence. Required deployed/persona acceptance remains NOT_RUN; no repeated research or reimplementation."
+        }
+      ],
       "blocker": null
     },
     {
@@ -193,11 +217,23 @@
       "verification_id": "V-U1.03",
       "pass_criterion": "V-U1.03: canvas/inspector/save use one state; versioned block extension opt-in, old v1/v2 output hashes unchanged; mutate event/style then save/reopen and compare design plus render.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "REUSED_SOURCE_AND_SYNTHETIC_CHECKPOINT",
+          "commit": "3c12a120d8bed86349c84cb75969fba55324d5f2",
+          "reference": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "tests": [
+            "web/tests/canvas/editor.spec.ts",
+            "web/tests/canvas/notifications.spec.ts",
+            "tests/test_email_canvas_layout.py"
+          ],
+          "scope": "Existing implementation retained; prior 7-case synthetic component evidence. Required deployed/persona acceptance remains NOT_RUN; no repeated research or reimplementation."
+        }
+      ],
       "blocker": null
     },
     {
@@ -208,11 +244,23 @@
       "verification_id": "V-U1.04",
       "pass_criterion": "V-U1.04: clicking any displayed decision/details only selects; assert zero navigation, decision/issuance/send calls and external resource fetch; hostile HTML cannot inject active nodes, handlers, forms or unsafe attributes.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "REUSED_SOURCE_AND_SYNTHETIC_CHECKPOINT",
+          "commit": "3c12a120d8bed86349c84cb75969fba55324d5f2",
+          "reference": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "tests": [
+            "web/tests/canvas/editor.spec.ts",
+            "web/tests/canvas/notifications.spec.ts",
+            "tests/test_email_canvas_layout.py"
+          ],
+          "scope": "Existing implementation retained; prior 7-case synthetic component evidence. Required deployed/persona acceptance remains NOT_RUN; no repeated research or reimplementation."
+        }
+      ],
       "blocker": null
     },
     {
@@ -222,13 +270,31 @@
       "depends_on": "U1.03",
       "verification_id": "V-U1.05",
       "pass_criterion": "V-U1.05: add/reorder an allowed optional explanatory block; required request/action/verification blocks cannot be deleted, duplicated, hidden or moved after an unsafe hierarchy; direct invalid JSON rejected. No dead advertised control.",
-      "status": "OPEN",
-      "source": "NOT_RUN",
+      "status": "BLOCKED",
+      "source": "BLOCKED",
       "interaction": "NOT_RUN",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
-      "blocker": null
+      "evidence": [
+        {
+          "kind": "RED_ONLY_NOT_SHIPPED",
+          "reference": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "pending_tests": ".dev/u1-05-blocked/",
+          "logs": [
+            ".dev/u1-05-python-red.txt",
+            ".dev/u1-05-web-red.txt"
+          ],
+          "result": "3 positive Python failures, 13 negative cases already rejected; 2 missing-model-helper Web failures. Not implemented/PASS."
+        }
+      ],
+      "blocker": {
+        "class": "PLATFORM_SAFETY_DENIAL",
+        "tool": "Remote_Desktop_Commander.start_process",
+        "target": "dev-atlas /home/aella/datarelay-grant-g10a-g0-integration-dev: optional-content schema/renderer/compiler/editor source batch",
+        "message": "요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.",
+        "effect": "U1.05 source was not written; normal readback confirms old source remains. No reroute or reformulated write.",
+        "bypassed": false
+      }
     },
     {
       "id": "U1.06",
@@ -238,11 +304,23 @@
       "verification_id": "V-U1.06",
       "pass_criterion": "V-U1.06: at 390px open/select/edit/close drawer; focus returns correctly, Escape works when appropriate, no trapped focus, page-level overflow or clipped primary buttons; no dragging required.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "PASS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "REUSED_SOURCE_AND_SYNTHETIC_CHECKPOINT",
+          "commit": "3c12a120d8bed86349c84cb75969fba55324d5f2",
+          "reference": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "tests": [
+            "web/tests/canvas/editor.spec.ts",
+            "web/tests/canvas/notifications.spec.ts",
+            "tests/test_email_canvas_layout.py"
+          ],
+          "scope": "Existing implementation retained; prior 7-case synthetic component evidence. Required deployed/persona acceptance remains NOT_RUN; no repeated research or reimplementation."
+        }
+      ],
       "blocker": null
     },
     {
@@ -253,11 +331,26 @@
       "verification_id": "V-U1.07",
       "pass_criterion": "V-U1.07: dirty exit offers keep/discard; failed save retains content; ambiguous save requires reconciliation; reopen reflects server state, never false Saved; no automatic publish/send.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "IN_PROGRESS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "CURRENT_SCOPED_SOURCE_AND_SYNTHETIC_BROWSER",
+          "source_paths": [
+            "web/src/notifications.tsx"
+          ],
+          "tests": [
+            "web/tests/canvas/draft-exit.spec.ts",
+            "web/tests/canvas/notifications.spec.ts"
+          ],
+          "result": "6/6 Chromium cases; 20/20 affected units; TypeScript/build PASS. Back/Notifications sections/new draft/unload and failed or lost-response reconciliation covered. Application-shell history navigation remains to qualify.",
+          "reference": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "artifact": ".dev/u1-07-browser-results.json",
+          "real_user_acceptance": false
+        }
+      ],
       "blocker": null
     },
     {

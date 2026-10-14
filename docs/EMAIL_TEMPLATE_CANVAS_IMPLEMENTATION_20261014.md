@@ -86,3 +86,61 @@ normal source work under the current owner instruction succeeded and synthetic
 qualification passed. A separate combined old-log/status read in this continuation
 was platform-blocked and was not rerouted. Independent source work and new test
 runs succeeded. Preserve the original G12 dirty file and Inbox stash unchanged.
+
+## U1.05 / U1.07 bounded continuation design (planned contract, not a PASS)
+
+Goal: add optional explanatory blocks with real selection/move/remove/persistence,
+then prevent unreviewed loss of an edited draft. Non-goals: Foundation changes,
+new approval authority, arbitrary HTML/CSS/URLs, mail sending or publication.
+A new immutable shared layout revision 4 adds at most three server-allowlisted
+`content_1`..`content_3` IDs, with bounded safe wording in `optional_content`.
+They exist only between `message` and `request_context`; the protected sequence
+and identities are immutable. Optional wording/order is explicitly set-wide.
+The schema requires a bijection between optional IDs and wording; old revisions
+reject the extension, and v1/v2/v3 artifacts and existing outputs stay unchanged.
+No database migration or automatic upgrade/publication. Existing designs opt in
+only when Add content is chosen, as an unsaved draft. Undo/redo covers additions,
+removals and order. Renderer, canvas, inspector and saved design share the IDs.
+U1.07 intercepts editor Back/section exit plus page unload when dirty, asks Keep
+editing or explicit Discard, never saves/publishes implicitly. Saving/ambiguous
+outcome keeps existing reconciliation guards. Failed saves retain local content.
+Qualification: RED-first schema/renderer tampering tests, mounted synthetic UI
+Add/edit/move/remove/save/reopen and dirty-exit/failure cases, affected regressions,
+compiler reproduction and exact-HEAD CI. Deployment/user/mail acceptance remains
+separate and must not be inferred from these tests.
+
+
+### U1.07 implementation checkpoint / U1.05 current denial
+
+U1.07 now asks Keep editing / Discard for dirty Back and Notifications section
+exits, retains focus/Escape recovery, and registers dirty page-unload protection.
+An unresolved save cannot be abandoned through those controls. Explicit refresh
+updates the saved baseline without overwriting differing local wording. A lost
+response whose write actually committed reconciles to the same saved draft.
+Existing one-shot save/CAS/Review->Confirm and no-publish/no-mail semantics remain.
+This checkpoint qualifies these entry points, not all application-shell history
+navigation or actual authenticated client acceptance.
+
+U1.05 remains BLOCKED, NOT IMPLEMENTED. RED-first Python: three positive cases
+failed with expected unsupported revision/optional-content errors, 13 negative
+cases already rejected; two Web model tests failed with missing helpers. The
+normal Remote_Desktop_Commander.start_process source-write batch on dev-atlas
+(worktree unchanged) was denied before execution with:
+`요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.`
+Denied targets: grant/email_design.py, grant/email_renderer.py,
+mail-renderer/build.mjs, web/src/email_design.ts, email_canvas_model.ts and
+email_template_workbench.tsx. Readback showed none changed. No alternative tool
+or reformulated optional-content write was attempted. Pending tests are preserved
+under .dev/u1-05-blocked/; RED logs .dev/u1-05-{python,web}-red.txt. They are not
+shipped or counted as passing tests. Old layout artifacts remain unchanged.
+
+
+Verification for the U1.07 source checkpoint: `npm --prefix web run test:canvas --
+draft-exit.spec.ts notifications.spec.ts` executed six Chromium cases (five new,
+one existing), all PASS. The retained JSON is .dev/u1-07-browser-results.json;
+log .dev/u1-07-browser-final.txt; dirty-exit screenshot .dev/u1-07-dirty-exit.png.
+Affected save/preview/initial-readiness/publication units: 20/20 PASS
+(.dev/u1-07-units.txt). TypeScript and production Vite build PASS
+(.dev/u1-07-build.txt). Scoped diff hygiene PASS; global worktree diff hygiene is
+intentionally not clean because the preserved original G12 test contains its
+existing trailing blank line. No G12 edit or stash mutation was made.
