@@ -84,7 +84,7 @@ def main():
             version, paused = Database.inspect_existing(settings.database)
         except (ValueError, OSError, sqlite3.DatabaseError) as exc:
             refuse_storage("CHECK", exc)
-        if version != 13:
+        if version != 14:
             raise SystemExit("SCHEMA_UPGRADE_REQUIRED: backup first; check does not migrate")
         print("DATABASE=ok")
         print("PAUSED=" + paused)

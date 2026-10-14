@@ -57,7 +57,7 @@ def test_actual_cli_backup_restore_preserves_private_pause_and_refuses_existing(
     assert cli(config, "backup", "--output", str(backup)).returncode == 0
     assert cli(config, "restore", "--input", str(backup), "--output", str(restored)).returncode == 0
     assert all(stat.S_IMODE(path.stat().st_mode) == 0o600 for path in (backup, restored))
-    assert Database.inspect_existing(restored) == (13, "1")
+    assert Database.inspect_existing(restored) == (14, "1")
     with sqlite3.connect(f"{restored.absolute().as_uri()}?mode=ro", uri=True) as conn:
         assert conn.execute("PRAGMA quick_check").fetchone()[0] == "ok"
         assert conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] == 0
@@ -66,7 +66,7 @@ def test_actual_cli_backup_restore_preserves_private_pause_and_refuses_existing(
     assert_clean_refusal(repeat, "RESTORE_REFUSED")
     assert "NEW destination" in repeat.stderr
     assert restored.read_bytes() == before
-    assert Database.inspect_existing(original) == (13, "0")
+    assert Database.inspect_existing(original) == (14, "0")
 
 
 def test_corrupt_backup_rejected_without_publishing_any_restore(tmp_path):

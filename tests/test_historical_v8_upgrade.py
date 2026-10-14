@@ -213,6 +213,6 @@ def test_newer_schema_rejects_unsupported_downgrade(tmp_path):
     path = tmp_path / "future.sqlite"
     Database(path)
     with sqlite3.connect(path) as conn:
-        conn.execute("PRAGMA user_version=14")
+        conn.execute("PRAGMA user_version=15")
     with pytest.raises(RuntimeError, match="Unsupported database schema"):
         Database(path)
