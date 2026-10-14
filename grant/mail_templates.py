@@ -133,8 +133,18 @@ DEFAULT_BRANDING = {
 
 
 def validate_template_text(value: str, *, subject: bool = False) -> str:
+    if not isinstance(value, str):
+        raise TypeError("Mail template text must be a string")
     if subject and any(c in value for c in "\r\n"):
         raise ValueError("Mail subject templates must be a single line")
+    if any(0xD800 <= ord(c) <= 0xDFFF
+           or ord(c) == 127
+           or ord(c) < 32 and (subject or c not in "\n\t")
+           or 0x200B <= ord(c) <= 0x200F
+           or 0x202A <= ord(c) <= 0x202E
+           or 0x2066 <= ord(c) <= 0x2069
+           for c in value):
+        raise ValueError("Mail template text contains unsupported control characters")
     unknown = set(TOKEN.findall(value)) - ALLOWED_VARIABLES
     if unknown:
         raise ValueError("Unsupported mail template variable: " + ", ".join(sorted(unknown)))

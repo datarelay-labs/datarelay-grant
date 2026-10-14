@@ -57,10 +57,11 @@ class ButtonSuffixes(StrictDesign):
     @field_validator("approve", "hold", "deny", "details")
     @classmethod
     def literal_suffix(cls, value: str) -> str:
-        if "{{" in value or any(ord(c) < 32 or 0xD800 <= ord(c) <= 0xDFFF
+        if ("{{" in value or re.search(r"(?i)(?:[a-z][a-z0-9+.-]*://|mailto:|javascript:|data:|(?:^|\s)www\.)", value)
+                or any(ord(c) < 32 or 0xD800 <= ord(c) <= 0xDFFF
                 or 0x200B <= ord(c) <= 0x200F or 0x202A <= ord(c) <= 0x202E
-                or 0x2066 <= ord(c) <= 0x2069 for c in value):
-            raise ValueError("Button descriptions must be plain one-line text without control characters")
+                or 0x2066 <= ord(c) <= 0x2069 for c in value)):
+            raise ValueError("Button descriptions must be literal one-line text without variables, URLs or control characters")
         return value
 
 
