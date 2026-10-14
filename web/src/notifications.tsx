@@ -1,5 +1,7 @@
-import {LiveEmailPreview} from './email_live_preview';
-import {EmailTemplateDesignEditor,EmailBodyEditor,type EmailBodyHandle} from './email_template_design_editor';
+import {EmailTemplateTile} from './email_template_inventory';
+import {EmailPublicationPanel} from './email_publication_review';
+import {EmailTemplateWorkbench} from './email_template_workbench';
+import type {EmailPreviewState} from './email_live_preview';
 import {createEmailDesign,type EmailDesign} from './email_design';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -438,7 +440,7 @@ export function Notifications() {
   const [enabled, setEnabled] = useState(true);
   const [event, setEvent] = useState<NotificationEvent>('requested');
   const [draftDesign,setDraftDesign]=useState<EmailDesign|null>(null);
-  const emailBodyRef=useRef<EmailBodyHandle>(null);
+  const [livePreviewState,setLivePreviewState]=useState<EmailPreviewState|null>(null);
   const [draftTemplates, setDraftTemplates] =
     useState<Record<NotificationEvent, NotificationEventTemplate>>(copyDefaults());
   const [preview, setPreview] = useState<PreviewResult | null>(null);
@@ -463,6 +465,8 @@ export function Notifications() {
     brand_name:brandName,sender_display_name:senderName,
   };
   const templateDraft={name,enabled,templates:draftTemplates,design:draftDesign};
+  const draftPreviewReady=!!livePreviewState?.current
+    &&livePreviewState.signature===templateDraftSignature(templateDraft)&&livePreviewState.event===event;
   const currentTemplate=editing
     ?sets.find(row=>row.id===editing)??null:null;
 
@@ -539,16 +543,9 @@ export function Notifications() {
     setTemplateView('editor');
   }
 
-  function updateCurrent(field: 'subject' | 'body', value: string) {
-    setDraftTemplates({
-      ...draftTemplates,
-      [event]: { ...draftTemplates[event], [field]: value },
-    });
-    invalidatePreview();
-  }
-
   function reviewTemplateSave(){
     if(templateSaveGuard.current.blocked())return;
+    if(!draftPreviewReady){task.setNotice('Wait for the current draft preview to validate before saving.');return;}
     if(editing && (!currentTemplate
       ||savedSignature!==templateDraftSignature(currentTemplate))){
       setReviewedTemplateSave(null);
@@ -821,7 +818,7 @@ export function Notifications() {
           aria-current={view === 'templates' ? 'page' : undefined}
           onClick={() => switchSection('templates')}
         >
-          Template Sets
+          Email Templates
         </button>
         <button
           type="button"
@@ -841,77 +838,12 @@ export function Notifications() {
 
       {view === 'templates' && templateView === 'list' ? (
         <Card
-          title="Template Sets"
+          title="Email Templates"
           description="Each set owns the complete Grant 1.0 event family. Existing requests keep their original snapshot."
-          actions={<Button disabled={!templatesLoaded || task.busy} onClick={startCreate}>Create template set</Button>}
+          actions={<Button disabled={!templatesLoaded || task.busy} onClick={startCreate}>Create email template</Button>}
         >
-          <div className="grant-table-scroll grant-notification-desktop-list">
-            <table className="grant-table">
-              <thead>
-                <tr>
-                  <th>Template set</th>
-                  <th>Status</th>
-                  <th>Events</th>
-                  <th>Updated</th>
-                  <th aria-label="Actions" />
-                </tr>
-              </thead>
-              <tbody>
-                {sets.map((row) => (
-                  <tr key={row.id}>
-                    <td>
-                      <button
-                        type="button"
-                        className="grant-table-link"
-                        onClick={() => edit(row)}
-                      >
-                        {row.name}
-                      </button>
-                      <small>{row.id}</small>
-                    </td>
-                    <td>{row.enabled ? 'Enabled' : 'Disabled'}</td>
-                    <td>{events.length} required events</td>
-                    <td>{when(row.updated_at)}</td>
-                    <td>
-                      <Button
-                        variant="secondary"
-                        disabled={task.busy}
-                        onClick={() => edit(row)}
-                      >
-                        Open
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {/* Card/list variants are mutually hidden by CSS, not separate
-              client/server lists or different policy permissions. */}
-          <ul className="grant-notification-mobile-list"
-            aria-label="Notification template sets mobile list">
-            {sets.map((row) => (
-              <li key={row.id} className="grant-notification-mobile-card">
-                <div className="grant-notification-mobile-heading">
-                  <button type="button" className="grant-table-link"
-                    onClick={() => edit(row)}>{row.name}</button>
-                  <span className="grant-notification-mobile-status">
-                    {row.enabled ? 'Enabled' : 'Disabled'}
-                  </span>
-                </div>
-                <dl className="grant-notification-mobile-facts">
-                  <div><dt>Required events</dt>
-                    <dd>{events.length} events</dd>
-                  </div>
-                  <div><dt>Updated</dt><dd>{when(row.updated_at)}</dd></div>
-                  <div><dt>Saved ID</dt><dd><code>{row.id}</code></dd></div>
-                </dl>
-                <div className="grant-notification-mobile-actions">
-                  <Button variant="secondary" disabled={task.busy}
-                    onClick={() => edit(row)}>Open template</Button>
-                </div>
-              </li>
-            ))}
+          <ul className="grant-email-template-inventory" aria-label="Email template inventory">
+            {sets.map(row=><EmailTemplateTile key={row.id} template={row} disabled={task.busy} onEdit={()=>edit(row)}/>)}
           </ul>
           {!templatesLoaded ? (
             <div>
@@ -932,10 +864,14 @@ export function Notifications() {
           <section className="grant-detail-header" aria-label="Notification template workspace">
             <div>
               <Button variant="ghost" onClick={leaveTemplateEditor}>
-                ← Back to template sets
+                ← Back to email templates
               </Button>
-              <p className="grant-eyebrow">Notification template set</p>
-              <h2>{editing ? name || 'Template set' : 'New template set'}</h2>
+              <p className="grant-eyebrow">Email template</p>
+              <h2>{editing ? name || 'Email template' : 'New email template'}</h2>
+              <p aria-label="Email draft publication status">{currentTemplate?.published_revision?'Published v'+currentTemplate.published_revision:'Not published'}
+                {' · '}{currentTemplate?.draft_revision?'Draft v'+currentTemplate.draft_revision:'New draft'}
+                {' · '}{!editing||draftDirty?'Unsaved changes':'Saved draft'}</p>
+              <Button type="submit" form="grant-email-draft-form" disabled={task.busy||templateSaveGuard.current.blocked()||!draftPreviewReady}>Save draft</Button>
               <p>
                 Edit one event at a time. Preview and test use the same render contract as
                 delivery.
@@ -943,86 +879,42 @@ export function Notifications() {
             </div>
           </section>
 
-<div className="grant-email-workbench">
+<EmailPublicationPanel key={editing||'unsaved-template'} template={currentTemplate}
+            draftSignature={templateDraftSignature(templateDraft)} dirty={draftDirty}
+            previewCurrent={!!livePreviewState?.current&&livePreviewState.signature===templateDraftSignature(templateDraft)&&livePreviewState.event===event}
+            disabled={task.busy||templateSaveGuard.current.blocked()}
+            onPublished={row=>{setSets(current=>current.map(item=>item.id===row.id?row:item));
+              setName(row.name);setEnabled(row.enabled);setDraftTemplates(structuredClone(row.templates));
+              setDraftDesign(row.design?structuredClone(row.design):null);setSavedSignature(templateDraftSignature(row));invalidatePreview();}}/>
+          <div className="grant-email-workbench">
           <Card
             title={editing ? 'Template set details' : 'Create notification template set'}
             description="All Grant events stay in one coherent set; editing never rewrites existing request snapshots."
           >
-            <Form
-              busy={task.busy||templateSaveGuard.current.blocked()}
-              onSubmit={reviewTemplateSave}
-              label={editing ? 'Review template set update' : 'Review template set creation'}
-            >
-              <TextField
-                label="Template set name"
-                required
-                maxLength={100}
-                value={name}
-                onChange={(change) => {
-                  setName(change.target.value);
-                  invalidatePreview();
-                }}
-              />
-
-              <div className="grant-event-editor">
-                <div>
-                  <p className="grant-field-label">Event template</p>
-                  <div className="grant-event-tabs" role="list" aria-label="Notification events">
-                    {events.map((item) => (
-                      <button
-                        type="button"
-                        key={item}
-                        aria-current={event === item ? 'page' : undefined}
-                        onClick={() => {
-                          setEvent(item);
-                          invalidatePreview();
-                        }}
-                      >
-                        {eventLabel(item)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <TextField
-                  label="Event subject"
-                  required
-                  maxLength={250}
-                  value={draftTemplates[event].subject}
-                  onChange={(change) => updateCurrent('subject', change.target.value)}
-                />
-                <EmailBodyEditor ref={emailBodyRef} value={draftTemplates[event].body}
-                  visual={draftDesign!==null} onChange={value=>updateCurrent('body',value)}
-                  onEnableFormatting={()=>{if(draftDesign){setDraftDesign({...draftDesign,shared_layout_revision:2,rich_text:true});invalidatePreview();}}}/>
-              </div>
-
-              <EmailTemplateDesignEditor key={editing||'new-template'} value={draftDesign}
-                variables={variables} disabled={task.busy||templateSaveGuard.current.blocked()}
-                onChange={design=>{setDraftDesign(design);invalidatePreview();}}
-                onInsertVariable={variable=>emailBodyRef.current?.insert('{{'+variable+'}}')}
-                onRestoreEventCopy={()=>{void task.run(async()=>{
-                  const generation=previewGeneration.current;
-                  const selected=event;
-                  const result=await api<{templates:Record<NotificationEvent,NotificationEventTemplate>}>(
-                    '/notification-template-defaults?locale='+(draftDesign?.locale??'en'));
-                  if(generation!==previewGeneration.current)throw Error('EVENT_DRAFT_CHANGED_REVIEW_REQUIRED');
-                  setDraftTemplates(current=>({...current,[selected]:result.templates[selected]}));
-                  invalidatePreview();
-                });}}/>
-
-              {editing ? (
-                <label className="grant-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={enabled}
-                    onChange={(change) => {
-                      setEnabled(change.target.checked);
-                      invalidatePreview();
-                    }}
-                  />
-                  Template set enabled
-                </label>
-              ) : null}
-            </Form>
+            <form id="grant-email-draft-form" className="grant-form" onSubmit={e=>{e.preventDefault();if(!task.busy&&!templateSaveGuard.current.blocked())reviewTemplateSave();}}>
+              <fieldset disabled={task.busy||templateSaveGuard.current.blocked()}>
+                <details open={!editing}><summary>Template details</summary>
+                  <TextField label="Template set name" required maxLength={100} value={name}
+                    onChange={change=>{setName(change.target.value);invalidatePreview();}}/>
+                  {editing&&<label className="grant-checkbox"><input type="checkbox" checked={enabled}
+                    onChange={change=>{setEnabled(change.target.checked);invalidatePreview();}}/>Template set enabled</label>}
+                </details>
+                <EmailTemplateWorkbench key={(editing||'new-template')+':'+(currentTemplate?.updated_at??0)}
+                  draft={templateDraft} event={event} variables={variables}
+                  disabled={task.busy||templateSaveGuard.current.blocked()}
+                  onChange={next=>{setName(next.name);setEnabled(next.enabled);setDraftDesign(next.design??null);setDraftTemplates(next.templates);invalidatePreview();}}
+                  onEventChange={next=>{setEvent(next);invalidatePreview();}}
+                  onPreviewState={setLivePreviewState}
+                  onRestoreEventCopy={async()=>{
+                    const generation=previewGeneration.current,selected=event;
+                    const result=await api<{templates:Record<NotificationEvent,NotificationEventTemplate>}>(
+                      '/notification-template-defaults?locale='+(draftDesign?.locale??'en'));
+                    if(generation!==previewGeneration.current)throw Error('EVENT_DRAFT_CHANGED_REVIEW_REQUIRED');
+                    return result.templates[selected];
+                  }}/>
+              </fieldset>
+              <Button type="submit" disabled={task.busy||templateSaveGuard.current.blocked()||!draftPreviewReady}>Review draft save</Button>
+            </form>
             <NotificationTemplateSaveConfirmation
               reviewed={reviewedTemplateSave}
               valid={isCurrentTemplateSaveReview(
@@ -1037,7 +929,7 @@ export function Notifications() {
                 ? 'A template create/update POST or PUT may already have committed. Never retry it automatically.'
                 : 'The prior template save still needs an explicit saved-state read.'}
               {' '}Return to the originally attempted set and refresh its metadata.
-              Another administrator could have changed it; this is not atomic backend CAS.
+              Another administrator could have changed it. The server enforces the expected saved revision.
               <Button variant="secondary" disabled={task.busy}
                 onClick={()=>{void task.run(refreshTemplateSave);}}>
                 Refresh saved template set
@@ -1058,7 +950,6 @@ export function Notifications() {
               title="Preview & test send"
               description="Transport acceptance is distinct from inbox receipt. Test messages never authorize execution."
             >
-              <LiveEmailPreview draft={templateDraft} event={event}/>
               <details><summary>Saved revision preview and test email</summary>
               {preview ? (
                 <Alert tone="info" title={preview.rendered.subject}>
@@ -1118,7 +1009,7 @@ export function Notifications() {
               <NotificationPreviewActions
                 saved={Boolean(editing)}
                 dirty={draftDirty}
-                busy={task.busy}
+                busy={task.busy||!livePreviewState?.current||livePreviewState.signature!==templateDraftSignature(templateDraft)||livePreviewState.event!==event}
                 testAttempted={testSendNeedsRefresh}
                 onPreview={() => void task.run(runPreview)}
                 onTestSend={() => void task.run(reviewTestSend)}

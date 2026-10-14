@@ -1,13 +1,83 @@
-.grant-email-designer{display:grid;gap:1rem;min-width:0;margin-block:1.25rem}
-.grant-email-design-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.5rem}
-.grant-email-design-grid>section{display:grid;align-content:start;gap:.85rem;min-width:0}
-.grant-email-style-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;padding-block:1rem}
-.grant-email-designer .grant-actions{flex-wrap:wrap}
-.grant-email-designer button{min-height:44px;white-space:normal;overflow-wrap:anywhere}
-@media(max-width:760px){.grant-email-design-grid,.grant-email-style-grid{grid-template-columns:minmax(0,1fr)}}
+/* Grant approval-domain layout only; all application colors use Foundation tokens. */
+.grant-email-workbench{display:block}
+.grant-email-workbench>:last-child{position:static}
+.grant-email-authoring{min-width:0;display:grid;gap:var(--dr-space-4,1rem)}
+.grant-email-context-bar{display:flex;gap:var(--dr-space-3,.75rem);align-items:center;flex-wrap:wrap}
+.grant-email-context-bar label{display:grid;gap:.25rem;min-width:0}
+.grant-email-context-bar select{max-width:100%;min-height:44px}
+.grant-email-authoring-grid{display:grid;grid-template-columns:140px minmax(0,1fr) 270px;gap:var(--dr-space-4,1rem);align-items:start}
+.grant-email-authoring-grid>*{min-width:0}
+.grant-email-outline{display:grid;gap:.35rem;position:sticky;top:1rem}
+.grant-email-outline button{display:grid;text-align:left;min-height:44px;padding:.65rem;border:1px solid var(--dr-border-default);border-radius:var(--dr-radius-control,6px);background:var(--dr-surface-card);color:var(--dr-text-primary)}
+.grant-email-outline button[aria-pressed=true]{border-color:var(--dr-focus-ring);background:var(--dr-surface-hover)}
+.grant-email-outline small,.grant-email-setting-scope,.grant-email-canvas-hint{color:var(--dr-text-secondary);font-size:var(--dr-font-size-sm,.875rem)}
+.grant-email-properties{position:sticky;top:1rem;display:grid;gap:.85rem;padding:1rem;border:1px solid var(--dr-border-default);border-radius:var(--dr-radius-card,10px);background:var(--dr-surface-card);max-height:calc(100vh - 3rem);overflow:auto;scrollbar-gutter:stable}
+.grant-email-properties h3{margin:0}
+.grant-email-properties label,.grant-email-properties details{display:grid;gap:.5rem;min-width:0}
+.grant-email-properties details:not([open])>*:not(summary){display:none}
+.grant-email-properties input,.grant-email-properties textarea,.grant-email-properties select{max-width:100%;min-width:0}
+.grant-email-properties button{white-space:normal;min-height:44px;overflow-wrap:anywhere}
+.grant-email-property-heading{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.grant-email-close-properties{display:none!important}
+.grant-email-central-canvas{min-width:0;padding:.75rem;background:var(--dr-surface-subtle);border-radius:var(--dr-radius-card,10px)}
+.grant-email-central-canvas .grant-actions{flex-wrap:wrap}
+.grant-email-live-preview{display:grid;gap:.75rem}
+.grant-email-sample-controls{padding:.5rem;background:var(--dr-surface-card);border-radius:var(--dr-radius-control,6px)}
+.grant-email-sample-controls label{display:grid;gap:.25rem;margin:.5rem 0}
+.grant-email-live-preview select{max-width:100%;min-height:44px}
+.grant-email-subject-select{display:grid;gap:.25rem;text-align:left;white-space:normal;overflow-wrap:anywhere;background:var(--dr-surface-card);color:var(--dr-text-primary);padding:.75rem;border:1px solid var(--dr-border-default);border-radius:var(--dr-radius-control,6px)}
+.grant-email-canvas-size{margin:1rem auto;box-shadow:0 2px 8px #00000010}
+.grant-email-canvas-projection{font-family:Arial,sans-serif;color:#111827;background:#f3f4f6;overflow-wrap:anywhere;min-width:0;text-align:initial}
+.grant-email-canvas-projection table{border:0;width:100%;min-width:0;table-layout:fixed}
+.grant-email-canvas-projection td,.grant-email-canvas-projection th{border:0}
+.grant-email-canvas-projection .grant-email-selectable{cursor:pointer}
+.grant-email-canvas-projection .grant-email-selectable:hover{outline:2px dashed var(--dr-focus-ring);outline-offset:-2px}
+.grant-email-canvas-projection .grant-email-selectable.is-selected{outline:2px solid var(--dr-focus-ring);outline-offset:-2px}
+.grant-email-stale{padding:.6rem;border-left:3px solid var(--dr-status-warning);background:var(--dr-surface-card)}
+.grant-email-presets{border:1px solid var(--dr-border-default);border-radius:var(--dr-radius-card,10px);padding:.75rem}
+.grant-email-preset-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem;margin-top:.75rem}
+.grant-email-preset-grid>button{display:grid!important;gap:.35rem;min-width:0;white-space:normal;align-content:start;padding:.5rem}
+.grant-email-preset-grid>button[aria-pressed=true]{outline:2px solid var(--dr-focus-ring)}
+.grant-email-preset-grid small{font-size:.8rem}
+.grant-email-preset-thumbnail{height:105px;width:130px;max-width:100%;overflow:hidden;display:block;position:relative;margin:auto;background:#f3f4f6}
+.grant-email-preset-thumbnail iframe{width:600px;height:650px;transform:scale(.215);transform-origin:top left;border:0;pointer-events:none;position:absolute;inset:0}
+.grant-email-button-sizes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.4rem}
+.grant-email-button-sizes button{display:grid!important}
+.grant-email-button-sizes button[aria-pressed=true]{outline:2px solid var(--dr-focus-ring)}
+.grant-email-variable-options{display:grid;gap:.5rem;max-height:20rem;overflow:auto}
+.grant-email-variable-options button{display:grid!important;justify-items:start;text-align:left;border:1px solid var(--dr-border-default);padding:.5rem;min-width:0}
+.grant-email-variable-options small,.grant-email-variable-options code,.grant-email-variable-options span{white-space:normal;overflow-wrap:anywhere;font-size:.8rem}
+@media(max-width:1250px){.grant-email-authoring-grid{grid-template-columns:115px minmax(0,1fr) 235px;gap:.6rem}.grant-email-properties{padding:.65rem}}
+@media(max-width:1000px){
+ .grant-email-authoring-grid{grid-template-columns:minmax(0,1fr)}
+ .grant-email-outline{position:static;display:flex;overflow-x:auto;max-width:100%;gap:.4rem;padding:.25rem}
+ .grant-email-outline button{flex:0 0 auto}
+ .grant-email-properties{display:none;position:static;max-height:none}
+ .grant-email-properties.is-open{display:grid;position:fixed;inset:auto .5rem .5rem;max-height:70vh;z-index:20;box-shadow:0 -4px 24px #00000026}
+ .grant-email-close-properties{display:inline-flex!important}
+ .grant-email-central-canvas{padding:.5rem}
+}
+@media(max-width:480px){.grant-email-preset-grid{grid-template-columns:minmax(0,1fr)}.grant-email-context-bar{align-items:stretch}.grant-email-context-bar>label{flex:1 1 100%}.grant-email-properties.is-open{inset:auto .25rem .25rem}.grant-email-authoring summary{min-height:44px;display:flex;align-items:center}}
 
-.grant-email-workbench{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:1.25rem;align-items:start}
-.grant-email-workbench>*{min-width:0}
-.grant-email-workbench>:last-child{position:sticky;top:1rem}
-.grant-email-workbench .grant-email-design-grid{grid-template-columns:minmax(0,1fr)}
-@media(max-width:1100px){.grant-email-workbench{grid-template-columns:minmax(0,1fr)}.grant-email-workbench>:last-child{position:static;order:-1}}
+.grant-email-publication-panel{display:grid;gap:.75rem;margin-bottom:1rem}
+.grant-email-publication-review{display:grid;gap:1rem;padding:1rem;border:1px solid var(--dr-border-default);border-radius:var(--dr-radius-card);background:var(--dr-surface-card)}
+.grant-email-comparison-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+.grant-email-comparison-grid>*{min-width:0}
+.grant-email-publication-panel li{padding:.5rem;overflow-wrap:anywhere}
+@media(max-width:900px){.grant-email-comparison-grid{grid-template-columns:minmax(0,1fr)}}
+/* A fixed-width email must not set the minimum width of the preview grid. */
+.grant-email-live-preview{grid-template-columns:minmax(0,1fr)}
+.grant-email-live-preview>*{min-width:0}
+
+#grant-email-draft-form{max-width:none;width:100%}
+#grant-email-draft-form fieldset{min-width:0}
+.grant-email-template-inventory{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,28rem),1fr));gap:1rem;list-style:none;margin:0;padding:0}
+.grant-email-template-tile{display:flex;gap:1rem;padding:1rem;border:1px solid var(--dr-border-default);border-radius:var(--dr-radius-card);min-width:0;background:var(--dr-surface-card)}
+.grant-email-template-summary{min-width:0;overflow-wrap:anywhere}
+.grant-email-template-summary h3{margin:0 0 .5rem}
+.grant-email-template-summary p{margin:.4rem 0}
+.grant-email-template-summary small{color:var(--dr-text-secondary)}
+.grant-email-inventory-thumbnail{flex:0 0 150px;min-height:170px;max-height:230px;overflow:hidden;position:relative;background:#f3f4f6;border-radius:6px}
+.grant-email-inventory-thumbnail iframe{position:absolute;width:600px;height:900px;transform:scale(.25);transform-origin:top left;border:0;pointer-events:none}
+.grant-email-inventory-thumbnail p{font-size:.8rem;padding:.5rem}
+@media(max-width:480px){.grant-email-template-tile{flex-direction:column}.grant-email-inventory-thumbnail{flex-basis:170px;width:150px}}

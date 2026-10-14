@@ -4,15 +4,16 @@ export type EmailStyles = {
   button_gap:number;button_radius:number;approve_color:string;hold_color:string;deny_color:string;
 };
 export type EmailDesign = {
-  schema_version:1;renderer_contract_version:1;shared_layout_revision:1|2;
+  schema_version:1;renderer_contract_version:1;shared_layout_revision:1|2|3;
   locale:'en'|'ko';preset:'standard'|'compact'|'high_visibility';button_size:'S'|'M'|'L';
+  event_headings?:Partial<Record<import("./types").NotificationEvent,string>>;
   heading:string;footer:string;logo_asset_id:null;blocks:string[];styles:EmailStyles;
   rich_text?:boolean;paragraph_alignment?:'left'|'center'|'right';
   button_suffixes?:{approve:string;hold:string;deny:string;details:string};
 };
 export const emailBlocks=['brand','heading','message','request_context','actions','verification','footer'];
 export function createEmailDesign(preset:EmailDesign['preset']='standard'):EmailDesign {
-  const design:EmailDesign={schema_version:1,renderer_contract_version:1,shared_layout_revision:2,
+  const design:EmailDesign={schema_version:1,renderer_contract_version:1,shared_layout_revision:3,
     locale:'en',preset,button_size:'M',rich_text:true,paragraph_alignment:'left',button_suffixes:{approve:'',hold:'',deny:'',details:''},heading:'{{request_title}}',footer:'',logo_asset_id:null,
     blocks:[...emailBlocks],styles:{font_size:16,button_font_size:16,button_padding_x:24,
       button_padding_y:12,button_gap:8,button_radius:6,approve_color:'#166534',hold_color:'#854d0e',deny_color:'#991b1b'}};

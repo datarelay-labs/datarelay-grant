@@ -11,7 +11,7 @@ describe('Pre-E2E first-run notification inventory',()=>{
   });
   it('does not open a default-based template editor before reading saved templates',()=>{
     const html=renderToStaticMarkup(createElement(Notifications));
-    expect(html).toMatch(/<button[^>]*disabled[^>]*>Create template set<\/button>/);
+    expect(html).toMatch(/<button[^>]*disabled[^>]*>Create email template<\/button>/);
     expect(html).not.toContain('Template saved.');
   });
 });

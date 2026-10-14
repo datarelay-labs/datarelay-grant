@@ -2,7 +2,7 @@ import {describe,it,expect} from 'vitest';
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {createEmailDesign,withButtonSize} from '../../src/email_design';
-import {EmailTemplateDesignEditor} from '../../src/email_template_design_editor';
+import {EmailTemplateWorkbench} from '../../src/email_template_workbench';
 import {templateDraftSignature} from '../../src/notification_preview';
 import {prepareTemplateSaveReview,submitReviewedTemplateSave,createTemplateSaveGuard} from '../../src/notification_template_save_review';
 import type {NotificationTemplateSet} from '../../src/types';
@@ -19,10 +19,10 @@ describe('ET-3 approval-specific visual editor',()=>{
    const large=withButtonSize(defaults,'L');
    expect(large.styles.button_font_size).toBe(20);
    expect(defaults.styles.button_font_size).toBe(16);
-   const html=renderToStaticMarkup(createElement(EmailTemplateDesignEditor,{
-     value:large,onChange:()=>{},onInsertVariable:()=>{},variables:['request_title'],disabled:false,
+   const html=renderToStaticMarkup(createElement(EmailTemplateWorkbench,{
+     draft:{...saved(),design:large},event:'requested',onChange:()=>{},onEventChange:()=>{},variables:['request_title'],disabled:false,
    }));
-   for(const label of ['Standard','Compact','High visibility','Button size','Protected approval actions','Verification requirements','Undo design change']) expect(html).toContain(label);
+   for(const label of ['Standard','Compact','High visibility','Canvas-first email editor','Email blocks','Selected block properties','Undo']) expect(html).toContain(label);
    expect(html).toContain('disabled');expect(html).not.toContain('href="javascript:');
  });
  it('changes review signature when only style changes and binds exact saved payload',async()=>{
@@ -39,8 +39,8 @@ describe('ET-3 approval-specific visual editor',()=>{
    expect(payload).toMatchObject({expected_updated_at:1,design:{button_size:'L'}});
  });
  it('explicitly opts legacy templates into a visual draft instead of silent migration',()=>{
-   const html=renderToStaticMarkup(createElement(EmailTemplateDesignEditor,{
-     value:null,onChange:()=>{},onInsertVariable:()=>{},variables:[],disabled:false,
+   const html=renderToStaticMarkup(createElement(EmailTemplateWorkbench,{
+     draft:{...saved(),design:null},event:'requested',onChange:()=>{},onEventChange:()=>{},variables:[],disabled:false,
    }));
    expect(html).toContain('Enable visual draft');
    expect(html).toContain('published');
@@ -51,9 +51,9 @@ import {readFileSync} from 'node:fs';
 import {formatEmailText} from '../../src/email_design';
 it('mounts the domain editor and cursor-aware formatting in the real Notifications workflow',()=>{
  const source=readFileSync(new URL('../../src/notifications.tsx',import.meta.url),'utf8');
- expect(source).toContain('<EmailBodyEditor ref={emailBodyRef}');
- expect(source).toContain('<EmailTemplateDesignEditor');
- expect(source).toContain('emailBodyRef.current?.insert');
+ expect(source).toContain('<EmailTemplateWorkbench');
+ expect(source).toContain('onPreviewState={setLivePreviewState}');
+ expect(source).not.toContain('<EmailTemplateDesignEditor');
  expect(source).toContain('grant-email-workbench');
  expect(source).toContain('design:draftDesign');
  expect(formatEmailText('Hello world',6,11,'bold').value).toBe('Hello **world**');

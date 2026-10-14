@@ -83,3 +83,16 @@ scenarios:
     command: "bash scripts/checks.sh renderer"
     invariants: [pinned compiler, deterministic checked-in shells, no user compiler input]
     release_gate: true
+
+  - id: GRANT-EMAIL-CANVAS-001
+    name: Synthetic canvas and publication component browser regression
+    cost: medium
+    estimated_seconds: 45
+    timeout_seconds: 180
+    level: integration
+    domains: [approval, api]
+    triggers: [preflight]
+    platforms: [linux]
+    command: "npm --prefix web run test:canvas"
+    invariants: [real Grant components, synthetic local renderer, no accounts or delivery, no client acceptance claim]
+    release_gate: false

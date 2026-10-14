@@ -14,3 +14,12 @@ describe('ET-1 final structured HTML preview',()=>{
   expect(output).toContain('320px');expect(output).toContain('Plain text');
  });
 });
+
+import {inertEmailDocument} from '../../src/notification_preview';
+it('rejects active or externally loaded elements before creating any preview iframe',()=>{
+ const rejected=inertEmailDocument('<html><head></head><body><img src="https://example.invalid/asset"><script>window.bad=1</script></body></html>');
+ expect(rejected).not.toContain('<img');expect(rejected).not.toContain('<script');
+ expect(rejected).toContain('Active content is not permitted');
+ const safe=inertEmailDocument('<html><head></head><body>&lt;img&gt; is escaped example wording.</body></html>');
+ expect(safe).toContain('&lt;img&gt;');
+});

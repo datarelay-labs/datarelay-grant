@@ -82,8 +82,37 @@ def review_publication(core, actor, ident, body):
     with core.db.transaction(write=False) as conn:
         require_current_authority(conn, actor)
         _, value, proof = candidate(core, conn, actor, ident, body.source_revision)
+        previous = None
+        if proof["published_revision"] is not None:
+            previous_row = conn.execute(
+                "SELECT snapshot,snapshot_hash FROM email_template_revisions WHERE template_id=? AND revision=?",
+                (ident, proof["published_revision"]),
+            ).fetchone()
+            if previous_row is None:
+                raise GrantError("EMAIL_REVISION_INTEGRITY", 409)
+            previous = json.loads(previous_row["snapshot"])
+            if digest(previous) != previous_row["snapshot_hash"]:
+                raise GrantError("EMAIL_REVISION_INTEGRITY", 409)
     rendered = {event: render_checked(value, event) for event in value["templates"]}
-    return {**proof, "review_hash": digest(proof), "future_requests_only": True,
+    old_design = (previous or {}).get("design") or {}
+    new_design = value.get("design") or {}
+    changed_events = []
+    for event in value["templates"]:
+        old_heading = old_design.get("event_headings", {}).get(event, old_design.get("heading"))
+        new_heading = new_design.get("event_headings", {}).get(event, new_design.get("heading"))
+        if ((previous or {}).get("templates", {}).get(event) != value["templates"][event]
+                or old_heading != new_heading):
+            changed_events.append(event)
+    shared_fields = ["styles." + key for key in sorted(set(old_design.get("styles", {})) | set(new_design.get("styles", {})))
+                     if old_design.get("styles", {}).get(key) != new_design.get("styles", {}).get(key)]
+    shared_fields += [key for key in sorted((set(old_design) | set(new_design)) - {"styles", "event_headings", "heading"})
+                      if old_design.get(key) != new_design.get(key)]
+    shared_fields += [key for key in ("brand_name", "sender_display_name")
+                      if (previous or {}).get(key) != value.get(key)]
+    comparison = {"event": "requested", "before": render_checked(previous, "requested") if previous else None,
+                  "after": rendered["requested"], "changed_events": changed_events,
+                  "shared_fields": shared_fields}
+    return {**proof, "comparison": comparison, "review_hash": digest(proof), "future_requests_only": True,
             "execution_allowed": False, "rendered": rendered["requested"],
             "events": [{"event": event, "subject": item["subject"], "html_bytes": len(item["html"].encode())}
                        for event, item in rendered.items()]}

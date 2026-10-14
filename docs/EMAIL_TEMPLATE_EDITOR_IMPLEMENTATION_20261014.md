@@ -1,5 +1,14 @@
 # Email template editor — source implementation checkpoint
 
+**Superseding current checkpoint:**
+[Canvas-first implementation](EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md).
+ET-3A/B, ET-4 preview UX and ET-5 publication UI are now implemented and synthetically
+qualified. The historical publication-UI denial below is no longer a current
+blocker. Stricter reviewed-test-send, assets and real acceptance remain separate.
+
+## Historical source checkpoint before the accepted canvas refinement
+
+
 This checkpoint supersedes ET-0's implementation status, not its accepted design.
 No competitor research was repeated. Implementer: CHATGPT_CHAT, dev-atlas,
 existing integrated candidate branch and Draft PR #100. Foundation common UI,

@@ -404,7 +404,11 @@ class Core:
         actor.require_admin()
         with self.db.transaction(write=False) as conn:
             rows = conn.execute("SELECT * FROM email_templates ORDER BY name").fetchall()
-        return [self._template_set_view(row) for row in rows]
+            usage = {row[0]: row[1] for row in conn.execute(
+                "SELECT email_template_id,COUNT(*) FROM profile_versions "
+                "WHERE lifecycle='ACTIVE' GROUP BY email_template_id"
+            )}
+        return [{**self._template_set_view(row), "active_policy_count": usage.get(row["id"], 0)} for row in rows]
 
     def update_notification_template_set(
         self, actor: Principal, ident: str, body: NotificationTemplateSetUpdate

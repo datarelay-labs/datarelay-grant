@@ -1,5 +1,29 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## P0-ET UI REFINEMENT — owner accepted 2026-10-14; implementation active
+
+Current priority supersedes the old research/renderer-first handoff: **ET-3A canvas
+and contextual inspector -> ET-3B presets/variables/scope/history -> ET-4 preview
+feedback -> ET-5 publication UI -> ET-6 qualification**. Reuse completed ET-1/2
+source; do not restart renderer research or touch Foundation common UI.
+Product contract: Product Standard section 10.11. Preserve original G12/stash and
+all prior safety records. Logo/CID remains a separate incomplete path, not a
+prerequisite to the accepted text-brand editor refinement. Prior denied operations
+may only be retried normally on their original target when current conditions allow.
+
+| Refinement | Current status | Acceptance |
+| --- | --- | --- |
+| ET-3A | SOURCE + SYNTHETIC BROWSER PASS | Select actual rendered blocks/outline, contextual properties, no decision/navigation effect, mobile inspector |
+| ET-3B | SOURCE + SYNTHETIC BROWSER PASS | Visual presets, friendly cursor variables, copy/locale-preserving style reset, complete-draft undo |
+| ET-4 UX | SOURCE + SYNTHETIC BROWSER PASS; stricter test-send still pending | Retain stale preview, synthetic contexts, block-linked errors, diagnostics |
+| ET-5 UI | SOURCE + SYNTHETIC BROWSER PASS | Reviewed before/after, authoritative impact, history/new-revision rollback |
+| ET-6 | 7 synthetic components PASS; actual user/client gate NOT RUN | Targeted browser regression then separately authorized actual user/mail-client acceptance |
+
+Current refinement evidence: `docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md`.
+Next runnable source work is the preserved stricter ET-4 reviewed-test-send
+integration. Logo/CID and real user/mail-client acceptance remain incomplete.
+Older ET checkpoints below are historical and do not override this verified order.
+
 ## P0-ET ACTIVE — approval-email visual editor (research complete; implementation open)
 
 **Owner request, 2026-10-14:** compare competing email template editors and

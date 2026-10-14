@@ -15,7 +15,7 @@ from importlib.resources import files
 from urllib.parse import urlsplit
 
 LAYOUT_REGISTRY = {}
-for _revision in (1, 2):
+for _revision in (1, 2, 3):
     _bytes = files("grant").joinpath(f"email_layout_v{_revision}.json").read_bytes()
     LAYOUT_REGISTRY[_revision] = {"sha256": hashlib.sha256(_bytes).hexdigest(),
                                    "layouts": json.loads(_bytes)["layouts"]}
@@ -93,7 +93,7 @@ def compose_email(
                           "DENY_COLOR": "deny_color"}.items():
             values[key] = str(style[name])
         values["LOCALE"] = design["locale"]
-        values["TITLE"] = TOKEN.sub(lambda match: context[match[1]], design["heading"])
+        values["TITLE"] = TOKEN.sub(lambda match: context[match[1]], design["event_headings"].get(event, design["heading"]))
         if design["footer"]:
             values["FOOTER"] += "\n" + TOKEN.sub(lambda match: context[match[1]], design["footer"])
     revision = design["shared_layout_revision"] if design else 1
@@ -130,7 +130,7 @@ def compose_email(
         segments += [values["GUIDANCE"], *[
             LABELS[outcome] + ": " + security.links[outcome] for outcome in OUTCOMES
         ], values["PIN"]]
-    korean = bool(design and revision == 2 and design["locale"] == "ko")
+    korean = bool(design and revision >= 2 and design["locale"] == "ko")
     if korean:
         from .email_localization import KO_GUIDANCE
 
@@ -152,7 +152,7 @@ def compose_email(
         prefix = "샘플 전용. PIN 0000과 모든 샘플 링크는 실제 결정에 사용할 수 없습니다. " if korean else "SAMPLE ONLY. PIN 0000 and all sample links are inert. "
         values["FOOTER"] = prefix + values["FOOTER"]
     segments += ["View Details: " + details, values["FOOTER"]]
-    if design and revision == 2:
+    if design and revision >= 2:
         values["ALIGN"] = design["paragraph_alignment"]
         for slot, key in (("APPROVE", "approve"), ("HOLD", "hold"), ("DENY", "deny"), ("DETAILS", "details")):
             suffix = design["button_suffixes"][key]
@@ -170,7 +170,7 @@ def compose_email(
     for key in ("BODY", "CONTEXT", "GUIDANCE", "PIN", "FOOTER"):
         if key in escaped:
             escaped[key] = escaped[key].replace("\n", "<br>")
-    if design and revision == 2 and design["rich_text"]:
+    if design and revision >= 2 and design["rich_text"]:
         from .email_rich_text import render_rich_text
 
         escaped["BODY"] = render_rich_text(body)

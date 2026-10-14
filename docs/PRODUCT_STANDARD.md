@@ -765,6 +765,41 @@ React Email a comparison/fallback, not an installed or prequalified dependency.
 See `docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md` for competitor evidence,
 ET-0–ET-7 delivery phases and ET-T01–ET-T24 planned acceptance criteria.
 
+### 10.11 Accepted canvas-first refinement (2026-10-14)
+
+Owner accepted the follow-up UI proposal with "Proceed". Implement in the current
+Grant workstream, without another survey or Foundation common UI changes.
+
+- Goal/UX contract: one event selector, readable block outline, central rendered
+  email and a contextual inspector. Selecting a message/button selects editing,
+  never a URL or approval. Keyboard outline offers the same selection. Narrow
+  screens use one canvas and a collapsible inspector, not three squeezed columns.
+- Retain one structured draft, existing renderer/transport, role/CAS/Review->Confirm
+  and immutable snapshots. No marketing platform, arbitrary HTML/CSS/JS, live
+  credentials, SMTP activation, production/release, or Foundation package changes.
+- Rendering boundary: exact HTML remains available in the existing no-script,
+  opaque sandbox. Interactive canvas is an inert allowlisted React projection of
+  that same synthetic server HTML, with stable renderer-owned block markers.
+  Discard scripts/styles/active elements, resource URLs, arbitrary attributes and
+  navigation; never mount raw HTML. Canvas appearance is not mail-client proof.
+- Version/state: introduce a new immutable layout revision only for block markers
+  and optional per-event headings. Preserve all old layout bytes/output hashes;
+  existing designs opt into new canvas layout as an unsaved draft, never silently
+  publish. Subject/body/heading are event scoped; typography/action styling/footer
+  show set-wide scope. Unsupported controls are not shown.
+- Presets/style reset preserve all copy, locale and action bindings. Friendly safe
+  variables insert at the selected compatible field's cursor. Undo/redo tracks the
+  complete draft and is isolated per template. Restore copy confirms event/language.
+- Preview retains the last valid rendering during refresh, visibly stale and
+  unusable as current review evidence. Add synthetic long EN/KO/optional-field
+  scenarios, actionable block-linked errors and collapsed diagnostics.
+- Publish review shows before/after, changed fields/events and authoritative policy
+  impact. Existing/queued request snapshots remain stable; rollback adds a revision.
+- Acceptance: RED->GREEN for copy-preserving presets/reset/history, field insertion,
+  selection/no-navigation/HTML isolation, stale generation, event scope and old
+  renderer preservation; targeted synthetic browser keyboard/390px tests and native
+  CI. Actual authenticated user/client/two-mailbox acceptance is separate, unclaimed.
+
 ## 11. User experience standard
 
 Grant follows the DataRelay Product Foundation for shared application identity, semantic

@@ -1,5 +1,19 @@
 ## 2026-10-14 — Email editor source checkpoint (ET-1 through ET-5 partial)
 
+## Current email editor refinement — 2026-10-14
+
+The accepted canvas-first UI is now implemented: lazy synthetic inventory previews,
+published/draft state and real policy usage, selectable mail blocks/contextual
+properties, protected presets and cursor variables/history, stale-aware sample
+preview, plus reviewed before/after publication/history/rollback UI. Foundation is
+unchanged. Local Web 725 PASS; targeted Python 59 PASS; synthetic Chromium 7/7
+PASS; TypeScript/Vite/Ruff/compiler/wheel checks PASS. These are source/component
+results, not authenticated Full User E2E, mail-client acceptance or deployed-preview
+verification. See `EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md` for exact
+scope and retained limitations. Next source task: reconcile stricter ET-4 reviewed
+sample-send UI/API; logo/CID remains incomplete. Exact pushed-HEAD CI is in #37/#67.
+
+
 Renderer, protected design/CAS/migration, visual editor, read-only unsaved live preview and future-only publication/localization backend are implemented. Logo upload/CID, new reviewed-test-send UI and publication confirmation/history UI encountered platform denials; they are not shipped or counted complete. Existing test-send remains unchanged; its stricter pending patch is preserved separately. Actual mail clients, authenticated browser, two-user E2E, preview deployment, merge and release are not performed. Full detail and phase boundaries: `docs/EMAIL_TEMPLATE_EDITOR_IMPLEMENTATION_20261014.md`. Latest exact-HEAD Git/CI evidence is in Issue #37/#67.
 
 ## 2026-10-14 — ET-2 protected design/draft source
