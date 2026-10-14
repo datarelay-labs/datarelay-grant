@@ -3239,9 +3239,18 @@
           "test_id": "V-U6.06",
           "observed_at": "2026-10-14T11:27:07.389400+00:00",
           "result_detail": "Acceptance cannot PASS until the required real environment/participant condition is supplied. SMTP host is unconfigured, no SMTP credentials are present, and the outbox worker is disabled. No real mailbox receipt can be produced without an approved external mail path."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "e467a28571f05328d43338912d5a5fc652c49e39",
+          "test_id": "V-U6.06",
+          "observed_at": "2026-10-14T11:42:40.525606+00:00",
+          "result_detail": "Gmail connector read-only verification found four historical Grant receipts from 2026-10-07, including approval/reminder/execution/test mail. Raw MIME shows real Gmail receipt with DKIM/SPF PASS and dev-host-origin path. Search of the last 24h found zero current Grant messages. This supports historical mailbox-path viability only; current candidate receipt remains blocked because Grant SMTP is unconfigured and worker disabled."
         }
       ],
-      "blocker": "BLOCKED_ENVIRONMENT: SMTP host is unconfigured, no SMTP credentials are present, and the outbox worker is disabled. No real mailbox receipt can be produced without an approved external mail path."
+      "blocker": "BLOCKED_ENVIRONMENT: Gmail mailbox access is now connected and historical Grant receipts from 2026-10-07 are verified, but the current candidate has SMTP unconfigured/worker disabled and no current-candidate Gmail receipt. Exact current saved-revision receipt remains unexecuted."
     },
     {
       "id": "U7.01",
@@ -3446,9 +3455,27 @@
           "test_id": "V-U7.04",
           "observed_at": "2026-10-14T11:27:07.389400+00:00",
           "result_detail": "Acceptance cannot PASS until the required real environment/participant condition is supplied. Gmail and Outlook connectors are available but not connected; no Apple Mail/iOS test session is available. Browser emulation cannot substitute for the actual client matrix."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "e467a28571f05328d43338912d5a5fc652c49e39",
+          "test_id": "V-U7.04",
+          "observed_at": "2026-10-14T11:42:40.525606+00:00",
+          "result_detail": "Gmail connector is now connected. Four historical Grant messages from 2026-10-07 were read with raw MIME; actual Gmail receipt and DKIM/SPF PASS were observed. They predate the current visual-email candidate, and searches of the historical Grant sender plus Grant subject pattern in the last 24h returned zero current-candidate mail. Outlook and Apple/iOS remain unavailable, so U7.04 stays blocked."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "e467a28571f05328d43338912d5a5fc652c49e39",
+          "test_id": "V-U7.04",
+          "observed_at": "2026-10-14T11:42:40.525606+00:00",
+          "result_detail": "Historical Gmail receipt proves a real Gmail delivery path existed, not current-candidate client rendering. Current candidate Gmail/Outlook/Apple/iOS same-message acceptance remains incomplete."
         }
       ],
-      "blocker": "BLOCKED_ENVIRONMENT: Gmail and Outlook connectors are available but not connected; no Apple Mail/iOS test session is available. Browser emulation cannot substitute for the actual client matrix."
+      "blocker": "BLOCKED_ENVIRONMENT: Gmail is now connected and historical Grant delivery is verified, but there is no current-candidate Gmail message to render/inspect; Outlook Email remains unconnected and no Apple Mail/iOS client session is available. Current same-message client matrix remains incomplete."
     },
     {
       "id": "U7.05",

@@ -38,7 +38,21 @@ def test_r3_reconciles_child_acceptance_without_false_pass():
 def test_r3_report_preserves_no_effect_boundary():
     assert "SMTP host configured: **NO**" in REPORT
     assert "Existing session rows: **1**; session/cookie material was not read or reused." in REPORT
-    assert "Gmail connector: available but not connected." in REPORT
+    assert "Gmail connector: **connected during R3 continuation**" in REPORT
+    assert "Current-candidate Gmail search: **0 messages in the last 24 hours**" in REPORT
     assert "Outlook Email connector: available but not connected." in REPORT
     assert "No credential, account, SMTP, worker, external target or production state was changed." in REPORT
     assert "No acceptance gate is falsely marked PASS." in REPORT
+
+
+def test_gmail_connection_is_supporting_historical_evidence_not_current_acceptance():
+    u606=ROWS["U6.06"]
+    u704=ROWS["U7.04"]
+    assert "historical Grant receipts" in u606["blocker"]
+    assert "no current-candidate Gmail receipt" in u606["blocker"]
+    assert "Gmail is now connected" in u704["blocker"]
+    assert "no current-candidate Gmail message" in u704["blocker"]
+    assert u606["acceptance"]=="BLOCKED"
+    assert u704["acceptance"]=="BLOCKED"
+    assert "Gmail connector: **connected during R3 continuation**" in REPORT
+    assert "Current-candidate Gmail search: **0 messages in the last 24 hours**" in REPORT
