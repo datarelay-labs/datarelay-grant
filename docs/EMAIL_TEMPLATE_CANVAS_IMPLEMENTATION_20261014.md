@@ -593,3 +593,34 @@ Evidence: `.dev/u1-05-python.txt`, `.dev/u1-05-python-regression.txt`,
 `.dev/u1-05-package.txt`. Wheel assets 1..7 are byte-exact; layout 7 SHA256 is
 `fc36a6c6a811509379a39fd739e75a5c80589ae080934cb47e126c7d76fabb81`.
 No deployed-development, real-person or mail-client acceptance is claimed.
+
+
+### U1.07 Grant shell and browser-history dirty-exit retry completed
+
+The previously denied Grant-owned app/history extension was retried normally on
+the same dev-atlas target and succeeded. `grant_navigation.ts` now centralizes
+Grant SPA push/pop navigation without modifying Foundation. Notifications
+registers one bounded blocker only while the email-template editor has a new,
+dirty or unreconciled draft. Product-shell navigation, browser Back, existing
+editor Back and Notifications section switches therefore share the same Keep
+editing / explicit Discard contract. Clean drafts do not intercept navigation.
+An unresolved save remains blocked by the existing reconciliation guard rather
+than being converted into an implicit discard.
+
+For browser Back, the navigation layer indexes Grant-owned history entries,
+restores the current position while the dirty-exit decision is pending, keeps
+that exact position on Keep, and traverses the originally requested history
+entry exactly once after explicit Discard. Unknown/external history still falls
+back to ordinary browser behavior; page unload retains the native beforeunload
+protection. No save, publication, mail or approval operation is triggered by
+navigation.
+
+Qualification: `navigation.spec.ts`, `draft-exit.spec.ts` and
+`notifications.spec.ts` **8/8 PASS** using actual Grant components with synthetic
+API transport. This includes shell push navigation, browser Back restore/
+one-time discard traversal, section/Back/unload, failed save, committed-but-lost
+response reconciliation and 390px new-unsaved protection. Full Web units
+**733/733 PASS** and TypeScript/Vite build PASS. Evidence:
+`.dev/u1-07-navigation-retry.txt`, `.dev/u1-07-navigation-retry-results.json`,
+`.dev/u1-07-web-full.txt`, `.dev/u1-07-web-check.txt`. Foundation common UI was
+not changed. Deployed-development and real-person acceptance remain separate.

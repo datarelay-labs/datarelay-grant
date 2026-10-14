@@ -387,9 +387,9 @@
       "depends_on": "U1.03",
       "verification_id": "V-U1.07",
       "pass_criterion": "V-U1.07: dirty exit offers keep/discard; failed save retains content; ambiguous save requires reconciliation; reopen reflects server state, never false Saved; no automatic publish/send.",
-      "status": "BLOCKED",
-      "source": "IN_PROGRESS",
-      "interaction": "IN_PROGRESS",
+      "status": "OPEN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -411,16 +411,35 @@
           "kind": "PENDING_EXTENSION_NOT_SHIPPED",
           "reference": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
           "pending_tests": ".dev/u1-07-navigation-blocked/"
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:14:57.084734+00:00",
+          "test_id": "V-U1.07",
+          "source_paths": [
+            "web/src/grant_navigation.ts",
+            "web/src/app.tsx",
+            "web/src/notifications.tsx"
+          ],
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "result_detail": "Historical app/history extension denial was normally retried on the same dev-atlas target and succeeded. Grant-owned SPA navigation now exposes one bounded dirty-editor blocker; Foundation source unchanged. Full Web 733/733 plus TypeScript/Vite PASS."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:14:57.084734+00:00",
+          "test_id": "V-U1.07",
+          "artifact": ".dev/u1-07-navigation-retry-results.json",
+          "test_files": [
+            "web/tests/canvas/navigation.spec.ts",
+            "web/tests/canvas/draft-exit.spec.ts",
+            "web/tests/canvas/notifications.spec.ts"
+          ],
+          "result_detail": "8/8 mounted synthetic browser cases PASS: editor Back, section exit, beforeunload, failed/lost-response reconciliation, new unsaved mobile, Grant shell push navigation Keep/Discard, browser Back restoration and one-time discard traversal. No automatic save/publish/send."
         }
       ],
-      "blocker": {
-        "class": "PLATFORM_SAFETY_DENIAL",
-        "tool": "Remote_Desktop_Commander.start_process",
-        "target": "dev-atlas /home/aella/datarelay-grant-g10a-g0-integration-dev: Grant-owned app/history dirty-exit extension",
-        "message": "요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.",
-        "effect": "This source extension was not written; existing implemented behavior remains. Pending tests retained under .dev; no bypass.",
-        "bypassed": false
-      }
+      "blocker": null
     },
     {
       "id": "U2.01",

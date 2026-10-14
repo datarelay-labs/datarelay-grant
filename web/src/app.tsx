@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Button,
   Card,
@@ -24,6 +24,7 @@ import { Profiles } from './policies';
 import { NewRequest, RequestDetail, RequestList } from './requests';
 import { PublicEmailDecisionLanding, parseEmailDecisionLandingToken } from './email_decision_landing';
 import type { Session } from './types';
+import {createGrantNavigation,type GrantNavigation} from './grant_navigation';
 
 
 
@@ -43,6 +44,7 @@ function AuthenticatedGrantApp() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [path, setPath] = useState(location.pathname === '/' ? '/home' : location.pathname);
+  const navigation=useRef<GrantNavigation|null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const task = useTask();
 
@@ -65,15 +67,12 @@ function AuthenticatedGrantApp() {
       await refresh();
       setLoading(false);
     });
-    const onPopState = () => setPath(location.pathname);
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
+    navigation.current=createGrantNavigation(window,next=>setPath(next==='/'?'/home':next));
+    return () => {navigation.current?.dispose();navigation.current=null;};
   }, []);
 
   function navigate(next: string) {
-    if (!next.startsWith('/') || next.startsWith('//')) return;
-    history.pushState(null, '', next);
-    setPath(next);
+    navigation.current?.navigate(next);
   }
 
   if (loading) {

@@ -11,6 +11,7 @@ import {
   TextField,
 } from '@datarelay-labs/foundation';
 import { api, errorText } from './api';
+import {registerGrantNavigationBlocker,type GrantNavigationIntent} from './grant_navigation';
 import './notifications-mobile.css';
 import {
   createDeliveryQueryReadScope,readCurrentDeliveryWorklist,
@@ -432,7 +433,8 @@ export function Notifications() {
   const templateSaveGuard=useRef(createTemplateSaveGuard());
   const [templateNeedsRefresh,setTemplateNeedsRefresh]=useState(false);
   const [savedSignature, setSavedSignature] = useState<string | null>(null);
-  const [pendingTemplateExit,setPendingTemplateExit]=useState<NotificationView|'list'|null>(null);
+  const [pendingTemplateExit,setPendingTemplateExit]=useState<NotificationView|'list'|'shell'|null>(null);
+  const shellNavigationIntent=useRef<GrantNavigationIntent|null>(null);
   const templateExitPrompt=useRef<HTMLDivElement>(null);
   const templateExitOrigin=useRef<HTMLElement|null>(null);
   const previewGeneration = useRef(0);
@@ -485,6 +487,18 @@ export function Notifications() {
   useEffect(()=>{
     if(pendingTemplateExit!==null)templateExitPrompt.current?.querySelector<HTMLButtonElement>('[data-keep-editing]')?.focus();
   },[pendingTemplateExit]);
+  useEffect(()=>registerGrantNavigationBlocker(intent=>{
+    if(activeViewRef.current!=='templates'||templateViewRef.current!=='editor')return false;
+    if(task.busy||templateSaveGuard.current.blocked()){
+      task.setNotice('Resolve the current save first. Refresh saved template set to reconcile its outcome; your local changes are retained.');
+      return true;
+    }
+    if(editing&& !draftDirty && !templateNeedsRefresh)return false;
+    templateExitOrigin.current=document.activeElement as HTMLElement|null;
+    shellNavigationIntent.current=intent;
+    setPendingTemplateExit('shell');
+    return true;
+  }),[editing,draftDirty,templateNeedsRefresh,task.busy]);
   function completeTemplateExit(next:NotificationView|'list'){
     setPendingTemplateExit(null);
     templateViewRef.current='list';
@@ -510,11 +524,15 @@ export function Notifications() {
     completeTemplateExit(next);
   }
   function keepTemplateEditing(){
+    if(pendingTemplateExit==='shell'){shellNavigationIntent.current?.cancel();shellNavigationIntent.current=null;}
     setPendingTemplateExit(null);
     requestAnimationFrame(()=>templateExitOrigin.current?.focus());
   }
   function discardTemplateExit(){
     if(pendingTemplateExit===null||task.busy||templateSaveGuard.current.blocked())return;
+    if(pendingTemplateExit==='shell'){
+      const intent=shellNavigationIntent.current;shellNavigationIntent.current=null;setPendingTemplateExit(null);intent?.proceed();return;
+    }
     completeTemplateExit(pendingTemplateExit);
   }
   function switchSection(next:NotificationView){
