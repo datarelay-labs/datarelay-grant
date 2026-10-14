@@ -624,3 +624,35 @@ response reconciliation and 390px new-unsaved protection. Full Web units
 `.dev/u1-07-navigation-retry.txt`, `.dev/u1-07-navigation-retry-results.json`,
 `.dev/u1-07-web-full.txt`, `.dev/u1-07-web-check.txt`. Foundation common UI was
 not changed. Deployed-development and real-person acceptance remain separate.
+
+
+### U2.01 inventory duplicate / policy-usage retry completed
+
+The previously denied U2.01 source operation was retried normally on the same
+dev-atlas worktree and completed without a bypass. Inventory tiles retain the
+saved synthetic thumbnail, enabled/published/draft truth and active-policy count,
+and now expose saved update metadata, an explicit Duplicate into new draft
+action and an administrator-only read-only policy-usage drill-down.
+
+The usage endpoint performs one current-authority read transaction, confirms the
+template identity, counts only ACTIVE policy versions, returns exact policy
+version/profile IDs, version/name/lifecycle/update time, and enforces bounded
+1..50 paging/offsets. Unknown data is not invented. No read path changes policy,
+template, publication or delivery state.
+
+Duplicate is a client-side deep copy into the existing reviewed create flow. It
+copies all nine event wordings and design state but no template ID, publication
+revision or policy binding. Names are collision-safe and bounded to 100
+characters. A legacy text template is copied into an unpublished immutable
+layout-1 design so its existing wording/renderer meaning is preserved until a
+separate explicit canvas upgrade. Editing the duplicate cannot mutate the source.
+
+Qualification: API usage 1/1 PASS plus affected publication/notification Python
+regressions 11/11 PASS; duplicate model 2/2 PASS; full Web **735/735 PASS**;
+TypeScript/Vite and scoped Ruff PASS. Mounted Notifications
+`inventory-actions.spec.ts` **2/2 PASS**: duplicate/save/authoritative refresh/
+reopen exact independent draft, and real read-only usage/update-metadata display
+with zero writes. Evidence `.dev/u2-01-api.txt`, `.dev/u2-01-python-regression.txt`,
+`.dev/u2-01-unit.txt`, `.dev/u2-01-browser-results.json`,
+`.dev/u2-01-web-full.txt`, `.dev/u2-01-web-check.txt`. No deployed-development or
+real-person acceptance is inferred.

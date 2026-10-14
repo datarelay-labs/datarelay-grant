@@ -35,6 +35,17 @@ export async function notificationsFixture(page:Page){
    const result=await renderSyntheticEmail({...payload,verification_mode:payload.verification_mode??'EMAIL_PIN',template:payload.template??{name:row.name,templates:row.templates,design:row.design}});
    await route.fulfill({json:{...result,event:payload.event,...(match?{template_set_id:row.id,template_updated_at:row.updated_at,preview_hash:'c'.repeat(64)}:{template_set_id:''}),transport_accepted:false,receipt_confirmed:false,execution_allowed:false}});return;
   }
+  if(pathname==='/api/v1/notification-template-sets'&&method==='POST'){
+   state.writes.push('POST');const payload=route.request().postDataJSON();
+   const copy={...state.rows[0],...payload,id:'synthetic-copy',enabled:true,created_at:3,updated_at:3,draft_revision:1,published_revision:null,active_policy_count:0};
+   state.rows.push(copy);await route.fulfill({status:201,json:copy});return;
+  }
+  if(pathname==='/api/v1/notification-template-sets/synthetic-template/usage'&&method==='GET'){
+   await route.fulfill({json:{template_id:'synthetic-template',total:2,offset:0,limit:20,has_more:false,policies:[
+    {id:'policy-version-1',profile_id:'policy-1',version:3,name:'Production changes',lifecycle:'ACTIVE',updated_at:1},
+    {id:'policy-version-2',profile_id:'policy-2',version:1,name:'Emergency approvals',lifecycle:'ACTIVE',updated_at:1},
+   ]}});return;
+  }
   if(pathname==='/api/v1/notification-template-sets/synthetic-template'&&method==='PUT'){
    state.writes.push('PUT');const payload=route.request().postDataJSON();expect(payload.expected_updated_at).toBe(state.rows[0].updated_at);
    if(!state.failSave||state.commitThenFail)state.rows[0]={...state.rows[0],...payload,updated_at:state.rows[0].updated_at+1,draft_revision:(state.rows[0].draft_revision??1)+1};

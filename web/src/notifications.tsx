@@ -1,4 +1,4 @@
-import {EmailTemplateTile} from './email_template_inventory';
+import {EmailTemplateTile,duplicateEmailTemplateDraft} from './email_template_inventory';
 import {EmailPublicationPanel} from './email_publication_review';
 import {EmailTemplateWorkbench} from './email_template_workbench';
 import type {EmailPreviewState} from './email_live_preview';
@@ -598,6 +598,15 @@ export function Notifications() {
     setTemplateView('editor');
   }
 
+  function duplicateTemplate(row:NotificationTemplateSet){
+    if(!templatesLoaded||task.busy)return;
+    const draft=duplicateEmailTemplateDraft(row,sets.map(item=>item.name));
+    templateViewRef.current='editor';selectedTemplateRef.current='';
+    setEditing('');setSavedSignature(null);setName(draft.name);setEnabled(draft.enabled);
+    setDraftTemplates(structuredClone(draft.templates));setDraftDesign(draft.design?structuredClone(draft.design):null);
+    setEvent('requested');invalidatePreview();setTemplateView('editor');
+  }
+
   function edit(row: NotificationTemplateSet) {
     templateViewRef.current='editor';
     selectedTemplateRef.current=row.id;
@@ -934,7 +943,7 @@ export function Notifications() {
           actions={<Button disabled={!templatesLoaded || task.busy} onClick={startCreate}>Create email template</Button>}
         >
           <ul className="grant-email-template-inventory" aria-label="Email template inventory">
-            {sets.map(row=><EmailTemplateTile key={row.id} template={row} disabled={task.busy} onEdit={()=>edit(row)}/>)}
+            {sets.map(row=><EmailTemplateTile key={row.id} template={row} disabled={task.busy} onEdit={()=>edit(row)} onDuplicate={()=>duplicateTemplate(row)}/>)}
           </ul>
           {!templatesLoaded ? (
             <div>

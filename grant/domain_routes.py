@@ -358,6 +358,16 @@ def register_domain(app, actor, human, reader):
 
         return read_logo(core, actor(request), ident)
 
+    @app.get("/api/v1/notification-template-sets/{ident}/usage")
+    def notification_template_usage(
+        ident: str, request: Request,
+        limit: int = Query(default=20, ge=1, le=50),
+        offset: int = Query(default=0, ge=0, le=100000),
+    ):
+        from .email_inventory import template_usage
+
+        return template_usage(core, actor(request), ident, limit, offset)
+
     @app.get("/api/v1/notification-template-sets")
     def notification_template_sets(request: Request):
         return core.notification_template_sets(actor(request))

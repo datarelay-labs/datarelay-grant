@@ -448,9 +448,9 @@
       "depends_on": "U1.01",
       "verification_id": "V-U2.01",
       "pass_criterion": "V-U2.01: populate rows from API; compare displayed versions/counts/metadata to response; unknown values are not zero or invented; duplicate creates an unpublished independent draft; route and reopen work.",
-      "status": "BLOCKED",
-      "source": "IN_PROGRESS",
-      "interaction": "NOT_RUN",
+      "status": "OPEN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -458,16 +458,32 @@
           "kind": "PENDING_EXTENSION_NOT_SHIPPED",
           "reference": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
           "pending_tests": ".dev/u2-01-blocked/"
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:19:28.433987+00:00",
+          "test_id": "V-U2.01",
+          "source_paths": [
+            "grant/email_inventory.py",
+            "grant/domain_routes.py",
+            "web/src/email_template_inventory.tsx",
+            "web/src/notifications.tsx"
+          ],
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "result_detail": "Historical source denial was normally retried on the same dev-atlas target and succeeded. Read-only active-policy usage is bounded/paged/admin-scoped; duplicate creates a deep-copied unpublished draft and legacy source opts into unchanged layout 1 wording. API focused 1/1 plus 11 affected Python regressions, Web unit duplicate 2/2 and full Web 735/735, type/build/Ruff PASS."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "observed_at": "2026-10-14T07:19:28.433987+00:00",
+          "test_id": "V-U2.01",
+          "artifact": ".dev/u2-01-browser-results.json",
+          "test_file": "web/tests/canvas/inventory-actions.spec.ts",
+          "result_detail": "2/2 mounted Notifications PASS: duplicate copies full wording/design into a distinct unpublished draft then save/refresh/reopen while source remains unchanged; policy-usage drill-down shows exact version/profile identity and saved updated metadata with zero writes."
         }
       ],
-      "blocker": {
-        "class": "PLATFORM_SAFETY_DENIAL",
-        "tool": "Remote_Desktop_Commander.start_process",
-        "target": "dev-atlas /home/aella/datarelay-grant-g10a-g0-integration-dev: email inventory duplicate/readonly usage extension",
-        "message": "요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.",
-        "effect": "This source extension was not written; existing implemented behavior remains. Pending tests retained under .dev; no bypass.",
-        "bypassed": false
-      }
+      "blocker": null
     },
     {
       "id": "U2.02",
