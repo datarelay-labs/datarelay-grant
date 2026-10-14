@@ -140,12 +140,38 @@
       "depends_on": "None",
       "verification_id": "V-U0.04",
       "pass_criterion": "V-U0.04: non-owned bytes/index preserved; G12 SHA256 cd7252633d96b424aa4e8f24ae08a8660f9663828b5fdffc0285ce9a73e68d4f and stash 03cf0142b688baa17892e48785ff01803fa81c0e remain; only this unit's explicit paths staged.",
-      "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
-      "dev_deployment": "NOT_RUN",
-      "acceptance": "NOT_RUN",
-      "evidence": [],
+      "status": "PASS",
+      "source": "PASS",
+      "interaction": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tests/test_candidate_builder_integrity.py",
+          "source_head": "619b4f9fb125d624671b31899a8dcf0ed0d91456",
+          "test_id": "V-U0.04",
+          "observed_at": "2026-10-14T10:04:12.580857+00:00",
+          "result_detail": "Exact preservation verified: original intentional G12 diff SHA256 cd7252633d96b424aa4e8f24ae08a8660f9663828b5fdffc0285ce9a73e68d4f is unchanged; stash 03cf0142b688baa17892e48785ff01803fa81c0e resolves as a commit; branch/origin/PR100 matched exact head and no force history was used.",
+          "native_ci": [
+            38545330782,
+            38545331302
+          ]
+        },
+        {
+          "gate": "interaction",
+          "justification": "U0.04 is a repository-preservation control and defines no user interaction."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "U0.04 validates repository/source ownership rather than a deployed surface."
+        },
+        {
+          "gate": "acceptance",
+          "justification": "U0.04 requires no persona or mail-client acceptance."
+        }
+      ],
       "blocker": null
     },
     {
@@ -155,12 +181,38 @@
       "depends_on": "U0.01",
       "verification_id": "V-U0.05",
       "pass_criterion": "V-U0.05: every row has source/test/deploy/acceptance fields and blocker/dependency fields; incomplete evidence cannot produce PASS or 100%; no global completion inferred from unit counts.",
-      "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
-      "dev_deployment": "NOT_RUN",
-      "acceptance": "NOT_RUN",
-      "evidence": [],
+      "status": "PASS",
+      "source": "PASS",
+      "interaction": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
+      "evidence": [
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "tools/validate_competitor_ui_wbs.py",
+          "source_head": "619b4f9fb125d624671b31899a8dcf0ed0d91456",
+          "test_id": "V-U0.05",
+          "observed_at": "2026-10-14T10:04:12.580857+00:00",
+          "result_detail": "Evidence model verified: all 68 tasks contain source, interaction, dev_deployment, acceptance, blocker, dependency and verification fields; validator plus five negative self-tests pass; docs/STATUS.md references this evidence ledger and explicitly separates evidence classes without a product-completion percentage.",
+          "native_ci": [
+            38545330782,
+            38545331302
+          ]
+        },
+        {
+          "gate": "interaction",
+          "justification": "U0.05 validates evidence-schema bookkeeping rather than product interaction."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "U0.05 validates evidence-schema bookkeeping; deployment proof remains task-specific."
+        },
+        {
+          "gate": "acceptance",
+          "justification": "U0.05 prevents synthetic evidence from becoming acceptance and has no independent persona/mail-client acceptance action."
+        }
+      ],
       "blocker": null
     },
     {
