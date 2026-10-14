@@ -224,7 +224,7 @@
       "pass_criterion": "V-U1.01: enter the real Notifications editor; see one primary canvas/event selector, version/save controls and outline, not a long all-properties form or second competing editor. Desktop screenshot and mounted route assertions required.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -245,6 +245,24 @@
           "test_id": "V-U1.01",
           "observed_at": "2026-10-14T03:40:16.634038+00:00",
           "scope_unchanged_at": "8490ce0ba0734f511f156347bf4025c20f1cd972"
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "web/src/email_template_workbench.tsx",
+          "source_head": "4fe71b4b96c66ed80e7c67138c784e17b0714435",
+          "test_id": "V-U1.01",
+          "observed_at": "2026-10-14T10:14:49.334269+00:00",
+          "result_detail": "Scoped focus/selection refinement committed at exact source head; TypeScript noEmit, full Web unit 738/738 and production type/build PASS."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": "web/tests/canvas/notifications.spec.ts",
+          "source_head": "4fe71b4b96c66ed80e7c67138c784e17b0714435",
+          "test_id": "V-U1.01",
+          "observed_at": "2026-10-14T10:14:49.334269+00:00",
+          "result_detail": "Mounted real Notifications composition PASS with one selectable email canvas, one Email blocks outline, one Event selector, visible Save draft control and desktop screenshot evidence; included in focused 6/6 Playwright PASS. Full Web unit 738/738 PASS and npm web check type/build PASS at the same dirty source before commit."
         }
       ],
       "blocker": null
@@ -258,7 +276,7 @@
       "pass_criterion": "V-U1.02: pointer and keyboard select each block; assert selected IDs, focus, matching inspector and updated render after input; no form-only substitute and no string-presence-only PASS.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -279,6 +297,24 @@
           "test_id": "V-U1.02",
           "observed_at": "2026-10-14T03:40:16.634038+00:00",
           "scope_unchanged_at": "8490ce0ba0734f511f156347bf4025c20f1cd972"
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "web/src/email_template_workbench.tsx",
+          "source_head": "4fe71b4b96c66ed80e7c67138c784e17b0714435",
+          "test_id": "V-U1.02",
+          "observed_at": "2026-10-14T10:14:49.334269+00:00",
+          "result_detail": "Scoped focus/selection refinement committed at exact source head; TypeScript noEmit, full Web unit 738/738 and production type/build PASS."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": "web/tests/canvas/editor.spec.ts",
+          "source_head": "4fe71b4b96c66ed80e7c67138c784e17b0714435",
+          "test_id": "V-U1.02",
+          "observed_at": "2026-10-14T10:14:49.334269+00:00",
+          "result_detail": "Mounted pointer selection on actual Message and Approval buttons asserts matching outline aria-pressed state, edited wording immediately appears in canvas, and keyboard Heading selection opens/focuses the matching inspector field; focused editor/notifications Playwright 6/6 PASS."
         }
       ],
       "blocker": null
@@ -409,7 +445,7 @@
       "pass_criterion": "V-U1.06: at 390px open/select/edit/close drawer; focus returns correctly, Escape works when appropriate, no trapped focus, page-level overflow or clipped primary buttons; no dragging required.",
       "status": "OPEN",
       "source": "PASS",
-      "interaction": "IN_PROGRESS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -430,6 +466,24 @@
           "test_id": "V-U1.06",
           "observed_at": "2026-10-14T03:40:16.634038+00:00",
           "scope_unchanged_at": "8490ce0ba0734f511f156347bf4025c20f1cd972"
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "web/src/email_template_workbench.tsx",
+          "source_head": "4fe71b4b96c66ed80e7c67138c784e17b0714435",
+          "test_id": "V-U1.06",
+          "observed_at": "2026-10-14T10:14:49.334269+00:00",
+          "result_detail": "Scoped focus/selection refinement committed at exact source head; TypeScript noEmit, full Web unit 738/738 and production type/build PASS."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": "web/tests/canvas/editor.spec.ts",
+          "source_head": "4fe71b4b96c66ed80e7c67138c784e17b0714435",
+          "test_id": "V-U1.06",
+          "observed_at": "2026-10-14T10:14:49.334269+00:00",
+          "result_detail": "At 390px keyboard Heading selection opens Event heading, Close settings returns focus to the outline, canvas click focuses the actual Event heading field, Escape closes and returns focus, and horizontal overflow remains absent; focused editor/notifications Playwright 6/6 PASS."
         }
       ],
       "blocker": null
