@@ -2055,9 +2055,9 @@
       "depends_on": "U6.01; current normal tool authorization",
       "verification_id": "V-U6.02",
       "pass_criterion": "V-U6.02: accepted raster dimensions/size/MIME normalize as specified; malformed/polyglot/oversized/unauthorized input rejected; no remote fetch; authorized preview only; original blocked batch must not be bypassed.",
-      "status": "BLOCKED",
-      "source": "IN_PROGRESS",
-      "interaction": "NOT_RUN",
+      "status": "OPEN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -2069,16 +2069,27 @@
             "tests/test_email_renderer.py"
           ],
           "result": "Original prior-turn backend retry succeeded; 84 affected cases then 60 final focused cases PASS; exact v1..v6 compiler/wheel assets; immutable snapshot/MIME identity and old-model serialization verified. No live SMTP, frontend or mail-client acceptance."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "source_head": "02fda84dff74177faa8d518bae4bb1ce1d4b1d7b",
+          "test_id": "V-U6.02",
+          "observed_at": "2026-10-14T07:52:14.372670+00:00",
+          "result_detail": "Grant-owned logo UI/safety integration completed on top of existing immutable server asset/CID backend. Local PNG/JPEG only, 32 KiB/512px bounds, no URL/SVG fetch, layout revision preserved through optional-content v7."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u6-logo-browser-final3-results.json",
+          "source_head": "02fda84dff74177faa8d518bae4bb1ce1d4b1d7b",
+          "test_id": "V-U6.02",
+          "observed_at": "2026-10-14T07:52:14.372670+00:00",
+          "result_detail": "2/2 mounted Notifications scenarios PASS: SVG rejected before upload; normalized immutable PNG rendered in selectable canvas and inert iframe; images-off preserves text brand; width/save/reopen persistence; optional-content layout7 preserved; removal leaves immutable asset retained. Synthetic transport only."
         }
       ],
-      "blocker": {
-        "class": "PLATFORM_SAFETY_DENIAL",
-        "tool": "Remote_Desktop_Commander.start_process",
-        "target": "dev-atlas: Grant-owned logo upload, version-preserving design model and embedded-image UI projection",
-        "message": "요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.",
-        "effect": "Backend normal retry succeeded and was independently tested. New frontend integration batch not executed; old frontend still blocks image rendering and advertises logo unavailable. No alternate/reformulated UI write.",
-        "bypassed": false
-      }
+      "blocker": null
     },
     {
       "id": "U6.03",
@@ -2087,9 +2098,9 @@
       "depends_on": "U6.02, U5.05",
       "verification_id": "V-U6.03",
       "pass_criterion": "V-U6.03: exact attachment/content ID and saved asset hash verified using synthetic mail; old request logo unchanged after replacement; images-off preserves brand/context; actual client acceptance recorded in U7.04.",
-      "status": "BLOCKED",
-      "source": "IN_PROGRESS",
-      "interaction": "NOT_RUN",
+      "status": "OPEN",
+      "source": "PASS",
+      "interaction": "PASS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [
@@ -2101,16 +2112,27 @@
             "tests/test_email_renderer.py"
           ],
           "result": "Original prior-turn backend retry succeeded; 84 affected cases then 60 final focused cases PASS; exact v1..v6 compiler/wheel assets; immutable snapshot/MIME identity and old-model serialization verified. No live SMTP, frontend or mail-client acceptance."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "source_head": "02fda84dff74177faa8d518bae4bb1ce1d4b1d7b",
+          "test_id": "V-U6.03",
+          "observed_at": "2026-10-14T07:52:14.372670+00:00",
+          "result_detail": "Grant-owned logo UI/safety integration completed on top of existing immutable server asset/CID backend. Local PNG/JPEG only, 32 KiB/512px bounds, no URL/SVG fetch, layout revision preserved through optional-content v7."
+        },
+        {
+          "gate": "interaction",
+          "result": "PASS",
+          "artifact": ".dev/u6-logo-browser-final3-results.json",
+          "source_head": "02fda84dff74177faa8d518bae4bb1ce1d4b1d7b",
+          "test_id": "V-U6.03",
+          "observed_at": "2026-10-14T07:52:14.372670+00:00",
+          "result_detail": "2/2 mounted Notifications scenarios PASS: SVG rejected before upload; normalized immutable PNG rendered in selectable canvas and inert iframe; images-off preserves text brand; width/save/reopen persistence; optional-content layout7 preserved; removal leaves immutable asset retained. Synthetic transport only."
         }
       ],
-      "blocker": {
-        "class": "PLATFORM_SAFETY_DENIAL",
-        "tool": "Remote_Desktop_Commander.start_process",
-        "target": "dev-atlas: Grant-owned logo upload, version-preserving design model and embedded-image UI projection",
-        "message": "요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.",
-        "effect": "Backend normal retry succeeded and was independently tested. New frontend integration batch not executed; old frontend still blocks image rendering and advertises logo unavailable. No alternate/reformulated UI write.",
-        "bypassed": false
-      }
+      "blocker": null
     },
     {
       "id": "U6.04",

@@ -13,17 +13,31 @@ export function renderSyntheticEmail(payload:unknown):Promise<any>{return new Pr
  const child=execFile('uv',['run','--frozen','python','tests/render_email_canvas_sample.py'],{cwd:root,maxBuffer:1024*1024,timeout:15000},(error,stdout,stderr)=>error?reject(Error(stderr)):resolve(JSON.parse(stdout)));
  child.stdin!.end(JSON.stringify(payload));
 });}
+
+function normalizeSyntheticLogo(data_base64:string):Promise<any>{return new Promise((resolve,reject)=>{
+ const child=execFile('uv',['run','--frozen','python','tests/normalize_email_logo_sample.py'],{cwd:root,maxBuffer:1024*1024,timeout:15000},(error,stdout,stderr)=>error?reject(Error(stderr)):resolve(JSON.parse(stdout)));
+ child.stdin!.end(JSON.stringify({data_base64}));
+});}
 export async function notificationsFixture(page:Page){
  const state={rows:[{id:'synthetic-template',name:'Synthetic approval',enabled:true,design:createEmailDesign(),
   templates:Object.fromEntries(events.map(event=>[event,{subject:'Request {{request_title}}',body:'Please review {{target}}.'}])),
   created_at:1,updated_at:1,draft_revision:1,published_revision:1,active_policy_count:2}] as NotificationTemplateSet[],
-  failSave:false,commitThenFail:false,writes:[] as string[],errors:[] as string[]};
+  failSave:false,commitThenFail:false,writes:[] as string[],errors:[] as string[],assets:new Map<string,any>()};
  page.on('pageerror',error=>state.errors.push(error.message));
  await page.route('**/api/v1/**',async route=>{
   const url=new URL(route.request().url()),method=route.request().method(),pathname=url.pathname;
   if(pathname==='/api/v1/notification-template-sets'&&method==='GET'){await route.fulfill({json:state.rows});return;}
   if(pathname.endsWith('/notification-variables')){await route.fulfill({json:{variables:['request_title','request_url','external_id','action_kind','target','reason','deadline','decision_state','execution_state']}});return;}
   if(pathname.endsWith('/notification-branding')){await route.fulfill({json:{brand_name:'DataRelay Grant',sender_display_name:'DataRelay Grant',logo_asset:''}});return;}
+  if(pathname==='/api/v1/notification-assets'&&method==='POST'){
+   const payload=route.request().postDataJSON(),value=await normalizeSyntheticLogo(payload.data_base64);
+   state.assets.set(value.id,value);await route.fulfill({status:201,json:{id:value.id,media_type:value.media_type,width:value.width,height:value.height,bytes:value.bytes,immutable:true}});return;
+  }
+  if(pathname.startsWith('/api/v1/notification-assets/')&&method==='GET'){
+   const id=decodeURIComponent(pathname.slice('/api/v1/notification-assets/'.length)),value=state.assets.get(id);
+   if(!value){await route.fulfill({status:404,json:{error:{code:'NOTIFICATION_ASSET_NOT_FOUND'}}});return;}
+   await route.fulfill({json:value});return;
+  }
   if(pathname==='/api/v1/notification-template-defaults'&&method==='GET'){
    const locale=url.searchParams.get('locale')==='ko'?'ko':'en';
    const value=await new Promise<string>((resolve,reject)=>execFile('uv',['run','--frozen','python','-c','import json,sys; from grant.email_localization import event_defaults; print(json.dumps({"locale":sys.argv[1],"templates":event_defaults(sys.argv[1])}))',locale],{cwd:root,timeout:15000},(error,stdout)=>error?reject(error):resolve(stdout)));
@@ -32,7 +46,9 @@ export async function notificationsFixture(page:Page){
   if(pathname.endsWith('/preview')){
    const match=pathname.match(/^\/api\/v1\/notification-template-sets\/([^/]+)\/preview$/);
    const payload=route.request().postDataJSON(),row=match?state.rows.find(item=>item.id===decodeURIComponent(match[1]))!:state.rows[0];
-   const result=await renderSyntheticEmail({...payload,verification_mode:payload.verification_mode??'EMAIL_PIN',template:payload.template??{name:row.name,templates:row.templates,design:row.design}});
+   const template=structuredClone(payload.template??{name:row.name,templates:row.templates,design:row.design});
+   const logoId=template.design?.logo_asset_id;if(logoId){const logo=state.assets.get(logoId);if(!logo){await route.fulfill({status:422,json:{error:{code:'NOTIFICATION_ASSET_NOT_FOUND'}}});return;}template.logo={id:logo.id,media_type:logo.media_type,width:logo.width,height:logo.height,data_base64:logo.data_base64};}
+   const result=await renderSyntheticEmail({...payload,verification_mode:payload.verification_mode??'EMAIL_PIN',template});
    await route.fulfill({json:{...result,event:payload.event,...(match?{template_set_id:row.id,template_updated_at:row.updated_at,preview_hash:'c'.repeat(64)}:{template_set_id:''}),transport_accepted:false,receipt_confirmed:false,execution_allowed:false}});return;
   }
   if(pathname==='/api/v1/notification-template-sets'&&method==='POST'){

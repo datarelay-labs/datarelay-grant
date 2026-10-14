@@ -15,5 +15,5 @@ content={key:TOKEN.sub(lambda match:context[match[1]],value)
 content['brand_name']='DataRelay Grant'
 security=EmailSecurity(payload['verification_mode'],'0000',
                        {key:PREVIEW_ORIGIN+key.lower() for key in OUTCOMES},True)
-result=compose_email(content,context,event,security=security,design=validate_design(template['design']),sample=True)
+result=compose_email(content,context,event,security=security,design=validate_design(template['design']),sample=True,logo=template.get('logo'))
 print(json.dumps({'rendered':result,'validation':{'html_bytes':len(result['html'].encode()),'protected_actions':4 if event in ('requested','reminder') else 1}}))

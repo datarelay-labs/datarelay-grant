@@ -1,3 +1,4 @@
+import {sanitizeEmbeddedLogos} from './email_logo_safety';
 import {EmailCanvasProjection} from './email_canvas_projection';
 import type {EmailBlock} from './email_canvas_model';
 import {designSignature} from './email_design';
@@ -85,18 +86,22 @@ export type EmailPreviewSimulation='normal'|'images_off'|'dark_approximation';
 export function simulatedEmailDocument(html:string,simulation:EmailPreviewSimulation):string {
  // Images-off is an intentionally stricter local simulation: image elements are
  // removed before the existing inert-document gate and therefore cannot fetch.
- if(simulation==='images_off')html=html.replace(/<\s*img\b[^>]*>/gi,'<span>[Image hidden]</span>');
+ if(simulation==='images_off')html=html.replace(/<\s*img\b[^>]*>/gi,'<span style="display:inline-block;font-size:14px;line-height:20px">[Image hidden]</span>');
  return inertEmailDocument(html);
 }
 
 export function inertEmailDocument(html:string):string {
- // Reject active/resource elements before iframe parsing. CSP remains defense
- // in depth; even browser-observable blocked resource attempts are unnecessary.
- if(/<\s*(?:script|img|iframe|frame|object|embed|link|base|form|input|textarea|select|video|audio|source|svg|math)\b/i.test(html)
-    || /<meta\b[^>]*http-equiv\s*=\s*["']?refresh\b/i.test(html)){
-  html='<!doctype html><html><head></head><body><p>Active content is not permitted in an email preview.</p></body></html>';
+ const blocked='<!doctype html><html><head></head><body><p>Active content is not permitted in an email preview.</p></body></html>';
+ let allowDataImages=false;
+ if(/<\s*img\b/i.test(html)){
+  const sanitized=sanitizeEmbeddedLogos(html);
+  if(sanitized===null)html=blocked;else{html=sanitized;allowDataImages=true;}
  }
- const policy="default-src 'none'; style-src 'unsafe-inline'; img-src 'none'; font-src 'none'; form-action 'none'; base-uri 'none'";
+ if(/<\s*(?:script|iframe|frame|object|embed|link|base|form|input|textarea|select|video|audio|source|svg|math)\b/i.test(html)
+    || /<meta\b[^>]*http-equiv\s*=\s*["']?refresh\b/i.test(html)){
+  html=blocked;allowDataImages=false;
+ }
+ const policy="default-src 'none'; style-src 'unsafe-inline'; img-src "+(allowDataImages?'data:':"'none'")+"; font-src 'none'; form-action 'none'; base-uri 'none'";
  const meta='<meta http-equiv="Content-Security-Policy" content="'+policy+'">';
  return /<head>/i.test(html)?html.replace(/<head>/i,'<head>'+meta):'<!doctype html><html><head>'+meta+'</head><body>'+html+'</body></html>';
 }

@@ -1,4 +1,5 @@
 import {EmailPaletteControls} from './email_palette_controls';
+import {EmailLogoControls} from './email_logo_controls';
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {Alert,Button,TextField} from '@datarelay-labs/foundation';
 import {api} from './api';
@@ -133,7 +134,7 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,reviewOpe
    <Button type="button" variant="secondary" disabled={busy||design.blocks.indexOf(selectedContent)===design.blocks.indexOf('request_context')-1} onClick={()=>designChange(moveEmailContent(design,selectedContent,1))}>Move content later</Button>
    <Button type="button" variant="secondary" disabled={busy} onClick={()=>{designChange(removeEmailContent(design,selectedContent));setSelected('message');setInspectorOpen(false);}}>Remove content block</Button></div>
  </>:<p>Enable visual editing to manage optional content.</p>;
- else if(selected==='brand')properties=<><strong>Text brand</strong><p>Brand and sender names are managed in Notifications → Branding. No account or sender settings are changed here.</p><p>Logo upload is not available. The text brand remains visible.</p></>;
+ else if(selected==='brand')properties=<><strong>Text brand</strong><p>Brand and sender names are managed in Notifications → Branding. No account or sender settings are changed here.</p>{design?<EmailLogoControls design={design} disabled={busy} onChange={designChange}/>:<p>Enable a visual draft before adding a logo. The text brand remains visible.</p>}</>;
  else if(selected==='request_context')properties=<><strong>Protected request details</strong><p>Title, action, target, reference and deadline remain visible before the decisions. These values come from the request; they cannot be removed or rebound.</p></>;
  else if(selected==='verification')properties=<><strong>Verification requirements</strong><p>The approval policy determines PIN, OTP and sign-in MFA. The final Confirm remains mandatory. Change Sample data to inspect each mode; previewing never changes policy.</p></>;
  else properties=visual?<>

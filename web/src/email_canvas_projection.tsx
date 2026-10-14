@@ -1,7 +1,8 @@
+import {safeEmbeddedLogo} from './email_logo_safety';
 import {createElement,useMemo,type CSSProperties,type ReactNode} from 'react';
 import {editableEmailBlocks,type EmailBlock} from './email_canvas_model';
 
-const tags=new Set(['table','tbody','thead','tfoot','tr','td','th','div','span','p','strong','b','em','i','ul','ol','li','br','h1','h2','h3','blockquote','a']);
+const tags=new Set(['table','tbody','thead','tfoot','tr','td','th','div','span','p','strong','b','em','i','ul','ol','li','br','h1','h2','h3','blockquote','a','img']);
 const properties=new Set(['background','background-color','border','border-collapse','border-spacing','border-radius','color','display','font-family','font-size','font-style','font-weight','height','line-height','margin','margin-top','margin-bottom','margin-left','margin-right','max-width','min-width','padding','padding-top','padding-bottom','padding-left','padding-right','text-align','text-decoration','vertical-align','width','word-break','overflow-wrap']);
 export function safeEmailCanvasStyle(name:string,value:string):string|null {
  if(!properties.has(name)||value.length>150||/url|expression|var\(|!important|[\\<>@;]/i.test(value))return null;
@@ -37,6 +38,11 @@ export function emailCanvasNodes(html:string,selected:EmailBlock):ReactNode {
    const number=Number(element.getAttribute(key));if(Number.isInteger(number)&&number>0&&number<=20)props[key==='colspan'?'colSpan':'rowSpan']=number;
   }
   if(tag==='table')props.role='presentation';
+  if(tag==='img'){
+   const src=element.getAttribute('src')??'',alt=(element.getAttribute('alt')??'').slice(0,200);
+   if(!safeEmbeddedLogo(src))return createElement('span',props,alt||'[Image hidden]');
+   props.src=src;props.alt=alt;props.loading='lazy';props.decoding='async';
+  }
   // Links become text-shaped presentation elements; selection belongs to the host.
   return createElement(tag==='a'?'span':tag,props,...Array.from(element.childNodes).map(child=>visit(child,depth+1)));
  }

@@ -818,3 +818,32 @@ proves rollback is another monotonically new publication. That backend invariant
 has no separate meaningful UI interaction gate; the related reviewed UI is
 covered by U5.02-U5.04/U5.07. Real-user, real-mail and deployed acceptance remain
 separate and NOT RUN.
+
+
+### U6.02/U6.03 Grant-owned logo UI and inert preview integration
+
+The previously backend-only immutable logo pipeline is now exposed by the Grant
+email editor without changing Foundation. Brand settings accept only local PNG or
+JPEG uploads up to **32 KiB**; SVG and remote URL inputs are not provided and are
+rejected client-side before the existing server normalization/auth boundary. The
+server remains authoritative for raster decode, 512×512 dimensions, metadata
+stripping, content-addressed identity and immutable storage.
+
+The editor preserves the current shared-layout revision when applying a logo, so
+an optional-content revision 7 draft never downgrades to revision 6. Logo width is
+bounded to 64–256 px. The selectable canvas accepts only a bounded embedded data
+PNG and otherwise renders fallback text. The inert iframe rewrites the one trusted
+embedded PNG to a fixed safe tag, permits only `img-src data:`, rejects external,
+duplicate or malformed image tags, and the explicit Images-off simulation removes
+the image while keeping the text brand. Removing a logo changes only the unsaved
+draft; the immutable stored asset remains available to historical snapshots.
+
+Qualification: backend asset/renderer/optional-content focus **57/57 PASS**;
+full Web units **738/738 PASS**; TypeScript/Vite production build PASS; pinned
+renderer layouts 1..7 reproduce exactly. Mounted Notifications logo scenarios
+**2/2 PASS** including invalid SVG, upload/normalize, canvas + iframe rendering,
+images-off fallback, width/save/reopen, revision-7 preservation and remove-without-
+delete. Evidence `.dev/u6-logo-python.txt`, `.dev/u6-logo-web-full.txt`,
+`.dev/u6-logo-web-check.txt`, `.dev/u6-logo-renderer.txt`,
+`.dev/u6-logo-browser-final3.txt` and JSON result. These are synthetic/local
+qualification only; actual Gmail/Outlook/Apple/iOS rendering remains U7.04.
