@@ -3721,9 +3721,18 @@
           "test_id": "V-U7.07",
           "observed_at": "2026-10-14T11:27:07.389400+00:00",
           "result_detail": "BLOCKED_TOOLING: The development preview is deployed and an existing session row is present, but ChatGPT has no legitimate authorized credential/browser-session path. Existing session/cookie or fixture-secret extraction is prohibited. Private preflight evidence root /home/aella/datarelay-grant-r3-evidence/grant-r3-20261014T112555Z; no secret material is committed."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "3cd472bdedf74d283e4fd45e6474228ad928ecaa",
+          "test_id": "V-U7.07",
+          "observed_at": "2026-10-14T23:07:09.454970+00:00",
+          "result_detail": "Read-only DB join verified one active human session for username admin, email rick@rick.kr, role admin, mfa_pending=false. No session token/cookie/hash was read or reused. This resolves the prior absence-of-legitimate-owner-session fact, but does not prove the required same-UI-task interaction because ChatGPT has no authorized GUI/session-control path."
         }
       ],
-      "blocker": "BLOCKED_TOOLING: The development preview is deployed and an existing session row is present, but ChatGPT has no legitimate authorized credential/browser-session path. Existing session/cookie or fixture-secret extraction is prohibited."
+      "blocker": "BLOCKED_TOOLING: A legitimate owner-authenticated admin session now exists on the deployed development preview (admin/rick@rick.kr, MFA pending false, active session verified without reading token material). ChatGPT still has no authorized GUI/session-control path to perform the required same-UI-task interaction; owner-performed evidence or a supported browser-control path is still required."
     },
     {
       "id": "U8.01",

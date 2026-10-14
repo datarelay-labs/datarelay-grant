@@ -49,6 +49,13 @@ Private evidence root: `/home/aella/datarelay-grant-r3-evidence/grant-r3-2026101
 - Two bounded non-authorizing current-candidate Grant SMTP messages were sent during qualification; the corrected-sender message was received by Gmail with Grant Message-ID, multipart text/HTML, DKIM PASS, SPF PASS, and no unexpected X-Google-Original-From.
 - Current dev DB email_templates count is 0. Therefore the remaining U6.06 blocker is no longer SMTP or mailbox receipt; it is the absence of an exact product-saved template revision to send. Product authentication is not bypassed to fabricate that row.
 
+### Owner-authenticated dev-preview continuation
+
+- One active development-preview session now belongs to admin / rick@rick.kr, role admin, with mfa_pending=false.
+- Session token/cookie/hash material was not read or reused.
+- This proves a legitimate owner-authenticated path exists on the deployed preview.
+- It does not by itself satisfy U7.07: the required same-UI-task interaction still needs owner-performed evidence or an authorized GUI/session-control path.
+
 ## User/external prerequisites to continue
 
 1. U6.06 SMTP transport and real Gmail receipt are now verified. Create/save one legitimate notification template revision through an authorized product session, then send that exact saved revision to the approved mailbox; do not insert a DB row directly.
