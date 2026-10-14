@@ -38,7 +38,7 @@ def test_initial_sqlite_file_is_owner_private_before_first_schema_write(tmp_path
     assert initial_permissions == [0o600], initial_permissions
     assert _file_mode(database) == 0o600
     with sqlite3.connect(database) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 13
 
 
 def test_existing_database_permissions_are_private_before_sqlite_read(tmp_path, monkeypatch):
@@ -91,6 +91,6 @@ def test_preexisting_database_survives_second_initialization_without_reset(tmp_p
         conn.execute("UPDATE runtime SET value='1' WHERE key='paused'")
     Database(path)
     with Database(path).transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 13
         assert conn.execute("SELECT value FROM runtime WHERE key='paused'").fetchone()[0] == "1"
     assert _file_mode(path) == 0o600

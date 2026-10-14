@@ -5,6 +5,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from .email_design import EmailDesign
 from .mail_templates import validate_event_templates
 
 
@@ -212,6 +213,7 @@ class NotificationEventTemplate(Input):
 
 
 class NotificationTemplateSet(Input):
+    design: EmailDesign | None = None
     name: str = Field(min_length=1, max_length=100)
     templates: dict[NotificationEvent, NotificationEventTemplate]
 

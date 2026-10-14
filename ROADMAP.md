@@ -28,7 +28,7 @@ No arbitrary HTML/JS/CSS, link rebinding, tracking or hidden approval block.
 | --- | --- | --- | --- |
 | ET-0 | Current request | 20-family source survey, recommendation, roadmap and 24 acceptance checks saved and linked | DONE — RESEARCH/DOCS ONLY |
 | ET-1 | P0; first next implementation | Same-input local MJML/React Email renderer PoC; structured subject/HTML/text, mode-correct guidance, three decisions + View Details; remove fragile body-string split | SOURCE IMPLEMENTED — 20 renderer tests; affected API 46 PASS; editor remains ET-2 onward |
-| ET-2 | P0; ET-1 | Protected JSON design schema, server style/asset validation, CAS draft API and immutable template/layout/renderer snapshot; legacy compatibility | NOT STARTED |
+| ET-2 | P0; ET-1 | Protected JSON design schema, server style/asset validation, CAS draft API and immutable template/layout/renderer snapshot; legacy compatibility | CORE SOURCE DONE — 51 affected tests PASS; logo upload/CID implementation platform-blocked and null-only in schema |
 | ET-3 | P0; ET-2 | Single block editor, three presets, safe variable chips and configurable text/button design with keyboard/mobile usability; reuse Foundation controls | NOT STARTED |
 | ET-4 | P0; ET-1–3 | Same-render live draft preview in desktop/mobile/HTML/text; inert sample data/PIN/links; saved-revision self-only test-send Review→Confirm | NOT STARTED |
 | ET-5 | P1 implementation; required before production | Publish impact/history, future-request-only revision selection, rollback-as-new-revision, nine events/locales and opt-in text migration | NOT STARTED |

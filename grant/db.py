@@ -96,6 +96,7 @@ CREATE TABLE IF NOT EXISTS email_templates (
  subject_template TEXT NOT NULL, body_template TEXT NOT NULL,
  reminder_subject_template TEXT NOT NULL, reminder_body_template TEXT NOT NULL,
  event_templates TEXT NOT NULL, sender_display_name TEXT NOT NULL DEFAULT 'DataRelay Grant',
+ design_json TEXT, draft_revision INTEGER NOT NULL DEFAULT 1, published_revision INTEGER,
  enabled INTEGER NOT NULL DEFAULT 1, created_at REAL NOT NULL, updated_at REAL NOT NULL
 );
 CREATE TABLE IF NOT EXISTS profiles (
@@ -266,7 +267,16 @@ CREATE TABLE IF NOT EXISTS escalations (
  due_at REAL NOT NULL, fired_at REAL,
  CHECK ((target_user_id IS NOT NULL) != (target_group_id IS NOT NULL))
 );
-PRAGMA user_version=12;
+CREATE TABLE IF NOT EXISTS email_template_revisions (
+ template_id TEXT NOT NULL REFERENCES email_templates(id), revision INTEGER NOT NULL,
+ snapshot TEXT NOT NULL, snapshot_hash TEXT NOT NULL, created_by TEXT NOT NULL,
+ created_at REAL NOT NULL, reason TEXT NOT NULL, PRIMARY KEY(template_id,revision)
+);
+CREATE TABLE IF NOT EXISTS notification_assets (
+ id TEXT PRIMARY KEY, media_type TEXT NOT NULL, width INTEGER NOT NULL, height INTEGER NOT NULL,
+ data BLOB NOT NULL, created_by TEXT NOT NULL, created_at REAL NOT NULL
+);
+PRAGMA user_version=13;
 """
 
 
@@ -304,7 +314,7 @@ def _existing_installation(path: Path) -> Iterator[tuple[sqlite3.Connection, int
         raise ValueError("Installation database is missing or not a regular file")
     with closing(sqlite3.connect(f"{path.absolute().as_uri()}?mode=ro", uri=True)) as conn:
         version = conn.execute("PRAGMA user_version").fetchone()[0]
-        if version not in range(1, 13):
+        if version not in range(1, 14):
             raise ValueError("Unsupported installation database schema")
         if conn.execute("PRAGMA quick_check").fetchone()[0] != "ok":
             raise ValueError("Installation database integrity check failed")
@@ -324,7 +334,7 @@ class Database:
         _ensure_private_database_path(path)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12):
+            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13):
                 raise RuntimeError("Unsupported database schema; do not downgrade this binary")
             conn.execute("PRAGMA journal_mode=WAL")
             if version == 1:
@@ -359,6 +369,9 @@ class Database:
                 version = 11
             if version == 11:
                 self._migrate_v11_to_v12(conn)
+                version = 12
+            if version == 12:
+                self._migrate_v12_to_v13(conn)
             conn.executescript(SCHEMA)
 
     @staticmethod
@@ -750,6 +763,32 @@ class Database:
                 )
         conn.execute("PRAGMA user_version=12")
 
+    @staticmethod
+    def _migrate_v12_to_v13(conn: sqlite3.Connection) -> None:
+        # Additive and atomic: never rewrite existing request/outbox bytes.
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            columns = {row[1] for row in conn.execute("PRAGMA table_info(email_templates)")}
+            for name, declaration in (("design_json", "TEXT"),
+                                      ("draft_revision", "INTEGER NOT NULL DEFAULT 1"),
+                                      ("published_revision", "INTEGER")):
+                if name not in columns:
+                    conn.execute(f"ALTER TABLE email_templates ADD COLUMN {name} {declaration}")
+            conn.execute("""CREATE TABLE IF NOT EXISTS email_template_revisions (
+                template_id TEXT NOT NULL REFERENCES email_templates(id), revision INTEGER NOT NULL,
+                snapshot TEXT NOT NULL, snapshot_hash TEXT NOT NULL, created_by TEXT NOT NULL,
+                created_at REAL NOT NULL, reason TEXT NOT NULL, PRIMARY KEY(template_id,revision))""")
+            conn.execute("""CREATE TABLE IF NOT EXISTS notification_assets (
+                id TEXT PRIMARY KEY, media_type TEXT NOT NULL, width INTEGER NOT NULL,
+                height INTEGER NOT NULL, data BLOB NOT NULL, created_by TEXT NOT NULL,
+                created_at REAL NOT NULL)""")
+            conn.execute("PRAGMA user_version=13")
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+
+
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
         conn.row_factory = sqlite3.Row
@@ -807,7 +846,7 @@ class Database:
         with closing(sqlite3.connect(f"{source.absolute().as_uri()}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
-            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12):
+            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13):
                 raise ValueError("Backup schema mismatch")
             with (
                 _private_sqlite_output(destination) as staged,

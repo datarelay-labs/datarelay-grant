@@ -340,10 +340,20 @@ class Core:
             "id": row["id"],
             "name": row["name"],
             "templates": json.loads(row["event_templates"]),
+            "design": json.loads(row["design_json"]) if row["design_json"] else None,
+            "draft_revision": row["draft_revision"],
+            "published_revision": row["published_revision"],
             "enabled": bool(row["enabled"]),
             "created_at": row["created_at"],
             "updated_at": row["updated_at"],
         }
+
+    @staticmethod
+    def _validate_design_assets(conn: sqlite3.Connection, design: dict | None) -> None:
+        if design and design.get("logo_asset_id") and not conn.execute(
+            "SELECT 1 FROM notification_assets WHERE id=?", (design["logo_asset_id"],),
+        ).fetchone():
+            raise GrantError("NOTIFICATION_ASSET_NOT_FOUND", 422)
 
     def create_notification_template_set(
         self, actor: Principal, body: NotificationTemplateSet
@@ -354,13 +364,15 @@ class Core:
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
             branding = self._branding(conn)
+            design = body.design.model_dump() if body.design else None
+            self._validate_design_assets(conn, design)
             try:
                 conn.execute(
                     """INSERT INTO email_templates(
                        id,name,subject_template,body_template,reminder_subject_template,
                        reminder_body_template,event_templates,sender_display_name,
-                       enabled,created_at,updated_at
-                    ) VALUES(?,?,?,?,?,?,?,?,1,?,?)""",
+                       enabled,created_at,updated_at,design_json
+                    ) VALUES(?,?,?,?,?,?,?,?,1,?,?,?)""",
                     (
                         ident,
                         body.name,
@@ -372,6 +384,7 @@ class Core:
                         branding["sender_display_name"],
                         now,
                         now,
+                        json_text(design) if design else None,
                     ),
                 )
             except sqlite3.IntegrityError as exc:
@@ -400,7 +413,7 @@ class Core:
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
             current = conn.execute(
-                "SELECT updated_at FROM email_templates WHERE id=?", (ident,)
+                "SELECT * FROM email_templates WHERE id=?", (ident,)
             ).fetchone()
             if not current:
                 raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
@@ -412,13 +425,29 @@ class Core:
                 (ident,),
             ).fetchone():
                 raise GrantError("EMAIL_TEMPLATE_IN_USE", 409)
+            design = body.design.model_dump() if body.design else (
+                json.loads(current["design_json"]) if current["design_json"] else None
+            )
+            self._validate_design_assets(conn, design)
+            # Opt-in conversion captures the unchanged legacy published baseline.
+            # Saving a design never silently changes active policies' future mail.
+            published_revision = current["published_revision"]
+            if design and not current["design_json"]:
+                legacy = snapshot(current, branding=self._branding(conn))
+                published_revision = 1
+                conn.execute(
+                    "INSERT INTO email_template_revisions VALUES(?,?,?,?,?,?,?)",
+                    (ident, 1, json_text(legacy), fingerprint(legacy), actor.id, time.time(),
+                     "Legacy baseline preserved before design draft"),
+                )
             updated_at = max(time.time(), math.nextafter(current["updated_at"], math.inf))
             try:
                 changed = conn.execute(
                     """UPDATE email_templates
                        SET name=?,subject_template=?,body_template=?,
                            reminder_subject_template=?,reminder_body_template=?,
-                           event_templates=?,enabled=?,updated_at=?
+                           event_templates=?,enabled=?,updated_at=?,design_json=?,
+                           draft_revision=draft_revision+1,published_revision=?
                        WHERE id=? AND updated_at=?""",
                     (
                         body.name,
@@ -429,6 +458,8 @@ class Core:
                         json_text(templates),
                         int(body.enabled),
                         updated_at,
+                        json_text(design) if design else None,
+                        published_revision,
                         ident,
                         body.expected_updated_at,
                     ),
@@ -1413,6 +1444,14 @@ class Core:
             ).fetchone()
             if not row:
                 raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 409)
+            if row["design_json"]:
+                published = conn.execute(
+                    "SELECT snapshot FROM email_template_revisions WHERE template_id=? AND revision=?",
+                    (row["id"], row["published_revision"]),
+                ).fetchone()
+                if not published:
+                    raise GrantError("EMAIL_TEMPLATE_UNPUBLISHED", 409)
+                return json.loads(published["snapshot"])
             return snapshot(row, branding=branding)
         return snapshot(None, branding=branding)
 

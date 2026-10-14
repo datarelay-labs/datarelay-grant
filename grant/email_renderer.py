@@ -56,9 +56,6 @@ def compose_email(
     sample: bool = False,
 ) -> dict[str, str]:
     """Render all three MIME/preview outputs through the same pure contract."""
-    if design is not None:
-        # The server design schema is introduced independently in ET-2.
-        raise ValueError("Email design schema not supported")
     subject, body = content["subject"], content["body"]
     if len(subject) > 2048 or len(body.encode("utf-8")) > 65536:
         raise ValueError("Rendered email content exceeds size limit")
@@ -79,6 +76,22 @@ def compose_email(
         "HOLD_COLOR": "#854d0e", "DENY_COLOR": "#991b1b",
         "FOOTER": "View Details requires the existing account read access; it never records a decision. Email previews never authorize execution.",
     }
+    if design is not None:
+        from .email_design import validate_design
+        from .mail_templates import TOKEN
+
+        design = validate_design(design)
+        style = design["styles"]
+        for key, name in {"FONT_SIZE": "font_size", "BUTTON_FONT": "button_font_size",
+                          "BUTTON_X": "button_padding_x", "BUTTON_Y": "button_padding_y",
+                          "GAP": "button_gap", "RADIUS": "button_radius",
+                          "APPROVE_COLOR": "approve_color", "HOLD_COLOR": "hold_color",
+                          "DENY_COLOR": "deny_color"}.items():
+            values[key] = str(style[name])
+        values["LOCALE"] = design["locale"]
+        values["TITLE"] = TOKEN.sub(lambda match: context[match[1]], design["heading"])
+        if design["footer"]:
+            values["FOOTER"] += "\n" + TOKEN.sub(lambda match: context[match[1]], design["footer"])
     segments = [body, values["CONTEXT"]]
     if eligible:
         assert security is not None

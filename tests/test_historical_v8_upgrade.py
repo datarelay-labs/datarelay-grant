@@ -152,7 +152,7 @@ def test_populated_real_v8_upgrade_preserves_authorization_and_rollback(tmp_path
             source.backup(copied)
     db = Database(candidate)
     with db.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 13
         assert conn.execute("PRAGMA quick_check").fetchone()[0] == "ok"
         assert conn.execute("PRAGMA foreign_key_check").fetchall() == []
         for state in ("pending", "denied"):
@@ -202,7 +202,7 @@ def test_populated_real_v8_upgrade_preserves_authorization_and_rollback(tmp_path
     db.backup(backup)
     Database.restore(backup, restored)
     with Database(restored).transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 13
         assert conn.execute("SELECT value FROM runtime WHERE key='paused'").fetchone()[0] == "1"
         assert conn.execute("SELECT count(*) FROM sessions").fetchone()[0] == 0
         assert conn.execute("SELECT count(*) FROM decision_issuances").fetchone()[0] == 0
@@ -213,6 +213,6 @@ def test_newer_schema_rejects_unsupported_downgrade(tmp_path):
     path = tmp_path / "future.sqlite"
     Database(path)
     with sqlite3.connect(path) as conn:
-        conn.execute("PRAGMA user_version=13")
+        conn.execute("PRAGMA user_version=14")
     with pytest.raises(RuntimeError, match="Unsupported database schema"):
         Database(path)

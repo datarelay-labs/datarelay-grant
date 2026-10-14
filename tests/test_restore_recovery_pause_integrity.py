@@ -23,7 +23,7 @@ def test_backup_missing_pause_marker_must_fail_closed_before_publication(tmp_pat
     original.backup(backup)
     with sqlite3.connect(backup) as conn:
         assert conn.execute("PRAGMA quick_check").fetchone()[0] == "ok"
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 13
         assert conn.execute("SELECT COUNT(*) FROM runtime WHERE key='paused'").fetchone()[0] == 0
 
     with pytest.raises(ValueError, match="Backup missing recovery pause marker"):

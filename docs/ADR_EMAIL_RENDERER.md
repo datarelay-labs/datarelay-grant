@@ -96,3 +96,33 @@ Official API references retained from the ET-0 research: MJML documentation
 (https://documentation.mjml.io/) and React Email render documentation
 (https://react.email/docs/utilities/render). Exact installed package source and
 lockfile, rather than changing online defaults, establish this compiler contract.
+
+## ET-2 design/state contract
+
+The opt-in design document uses strict schema v1; event prose remains in the
+existing complete nine-event set. Seven required blocks have immutable identity
+and order. Only heading/footer, en/ko locale, preset/size and bounded typed style
+values are inputs. URLs, PIN, verification mode, arbitrary CSS and HTML fields are
+not accepted. White button text requires validated color contrast >= 4.5:1;
+button font/padding/gap bounds preserve visible canonical decisions.
+
+SQLite v12→v13 adds nullable design JSON, a draft revision, a published revision
+pointer and immutable revision/asset tables in an atomic additive migration.
+No existing request, issued capability or outbox payload is rewritten. Tests
+exercise synthetic records before and after upgrade and backup inspection.
+Existing text-only clients omit design and preserve any saved visual design.
+Opting in on an old text set first preserves its unchanged legacy publication
+as revision 1; saving the new design remains a draft. A new design set is not
+eligible for request snapshots until explicitly published in ET-5.
+
+Snapshots retain a deep validated design and exact immutable compiler/layout
+identity and hash. A mismatched renderer fails closed rather than pretending to
+reproduce an older design with a new layout. Logo assets remain unavailable: the asset upload/CID implementation batch was
+blocked by the platform before execution. The public schema only accepts null
+for logo_asset_id until that separately authorized path is implemented.
+No external logo URL or silently ignored asset reference is accepted.
+The six initial RED asset tests and their evidence are preserved under
+`.dev/et2-assets-blocked-tests.py` and `.dev/et2-assets-red.txt`; they are not
+implemented acceptance and are not counted as passing tests. Pillow was
+removed because the blocked pipeline does not run; no unused imaging dependency
+is shipped. Design/style/editor work is independent and continues.

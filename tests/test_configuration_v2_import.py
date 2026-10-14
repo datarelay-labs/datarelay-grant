@@ -422,7 +422,7 @@ def test_v2_import_survives_disposable_backup_restore_without_activation_or_deli
 
     db = Database(recovered_path)
     with db.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 12
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 13
         assert conn.execute("SELECT value FROM runtime WHERE key='paused'").fetchone()[0] == "1"
         assert conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] == 0
         assert {

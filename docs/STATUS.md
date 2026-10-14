@@ -1,3 +1,9 @@
+## 2026-10-14 — ET-2 protected design/draft source
+
+Strict versioned design, bounded button styles and contrast, preserved protected blocks, CAS draft saves, renderer/layout hash snapshots and atomic v12→v13 migration implemented. 51 affected Python tests PASS, including preservation of actual synthetic request/outbox/issuance bytes. Existing legacy clients preserve design; opt-in conversion retains the unchanged published baseline; unpublished new designs cannot enter request snapshots.
+
+Logo upload/CID implementation was denied by the platform before execution. No bypass attempted; logo_asset_id accepts only null. Six initial RED logo tests are preserved locally as planned work, not counted as PASS. No imaging dependency, active logo feature or deployment is shipped. Independent ET-3 authoring work continues. ET-1 exact HEAD cf3f9e2 native Grant CI 38494290296 and Engineering System CI 38494290791 SUCCESS.
+
 ## 2026-10-14 — ET-1 email renderer source delivery
 
 Pinned MJML 5.4.1 trusted build-time shells, compared with React Email 6.11.1 on 18 synthetic cases, now provide the shared subject/HTML/plain-text path. Three decisions + separately authorized View Details, mode-correct guidance, inert previews, terminal-event protection and MIME parity are covered by 20 renderer tests and 46 affected API tests. Compiled artifact reproduces; cached offline npm install and Python wheel inclusion PASS. Preview isolation unit and type/build PASS. No actual mail-client/user acceptance or preview deployment. ET-2 is next; Foundation/G12/stash remain untouched. See `docs/ADR_EMAIL_RENDERER.md`.

@@ -194,7 +194,16 @@ def normalize_snapshot(template: Mapping[str, object] | None) -> dict[str, objec
                 value = raw_branding.get(key)
                 if isinstance(value, str) and value:
                     branding[key] = value
-        return {"templates": events, "branding": branding}
+        result = {"templates": events, "branding": branding}
+        if template.get("design") is not None:
+            from .email_design import renderer_snapshot, validate_design
+
+            result["design"] = validate_design(template["design"])
+            expected = renderer_snapshot()
+            if template.get("renderer", expected) != expected:
+                raise ValueError("Unsupported immutable email renderer snapshot")
+            result["renderer"] = expected
+        return result
     return {"templates": _legacy_to_events(template), "branding": dict(DEFAULT_BRANDING)}
 
 
@@ -225,6 +234,16 @@ def snapshot(row: object | None = None, *, branding: Mapping[str, str] | None = 
             sender = ""
         if sender:
             result["branding"]["sender_display_name"] = sender  # type: ignore[index]
+    if row is not None:
+        try:
+            design = row["design_json"]
+        except (KeyError, IndexError, TypeError):
+            design = None
+        if design:
+            from .email_design import renderer_snapshot, validate_design
+
+            result["design"] = validate_design(json.loads(design))
+            result["renderer"] = renderer_snapshot()
     if branding:
         for key in ("brand_name", "sender_display_name", "logo_asset"):
             if branding.get(key):
@@ -271,7 +290,8 @@ def render_from_context(
     }
     from .email_renderer import compose_email
 
-    return compose_email(content, context, event, security=security, sample=sample)
+    return compose_email(content, context, event, security=security, sample=sample,
+                         design=normalized.get("design"))
 
 
 def render_notification(template: Mapping[str, object], row, origin: str, *, event: str) -> dict[str, str]:
