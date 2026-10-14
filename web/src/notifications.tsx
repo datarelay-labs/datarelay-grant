@@ -975,6 +975,7 @@ export function Notifications() {
                 <EmailTemplateWorkbench key={(editing||'new-template')+':'+(currentTemplate?.updated_at??0)}
                   draft={templateDraft} event={event} variables={variables}
                   disabled={task.busy||templateSaveGuard.current.blocked()}
+                  reviewOpen={reviewedTemplateSave!==null}
                   onChange={next=>{setName(next.name);setEnabled(next.enabled);setDraftDesign(next.design??null);setDraftTemplates(next.templates);invalidatePreview();}}
                   onEventChange={next=>{setEvent(next);invalidatePreview();}}
                   onPreviewState={setLivePreviewState}

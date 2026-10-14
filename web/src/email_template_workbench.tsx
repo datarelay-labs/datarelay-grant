@@ -41,8 +41,8 @@ function EmailPresetPicker({value,onChange,disabled,events}:{value:EmailDesign;o
  </details>;
 }
 
-export function EmailTemplateWorkbench({draft,event,variables,disabled,onChange,onEventChange,onRestoreEventCopy,onPreviewState}:{
- draft:TemplateDraft;event:NotificationEvent;variables:string[];disabled:boolean;
+export function EmailTemplateWorkbench({draft,event,variables,disabled,reviewOpen=false,onChange,onEventChange,onRestoreEventCopy,onPreviewState}:{
+ draft:TemplateDraft;event:NotificationEvent;variables:string[];disabled:boolean;reviewOpen?:boolean;
  onChange:(draft:TemplateDraft)=>void;onEventChange:(event:NotificationEvent)=>void;
  onRestoreEventCopy?:()=>Promise<NotificationEventTemplate>;onPreviewState?:(state:EmailPreviewState)=>void;
 }){
@@ -55,6 +55,7 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,onChange,
  const outline=useRef<HTMLElement>(null);
  const field=useRef<HTMLInputElement|HTMLTextAreaElement|null>(null);
  const design=draft.design??null,visual=!!design&&design.shared_layout_revision>=3;
+ useEffect(()=>{if(reviewOpen)setInspectorOpen(false);},[reviewOpen]);
  const busy=disabled||restoring;
  function change(next:TemplateDraft){if(busy)return;history.current.push(draft);setLocalError('');onChange(next);}
  function designChange(next:EmailDesign){change({...draft,design:next});}
