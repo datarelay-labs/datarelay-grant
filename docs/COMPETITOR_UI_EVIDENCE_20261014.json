@@ -272,7 +272,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -310,6 +310,15 @@
           "test_id": "V-U1.01",
           "observed_at": "2026-10-14T10:14:49.334269+00:00",
           "result_detail": "Mounted real Notifications composition PASS with one selectable email canvas, one Email blocks outline, one Event selector, visible Save draft control and desktop screenshot evidence; included in focused 6/6 Playwright PASS. Full Web unit 738/738 PASS and npm web check type/build PASS at the same dirty source before commit."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U1.01",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -324,7 +333,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -362,6 +371,15 @@
           "test_id": "V-U1.02",
           "observed_at": "2026-10-14T10:14:49.334269+00:00",
           "result_detail": "Mounted pointer selection on actual Message and Approval buttons asserts matching outline aria-pressed state, edited wording immediately appears in canvas, and keyboard Heading selection opens/focuses the matching inspector field; focused editor/notifications Playwright 6/6 PASS."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U1.02",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -376,7 +394,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -405,6 +423,15 @@
           "test_id": "V-U1.03",
           "observed_at": "2026-10-14T10:17:49.436849+00:00",
           "result_detail": "Current exact candidate qualification 3/3 PASS. The keyboard task mutates preset/body/button-size in one draft, explicitly Review/Confirm saves one PUT, verifies revision/published pointer and saved design/content, refreshes authoritative state, returns to inventory and reopens the same draft with the changed render visible. Existing source gate retains versioned block IDs and legacy layout reproduction evidence."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U1.03",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -419,7 +446,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -448,6 +475,15 @@
           "test_id": "V-U1.04",
           "observed_at": "2026-10-14T10:17:49.436849+00:00",
           "result_detail": "Current mounted editor/Notifications suite 6/6 PASS. Clicking rendered Message and Approve/action content only changes selection/editor state; intercepted non-preview API effects remain empty and URL stays on the canvas. Hostile script/img/link/handler injection produces zero active a/img/script/iframe/form/input/svg nodes, zero href/src/onclick attributes, no window execution and no external fetch."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U1.04",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -462,7 +498,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -497,6 +533,15 @@
           "test_file": "web/tests/canvas/optional-content.spec.ts",
           "result_detail": "1/1 mounted Notifications PASS: add/edit two blocks, explicit move, protected ordering, remove, identity reuse, variable expansion, save, authoritative refresh and reopen exact order; one synthetic PUT; published revision unchanged; no real user/mail acceptance.",
           "source_head": "ef554b2ac8cb3a169b831f2eca80b4eb0d8c974f"
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U1.05",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -511,7 +556,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -549,6 +594,15 @@
           "test_id": "V-U1.06",
           "observed_at": "2026-10-14T10:14:49.334269+00:00",
           "result_detail": "At 390px keyboard Heading selection opens Event heading, Close settings returns focus to the outline, canvas click focuses the actual Event heading field, Escape closes and returns focus, and horizontal overflow remains absent; focused editor/notifications Playwright 6/6 PASS."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U1.06",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -563,7 +617,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -612,6 +666,15 @@
           ],
           "result_detail": "8/8 mounted synthetic browser cases PASS: editor Back, section exit, beforeunload, failed/lost-response reconciliation, new unsaved mobile, Grant shell push navigation Keep/Discard, browser Back restoration and one-time discard traversal. No automatic save/publish/send.",
           "source_head": "cfb618aa61333ea3bb79384a4a782eca05fd57f4"
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U1.07",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -626,7 +689,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -658,6 +721,15 @@
           "test_file": "web/tests/canvas/inventory-actions.spec.ts",
           "result_detail": "2/2 mounted Notifications PASS: duplicate copies full wording/design into a distinct unpublished draft then save/refresh/reopen while source remains unchanged; policy-usage drill-down shows exact version/profile identity and saved updated metadata with zero writes.",
           "source_head": "3537aa088aaeed6deb21fcf7a636e07b93653ed3"
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U2.01",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -672,7 +744,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -706,6 +778,15 @@
             "web/tests/canvas/preview-contract.spec.ts"
           ],
           "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. Preset thumbnails and scoped appearance reset preserve all edited content fields. No real person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U2.02",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -720,7 +801,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -778,6 +859,15 @@
             "web/tests/canvas/preview-contract.spec.ts"
           ],
           "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. Nine-event subject/body/heading plus event preheader and focused variable insertion persist through save/reopen. No real person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U2.03",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -792,7 +882,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -826,6 +916,15 @@
             "web/tests/canvas/preview-contract.spec.ts"
           ],
           "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. Event-vs-shared-vs-policy scope is visible at the point of edit and behavior matches the label. No real person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U2.04",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -840,7 +939,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -874,6 +973,15 @@
             "web/tests/canvas/preview-contract.spec.ts"
           ],
           "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. Searchable human variable picker inserts at the active selection and refuses over-limit insertion. No real person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U2.05",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -888,7 +996,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -922,6 +1030,15 @@
             "web/tests/canvas/preview-contract.spec.ts"
           ],
           "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. Scoped appearance reset preserves wording/locale; reviewed restore cancel is inert and confirm changes only selected event. No real person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U2.06",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -936,7 +1053,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -970,6 +1087,15 @@
             "web/tests/canvas/preview-contract.spec.ts"
           ],
           "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. Whole-draft undo/redo restores exact copy/style snapshots, invalidates redo on branch and is template-isolated. No real person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U2.07",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -984,7 +1110,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1018,6 +1144,15 @@
             "web/tests/canvas/preview-contract.spec.ts"
           ],
           "result_detail": "10/10 mounted Notifications synthetic-transport cases PASS. All nine event copy plus EN/KO locale survives save/reopen without silent translation; long/missing-optional sample paths remain valid. No real person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U2.08",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1032,7 +1167,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1078,6 +1213,15 @@
           "artifact": ".dev/u3-01-03-browser-results.json",
           "test_file": "web/tests/canvas/mail-palette.spec.ts",
           "result_detail": "Mounted Notifications desktop render verifies event status, explanation, protected action-before-verification hierarchy and saved/reopened dark palette without publication. Synthetic transport; no real mail client."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U3.01",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1092,7 +1236,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1112,6 +1256,15 @@
           "test_id": "V-U3.02",
           "observed_at": "2026-10-14T05:52:53.228929+00:00",
           "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U3.02",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1126,7 +1279,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1168,6 +1321,15 @@
           "test_file": "web/tests/canvas/mail-palette.spec.ts",
           "result_detail": "3/3 palette scenarios PASS: desktop save/reopen, 390px custom contrast failure -> stale preview -> curated recovery/reset with no overflow, and v7 optional-content palette edit never downgrades layout. No app/Foundation theme change.",
           "source_head": "d6d73a621a2e70708854bddacfd92c850967ed30"
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U3.03",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1182,7 +1344,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1202,6 +1364,15 @@
           "test_id": "V-U3.04",
           "observed_at": "2026-10-14T05:52:53.228929+00:00",
           "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U3.04",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1216,7 +1387,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1236,6 +1407,15 @@
           "test_id": "V-U3.05",
           "observed_at": "2026-10-14T05:52:53.228929+00:00",
           "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U3.05",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1250,7 +1430,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1270,6 +1450,15 @@
           "test_id": "V-U3.06",
           "observed_at": "2026-10-14T05:52:53.228929+00:00",
           "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U3.06",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1284,7 +1473,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1304,6 +1493,15 @@
           "test_id": "V-U3.07",
           "observed_at": "2026-10-14T05:52:53.228929+00:00",
           "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U3.07",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1318,7 +1516,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1351,6 +1549,15 @@
           ],
           "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Python renderer/preview workflow 30/30 PASS proves unsaved/saved preview and structured MIME use the same pure versioned renderer contract; mounted preview source/text/layout inspection is current-generation exact output.",
           "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff"
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U4.01",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1365,7 +1572,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1405,6 +1612,15 @@
             "web/tests/canvas/preview-distinction.spec.ts"
           ],
           "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Delayed old responses never replace current content; last valid preview is visibly stale during update/error and becomes current only after the matching response."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U4.02",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1419,7 +1635,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1459,6 +1675,15 @@
             "web/tests/canvas/preview-distinction.spec.ts"
           ],
           "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Normal/long EN/long KO/missing optional, all nine events and all three verification modes use only synthetic data and produce no writes."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U4.03",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1473,7 +1698,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1511,6 +1736,15 @@
             "web/tests/canvas/preview-distinction.spec.ts"
           ],
           "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Historical exact-field focus denial retried normally and succeeded. Validation problems carry an exact human field label; Hold contrast recovery opens the existing inspector and focuses Hold button color, then clears only after corrected render."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U4.04",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1525,7 +1759,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1581,6 +1815,15 @@
             "web/tests/canvas/preview-distinction.spec.ts"
           ],
           "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Historical simulation denial retried normally and succeeded. 320/375/390/600 views plus HTML/plain/source and clearly labeled Images off/Dark-mode approximation/Normal inert simulations PASS; UI explicitly says not Gmail/Outlook/Apple/mobile acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U4.05",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1595,7 +1838,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1628,6 +1871,15 @@
           ],
           "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Unsaved preview is admin-scoped/read-only/inert with zero save/issuance/outbox/decision writes; iframe sandbox/CSP and synthetic sample material remain nonauthorizing.",
           "source_head": "ad145562451835e73dde9b96d5e2ef65a22067ff"
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U4.06",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1642,7 +1894,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1682,6 +1934,15 @@
             "web/tests/canvas/preview-distinction.spec.ts"
           ],
           "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Diagnostics stay collapsed by default and match current renderer revision, HTML bytes/protected-action count and exact current source; inspection cannot execute HTML."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U4.07",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1696,7 +1957,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1736,6 +1997,15 @@
             "web/tests/canvas/preview-distinction.spec.ts"
           ],
           "result_detail": "5/5 mounted Notifications synthetic-transport preview scenarios PASS. Live unsaved central preview and saved-revision preview/test remain separately labeled; edits invalidate and disable saved evidence without a write."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U4.08",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1750,7 +2020,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1792,6 +2062,15 @@
           "test_id": "V-U5.01",
           "observed_at": "2026-10-14T07:41:20.470147+00:00",
           "result_detail": "Mounted Notifications publication-inspection 5/5 PASS: draft save does not publish, exact diff/policy impact review, read-only historical preview, conflict fresh-review recovery, and rollback as new monotonic revision. Synthetic transport only."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U5.01",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1806,7 +2085,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1849,6 +2128,15 @@
           "test_id": "V-U5.02",
           "observed_at": "2026-10-14T07:41:20.470147+00:00",
           "result_detail": "Mounted Notifications publication-inspection 5/5 PASS: draft save does not publish, exact diff/policy impact review, read-only historical preview, conflict fresh-review recovery, and rollback as new monotonic revision. Synthetic transport only."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U5.02",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1863,7 +2151,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1906,6 +2194,15 @@
           "test_id": "V-U5.03",
           "observed_at": "2026-10-14T07:41:20.470147+00:00",
           "result_detail": "Mounted Notifications publication-inspection 5/5 PASS: draft save does not publish, exact diff/policy impact review, read-only historical preview, conflict fresh-review recovery, and rollback as new monotonic revision. Synthetic transport only."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U5.03",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1920,7 +2217,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -1963,6 +2260,15 @@
           "test_id": "V-U5.04",
           "observed_at": "2026-10-14T07:41:20.470147+00:00",
           "result_detail": "Mounted Notifications publication-inspection 5/5 PASS: draft save does not publish, exact diff/policy impact review, read-only historical preview, conflict fresh-review recovery, and rollback as new monotonic revision. Synthetic transport only."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U5.04",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -1977,7 +2283,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "NOT_APPLICABLE_WITH_JUSTIFICATION",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2023,6 +2329,15 @@
         {
           "gate": "interaction",
           "justification": "U5.05 is an immutable server snapshot invariant across requests/outbox/reminders/reissues; the authoritative proof is disposable API/database byte/state comparison. Publication UI interaction is separately qualified by U5.02-U5.04/U5.07."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U5.05",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2037,7 +2352,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2080,6 +2395,15 @@
           "test_id": "V-U5.06",
           "observed_at": "2026-10-14T07:41:20.470147+00:00",
           "result_detail": "Mounted Notifications publication-inspection 5/5 PASS: draft save does not publish, exact diff/policy impact review, read-only historical preview, conflict fresh-review recovery, and rollback as new monotonic revision. Synthetic transport only."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U5.06",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2094,7 +2418,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2136,6 +2460,15 @@
           "test_id": "V-U5.07",
           "observed_at": "2026-10-14T07:41:20.470147+00:00",
           "result_detail": "Mounted Notifications publication-inspection 5/5 PASS: draft save does not publish, exact diff/policy impact review, read-only historical preview, conflict fresh-review recovery, and rollback as new monotonic revision. Synthetic transport only."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U5.07",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2150,7 +2483,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2192,6 +2525,15 @@
             "web/tests/canvas/publication.spec.ts"
           ],
           "result_detail": "Current mounted publication suite 5/5 PASS. Legacy canvas upgrade remains explicit draft-only and preserves all nine event wording and locale until separate publication. Synthetic transport only; owner release/real mailbox acceptance not implied."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U5.08",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2206,7 +2548,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2226,6 +2568,15 @@
           "test_id": "V-U6.01",
           "observed_at": "2026-10-14T05:52:53.228929+00:00",
           "result_detail": "Mounted Notifications synthetic-transport recipient-contract.spec.ts 4/4 PASS. Exact scenario mapping by test title; this is component interaction evidence, not real-person/mail-client acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U6.01",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2240,7 +2591,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2269,6 +2620,15 @@
           "test_id": "V-U6.02",
           "observed_at": "2026-10-14T07:52:14.372670+00:00",
           "result_detail": "2/2 mounted Notifications scenarios PASS: SVG rejected before upload; normalized immutable PNG rendered in selectable canvas and inert iframe; images-off preserves text brand; width/save/reopen persistence; optional-content layout7 preserved; removal leaves immutable asset retained. Synthetic transport only."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U6.02",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2283,7 +2643,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2312,6 +2672,15 @@
           "test_id": "V-U6.03",
           "observed_at": "2026-10-14T07:52:14.372670+00:00",
           "result_detail": "2/2 mounted Notifications scenarios PASS: SVG rejected before upload; normalized immutable PNG rendered in selectable canvas and inert iframe; images-off preserves text brand; width/save/reopen persistence; optional-content layout7 preserved; removal leaves immutable asset retained. Synthetic transport only."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U6.03",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2326,7 +2695,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2346,6 +2715,15 @@
           "source_head": "86badc1f1cc0c028106cd933e69121db946966e0",
           "artifact": ".dev/u6-reviewed-send-browser-green-results.json",
           "scope": "3/3 mounted actual Notifications component scenarios with synthetic intercepted transport; accepted/unknown/attempted reconciliation and no automatic replay. No real mailbox."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U6.04",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2360,7 +2738,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2380,6 +2758,15 @@
           "source_head": "86badc1f1cc0c028106cd933e69121db946966e0",
           "artifact": ".dev/u6-reviewed-send-browser-green-results.json",
           "scope": "3/3 mounted actual Notifications component scenarios with synthetic intercepted transport; accepted/unknown/attempted reconciliation and no automatic replay. No real mailbox."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U6.05",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2490,7 +2877,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2519,6 +2906,10 @@
           "test_id": "V-U7.02",
           "observed_at": "2026-10-14T07:55:58.190497+00:00",
           "result_detail": "Mounted Notifications task PASS at current production source: keyboard-only preset/body/button-size/save/reopen plus 320/375/390 no-overflow screenshots."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "R1: this row is a mounted qualification criterion, not a separate deployment deliverable. U7.07 owns exact development deployment provenance; this row keeps its own interaction evidence and acceptance remains separate."
         }
       ],
       "blocker": null
@@ -2533,7 +2924,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2560,6 +2951,10 @@
           "test_id": "V-U7.03",
           "observed_at": "2026-10-14T08:35:35.139804+00:00",
           "result_detail": "Exact current source typecheck and production Web build PASS. Grant-owned inspector/focus/mobile source is unchanged from the c5c5566 interaction-qualified candidate; 7bf377b changes only qualification tests/docs and adds 320/375/390 keyboard/touch evidence. Foundation source remains unchanged."
+        },
+        {
+          "gate": "dev_deployment",
+          "justification": "R1: this row is a mounted qualification criterion, not a separate deployment deliverable. U7.07 owns exact development deployment provenance; this row keeps its own interaction evidence and acceptance remains separate."
         }
       ],
       "blocker": null
@@ -2765,7 +3160,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2785,6 +3180,15 @@
           "test_id": "V-U8.01",
           "observed_at": "2026-10-14T08:51:46.415535+00:00",
           "result_detail": "Official isolated native Grant browser qualification 45/45 PASS. New mounted scenario independently logs in requester, approver and admin fixture personas from Home and resolves New Request, approval queue and Approval policies routes; existing Home paging/overdue scenarios also pass. This is automated interaction evidence, not independent-human acceptance."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U8.01",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2799,7 +3203,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2819,6 +3223,15 @@
           "test_id": "V-U8.02",
           "observed_at": "2026-10-14T08:51:46.415535+00:00",
           "result_detail": "Official isolated native Grant browser qualification 45/45 PASS covers approver Inbox needs/held/recent, Entra-style selected context, deadlines, mobile 320/375 keyboard queue controls, delegation and decision journeys. Server-scoped fixture authority is exercised; real-person acceptance remains separate."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U8.02",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2833,7 +3246,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2853,6 +3266,15 @@
           "test_id": "V-U8.03",
           "observed_at": "2026-10-14T08:51:46.415535+00:00",
           "result_detail": "Official isolated native Grant browser qualification 45/45 PASS covers requester create/review/confirm, replacement request, progressive Request Detail activity, deadline truth and approved-grant-vs-execution separation. No external production effect is claimed."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U8.03",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2867,7 +3289,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2887,6 +3309,15 @@
           "test_id": "V-U8.04",
           "observed_at": "2026-10-14T08:51:46.415535+00:00",
           "result_detail": "Official isolated native Grant browser qualification 45/45 PASS covers policy selector lifecycle, approver-group saved identity/coverage, policy mobile 320/375, exact review/confirm and retained role/CAS boundaries. Synthetic fixture interaction only."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U8.04",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2901,7 +3332,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2921,6 +3352,15 @@
           "test_id": "V-U8.05",
           "observed_at": "2026-10-14T08:51:46.415535+00:00",
           "result_detail": "Official isolated native Grant browser qualification 45/45 PASS. New first-run admin scenario resolves integrations, approvers and new Draft policy routes and proves unsaved new policy exposes neither Test nor Activate; existing branding/template/delivery/mail-test scenarios preserve accepted/received/executed distinctions."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U8.05",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2935,7 +3375,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2955,6 +3395,15 @@
           "test_id": "V-U8.06",
           "observed_at": "2026-10-14T08:51:46.415535+00:00",
           "result_detail": "Official isolated native Grant browser qualification 45/45 PASS covers audit search/export and role rejection, Operations exact exception queues, integration health/diagnostics role scope, progressive request evidence and sign-out revocation. No secrets or verified native business effect are asserted."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U8.06",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null
@@ -2969,7 +3418,7 @@
       "status": "OPEN",
       "source": "PASS",
       "interaction": "PASS",
-      "dev_deployment": "NOT_RUN",
+      "dev_deployment": "PASS",
       "acceptance": "NOT_RUN",
       "evidence": [
         {
@@ -2989,6 +3438,15 @@
           "test_id": "V-U8.07",
           "observed_at": "2026-10-14T08:51:46.415535+00:00",
           "result_detail": "Official isolated native Grant browser qualification 45/45 PASS covers shared Foundation login/grouped shell, member Account & security, admin shortcuts, mobile adapter and role/capability truth while Grant consumes Foundation unchanged. Missing upstream common features remain dependency scope, not local reimplementation."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": "docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md",
+          "source_head": "93c74f88e0ce784cdb89cdf042d60f2c22c375e8",
+          "test_id": "V-U8.07",
+          "observed_at": "2026-10-14T10:58:49.621646+00:00",
+          "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
         }
       ],
       "blocker": null

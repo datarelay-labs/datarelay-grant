@@ -1,3 +1,5 @@
+R1 deployment reconciliation: 52 implementation-qualified rows -> 50 dev-deployment PASS + U7.02/U7.03 N/A; acceptance unchanged. See COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md.
+
 <!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 BEGIN -->
 ## Current priority and completion truth — competitor UI only
 

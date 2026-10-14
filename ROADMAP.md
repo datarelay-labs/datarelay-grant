@@ -14,6 +14,7 @@ Current product source remains `4fe71b4b96c66ed80e7c67138c784e17b0714435`. Exact
 - U0.02 coordination, U0.04 preservation and U0.05 evidence-model gates PASS. Original G12 and stash remain protected.
 - U0.01/U0.03/U8.08 are blocked on retained historical source S02, unavailable after the already-completed permitted searches. Do not invent it or repeat competitor research.
 - Current development HTTPS preview serves the current Web build with independent byte-matched readback; U7.07 source + dev deployment PASS, while authenticated same-UI-task interaction remains blocked without an authorized persona/credential path.
+- **R1 deployment reconciliation COMPLETE:** 52 implementation-qualified rows reconciled; 50 dev-deployment PASS and U7.02/U7.03 N/A because U7.07 owns deployment provenance. Acceptance remains unchanged/NOT_RUN. See docs/COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md.
 - U6.06 and U7.04–U7.06 have explicit external acceptance blockers: authorized real SMTP/mailbox receipt, actual Gmail/Outlook/Apple/iOS clients, independently acting real users/mailboxes, and a measured novice participant.
 - U9.01/U9.02 therefore remain OPEN; U9.03/U9.04 cannot close until those dependencies do. The exclusive priority lock remains active.
 
