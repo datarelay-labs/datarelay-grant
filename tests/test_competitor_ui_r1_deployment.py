@@ -24,7 +24,8 @@ def test_r1_reconciles_exact_52_rows_without_claiming_acceptance():
     rows = {row["id"]: row for row in LEDGER["tasks"]}
     assert {key for key in ids if rows[key]["dev_deployment"] == "PASS"} == set(ids) - {"U7.02", "U7.03"}
     assert {key for key in ids if rows[key]["dev_deployment"] == "NOT_APPLICABLE_WITH_JUSTIFICATION"} == {"U7.02", "U7.03"}
-    assert all(rows[key]["acceptance"] == "NOT_RUN" for key in ids)
+    assert all(rows[key]["acceptance"] != "PASS" for key in ids)
+    assert {rows[key]["acceptance"] for key in ids} <= {"NOT_RUN", "BLOCKED", "NOT_APPLICABLE_WITH_JUSTIFICATION"}
     assert "U8.08" not in ids
     for key in ids:
         assert f"| {key} |" in REPORT

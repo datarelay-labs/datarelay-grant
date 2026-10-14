@@ -291,7 +291,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "REUSED_SOURCE_AND_SYNTHETIC_CHECKPOINT",
@@ -337,9 +337,18 @@
           "test_id": "V-U1.01",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U1.01",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U1.02",
@@ -352,7 +361,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "REUSED_SOURCE_AND_SYNTHETIC_CHECKPOINT",
@@ -398,9 +407,18 @@
           "test_id": "V-U1.02",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U1.02",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U1.03",
@@ -413,7 +431,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "REUSED_SOURCE_AND_SYNTHETIC_CHECKPOINT",
@@ -450,9 +468,18 @@
           "test_id": "V-U1.03",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U1.03",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U1.04",
@@ -465,7 +492,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "REUSED_SOURCE_AND_SYNTHETIC_CHECKPOINT",
@@ -502,9 +529,18 @@
           "test_id": "V-U1.04",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U1.04",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U1.05",
@@ -517,7 +553,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "RED_ONLY_NOT_SHIPPED",
@@ -560,9 +596,18 @@
           "test_id": "V-U1.05",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U1.05",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U1.06",
@@ -575,7 +620,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "REUSED_SOURCE_AND_SYNTHETIC_CHECKPOINT",
@@ -621,9 +666,18 @@
           "test_id": "V-U1.06",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U1.06",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U1.07",
@@ -636,7 +690,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "CURRENT_SCOPED_SOURCE_AND_SYNTHETIC_BROWSER",
@@ -693,9 +747,18 @@
           "test_id": "V-U1.07",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U1.07",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U2.01",
@@ -708,7 +771,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "PENDING_EXTENSION_NOT_SHIPPED",
@@ -748,9 +811,18 @@
           "test_id": "V-U2.01",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U2.01",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U2.02",
@@ -763,7 +835,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -805,9 +877,18 @@
           "test_id": "V-U2.02",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U2.02",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U2.03",
@@ -820,7 +901,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -886,9 +967,18 @@
           "test_id": "V-U2.03",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U2.03",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U2.04",
@@ -901,7 +991,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -943,9 +1033,18 @@
           "test_id": "V-U2.04",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U2.04",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U2.05",
@@ -958,7 +1057,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -1000,9 +1099,18 @@
           "test_id": "V-U2.05",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U2.05",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U2.06",
@@ -1015,7 +1123,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -1057,9 +1165,18 @@
           "test_id": "V-U2.06",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U2.06",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U2.07",
@@ -1072,7 +1189,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -1114,9 +1231,18 @@
           "test_id": "V-U2.07",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U2.07",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U2.08",
@@ -1129,7 +1255,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -1171,9 +1297,18 @@
           "test_id": "V-U2.08",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U2.08",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U3.01",
@@ -1186,7 +1321,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "QUALIFIED_PRESENTATION_V5_PENDING_COMMIT_BINDING",
@@ -1240,9 +1375,18 @@
           "test_id": "V-U3.01",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U3.01",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U3.02",
@@ -1255,7 +1399,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -1283,9 +1427,18 @@
           "test_id": "V-U3.02",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U3.02",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U3.03",
@@ -1298,7 +1451,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "PARTIAL_WORKTREE_QUALIFICATION",
@@ -1348,9 +1501,18 @@
           "test_id": "V-U3.03",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U3.03",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U3.04",
@@ -1363,7 +1525,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -1391,9 +1553,18 @@
           "test_id": "V-U3.04",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U3.04",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U3.05",
@@ -1406,7 +1577,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -1434,9 +1605,18 @@
           "test_id": "V-U3.05",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U3.05",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U3.06",
@@ -1449,7 +1629,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -1477,9 +1657,18 @@
           "test_id": "V-U3.06",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U3.06",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U3.07",
@@ -1492,7 +1681,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -1520,9 +1709,18 @@
           "test_id": "V-U3.07",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U3.07",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U4.01",
@@ -1535,7 +1733,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -1576,9 +1774,18 @@
           "test_id": "V-U4.01",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U4.01",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U4.02",
@@ -1591,7 +1798,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "ACTUAL_MOUNTED_SYNTHETIC_PREVIEW_SCENARIOS",
@@ -1639,9 +1846,18 @@
           "test_id": "V-U4.02",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U4.02",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U4.03",
@@ -1654,7 +1870,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "ACTUAL_MOUNTED_SYNTHETIC_PREVIEW_SCENARIOS",
@@ -1702,9 +1918,18 @@
           "test_id": "V-U4.03",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U4.03",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U4.04",
@@ -1717,7 +1942,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "EXACT_INPUT_FOCUS_RED_CORRECTION_DENIED",
@@ -1763,9 +1988,18 @@
           "test_id": "V-U4.04",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U4.04",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U4.05",
@@ -1778,7 +2012,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "ACTUAL_MOUNTED_SYNTHETIC_PREVIEW_SCENARIOS",
@@ -1842,9 +2076,18 @@
           "test_id": "V-U4.05",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U4.05",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U4.06",
@@ -1857,7 +2100,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -1898,9 +2141,18 @@
           "test_id": "V-U4.06",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U4.06",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U4.07",
@@ -1913,7 +2165,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "ACTUAL_MOUNTED_SYNTHETIC_PREVIEW_SCENARIOS",
@@ -1961,9 +2213,18 @@
           "test_id": "V-U4.07",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U4.07",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U4.08",
@@ -1976,7 +2237,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "ACTUAL_MOUNTED_SYNTHETIC_PREVIEW_SCENARIOS",
@@ -2024,9 +2285,18 @@
           "test_id": "V-U4.08",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U4.08",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U5.01",
@@ -2039,7 +2309,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -2089,9 +2359,18 @@
           "test_id": "V-U5.01",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U5.01",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U5.02",
@@ -2104,7 +2383,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "QUALIFIED_REVIEW_AND_HISTORY_PENDING_COMMIT_BINDING",
@@ -2155,9 +2434,18 @@
           "test_id": "V-U5.02",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U5.02",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U5.03",
@@ -2170,7 +2458,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "QUALIFIED_REVIEW_AND_HISTORY_PENDING_COMMIT_BINDING",
@@ -2221,9 +2509,18 @@
           "test_id": "V-U5.03",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U5.03",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U5.04",
@@ -2236,7 +2533,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "QUALIFIED_REVIEW_AND_HISTORY_PENDING_COMMIT_BINDING",
@@ -2287,9 +2584,18 @@
           "test_id": "V-U5.04",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U5.04",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U5.05",
@@ -2302,7 +2608,7 @@
       "source": "PASS",
       "interaction": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -2356,9 +2662,18 @@
           "test_id": "V-U5.05",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U5.05",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U5.06",
@@ -2371,7 +2686,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "QUALIFIED_REVIEW_AND_HISTORY_PENDING_COMMIT_BINDING",
@@ -2422,9 +2737,18 @@
           "test_id": "V-U5.06",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U5.06",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U5.07",
@@ -2437,7 +2761,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -2487,9 +2811,18 @@
           "test_id": "V-U5.07",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U5.07",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U5.08",
@@ -2502,7 +2835,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -2552,9 +2885,18 @@
           "test_id": "V-U5.08",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U5.08",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U6.01",
@@ -2567,7 +2909,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -2595,9 +2937,18 @@
           "test_id": "V-U6.01",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U6.01",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U6.02",
@@ -2610,7 +2961,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "BACKEND_ASSET_RETRY_AND_IMMUTABLE_MIME_QUALIFICATION",
@@ -2647,9 +2998,18 @@
           "test_id": "V-U6.02",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U6.02",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U6.03",
@@ -2662,7 +3022,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "kind": "BACKEND_ASSET_RETRY_AND_IMMUTABLE_MIME_QUALIFICATION",
@@ -2699,9 +3059,18 @@
           "test_id": "V-U6.03",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U6.03",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U6.04",
@@ -2714,7 +3083,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -2742,9 +3111,18 @@
           "test_id": "V-U6.04",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U6.04",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U6.05",
@@ -2757,7 +3135,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -2785,9 +3163,18 @@
           "test_id": "V-U6.05",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U6.05",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U6.06",
@@ -2834,9 +3221,27 @@
           "test_id": "V-U6.06",
           "observed_at": "2026-10-14T10:38:58.994222+00:00",
           "result_detail": "Requires separately authorized actual mailbox receipt with inert/non-authorizing actions; synthetic transport or preview cannot substitute."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U6.06",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "BLOCKED_ENVIRONMENT: SMTP host is unconfigured, no SMTP credentials are present, and the outbox worker is disabled. No real mailbox receipt can be produced without an approved external mail path. Private preflight evidence root /home/aella/datarelay-grant-r3-evidence/grant-r3-20261014T112555Z; no external effect was performed."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U6.06",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "Acceptance cannot PASS until the required real environment/participant condition is supplied. SMTP host is unconfigured, no SMTP credentials are present, and the outbox worker is disabled. No real mailbox receipt can be produced without an approved external mail path."
         }
       ],
-      "blocker": "Requires explicit authorization for a real nonproduction SMTP/mailbox receipt. Current scope explicitly forbids real SMTP/external effects."
+      "blocker": "BLOCKED_ENVIRONMENT: SMTP host is unconfigured, no SMTP credentials are present, and the outbox worker is disabled. No real mailbox receipt can be produced without an approved external mail path."
     },
     {
       "id": "U7.01",
@@ -2892,11 +3297,11 @@
       "depends_on": "U1–U5",
       "verification_id": "V-U7.02",
       "pass_criterion": "V-U7.02: actual UI events and persisted readback at same candidate demonstrate all steps; screenshots desktop/390px plus request/response assertions; helper/SSR/source-string checks alone fail this gate. Synthetic backend tests are labeled, not actual user acceptance.",
-      "status": "OPEN",
+      "status": "PASS",
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
-      "acceptance": "NOT_RUN",
+      "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "evidence": [
         {
           "gate": "source",
@@ -2928,6 +3333,10 @@
         {
           "gate": "dev_deployment",
           "justification": "R1: this row is a mounted qualification criterion, not a separate deployment deliverable. U7.07 owns exact development deployment provenance; this row keeps its own interaction evidence and acceptance remains separate."
+        },
+        {
+          "gate": "acceptance",
+          "justification": "R3: this is a mounted automated qualification row. Genuine human/mailbox acceptance is owned by U7.05 and measured novice acceptance by U7.06; this row must not duplicate or substitute those gates."
         }
       ],
       "blocker": null
@@ -2939,11 +3348,11 @@
       "depends_on": "U7.02",
       "verification_id": "V-U7.03",
       "pass_criterion": "V-U7.03: complete task by keyboard without drag; clear accessible names, logical focus, no trap/overflow/clipped primary action at 390px; all rendered labels/context usable at 320/375/390; automation findings plus manual evidence, no unearned standards certification.",
-      "status": "OPEN",
+      "status": "PASS",
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "NOT_APPLICABLE_WITH_JUSTIFICATION",
-      "acceptance": "NOT_RUN",
+      "acceptance": "NOT_APPLICABLE_WITH_JUSTIFICATION",
       "evidence": [
         {
           "kind": "PARTIAL_MOUNTED_ACCESSIBILITY_QUALIFICATION",
@@ -2973,6 +3382,10 @@
         {
           "gate": "dev_deployment",
           "justification": "R1: this row is a mounted qualification criterion, not a separate deployment deliverable. U7.07 owns exact development deployment provenance; this row keeps its own interaction evidence and acceptance remains separate."
+        },
+        {
+          "gate": "acceptance",
+          "justification": "R3: this is a mounted automated qualification row. Genuine human/mailbox acceptance is owned by U7.05 and measured novice acceptance by U7.06; this row must not duplicate or substitute those gates."
         }
       ],
       "blocker": null
@@ -3015,9 +3428,27 @@
           "test_id": "V-U7.04",
           "observed_at": "2026-10-14T10:38:58.994222+00:00",
           "result_detail": "Requires actual supported mail clients and message revision observations; browser emulation is explicitly insufficient."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U7.04",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "BLOCKED_ENVIRONMENT: Gmail and Outlook connectors are available but not connected; no Apple Mail/iOS test session is available. Browser emulation cannot substitute for the actual client matrix. Private preflight evidence root /home/aella/datarelay-grant-r3-evidence/grant-r3-20261014T112555Z; no external effect was performed."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U7.04",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "Acceptance cannot PASS until the required real environment/participant condition is supplied. Gmail and Outlook connectors are available but not connected; no Apple Mail/iOS test session is available. Browser emulation cannot substitute for the actual client matrix."
         }
       ],
-      "blocker": "Approved real Gmail/Outlook/Apple Mail/iOS client and mailbox environments are not available to this Chat."
+      "blocker": "BLOCKED_ENVIRONMENT: Gmail and Outlook connectors are available but not connected; no Apple Mail/iOS test session is available. Browser emulation cannot substitute for the actual client matrix."
     },
     {
       "id": "U7.05",
@@ -3057,9 +3488,27 @@
           "test_id": "V-U7.05",
           "observed_at": "2026-10-14T10:38:58.994222+00:00",
           "result_detail": "The 121-case contract cannot be passed by fixtures, synthetic browser identities, shared credentials or mock mailboxes."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U7.05",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "BLOCKED_ENVIRONMENT: The development DB contains enabled accounts, but no two independently acting real participants with independently controlled mailboxes are available to ChatGPT for a genuine two-human pass. Private preflight evidence root /home/aella/datarelay-grant-r3-evidence/grant-r3-20261014T112555Z; no external effect was performed."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U7.05",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "Acceptance cannot PASS until the required real environment/participant condition is supplied. The development DB contains enabled accounts, but no two independently acting real participants with independently controlled mailboxes are available to ChatGPT for a genuine two-human pass."
         }
       ],
-      "blocker": "Requires approved independent human participants, independently controlled real mailboxes and an approved acceptance surface."
+      "blocker": "BLOCKED_ENVIRONMENT: The development DB contains enabled accounts, but no two independently acting real participants with independently controlled mailboxes are available to ChatGPT for a genuine two-human pass."
     },
     {
       "id": "U7.06",
@@ -3099,9 +3548,27 @@
           "test_id": "V-U7.06",
           "observed_at": "2026-10-14T10:38:58.994222+00:00",
           "result_detail": "The <=5-action and <=180-second targets require observed participant measurements; estimates or automation cannot substitute."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U7.06",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "BLOCKED_ENVIRONMENT: No authorized first-time/novice participant is available for measured action-count and elapsed-time observations. Private preflight evidence root /home/aella/datarelay-grant-r3-evidence/grant-r3-20261014T112555Z; no external effect was performed."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U7.06",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "Acceptance cannot PASS until the required real environment/participant condition is supplied. No authorized first-time/novice participant is available for measured action-count and elapsed-time observations."
         }
       ],
-      "blocker": "Requires an authorized novice/first-use participant and measured task recording."
+      "blocker": "BLOCKED_ENVIRONMENT: No authorized first-time/novice participant is available for measured action-count and elapsed-time observations."
     },
     {
       "id": "U7.07",
@@ -3164,9 +3631,18 @@
         {
           "gate": "acceptance",
           "justification": "U7.07 separates development deployment provenance from user/mail-client acceptance; U7.04-U7.06 own those acceptance gates."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U7.07",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "BLOCKED_TOOLING: The development preview is deployed and an existing session row is present, but ChatGPT has no legitimate authorized credential/browser-session path. Existing session/cookie or fixture-secret extraction is prohibited. Private preflight evidence root /home/aella/datarelay-grant-r3-evidence/grant-r3-20261014T112555Z; no secret material is committed."
         }
       ],
-      "blocker": "Authenticated same-UI-task interaction on the deployed development preview requires an authorized persona/credential path; no fixture-secret workaround is permitted."
+      "blocker": "BLOCKED_TOOLING: The development preview is deployed and an existing session row is present, but ChatGPT has no legitimate authorized credential/browser-session path. Existing session/cookie or fixture-secret extraction is prohibited."
     },
     {
       "id": "U8.01",
@@ -3179,7 +3655,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -3207,9 +3683,18 @@
           "test_id": "V-U8.01",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U8.01",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U8.02",
@@ -3222,7 +3707,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -3250,9 +3735,18 @@
           "test_id": "V-U8.02",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U8.02",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U8.03",
@@ -3265,7 +3759,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -3293,9 +3787,18 @@
           "test_id": "V-U8.03",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U8.03",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U8.04",
@@ -3308,7 +3811,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -3336,9 +3839,18 @@
           "test_id": "V-U8.04",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U8.04",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U8.05",
@@ -3351,7 +3863,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -3379,9 +3891,18 @@
           "test_id": "V-U8.05",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U8.05",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U8.06",
@@ -3394,7 +3915,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -3422,9 +3943,18 @@
           "test_id": "V-U8.06",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U8.06",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U8.07",
@@ -3437,7 +3967,7 @@
       "source": "PASS",
       "interaction": "PASS",
       "dev_deployment": "PASS",
-      "acceptance": "NOT_RUN",
+      "acceptance": "BLOCKED",
       "evidence": [
         {
           "gate": "source",
@@ -3465,9 +3995,18 @@
           "test_id": "V-U8.07",
           "observed_at": "2026-10-14T10:58:49.621646+00:00",
           "result_detail": "R1 deployment reconciliation: current development preview serves product code identical to 4fe71b4b96c66ed80e7c67138c784e17b0714435; Web index/JS/CSS hashes match from dev-atlas and independent dev-drcontrol readback, and the running Python service imports Grant modules directly from the current worktree. This row target is included in that deployed candidate. This is deployment provenance only; acceptance remains NOT_RUN."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "7ac59e9c76f88574f63ef1d05d262484eec107f3",
+          "test_id": "V-U8.07",
+          "observed_at": "2026-10-14T11:27:07.389400+00:00",
+          "result_detail": "R3 preflight found no genuine two-human/two-independent-mailbox acceptance environment. This row keeps its implementation/mounted/deployment evidence, but acceptance is blocked until U7.05 executes on a legitimate same-candidate environment."
         }
       ],
-      "blocker": null
+      "blocker": "R3 acceptance blocked by U7.05 genuine independent-person/mailbox Full User E2E; specialized mail rendering/receipt rows additionally depend on U6.06/U7.04 where applicable."
     },
     {
       "id": "U8.08",
@@ -3579,7 +4118,7 @@
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [],
-      "blocker": null
+      "blocker": "R3_BLOCKED: applicable real acceptance remains blocked at U6.06/U7.04/U7.05/U7.06/U7.07."
     },
     {
       "id": "U9.03",
@@ -3594,7 +4133,7 @@
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [],
-      "blocker": null
+      "blocker": "Depends on U9.02 real-acceptance closure."
     },
     {
       "id": "U9.04",
@@ -3609,7 +4148,7 @@
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
       "evidence": [],
-      "blocker": null
+      "blocker": "Depends on U9.02/U9.03 and final owner acknowledgement; merge/release remain separate."
     }
   ],
   "documentation_validation": {
