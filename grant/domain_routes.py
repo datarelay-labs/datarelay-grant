@@ -320,6 +320,12 @@ def register_domain(app, actor, human, reader):
     def notification_publication_commit(ident: str, body: PublicationCommit, request: Request):
         return commit_publication(core, actor(request), ident, body)
 
+    @app.get("/api/v1/notification-template-sets/{ident}/versions/{revision}/preview")
+    def notification_version_preview(ident: str, revision: int, request: Request, event: str = "requested"):
+        from .email_publication import preview_publication_version
+
+        return preview_publication_version(core, actor(request), ident, revision, event)
+
     @app.get("/api/v1/notification-template-sets/{ident}/versions")
     def notification_publication_history(ident: str, request: Request):
         return publication_history(core, actor(request), ident)

@@ -97,21 +97,32 @@ def review_publication(core, actor, ident, body):
     old_design = (previous or {}).get("design") or {}
     new_design = value.get("design") or {}
     changed_events = []
+    event_changes = {}
     for event in value["templates"]:
         old_heading = old_design.get("event_headings", {}).get(event, old_design.get("heading"))
         new_heading = new_design.get("event_headings", {}).get(event, new_design.get("heading"))
-        if ((previous or {}).get("templates", {}).get(event) != value["templates"][event]
-                or old_heading != new_heading):
+        old_copy = (previous or {}).get("templates", {}).get(event, {})
+        changes = [field for field in ("subject", "body") if old_copy.get(field) != value["templates"][event][field]]
+        if old_heading != new_heading:
+            changes.append("heading")
+        if old_design.get("event_preheaders", {}).get(event, "") != new_design.get("event_preheaders", {}).get(event, ""):
+            changes.append("preheader")
+        if changes:
             changed_events.append(event)
+            event_changes[event] = changes
     shared_fields = ["styles." + key for key in sorted(set(old_design.get("styles", {})) | set(new_design.get("styles", {})))
                      if old_design.get("styles", {}).get(key) != new_design.get("styles", {}).get(key)]
-    shared_fields += [key for key in sorted((set(old_design) | set(new_design)) - {"styles", "event_headings", "heading"})
+    from .email_palette import DEFAULT_PALETTE
+
+    old_palette, new_palette = old_design.get("palette", DEFAULT_PALETTE), new_design.get("palette", DEFAULT_PALETTE)
+    shared_fields += ["palette." + key for key in sorted(DEFAULT_PALETTE) if old_palette[key] != new_palette[key]]
+    shared_fields += [key for key in sorted((set(old_design) | set(new_design)) - {"styles", "palette", "event_headings", "event_preheaders", "heading"})
                       if old_design.get(key) != new_design.get(key)]
     shared_fields += [key for key in ("brand_name", "sender_display_name")
                       if (previous or {}).get(key) != value.get(key)]
     comparison = {"event": "requested", "before": render_checked(previous, "requested") if previous else None,
                   "after": rendered["requested"], "changed_events": changed_events,
-                  "shared_fields": shared_fields}
+                  "shared_fields": shared_fields, "event_changes": event_changes}
     return {**proof, "comparison": comparison, "review_hash": digest(proof), "future_requests_only": True,
             "execution_allowed": False, "rendered": rendered["requested"],
             "events": [{"event": event, "subject": item["subject"], "html_bytes": len(item["html"].encode())}
@@ -156,3 +167,26 @@ def publication_history(core, actor, ident):
             "SELECT revision,snapshot_hash,created_by,created_at,reason FROM email_template_revisions "
             "WHERE template_id=? ORDER BY revision DESC LIMIT 50", (ident,),
         )]
+
+
+def preview_publication_version(core, actor, ident: str, revision: int, event: str = "requested"):
+    """Render an immutable saved revision using synthetic context, with zero writes."""
+    actor.require_admin()
+    if type(revision) is not int or revision < 1:
+        raise GrantError("INVALID_REVISION", 422)
+    with core.db.transaction(write=False) as conn:
+        require_current_authority(conn, actor)
+        row = conn.execute(
+            "SELECT revision,snapshot,snapshot_hash,created_by,created_at,reason FROM email_template_revisions "
+            "WHERE template_id=? AND revision=?", (ident, revision),
+        ).fetchone()
+        if row is None:
+            raise GrantError("EMAIL_REVISION_NOT_FOUND", 404)
+        value = json.loads(row["snapshot"])
+        if digest(value) != row["snapshot_hash"]:
+            raise GrantError("EMAIL_REVISION_INTEGRITY", 409)
+        if event not in value.get("templates", {}):
+            raise GrantError("INVALID_NOTIFICATION_EVENT", 422)
+        metadata = {key: row[key] for key in ("revision", "snapshot_hash", "created_by", "created_at", "reason")}
+    return {"template_id": ident, **metadata, "event": event, "rendered": render_checked(value, event),
+            "read_only": True, "execution_allowed": False}

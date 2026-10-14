@@ -478,7 +478,7 @@
       "verification_id": "V-U2.03",
       "pass_criterion": "V-U2.03: edit requested, switch through all nine events and return; changed fields persist only at intended event; every exposed field renders and survives save/reopen; preheader requires a minimal versioned schema path, not an ignored control.",
       "status": "OPEN",
-      "source": "IN_PROGRESS",
+      "source": "PASS",
       "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
@@ -510,6 +510,20 @@
             "web/tests/unit/email-preheader.test.ts"
           ],
           "result": "2 new Chromium cases; 86 affected Python; 727 full Web units; TypeScript/build/Ruff/compiler-reproduction/wheel assets PASS. New versioned preheader source is complete pending exact Git/CI binding; no dev/mail/person acceptance."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "test_id": "V-U2.03",
+          "observed_at": "2026-10-14T04:26:29.900612+00:00",
+          "source_head": "94a078c83b9a4c9a825cad013a8071418cfbaeb3",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "native_ci": [
+            38509729653,
+            38509729480,
+            38509732466
+          ],
+          "scope": "Versioned event preheader and nine-event copy/heading persistence source verified; current v5 preserves it. Actual deployed/user acceptance NOT_RUN."
         }
       ],
       "blocker": null
@@ -692,7 +706,7 @@
       "verification_id": "V-U3.01",
       "pass_criterion": "V-U3.01: golden outputs and actual rendered screenshots verify hierarchy and required fields across presets; optional metadata may reorder only within a bounded summary region; Compact never hides required context or security notice.",
       "status": "OPEN",
-      "source": "IN_PROGRESS",
+      "source": "PASS",
       "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
@@ -706,6 +720,20 @@
             "web/tests/unit/email-palette.test.ts"
           ],
           "pending_native_browser_scenario": ".dev/u3-palette-blocked/mail-palette.spec.ts"
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "test_id": "V-U3.01",
+          "observed_at": "2026-10-14T04:26:29.900612+00:00",
+          "source_head": "f39db8eb722254c83a6729c3b5a3005a0bb7584f",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "native_ci": [
+            38510666205,
+            38510666386,
+            38510666077
+          ],
+          "scope": "Nine events EN/KO, immutable status and required hierarchy, compiler old/new byte stability; real recipients/deployed acceptance NOT_RUN."
         }
       ],
       "blocker": null
@@ -1026,11 +1054,22 @@
       "verification_id": "V-U5.02",
       "pass_criterion": "V-U5.02: real mounted review shows server-bound current published/draft comparison and actual field/event diff; initial publication handles no previous version; empty/stale/invalid review cannot confirm.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "IN_PROGRESS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "QUALIFIED_REVIEW_AND_HISTORY_PENDING_COMMIT_BINDING",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "test_files": [
+            "tests/test_email_publication_inspection.py",
+            "web/tests/canvas/publication-inspection.spec.ts",
+            "web/tests/unit/email-publication-review.test.ts"
+          ],
+          "result": "8 API/publication regression cases, five guard units and three actual-component synthetic browser scenarios PASS; type/build/Ruff PASS. Definite conflict recovery consumes old proof; unknown outcome remains latched. No actual live publication or mail."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1041,11 +1080,22 @@
       "verification_id": "V-U5.03",
       "pass_criterion": "V-U5.03: reconcile displayed policy IDs/counts and affected events with authoritative response; concurrent policy impact change invalidates review; zero usage shown only after successful read.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "IN_PROGRESS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "QUALIFIED_REVIEW_AND_HISTORY_PENDING_COMMIT_BINDING",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "test_files": [
+            "tests/test_email_publication_inspection.py",
+            "web/tests/canvas/publication-inspection.spec.ts",
+            "web/tests/unit/email-publication-review.test.ts"
+          ],
+          "result": "8 API/publication regression cases, five guard units and three actual-component synthetic browser scenarios PASS; type/build/Ruff PASS. Definite conflict recovery consumes old proof; unknown outcome remains latched. No actual live publication or mail."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1056,11 +1106,22 @@
       "verification_id": "V-U5.04",
       "pass_criterion": "V-U5.04: current authorized confirm creates one publication; edit/branding/version/actor/impact changes reject stale proof; unauthorized calls fail; conflict offers preserve/reload, never silently overwrites; no automatic send/policy activation/execution.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "IN_PROGRESS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "QUALIFIED_REVIEW_AND_HISTORY_PENDING_COMMIT_BINDING",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "test_files": [
+            "tests/test_email_publication_inspection.py",
+            "web/tests/canvas/publication-inspection.spec.ts",
+            "web/tests/unit/email-publication-review.test.ts"
+          ],
+          "result": "8 API/publication regression cases, five guard units and three actual-component synthetic browser scenarios PASS; type/build/Ruff PASS. Definite conflict recovery consumes old proof; unknown outcome remains latched. No actual live publication or mail."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1086,11 +1147,22 @@
       "verification_id": "V-U5.06",
       "pass_criterion": "V-U5.06: history/order/content matches immutable records; preview older revision is inert and read-only; only permitted roles see controls; no fabricated editor/time.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "IN_PROGRESS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "QUALIFIED_REVIEW_AND_HISTORY_PENDING_COMMIT_BINDING",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "test_files": [
+            "tests/test_email_publication_inspection.py",
+            "web/tests/canvas/publication-inspection.spec.ts",
+            "web/tests/unit/email-publication-review.test.ts"
+          ],
+          "result": "8 API/publication regression cases, five guard units and three actual-component synthetic browser scenarios PASS; type/build/Ruff PASS. Definite conflict recovery consumes old proof; unknown outcome remains latched. No actual live publication or mail."
+        }
+      ],
       "blocker": null
     },
     {

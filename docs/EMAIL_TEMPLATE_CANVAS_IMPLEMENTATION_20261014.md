@@ -361,3 +361,44 @@ its two canonical GitHub comments have identical body SHA256. All seven original
 UI-01..UI-07 rows have exact line/wording/WBS mappings, now enforced by the checker
 and two additional omission/tampering tests. The named S02 original attachment
 remains unlocated; no replacement research or fabricated narrative closure.
+
+### U5.02 / U5.03 / U5.06 review and historical preview design
+
+Event-specific preheader changes must be classified on that event, not as a
+set-wide change. The comparison lists subject/body/heading/preheader fields per
+event and individual shared palette/style fields. Existing review hash/CAS,
+actor, policy impact and explicit confirm contracts are unchanged.
+
+Add an administrator-only read-only immutable-version preview: verify the
+stored snapshot hash, render only allowlisted events against existing synthetic
+publication sample data, and return the stored revision/actor/time/hash plus
+rendered output. It must not create drafts, publish, issue decisions or touch
+queued messages. UI shows actual history actor/time, exact active policy/version
+IDs, and a separate view-only historical preview. Existing rollback-as-new-
+publication remains separate; no automatic historical replay or real SMTP.
+Tests use disposable API DBs or intercepted synthetic browser transport only.
+
+U5 inspection checkpoint: per-event subject/body/heading/preheader differences,
+individual palette fields and actual policy/version IDs are now displayed.
+A read-only immutable historical preview verifies snapshot hash/current admin
+and exposes stored author/time/revision/hash, without creating any publication,
+draft, request, issuance, outbox entry or audit write. Three new API cases plus
+five comparison/publication regressions PASS (8 total). The original no-write
+baseline initially included a separate synthetic user's login; the corrected
+test authenticates both fixture users before the baseline and retains the exact
+all-table equality assertion. Browser fixture initially omitted required sample
+context; using the existing complete synthetic sample corrected that harness.
+Neither harness issue was a production defect or an acceptance pass.
+
+A genuine U5.04 client recovery defect was reproduced and fixed: a server 409
+PUBLICATION_CHANGED_REVIEW_REQUIRED, known to occur before any commit, now
+releases the pending attempt but permanently consumes that proof. The user must
+request a fresh review; the old POST is not replayed. Unknown conflicts and
+transport/ambiguous failures remain latched. Five guard unit cases PASS.
+Three mounted scenarios PASS: reviewed explicit synthetic publication, historical
+read-only preview, and definitive-conflict/fresh-review recovery. Real current
+administrator/mailbox/production publication was not invoked. TypeScript/Vite
+and scoped Ruff PASS. Evidence: .dev/u5-inspection-python-final.txt,
+.dev/u5-inspection-browser-qualified-results.json, .dev/u5-conflict-{red,green}.txt,
+.dev/u5-inspection-build.txt. Existing rollback creates a new immutable published
+revision; exact old request snapshots remain governed by the original API tests.
