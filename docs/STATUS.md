@@ -1,3 +1,7 @@
+## 2026-10-14 — ET-1 email renderer source delivery
+
+Pinned MJML 5.4.1 trusted build-time shells, compared with React Email 6.11.1 on 18 synthetic cases, now provide the shared subject/HTML/plain-text path. Three decisions + separately authorized View Details, mode-correct guidance, inert previews, terminal-event protection and MIME parity are covered by 20 renderer tests and 46 affected API tests. Compiled artifact reproduces; cached offline npm install and Python wheel inclusion PASS. Preview isolation unit and type/build PASS. No actual mail-client/user acceptance or preview deployment. ET-2 is next; Foundation/G12/stash remain untouched. See `docs/ADR_EMAIL_RENDERER.md`.
+
 # Grant 1.0 implementation status
 
 ## 2026-10-14 — email template editor research and P0-ET plan complete; editor NOT implemented

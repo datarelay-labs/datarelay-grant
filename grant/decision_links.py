@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import html
 import json
 import secrets
 import sqlite3
@@ -20,8 +19,9 @@ from .approval_mail import eligible_recipients
 from .auth import Principal, require_current_authority
 from .config import Settings
 from .db import Database, audit, uid
+from .email_renderer import EmailSecurity
 from .errors import GrantError
-from .mail_templates import render_notification
+from .mail_templates import render_from_context, request_context
 
 OUTCOMES = ("APPROVED", "HELD", "DENIED")
 MAX_PIN_FAILURES = 5
@@ -50,45 +50,20 @@ def _code_digest(settings: Settings, issuance_id: str, pin: str) -> str:
 
 def _message(
     settings: Settings, request: sqlite3.Row, event: str,
-    pin: str, tokens: dict[str, str],
+    pin: str, tokens: dict[str, str], *, verification_mode: str | None = None,
 ) -> dict:
-    content = render_notification(
-        json.loads(request["mail_template"]), request, settings.origin, event=event,
-    )
-    # The same PIN is tied to one mailbox issuance, not the three independent
-    # answer tokens. PIN never appears inside a URL, analytics, or query string.
     links = {
-        outcome: f"{settings.origin}/api/v1/decision-intents/{token}"
+        outcome: f"{settings.origin.rstrip('/')}/api/v1/decision-intents/{token}"
         for outcome, token in tokens.items()
     }
-    labels = {"APPROVED": "Approve", "HELD": "Hold", "DENIED": "Deny"}
-    actions = "\n".join(
-        f"{labels[outcome]}: {links[outcome]}" for outcome in OUTCOMES
+    content = render_from_context(
+        json.loads(request["mail_template"]), event, request_context(request, settings.origin),
+        security=EmailSecurity(verification_mode or request["decision_verification_mode"], pin, links),
     )
-    content["body"] = (
-        f"{content['body']}\n\n"
-        "Decision links (each opens read-only; verify the email PIN and confirm):\n"
-        f"{actions}\n\n"
-        f"Four-digit confirmation PIN: {pin}\n"
-        "The PIN in this same email does not prove personal identity or MFA.\n"
-        "Do not forward this message."
-    )
-    content["html"] = (
-        "<!doctype html><html><body>"
-        f"<p>{html.escape(content['body'].split('Decision links (')[0]).replace(chr(10), '<br>')}</p>"
-        "<p>Choose a decision (opening a link never records a vote):</p>"
-        + "".join(
-            f'<p><a href="{html.escape(links[outcome], quote=True)}">'
-            f'{html.escape(labels[outcome])}</a></p>'
-            for outcome in OUTCOMES
-        )
-        + f"<p>Four-digit confirmation PIN: <strong>{html.escape(pin)}</strong></p>"
-        "<p>Same-email PIN does not independently verify a named person or MFA.</p>"
-        "</body></html>"
-    )
-    # Reissue/reminder source material stays inside encrypted outbox only.
-    content["_decision_tokens"] = tokens
-    content["_decision_pin"] = pin
+    # Only the issuance path stores material, solely inside the sealed outbox.
+    if event in ("requested", "reminder"):
+        content["_decision_tokens"] = tokens
+        content["_decision_pin"] = pin
     return content
 
 
@@ -99,6 +74,9 @@ def queue_choice_mail(
     """Issue/reuse recipient generations and return actual outbox inserts."""
     if request["email_pin_enabled"] != 1:
         raise ValueError("secure notification requires email PIN enabled")
+    from .verification_policy import current_required
+
+    verification_mode = current_required(conn, request)
     queued = 0
     for recipient in eligible_recipients(conn, request, now):
         if recipient_filter and recipient["recipient_id"] != recipient_filter:
@@ -184,6 +162,7 @@ def queue_choice_mail(
             encrypted = settings.seal(_message(
                 settings, request, event,
                 material["_decision_pin"], material["_decision_tokens"],
+                verification_mode=verification_mode,
             ))
         if encrypted is None:
             prior_generation = conn.execute(
@@ -220,7 +199,7 @@ def queue_choice_mail(
                      recipient["step_id"], recipient["assignment_epoch"],
                      request["action_hash"], expires),
                 )
-            encrypted = settings.seal(_message(settings, request, event, pin, tokens))
+            encrypted = settings.seal(_message(settings, request, event, pin, tokens, verification_mode=verification_mode))
             audit(conn, request["id"], "policy", "decision.issuance_created", {
                 "issuance_id": issuance_id, "approval_assignment_id": recipient["assignment_id"],
                 "recipient_id": recipient["recipient_id"],

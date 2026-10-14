@@ -1,4 +1,4 @@
-"""Bounded plain-text notification template sets for Grant events."""
+"""Bounded structured notification template sets for Grant events."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ TOKEN = re.compile(r"\{\{([a-z_]+)\}\}")
 DEFAULT_MAIL_TEMPLATE = {
     "subject_template": "[Grant] Approval: {{request_title}}",
     "body_template": (
-        "Review the exact action and sign in as the assigned approver.\n\n"
+        "Review the exact action and follow the protected verification instructions below.\n\n"
         "Request: {{request_url}}\n"
         "External ID: {{external_id}}\n"
         "Action: {{action_kind}}\n"
@@ -248,7 +248,8 @@ def request_context(row, origin: str) -> dict[str, str]:
 
 
 def render_from_context(
-    template: Mapping[str, object], event: str, context: Mapping[str, str]
+    template: Mapping[str, object], event: str, context: Mapping[str, str],
+    *, security=None, sample: bool = False,
 ) -> dict[str, str]:
     if event not in NOTIFICATION_EVENTS:
         raise ValueError("Unsupported notification event")
@@ -262,12 +263,15 @@ def render_from_context(
         return TOKEN.sub(lambda match: str(context[match.group(1)]), value)
 
     branding = normalized["branding"]  # type: ignore[assignment]
-    return {
+    content = {
         "subject": render(event_template["subject"]).replace("\r", " ").replace("\n", " "),
         "body": render(event_template["body"]),
         "sender_display_name": branding["sender_display_name"],
         "brand_name": branding["brand_name"],
     }
+    from .email_renderer import compose_email
+
+    return compose_email(content, context, event, security=security, sample=sample)
 
 
 def render_notification(template: Mapping[str, object], row, origin: str, *, event: str) -> dict[str, str]:
@@ -277,3 +281,17 @@ def render_notification(template: Mapping[str, object], row, origin: str, *, eve
 def render_mail(template: dict[str, object], row, origin: str, *, reminder: bool) -> dict[str, str]:
     """Compatibility wrapper for the pre-1.0 requested/reminder path."""
     return render_notification(template, row, origin, event="reminder" if reminder else "requested")
+
+
+def render_preview(
+    template: Mapping[str, object], event: str, context: Mapping[str, str],
+    *, verification_mode: str = "EMAIL_PIN",
+) -> dict[str, str]:
+    """Pure synthetic path shared by preview and reviewed test mail; never issues."""
+    from .email_renderer import OUTCOMES, PREVIEW_ORIGIN, EmailSecurity
+
+    safe_context = {**context, "request_url": PREVIEW_ORIGIN + "details"}
+    security = EmailSecurity(verification_mode, "0000", {
+        outcome: PREVIEW_ORIGIN + outcome.lower() for outcome in OUTCOMES
+    }, sample=True)
+    return render_from_context(template, event, safe_context, security=security, sample=True)

@@ -34,6 +34,10 @@ case "${1:-all}" in
     ;;
   setup) bash scripts/checks.sh setup-api; bash scripts/checks.sh setup-web ;;
   api) uv run --frozen pytest ;;
+  renderer)
+    npm --prefix mail-renderer ci --ignore-scripts --no-audit --no-fund
+    node --max-old-space-size=256 mail-renderer/build.mjs --check
+    ;;
   web) npm --prefix web test; npm --prefix web run check ;;
   static) uv run --frozen ruff check grant tests tools/prepare_foundation.py tools/build_candidate.py tools/verify_candidate.py; git diff --check ;;
   browser)
@@ -92,5 +96,5 @@ PYREPORT
     printf 'BROWSER_NATIVE_FULL_PASS=%s/%s batches=%s evidence=%s\n' "$verified" "$expected" "$batches" "$evidence_dir"
     ;;
   all) bash scripts/checks.sh static; bash scripts/checks.sh api; bash scripts/checks.sh web; bash scripts/checks.sh browser ;;
-  *) printf 'Usage: bash scripts/checks.sh setup|setup-api|setup-web|api|web|static|browser|all\n' >&2; exit 2 ;;
+  *) printf 'Usage: bash scripts/checks.sh setup|setup-api|setup-web|api|web|renderer|static|browser|all\n' >&2; exit 2 ;;
 esac

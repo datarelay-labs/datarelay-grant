@@ -512,7 +512,9 @@ class Core:
             if not row:
                 raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
             template = snapshot(row, branding=self._branding(conn))
-        rendered = render_from_context(template, body.event, body.sample.model_dump())
+        from .mail_templates import render_preview
+
+        rendered = render_preview(template, body.event, body.sample.model_dump())
         return {
             "template_set_id": ident,
             "event": body.event,
@@ -546,7 +548,9 @@ class Core:
             ).fetchone()
             if not recipient or not recipient["enabled"]:
                 raise GrantError("TEST_RECIPIENT_NOT_FOUND", 404)
-        rendered = render_from_context(template, body.event, body.sample.model_dump())
+        from .mail_templates import render_preview
+
+        rendered = render_preview(template, body.event, body.sample.model_dump())
         event_id = uid()
         with self.db.transaction(write=False) as conn:
             require_current_authority(conn, principal)

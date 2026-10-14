@@ -3,6 +3,8 @@ setup_command: "bash scripts/checks.sh setup"
 paths:
   "grant/**":
     domains: [approval, api, automation, integrations]
+  "mail-renderer/**":
+    domains: [approval, api]
   "web/**":
     domains: [approval, api]
   "tests/**":
@@ -67,4 +69,17 @@ scenarios:
     platforms: [linux]
     command: "bash scripts/checks.sh browser"
     invariants: [real authenticated user journeys, explicit confirmation, no fixture proof of external integration]
+    release_gate: true
+
+  - id: GRANT-EMAIL-RENDERER-001
+    name: Pinned offline-capable trusted mail shell reproduction
+    cost: medium
+    estimated_seconds: 30
+    timeout_seconds: 180
+    level: integration
+    domains: [approval, api]
+    triggers: [pr, preflight, release]
+    platforms: [linux]
+    command: "bash scripts/checks.sh renderer"
+    invariants: [pinned compiler, deterministic checked-in shells, no user compiler input]
     release_gate: true

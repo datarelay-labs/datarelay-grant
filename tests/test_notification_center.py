@@ -250,7 +250,7 @@ def test_notification_test_send_revalidates_authority_before_transport(env, monk
     sent = []
     monkeypatch.setattr("grant.transport.send_email", lambda *args: sent.append(args))
 
-    from grant.core import render_from_context as real_render
+    from grant.mail_templates import render_from_context as real_render
 
     def revoke_after_render(*args, **kwargs):
         rendered = real_render(*args, **kwargs)
@@ -258,7 +258,7 @@ def test_notification_test_send_revalidates_authority_before_transport(env, monk
             conn.execute("UPDATE users SET enabled=0 WHERE id=?", (env.users["admin"]["id"],))
         return rendered
 
-    monkeypatch.setattr("grant.core.render_from_context", revoke_after_render)
+    monkeypatch.setattr("grant.mail_templates.render_from_context", revoke_after_render)
     response = admin.post(
         f"/api/v1/notification-template-sets/{template_set['id']}/test-send",
         json={

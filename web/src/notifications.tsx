@@ -19,7 +19,7 @@ import { Form, Select, TextArea, useTask, when } from './common';
 import { createNotificationTestSendReview, isCurrentNotificationTestSendReview, createNotificationTestSendAttemptGuard, submitReviewedNotificationTestSend, NotificationTestSendConfirmation, type NotificationTestSendPreview, type NotificationTestSendReview, type NotificationTestSendSample } from './notification_test_send_review';
 import {
   hasUnsavedTemplateChanges, NotificationPreviewActions,
-  NotificationRequestLink, templateDraftSignature,
+  NotificationRequestLink, templateDraftSignature, NotificationRenderedPreview,
 } from './notification_preview';
 import {
   NotificationTemplateSaveConfirmation,
@@ -56,7 +56,7 @@ const events: NotificationEvent[] = [
 const defaults: Record<NotificationEvent, NotificationEventTemplate> = {
   requested: {
     subject: '[Grant] Approval: {{request_title}}',
-    body: 'Review the exact action and sign in as the assigned approver.\n\nRequest: {{request_url}}\nExternal ID: {{external_id}}\nAction: {{action_kind}}\nTarget: {{target}}\nReason: {{reason}}\nDeadline: {{deadline}}',
+    body: 'Review the exact action and follow the protected verification instructions below.\n\nRequest: {{request_url}}\nExternal ID: {{external_id}}\nAction: {{action_kind}}\nTarget: {{target}}\nReason: {{reason}}\nDeadline: {{deadline}}',
   },
   reminder: {
     subject: '[Grant] Reminder: {{request_title}}',
@@ -1111,7 +1111,7 @@ export function Notifications() {
               )}
               {preview ? (
                 <Alert tone="warning" title={preview.rendered.subject}>
-                  <pre className="grant-mono">{preview.rendered.body}</pre>
+                  <NotificationRenderedPreview rendered={preview.rendered}/>
                   <p>
                     Sender: {preview.rendered.sender_display_name} · transport accepted:{' '}
                     {String(preview.transport_accepted)} · inbox receipt confirmed:{' '}

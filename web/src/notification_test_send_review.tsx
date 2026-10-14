@@ -20,6 +20,8 @@ export type NotificationTestSendPreview = {
   rendered: {
     subject: string;
     body: string;
+    html?: string;
+    text?: string;
     sender_display_name: string;
     brand_name: string;
   };

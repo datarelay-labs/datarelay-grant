@@ -57,6 +57,8 @@ jobs:
         env:
           GRANT_FOUNDATION_SOURCE: ${{ github.workspace }}/.dev/foundation-source
         run: bash scripts/checks.sh setup
+      - name: Reproduce pinned approval-email shells
+        run: bash scripts/checks.sh renderer
       - name: Foundation adapters, types and production web build
         run: bash scripts/checks.sh web
       - name: Install browser runtime for explicit qualification
