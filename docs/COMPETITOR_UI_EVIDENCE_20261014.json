@@ -3248,9 +3248,18 @@
           "test_id": "V-U6.06",
           "observed_at": "2026-10-14T11:42:40.525606+00:00",
           "result_detail": "Gmail connector read-only verification found four historical Grant receipts from 2026-10-07, including approval/reminder/execution/test mail. Raw MIME shows real Gmail receipt with DKIM/SPF PASS and dev-host-origin path. Search of the last 24h found zero current Grant messages. This supports historical mailbox-path viability only; current candidate receipt remains blocked because Grant SMTP is unconfigured and worker disabled."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "e39e9742bc20e73c95985064de2a9355dae2859f",
+          "test_id": "V-U6.06",
+          "observed_at": "2026-10-14T12:13:23.976837+00:00",
+          "result_detail": "Current candidate renderer output (mjml-5.4.1-layout-5, layout SHA256 596dacbaf72a8a2d9695bca38661e059a581690992814c267ca436133e4f01dc, 7840 HTML bytes) was delivered to the connected Gmail mailbox through Gmail API and received as multipart/alternative. This proves current-render mailbox/MIME viability only. Grant SMTP transport itself remains unconfigured and was not exercised."
         }
       ],
-      "blocker": "BLOCKED_ENVIRONMENT: Gmail mailbox access is now connected and historical Grant receipts from 2026-10-07 are verified, but the current candidate has SMTP unconfigured/worker disabled and no current-candidate Gmail receipt. Exact current saved-revision receipt remains unexecuted."
+      "blocker": "BLOCKED_ENVIRONMENT: Current-candidate rendered HTML has now been received by Gmail via the connected Gmail account, proving mailbox and current-render MIME viability. However it was not sent through DataRelay Grant SMTP; Grant SMTP credentials are absent, worker remains disabled, and no exact Grant transport receipt exists."
     },
     {
       "id": "U7.01",
@@ -3473,9 +3482,27 @@
           "test_id": "V-U7.04",
           "observed_at": "2026-10-14T11:42:40.525606+00:00",
           "result_detail": "Historical Gmail receipt proves a real Gmail delivery path existed, not current-candidate client rendering. Current candidate Gmail/Outlook/Apple/iOS same-message acceptance remains incomplete."
+        },
+        {
+          "gate": "interaction",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "e39e9742bc20e73c95985064de2a9355dae2859f",
+          "test_id": "V-U7.04",
+          "observed_at": "2026-10-14T12:13:23.976837+00:00",
+          "result_detail": "Current candidate pure renderer output was self-delivered through the connected Gmail account and actually received. Raw MIME preserves multipart plain+HTML content and current renderer structural markers (brand, event status, heading, context, inert View Details, sample-only footer). Gmail transport/MIME subcell is verified; direct Gmail Web/Mobile visual rendering, dark/images-off observations, Outlook and Apple/iOS remain unrun."
+        },
+        {
+          "gate": "acceptance",
+          "result": "BLOCKED",
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "source_head": "e39e9742bc20e73c95985064de2a9355dae2859f",
+          "test_id": "V-U7.04",
+          "observed_at": "2026-10-14T12:13:23.976837+00:00",
+          "result_detail": "A current-candidate Gmail message now exists and MIME content is verified, but actual-client visual acceptance is still incomplete because no direct Gmail Web/Mobile layout observation, Outlook observation, or Apple Mail/iOS observation has been captured."
         }
       ],
-      "blocker": "BLOCKED_ENVIRONMENT: Gmail is now connected and historical Grant delivery is verified, but there is no current-candidate Gmail message to render/inspect; Outlook Email remains unconnected and no Apple Mail/iOS client session is available. Current same-message client matrix remains incomplete."
+      "blocker": "BLOCKED_ENVIRONMENT: Current-candidate Gmail transport/MIME subcell is verified, but Gmail Web/Mobile visual rendering has not been directly observed; Outlook Email remains unconnected and Apple Mail/iOS client sessions are unavailable. Full actual-client matrix remains incomplete."
     },
     {
       "id": "U7.05",
