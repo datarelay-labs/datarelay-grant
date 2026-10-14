@@ -2613,6 +2613,24 @@
           "test_id": "V-U7.07",
           "observed_at": "2026-10-14T08:51:46.415535+00:00",
           "result_detail": "Nonproduction dev preview serves the exact tested build at https://221.139.249.116:18443/: HTTP 200; index/JS/CSS SHA256 values equal the staged build; fresh Chromium login screenshot recorded. Worker disabled and no live effect exercised. Authenticated same-UI-task deployment interaction remains NOT_RUN, so acceptance is not implied."
+        },
+        {
+          "gate": "source",
+          "result": "PASS",
+          "artifact": ".dev/u7-07-deployment-provenance-55c05f7.txt",
+          "source_head": "55c05f74885f0c4e4083e8bd386a9fb8898b5fa4",
+          "test_id": "V-U7.07",
+          "observed_at": "2026-10-14T10:35:38.427590+00:00",
+          "result_detail": "Current exact repository HEAD Web production build completed successfully; product Web source is unchanged from 4fe71b4 and later commits through 55c05f7 are evidence/coordination only."
+        },
+        {
+          "gate": "dev_deployment",
+          "result": "PASS",
+          "artifact": ".dev/u7-07-deployment-provenance-55c05f7.txt",
+          "source_head": "55c05f74885f0c4e4083e8bd386a9fb8898b5fa4",
+          "test_id": "V-U7.07",
+          "observed_at": "2026-10-14T10:35:38.427590+00:00",
+          "result_detail": "Development HTTPS preview updated to current Web build. Local and independent dev-drcontrol GETs returned HTTP 200 with byte-identical index/JS/CSS SHA256; protected unauthenticated admin GET returned 401. Rollback config and SQLite backup retained with quick_check=ok; worker remains disabled and SMTP unconfigured. Fresh anonymous Chromium login screenshot HTTP 200/title DataRelay Grant. Authenticated deployed-task interaction and user acceptance remain NOT_RUN."
         }
       ],
       "blocker": null
