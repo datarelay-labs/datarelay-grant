@@ -17,16 +17,19 @@ export async function compile(source) {
 export function source(decisions, revision=1) {
   const mark = id => revision >= 3 ? ' css-class="grant-mail-block-'+id+'"' : '';
   const actions = decisions ? ['APPROVE','HOLD','DENY','DETAILS'] : ['DETAILS'];
+  const bodyColor=revision>=5?'#111828':'#111827',mutedColor=revision>=5?'#334156':'#334155';
+  const status=revision>=5?`<mj-text css-class="grant-mail-event-status" font-family="Arial, sans-serif" font-size="14px" color="${mutedColor}" font-weight="700">@@GRANT_EVENT_LABEL@@</mj-text>\n`:'';
+
   return `<mjml><mj-head><mj-title>@@GRANT_SUBJECT@@</mj-title>${revision>=4?'<mj-preview>@@GRANT_PREHEADER@@</mj-preview>':''}</mj-head>
-<mj-body width="600px" background-color="#f3f4f6"><mj-section background-color="#ffffff" padding="23px"><mj-column>
-<mj-text${mark("brand")} font-family="Arial, sans-serif" font-size="15px" color="#334155">@@GRANT_BRAND@@</mj-text>
-<mj-text${mark("heading")} font-family="Arial, sans-serif" font-size="24px" color="#111827" font-weight="700">@@GRANT_TITLE@@</mj-text>
-<mj-text${mark("message")}${revision>=2?' align="right"':''} font-family="Arial, sans-serif" font-size="19px" line-height="1.6" color="#111827">@@GRANT_BODY@@</mj-text>
-<mj-text${mark("request_context")} font-family="Arial, sans-serif" font-size="16px" line-height="1.6" color="#111827">@@GRANT_CONTEXT@@</mj-text>
-${decisions ? `<mj-text${mark('verification')} font-family="Arial, sans-serif" font-size="16px" line-height="1.6" color="#111827">@@GRANT_GUIDANCE@@</mj-text>` : ''}
+<mj-body width="600px" background-color="${revision>=5?'#fefdfc':'#f3f4f6'}"><mj-section background-color="${revision>=5?'#fcfdfe':'#ffffff'}" padding="23px"><mj-column>
+<mj-text${mark("brand")} font-family="Arial, sans-serif" font-size="15px" color="${mutedColor}">@@GRANT_BRAND@@</mj-text>
+${status}<mj-text${mark("heading")} font-family="Arial, sans-serif" font-size="24px" color="${bodyColor}" font-weight="700">@@GRANT_TITLE@@</mj-text>
+<mj-text${mark("message")}${revision>=2?' align="right"':''} font-family="Arial, sans-serif" font-size="19px" line-height="1.6" color="${bodyColor}">@@GRANT_BODY@@</mj-text>
+<mj-text${mark("request_context")} font-family="Arial, sans-serif" font-size="16px" line-height="1.6" color="${bodyColor}">@@GRANT_CONTEXT@@</mj-text>
+${decisions&&revision<5 ? `<mj-text${mark('verification')} font-family="Arial, sans-serif" font-size="16px" line-height="1.6" color="${bodyColor}">@@GRANT_GUIDANCE@@</mj-text>` : ''}
 ${actions.map((a,i)=>`<mj-button${mark("actions")}${revision>=2?' width="100%"':''} font-family="Arial, sans-serif" font-size="17px" font-weight="700" line-height="24px" inner-padding="13px 29px" padding="9px 0" border-radius="7px" background-color="${['#166534','#854d0e','#991b1b','#334155'][decisions?i:3]}" color="#ffffff" href="@@GRANT_${a}_URL@@" target="_blank">@@GRANT_${a}_LABEL@@</mj-button>`).join('')}
-${decisions ? `<mj-text${mark('verification')} font-family="Arial, sans-serif" font-size="18px" line-height="1.6" color="#111827">@@GRANT_PIN@@</mj-text>` : ''}
-<mj-text${mark("footer")} font-family="Arial, sans-serif" font-size="14px" line-height="1.6" color="#334155">@@GRANT_FOOTER@@</mj-text>
+${decisions ? `${revision>=5?`<mj-text${mark('verification')} font-family="Arial, sans-serif" font-size="16px" line-height="1.6" color="${bodyColor}">@@GRANT_GUIDANCE@@</mj-text>`:''}<mj-text${mark('verification')} font-family="Arial, sans-serif" font-size="18px" line-height="1.6" color="${bodyColor}">@@GRANT_PIN@@</mj-text>` : ''}
+<mj-text${mark("footer")} font-family="Arial, sans-serif" font-size="14px" line-height="1.6" color="${mutedColor}">@@GRANT_FOOTER@@</mj-text>
 </mj-column></mj-section></mj-body></mjml>`;
 }
 function slots(html, revision=1) {
@@ -41,6 +44,7 @@ function slots(html, revision=1) {
   if(revision>=2) html=html.replaceAll('text-align:right','text-align:@@GRANT_ALIGN@@')
     .replaceAll('display:inline-block;background:','display:block;background:')
     .replaceAll('mso-padding-alt:13px 29px','mso-padding-alt:@@GRANT_BUTTON_Y@@px @@GRANT_BUTTON_X@@px');
+  if(revision>=5)for(const [value,slot] of Object.entries({'#fefdfc':'@@GRANT_PAGE_BG@@','#fcfdfe':'@@GRANT_CONTENT_BG@@','#111828':'@@GRANT_TEXT_COLOR@@','#334156':'@@GRANT_BRAND_COLOR@@'}))html=html.replaceAll(value,slot);
   if(revision>=4){
     const metadata=/(<div\b[^>]*)(>\s*@@GRANT_PREHEADER@@\s*<\/div>)/g;
     assert.equal(Array.from(html.matchAll(metadata)).length,1);
@@ -48,13 +52,13 @@ function slots(html, revision=1) {
   }
   return html.replace(/<html\b/, '<html lang="@@GRANT_LOCALE@@"');
 }
-for (const revision of [1,2,3,4]) {
+for (const revision of [1,2,3,4,5]) {
   const layouts = {decision:slots(await compile(source(true,revision)),revision),
     notice:slots(await compile(source(false,revision)),revision)};
   const artifact = {contract_version:1, renderer:'mjml@5.4.1', layout_revision:revision, layouts};
   const output = JSON.stringify(artifact,null,2)+'\n';
   const path = new URL('../grant/email_layout_v'+revision+'.json', import.meta.url);
-  if (process.argv.includes('--check') || revision<=3&&existsSync(path)) assert.equal(readFileSync(path,'utf8'), output);
+  if (process.argv.includes('--check') || revision<=4&&existsSync(path)) assert.equal(readFileSync(path,'utf8'), output);
   else writeFileSync(path, output);
   console.log(JSON.stringify({artifact:'grant/email_layout_v'+revision+'.json',bytes:Buffer.byteLength(output),
     sha256:createHash('sha256').update(output).digest('hex')}));

@@ -264,3 +264,100 @@ Evidence .dev/u2-03-preheader-{python,web,web-full,build,package}.txt and
 development-preview deployment is claimed. U1.05's preserved, never-applied
 optional-content proposal must use a later layout revision; it cannot overwrite
 this revision 4 artifact.
+
+### U3.01 / U3.03 recipient hierarchy and bounded color design
+
+New immutable layout 5 adds an uneditable localized event-status caption and
+orders new recipient mail as brand -> status/title -> explanation -> required
+request context -> Approve/Hold/Deny -> separate View Details -> verification
+instructions/PIN -> mandatory footer. Plain text follows the same order. No
+eligibility, verification, decision identity/URL or confirmation rule changes.
+Old v1/v2/v3/v4 artifacts and outputs remain reproducible; previously saved
+versions never opt in silently. New templates use the current layout; explicit
+appearance/canvas upgrade is an unsaved edit on an existing template.
+
+A strict `palette` contains only mail page/content backgrounds and body/brand
+text colors. Curated Light/Warm/Dark schemes plus collapsed custom controls
+provide contrast feedback. Both body and brand text require >=4.5:1 against
+the content background, enforced again by the server; existing action-white
+contrast gates remain. Old layout revisions reject a non-default palette rather
+than ignore it. Palette reset is separate and preserves wording, event maps,
+locale, action styles and bindings. App/Foundation themes are not changed.
+Editing a preheader must retain layout 5 rather than downgrade it to layout 4.
+Qualification: schema/model tampering, all nine events in EN/KO, protected order,
+legacy artifact hashes, mounted apply/custom/recover/reset/save/reopen and
+preheader non-downgrade. Real-client dark-mode acceptance remains NOT_RUN.
+
+
+U3 current scoped checkpoint: layout 5 source, palette/server constraints,
+TypeScript and Ruff are implemented/passing locally. Forty current presentation
+and preheader Python cases PASS, including all nine events in EN/KO; eight
+palette/preheader/canvas model units PASS. One actual-Notifications desktop
+palette/status/order/edit/save/reopen case PASS with screenshot
+.dev/u3-dark-palette-desktop.png, inspected directly. The second, mobile test
+failed before exercising its intended scenario because it did not open the
+mobile property inspector. This is an incomplete test setup, not evidence of a
+product defect or mobile PASS. A normal corrective batch (open the inspector
+in that test; compact palette button presentation) was blocked before execution
+by Remote_Desktop_Commander.start_process on dev-atlas:
+`요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.`
+Denied targets: web/src/email_palette_controls.tsx and
+web/tests/canvas/mail-palette.spec.ts. No corrective write occurred and no
+alternate/reformatted correction was attempted. The native pending scenario,
+its original failure trace/screenshot and SHA remain under
+.dev/u3-palette-blocked/; .dev/u3-palette-browser-results.json records the actual
+one PASS/one setup failure. It is deliberately not shipped as a falsely green
+browser suite. U3.03 mobile interaction/compact polish remains OPEN/BLOCKED.
+Existing implemented server/desktop source remains available for independent
+review. The original G12 test and all previous pending bundles are preserved.
+
+### U4 preview interaction and exact-field recovery design
+
+Use mounted Notifications with explicitly synthetic intercepted preview transport
+and the original Python renderer to verify old/latest response ordering, retained
+stale content, server failure/recovery, sample/mode switching and exact matching
+HTML/text/layout identity. No actual account, mail, publication or request writes.
+Local validation issues carry the exact human field label as well as their block;
+clicking recovery opens the existing inspector and focuses that particular input,
+not the first unrelated control. Collapsed ancestors open only for the requested
+field. Palette-control layout and the currently blocked mobile palette scenario
+are not part of this independent change. Other version/publication guards remain.
+
+
+U4 results: actual Hold-color recovery focus defect was reproduced with the
+existing editor. A normal U4.04 source fix request (precise field labels, exact
+input focus and disclosure expansion) was denied before execution by
+Remote_Desktop_Commander.start_process on dev-atlas, with the same explicit
+platform safety-decision error recorded above. Targets: email_preview_model.ts,
+email_live_preview.tsx and email_template_workbench.tsx. Readback confirms the
+old one-argument block callback and generic first-control focus remain. No
+alternate or reformulated implementation was attempted. Original four-case
+harness including the genuine focus RED is preserved unchanged at
+.dev/u4-exact-focus-blocked/preview-contract.spec.ts; RED log
+.dev/u4-exact-focus-red.txt. U4.04 exact-field recovery remains BLOCKED.
+
+The other three independent existing-behavior scenarios ran normally and all
+PASS (.dev/u4-independent-preview-results.json): delayed/out-of-order response
+cannot replace current content; last valid content remains explicitly stale
+through failure and recovers without saves; four sample types, three verification
+modes, nine events, desktop/320/375/390 layout widths, exact text/source output
+and collapsed diagnostics use the same synthetic renderer response. Only those
+three passing cases remain in active preview-contract.spec.ts. No failed focus
+scenario is silently marked PASS. Source/browser transport remains synthetic,
+zero writes observed; actual mail-client/person acceptance stays NOT_RUN.
+
+U3/U4 source checkpoint regression: full Web units 729/729 PASS (97 files),
+127 affected Python cases PASS, including the 13 current original-coverage
+checks; TypeScript/Vite and scoped Ruff PASS. The compiler reproduces layouts
+1..5 and the locally built wheel includes each exact artifact. Three independent
+current-preview browser scenarios PASS; U3 desktop palette case PASS. The archived
+U3 mobile-setup case and U4 precise-focus RED are explicitly NOT passing gates.
+Evidence: .dev/u3-web-full.txt, .dev/u3-python-regression.txt, .dev/u3-build.txt,
+.dev/u3-layout-package/, .dev/u4-independent-preview-results.json. No running
+user preview was replaced and no real mail/user acceptance was executed.
+
+The S03 original audit is now preserved verbatim in ORIGINAL_EMAIL_UI_AUDIT_20261014.md;
+its two canonical GitHub comments have identical body SHA256. All seven original
+UI-01..UI-07 rows have exact line/wording/WBS mappings, now enforced by the checker
+and two additional omission/tampering tests. The named S02 original attachment
+remains unlocated; no replacement research or fabricated narrative closure.

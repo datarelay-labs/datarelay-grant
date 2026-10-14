@@ -692,11 +692,22 @@
       "verification_id": "V-U3.01",
       "pass_criterion": "V-U3.01: golden outputs and actual rendered screenshots verify hierarchy and required fields across presets; optional metadata may reorder only within a bounded summary region; Compact never hides required context or security notice.",
       "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "source": "IN_PROGRESS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "QUALIFIED_PRESENTATION_V5_PENDING_COMMIT_BINDING",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "result": "Exact run 127 Python cases; full 729 Web units; compiler/wheel1..5/type/build/Ruff PASS. Nine-event/EN-KO status/protected hierarchy and bounded palettes implemented; desktop interaction passed; mobile setup and compact polish remain explicitly blocked.",
+          "test_files": [
+            "tests/test_email_presentation_v5.py",
+            "web/tests/unit/email-palette.test.ts"
+          ],
+          "pending_native_browser_scenario": ".dev/u3-palette-blocked/mail-palette.spec.ts"
+        }
+      ],
       "blocker": null
     },
     {
@@ -721,13 +732,37 @@
       "depends_on": "U3.02",
       "verification_id": "V-U3.03",
       "pass_criterion": "V-U3.03: valid palette persists; insufficient text contrast and invisible/overflow/hide styles rejected by server even through crafted JSON; decision meaning is visible in text, not color only; outgoing mail colors do not alter app/Foundation theme.",
-      "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "status": "BLOCKED",
+      "source": "IN_PROGRESS",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
-      "blocker": null
+      "evidence": [
+        {
+          "kind": "PARTIAL_WORKTREE_QUALIFICATION",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "result": "40 current Python cases, eight Web units, type/Ruff and one mounted desktop scenario PASS; second mobile setup NOT QUALIFIED; correction request denied.",
+          "pending_native_scenario": ".dev/u3-palette-blocked/mail-palette.spec.ts"
+        },
+        {
+          "kind": "QUALIFIED_PRESENTATION_V5_PENDING_COMMIT_BINDING",
+          "artifact": "docs/EMAIL_TEMPLATE_CANVAS_IMPLEMENTATION_20261014.md",
+          "result": "Exact run 127 Python cases; full 729 Web units; compiler/wheel1..5/type/build/Ruff PASS. Nine-event/EN-KO status/protected hierarchy and bounded palettes implemented; desktop interaction passed; mobile setup and compact polish remain explicitly blocked.",
+          "test_files": [
+            "tests/test_email_presentation_v5.py",
+            "web/tests/unit/email-palette.test.ts"
+          ],
+          "pending_native_browser_scenario": ".dev/u3-palette-blocked/mail-palette.spec.ts"
+        }
+      ],
+      "blocker": {
+        "class": "PLATFORM_SAFETY_DENIAL",
+        "tool": "Remote_Desktop_Commander.start_process",
+        "target": "dev-atlas: pending mobile property-inspector test setup and compact palette-control polish",
+        "message": "요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.",
+        "effect": "Correction not written; source palette/server/desktop functionality is implemented; mobile setup remains unqualified. No bypass.",
+        "bypassed": false
+      }
     },
     {
       "id": "U3.04",
@@ -813,10 +848,19 @@
       "pass_criterion": "V-U4.02: delay/out-of-order response/unmount/edit tests prove old responses never win; previous image remains while Updating is visible; stale/error result cannot count as current test/publish review.",
       "status": "OPEN",
       "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "ACTUAL_MOUNTED_SYNTHETIC_PREVIEW_SCENARIOS",
+          "artifact": ".dev/u4-independent-preview-results.json",
+          "tests": [
+            "web/tests/canvas/preview-contract.spec.ts"
+          ],
+          "result": "3/3 PASS: delayed old response, explicit failure/recovery, samples/modes/nine events/widths/source/text/diagnostics; no real mail or person acceptance. Image-off/dark simulations remain outside this checkpoint."
+        }
+      ],
       "blocker": null
     },
     {
@@ -828,10 +872,19 @@
       "pass_criterion": "V-U4.03: select each sample and compare expected values/required context; only fake request data, invalid URLs and dummy PIN appear; sample switching changes no stored template, issuance or live request.",
       "status": "OPEN",
       "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "ACTUAL_MOUNTED_SYNTHETIC_PREVIEW_SCENARIOS",
+          "artifact": ".dev/u4-independent-preview-results.json",
+          "tests": [
+            "web/tests/canvas/preview-contract.spec.ts"
+          ],
+          "result": "3/3 PASS: delayed old response, explicit failure/recovery, samples/modes/nine events/widths/source/text/diagnostics; no real mail or person acceptance. Image-off/dark simulations remain outside this checkpoint."
+        }
+      ],
       "blocker": null
     },
     {
@@ -841,13 +894,27 @@
       "depends_on": "U1.02, U4.02",
       "verification_id": "V-U4.04",
       "pass_criterion": "V-U4.04: induce contrast/length/missing-required errors; click message to focus exact block/input, fix and re-render; stale error clears only on correct response; publication remains blocked until valid.",
-      "status": "OPEN",
-      "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "status": "BLOCKED",
+      "source": "IN_PROGRESS",
+      "interaction": "FAIL",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
-      "blocker": null
+      "evidence": [
+        {
+          "kind": "EXACT_INPUT_FOCUS_RED_CORRECTION_DENIED",
+          "artifact": ".dev/u4-exact-focus-red.txt",
+          "pending_scenario": ".dev/u4-exact-focus-blocked/preview-contract.spec.ts",
+          "result": "FAIL: clicking Hold contrast recovery does not focus Hold color. This gate is not passed."
+        }
+      ],
+      "blocker": {
+        "class": "PLATFORM_SAFETY_DENIAL",
+        "tool": "Remote_Desktop_Commander.start_process",
+        "target": "dev-atlas: U4.04 exact input recovery in model/live preview/workbench",
+        "message": "요청의 보안 상태를 결정하지 못해 이 도구 요청은 OpenAI에 의해 차단되었습니다.",
+        "effect": "Genuine Hold-input focus defect reproduced; source correction not written. Other preview validation remains functional. No bypass.",
+        "bypassed": false
+      }
     },
     {
       "id": "U4.05",
@@ -858,10 +925,19 @@
       "pass_criterion": "V-U4.05: same current revision in each view; required content/actions readable without clipping; text fallback usable; simulations never display Gmail/Outlook acceptance PASS.",
       "status": "OPEN",
       "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "ACTUAL_MOUNTED_SYNTHETIC_PREVIEW_SCENARIOS",
+          "artifact": ".dev/u4-independent-preview-results.json",
+          "tests": [
+            "web/tests/canvas/preview-contract.spec.ts"
+          ],
+          "result": "3/3 PASS: delayed old response, explicit failure/recovery, samples/modes/nine events/widths/source/text/diagnostics; no real mail or person acceptance. Image-off/dark simulations remain outside this checkpoint."
+        }
+      ],
       "blocker": null
     },
     {
@@ -888,10 +964,19 @@
       "pass_criterion": "V-U4.07: diagnostics collapsed by default; data matches actual server output and current generation; source inspection cannot edit or execute HTML and cannot expose real secrets.",
       "status": "OPEN",
       "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "ACTUAL_MOUNTED_SYNTHETIC_PREVIEW_SCENARIOS",
+          "artifact": ".dev/u4-independent-preview-results.json",
+          "tests": [
+            "web/tests/canvas/preview-contract.spec.ts"
+          ],
+          "result": "3/3 PASS: delayed old response, explicit failure/recovery, samples/modes/nine events/widths/source/text/diagnostics; no real mail or person acceptance. Image-off/dark simulations remain outside this checkpoint."
+        }
+      ],
       "blocker": null
     },
     {
@@ -903,10 +988,19 @@
       "pass_criterion": "V-U4.08: user sees current draft centrally; saved test/review names exact revision; edits invalidate evidence; no two unlabeled previews disagree about what will save, publish or send.",
       "status": "OPEN",
       "source": "NOT_RUN",
-      "interaction": "NOT_RUN",
+      "interaction": "IN_PROGRESS",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
+      "evidence": [
+        {
+          "kind": "ACTUAL_MOUNTED_SYNTHETIC_PREVIEW_SCENARIOS",
+          "artifact": ".dev/u4-independent-preview-results.json",
+          "tests": [
+            "web/tests/canvas/preview-contract.spec.ts"
+          ],
+          "result": "3/3 PASS: delayed old response, explicit failure/recovery, samples/modes/nine events/widths/source/text/diagnostics; no real mail or person acceptance. Image-off/dark simulations remain outside this checkpoint."
+        }
+      ],
       "blocker": null
     },
     {
@@ -1417,5 +1511,5 @@
     "product_acceptance": "NOT_RUN"
   },
   "original_crosswalk_path": "docs/COMPETITOR_UI_ORIGINAL_CROSSWALK_20261014.json",
-  "original_crosswalk_sha256": "2d17698fe326ad6f2c6c0b3644a2908313a919be331aa6864eeced72d19e715d"
+  "original_crosswalk_sha256": "8beb7cd3eac69a0f2b13d5416befac6f6e48aee4d0c1d86dea47c4fe04f7ddf5"
 }

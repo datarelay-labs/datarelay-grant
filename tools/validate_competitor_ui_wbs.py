@@ -112,6 +112,7 @@ def validate_crosswalk(data: dict, wbs_ids: set[str], root: Path = ROOT) -> dict
     families = {'U': 16, 'A': 17, 'E': 13, 'L': 12, 'X': 11,
                 'S': 24, 'C': 10, 'P': 10, 'V': 8}
     expected = {
+        'original_ui_audit_rows': {f'UI-{i:02}' for i in range(1, 8)},
         'et_checks': {f'ET-T{i:02}' for i in range(1, 25)},
         'original_user_scenarios': {f'{family}-{i:03}' for family, count in families.items()
                                     for i in range(1, count + 1)},
@@ -130,9 +131,12 @@ def validate_crosswalk(data: dict, wbs_ids: set[str], root: Path = ROOT) -> dict
                 raise ValueError(f"{row['id']}: missing or invalid WBS mapping")
             line = loaded[row['source']][row['line'] - 1]
             cells = [cell.strip() for cell in line.split('|')[1:-1]]
-            if not cells or cells[0].replace('**', '') != row['id']:
+            identity = cells[0].replace('**', '') if cells else ''
+            if group == 'original_ui_audit_rows':
+                identity = identity.split(' / ')[0]
+            if identity != row['id']:
                 raise ValueError(f"{row['id']}: original line identity changed")
-            if group == 'historical_gap_rows':
+            if group in {'historical_gap_rows', 'original_ui_audit_rows'}:
                 if row.get('source_row_verbatim') != line:
                     raise ValueError(f"{row['id']}: original gap wording changed")
             else:
@@ -160,7 +164,7 @@ def validate_crosswalk(data: dict, wbs_ids: set[str], root: Path = ROOT) -> dict
         if original_row['priority'] == 'defer' and row.get('disposition') != 'ORIGINAL_EXPLICIT_DEFERRED_NOT_NEW_SCOPE':
             raise ValueError('Original explicit deferral was silently changed')
     return {'et_checks': 24, 'original_user_scenarios': 121,
-            'historical_gap_rows': 9, 'structured_findings': len(findings),
+            'historical_gap_rows': 9, 'structured_findings': len(findings), 'original_ui_audit_rows': 7,
             'traceability': 'PASS', 'product_acceptance': False}
 
 

@@ -1,3 +1,4 @@
+import {emailPalettes,mailPaletteContrast} from './email_palette';
 import type {NotificationEvent} from './types';
 import type {TemplateDraft} from './notification_preview';
 import type {EmailBlock} from './email_canvas_model';
@@ -17,6 +18,11 @@ export function emailPreviewProblems(draft:TemplateDraft,event:NotificationEvent
  if(!text.subject.trim()||text.subject.length>250)problems.push({block:'subject',message:'Enter a subject of 1 to 250 characters.'});
  if(!text.body.trim()||text.body.length>8000)problems.push({block:'message',message:'Enter message wording of 1 to 8,000 characters.'});
  if(design){
+  const palette=design.palette??emailPalettes.light;
+  for(const [field,label] of [['body_text','Message'],['brand_text','Brand']] as const){
+   if(mailPaletteContrast(palette[field],palette.content_background)<4.5)problems.push({block:'message',message:label+' text requires 4.5:1 contrast against the mail content background.'});
+  }
+  if(!/^#[0-9a-f]{6}$/i.test(palette.page_background))problems.push({block:'message',message:'Use a six-digit mail page background color.'});
   const heading=design.event_headings?.[event]??design.heading;
   if(!heading.trim()||heading.length>250)problems.push({block:'heading',message:'Enter a heading of 1 to 250 characters.'});
   for(const [key,label] of [['approve_color','Approve'],['hold_color','Hold'],['deny_color','Deny']] as const){

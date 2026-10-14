@@ -1,3 +1,4 @@
+import {EmailPaletteControls} from './email_palette_controls';
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {Alert,Button,TextField} from '@datarelay-labs/foundation';
 import {api} from './api';
@@ -76,7 +77,7 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,onChange,
   const value=inPreheader?(design?.event_preheaders?.[event]??''):selected==='subject'?draft.templates[event].subject:selected==='message'?draft.templates[event].body:selected==='heading'?(design?.event_headings?.[event]??design?.heading??''):design?.footer??'';
   try{
    const next=insertEmailVariable(value,element?.selectionStart??value.length,element?.selectionEnd??value.length,key,variables,max);
-   if(inPreheader&&design)designChange({...design,shared_layout_revision:4,event_preheaders:{...design.event_preheaders,[event]:next.value}});
+   if(inPreheader&&design)designChange({...design,shared_layout_revision:design.shared_layout_revision>=4?design.shared_layout_revision:4,event_preheaders:{...design.event_preheaders,[event]:next.value}});
    else if(selected==='subject'||selected==='message')copyChange(selected==='subject'?'subject':'body',next.value);
    else if(design)designChange(selected==='heading'?{...design,event_headings:{...design.event_headings,[event]:next.value}}:{...design,footer:next.value});
    requestAnimationFrame(()=>{const target=element??inspector.current?.querySelector<HTMLInputElement|HTMLTextAreaElement>('[data-email-wording]');target?.focus();target?.setSelectionRange(next.cursor,next.cursor);});
@@ -95,8 +96,8 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,onChange,
  let properties:ReactNode;
  if(selected==='subject')properties=<><TextField data-email-wording label="Event subject" required maxLength={250} value={draft.templates[event].subject} disabled={busy} onChange={e=>copyChange('subject',e.target.value)}/>
   {visual&&design&&<><TextField data-email-wording data-email-preheader label="Event preheader" maxLength={200} value={design.event_preheaders?.[event]??''} disabled={busy}
-   onChange={e=>designChange({...design,shared_layout_revision:4,event_preheaders:{...design.event_preheaders,[event]:e.target.value}})}/>
-   <p>Optional inbox summary for this event. Leave empty to omit it. Use one line and up to 200 characters. Editing opts this unsaved draft into layout 4; published mail is unchanged.</p></>}
+   onChange={e=>designChange({...design,shared_layout_revision:design.shared_layout_revision>=4?design.shared_layout_revision:4,event_preheaders:{...design.event_preheaders,[event]:e.target.value}})}/>
+   <p>Optional inbox summary for this event. Use one line and up to 200 characters; leave empty to omit. Published mail is unchanged.</p></>}
  </>;
  else if(selected==='message')properties=<>
   <EmailBodyEditor value={draft.templates[event].body} visual={!!design} disabled={busy}
@@ -108,6 +109,7 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,onChange,
    <label>Paragraph alignment<select value={design.paragraph_alignment??'left'} disabled={busy} onChange={e=>designChange({...design,paragraph_alignment:e.target.value as 'left'|'center'|'right'})}><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select></label>
    <Button type="button" variant="secondary" disabled={busy} onClick={()=>designChange(resetEmailAppearance(design,'message'))}>Reset text appearance</Button>
   </details>}
+  {visual&&<EmailPaletteControls design={design} disabled={busy} onChange={designChange}/>}
   <Button type="button" variant="secondary" disabled={busy||!onRestoreEventCopy} onClick={()=>setRestore(true)}>Restore default wording</Button>
  </>;
  else if(selected==='heading')properties=visual?<><TextField data-email-wording label="Event heading" value={design.event_headings?.[event]??design.heading} required maxLength={250} disabled={busy}
@@ -138,7 +140,7 @@ export function EmailTemplateWorkbench({draft,event,variables,disabled,onChange,
     <Button type="button" variant="secondary" disabled={busy||!history.current.canRedo()} onClick={()=>{const next=history.current.redo(draft);if(next)onChange(next);}}>Redo</Button></div>
   </div>
   {!visual&&<Alert tone="info" title={design?'Enable canvas layout':'Enable visual draft'}><p>Your published version stays unchanged. The new layout adds block selection and event-specific headings without replacing your wording.</p>
-   <Button type="button" variant="secondary" disabled={busy} onClick={()=>designChange(design?{...design,shared_layout_revision:3}:createEmailDesign())}>{design?'Enable canvas editing':'Enable visual draft'}</Button>
+   <Button type="button" variant="secondary" disabled={busy} onClick={()=>designChange(design?{...design,shared_layout_revision:5}:createEmailDesign())}>{design?'Enable canvas editing':'Enable visual draft'}</Button>
   </Alert>}
   {visual&&<EmailPresetPicker value={design} onChange={designChange} disabled={busy} events={Object.keys(draft.templates) as NotificationEvent[]}/>}
   <div className="grant-email-authoring-grid">

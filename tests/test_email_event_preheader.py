@@ -53,6 +53,7 @@ def test_old_artifacts_are_byte_identical():
         1: "96af3f444ca3045e439b10f51c197cc9f44c5125a1f964eb8b3e1f1abea62241",
         2: "7e797fa9b3f30516ee01cb454a7c732750ea3b9bd47c7d2486455439bffd0cf7",
         3: "b0ef2a6895872104538c0872dec51bc01436ecfb3fcac45af6055698d078c35f",
+        4: "b6f460c4bb88150866e5e9977649023e7f6070fe16fee835a72e577dd3847274",
     }.items():
         assert hashlib.sha256(files("grant").joinpath(f"email_layout_v{revision}.json").read_bytes()).hexdigest() == digest
 

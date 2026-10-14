@@ -4,7 +4,7 @@ import {applyEmailPreset,resetEmailAppearance} from '../../src/email_canvas_mode
 
 describe('U2.03 versioned event preheader draft stability',()=>{
  it('normalizes an absent optional map without reinterpreting old layout metadata',()=>{
-  const old=createEmailDesign();expect(old.shared_layout_revision).toBe(3);
+  const old={...createEmailDesign(),shared_layout_revision:3 as const};expect(old.shared_layout_revision).toBe(3);
   expect(designSignature(old)).toBe(designSignature({...old,event_preheaders:{}}));
   expect(old).not.toHaveProperty('event_preheaders');
  });

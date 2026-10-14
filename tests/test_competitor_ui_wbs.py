@@ -24,7 +24,7 @@ def test_current_inventory_and_negative_false_pass_cases():
 def test_all_original_exact_ids_and_wording_are_traceable_not_executed():
     assert CHECKER["validate_crosswalk"](CROSSWALK, WBS_IDS) == {
         "et_checks": 24, "original_user_scenarios": 121, "historical_gap_rows": 9,
-        "structured_findings": 12, "traceability": "PASS", "product_acceptance": False,
+        "structured_findings": 12, "original_ui_audit_rows": 7, "traceability": "PASS", "product_acceptance": False,
     }
     assert CROSSWALK["all_historical_narrative_requirements_reconciled"] is False
 
@@ -32,6 +32,7 @@ def test_all_original_exact_ids_and_wording_are_traceable_not_executed():
 @pytest.mark.parametrize("case", [
     "dropped_et", "duplicate_user", "changed_wording", "unknown_wbs",
     "changed_source_hash", "wrong_source_line", "fake_acceptance", "deferral_removed",
+    "audit_dropped", "audit_changed",
 ])
 def test_crosswalk_rejects_omission_tampering_and_false_acceptance(case):
     changed = copy.deepcopy(CROSSWALK)
@@ -49,6 +50,10 @@ def test_crosswalk_rejects_omission_tampering_and_false_acceptance(case):
         changed["et_checks"][0]["line"] = 1
     elif case == "fake_acceptance":
         changed["product_acceptance"] = True
+    elif case == "audit_dropped":
+        changed["original_ui_audit_rows"].pop()
+    elif case == "audit_changed":
+        changed["original_ui_audit_rows"][0]["source_row_verbatim"] = "Reduced scope"
     else:
         changed["historical_structured_findings"][-1]["disposition"] = "MANDATORY"
     with pytest.raises(ValueError):

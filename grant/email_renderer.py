@@ -15,7 +15,7 @@ from importlib.resources import files
 from urllib.parse import urlsplit
 
 LAYOUT_REGISTRY = {}
-for _revision in (1, 2, 3, 4):
+for _revision in (1, 2, 3, 4, 5):
     _bytes = files("grant").joinpath(f"email_layout_v{_revision}.json").read_bytes()
     LAYOUT_REGISTRY[_revision] = {"sha256": hashlib.sha256(_bytes).hexdigest(),
                                    "layouts": json.loads(_bytes)["layouts"]}
@@ -26,6 +26,14 @@ OUTCOMES = ("APPROVED", "HELD", "DENIED")
 MODES = ("EMAIL_PIN", "EMAIL_PIN_PLUS_OTP", "EMAIL_PIN_PLUS_MFA")
 PREVIEW_ORIGIN = "https://example.invalid/grant-preview/"
 LABELS = {"APPROVED": "Approve", "HELD": "Hold", "DENIED": "Deny"}
+EVENT_LABELS = {
+    "requested": ("Approval requested", "승인 요청"), "reminder": ("Approval reminder", "승인 알림"),
+    "approved": ("Approved", "승인됨"), "denied": ("Denied", "거부됨"),
+    "expired": ("Expired", "만료됨"), "cancelled": ("Cancelled", "취소됨"),
+    "execution_succeeded": ("Execution reported successful", "실행 성공 보고"),
+    "execution_failed": ("Execution reported failed", "실행 실패 보고"),
+    "execution_unknown": ("Execution status unknown", "실행 상태 확인 필요"),
+}
 GUIDANCE = {
     "EMAIL_PIN": "No account login is required. Enter the four-digit email PIN, review the selected decision, then select Confirm.",
     "EMAIL_PIN_PLUS_OTP": "No account login is required. Enter the four-digit email PIN and the additional email OTP, then select Confirm. An additional email OTP is not an independent MFA factor.",
@@ -166,6 +174,21 @@ def compose_email(
                 for slot in ("APPROVE", "HOLD", "DENY")
             ], values["PIN"]]
         segments += [values["DETAILS_LABEL"] + ": " + details, values["FOOTER"]]
+    if design and revision >= 5:
+        if event not in EVENT_LABELS:
+            raise ValueError("Unsupported email event")
+        values["EVENT_LABEL"] = EVENT_LABELS[event][korean]
+        for slot, field in (("PAGE_BG", "page_background"), ("CONTENT_BG", "content_background"),
+                            ("TEXT_COLOR", "body_text"), ("BRAND_COLOR", "brand_text")):
+            values[slot] = design["palette"][field]
+        segments = [values["EVENT_LABEL"], values["TITLE"], body, values["CONTEXT"]]
+        if eligible:
+            segments += [values[slot + "_LABEL"] + ": " + values[slot + "_URL"]
+                         for slot in ("APPROVE", "HOLD", "DENY")]
+        segments += [values["DETAILS_LABEL"] + ": " + details]
+        if eligible:
+            segments += [values["GUIDANCE"], values["PIN"]]
+        segments += [values["FOOTER"]]
     if design and revision >= 4:
         preheader = TOKEN.sub(lambda match: context[match[1]], design["event_preheaders"].get(event, ""))
         if len(preheader) > 2048 or any(ord(c) < 32 or ord(c) == 127 for c in preheader):

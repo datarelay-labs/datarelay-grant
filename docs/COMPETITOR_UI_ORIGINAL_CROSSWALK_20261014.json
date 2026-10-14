@@ -87,6 +87,16 @@
       "line_count": 517,
       "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
       "observed_at": "2026-10-14T03:40:16.634038+00:00"
+    },
+    {
+      "path": "docs/ORIGINAL_EMAIL_UI_AUDIT_20261014.md",
+      "sha256": "abcc34d5f4dbbe1174cdd8bd3fbc76b2d46c60442c4384dc20678204930f813d",
+      "line_count": 32,
+      "access": "PASS_ORIGINAL_GITHUB_COMMENT_READ",
+      "observed_at": "2026-10-14T04:09:06.799182+00:00",
+      "historical_status_not_current": true,
+      "canonical_source": "https://github.com/datarelay-labs/datarelay-grant/issues/37#issuecomment-6159372744",
+      "identical_mirror_source": "https://github.com/datarelay-labs/datarelay-grant/issues/67#issuecomment-6159373603"
     }
   ],
   "et_checks": [
@@ -2687,8 +2697,111 @@
   "all_historical_narrative_requirements_reconciled": false,
   "product_acceptance": false,
   "remaining_reconciliation": [
-    "Original S02 retained UI reanalysis artifact and S03 audit comments must be tied to exact source rows.",
+    "Original S02 retained UI reanalysis artifact remains unlocated: exact-title Files search returned no relevant file; bounded docs/.dev filename search found none. S03 original comments are now pinned and all seven exact audit rows mapped.",
     "Narrative P0-2A..G, UX-A..E, G-CI/B2..B5 and scope overrides must be atomized against U8, not blanket marked complete.",
     "Attach exact current source/test/commit evidence to mapped acceptance rows; no original real-person scenario was run."
+  ],
+  "original_ui_audit_rows": [
+    {
+      "id": "UI-01",
+      "source": "docs/ORIGINAL_EMAIL_UI_AUDIT_20261014.md",
+      "line": 19,
+      "source_row_verbatim": "| UI-01 / ET-3A | Outline, central email canvas and contextual inspector; click heading/body/actions to edit that block only; keyboard equivalent and narrow-screen inspector; selecting an approval button never navigates or approves | notifications.tsx, email_template_design_editor.tsx, email-template-editor.css, in-progress canvas model | Mounted interaction test plus desktop/390px browser evidence; assert selected panel, changed rendering and zero decision/navigation effects |",
+      "wbs": [
+        "U1.01",
+        "U1.02",
+        "U1.03",
+        "U1.04",
+        "U1.06"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_CONTRACT_NOT_EXECUTION",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UI-02",
+      "source": "docs/ORIGINAL_EMAIL_UI_AUDIT_20261014.md",
+      "line": 20,
+      "source_row_verbatim": "| UI-02 / ET-3B | Visual Standard/Compact/High-visibility presets; appearance reset and undo/redo preserve all event copy, locale and protected bindings; correct whole-draft history | email_design.ts, email_canvas_model.ts, editor | RED->GREEN preservation tests plus preset/reset/undo/save/reopen interaction; not only helper constants |",
+      "wbs": [
+        "U2.02",
+        "U2.06",
+        "U2.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_CONTRACT_NOT_EXECUTION",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UI-03",
+      "source": "docs/ORIGINAL_EMAIL_UI_AUDIT_20261014.md",
+      "line": 21,
+      "source_row_verbatim": "| UI-03 / ET-3B | Friendly safe variable labels/examples and insertion at the intended field cursor; visible per-event versus template-set-wide scope | canvas model, editor, notifications.tsx | Field/cursor insertion, event-switch isolation and scope interaction tests; server allowlist remains authoritative |",
+      "wbs": [
+        "U2.04",
+        "U2.05"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_CONTRACT_NOT_EXECUTION",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UI-04",
+      "source": "docs/ORIGINAL_EMAIL_UI_AUDIT_20261014.md",
+      "line": 22,
+      "source_row_verbatim": "| UI-04 / ET-4 | Last valid preview remains during refresh but is visibly stale and cannot serve as current review evidence; long EN/KO/missing-optional samples; block-linked errors; technical diagnostics collapsed | email_live_preview.tsx, notification_preview.tsx | Delayed/out-of-order requests, render failure/recovery and sample-selection interaction; same renderer; no save/issuance/send on preview |",
+      "wbs": [
+        "U4.01",
+        "U4.02",
+        "U4.03",
+        "U4.04",
+        "U4.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_CONTRACT_NOT_EXECUTION",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UI-05",
+      "source": "docs/ORIGINAL_EMAIL_UI_AUDIT_20261014.md",
+      "line": 23,
+      "source_row_verbatim": "| UI-05 / ET-5 | Saved versus published version, before/after changes, authoritative policy impact, history/rollback-as-new-revision, future-request-only effect | notifications.tsx and existing publication/impact APIs | Mounted draft->review->confirm/history workflow with CAS and unchanged old request/outbox snapshots; API existence alone insufficient |",
+      "wbs": [
+        "U5.01",
+        "U5.02",
+        "U5.03",
+        "U5.04",
+        "U5.05",
+        "U5.06",
+        "U5.07"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_CONTRACT_NOT_EXECUTION",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UI-06",
+      "source": "docs/ORIGINAL_EMAIL_UI_AUDIT_20261014.md",
+      "line": 24,
+      "source_row_verbatim": "| UI-06 / ET-3B and ET-5 | Template entry shows useful mail thumbnail, version/draft state and actual policy usage; new templates start from usable presets rather than blank design | notifications.tsx | Inventory/create/reopen journey with real API contracts; no invented policy counts or fake publication state |",
+      "wbs": [
+        "U2.01",
+        "U2.02",
+        "U5.01"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_CONTRACT_NOT_EXECUTION",
+      "acceptance": "NOT_RUN"
+    },
+    {
+      "id": "UI-07",
+      "source": "docs/ORIGINAL_EMAIL_UI_AUDIT_20261014.md",
+      "line": 25,
+      "source_row_verbatim": "| UI-07 / ET-6 | Evidence on the real candidate screen; source/UI and deployed preview are explicitly separate | existing user/browser acceptance contracts | Exact source/build identification, representative desktop/mobile screenshots, action results and persisted readback; authenticated user/mail-client/two-mailbox acceptance only under its actual approved conditions |",
+      "wbs": [
+        "U7.01",
+        "U7.02",
+        "U7.03",
+        "U7.04",
+        "U7.05",
+        "U9.02"
+      ],
+      "disposition": "RETAINED_ORIGINAL_ACCEPTANCE_CONTRACT_NOT_EXECUTION",
+      "acceptance": "NOT_RUN"
+    }
   ]
 }
