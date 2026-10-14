@@ -1,3 +1,11 @@
+<!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 BEGIN -->
+## Current priority and completion truth — competitor UI only
+
+The owner requires exclusive completion of the competitor-derived UI implementation before other work. [Mandatory 10-milestone / 68-task WBS](COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md) and [per-task evidence ledger](COMPETITOR_UI_EVIDENCE_20261014.json) govern current claims. The source lane reached `3c12a12` (canvas-first email authoring and reviewed publication) during this documentation update; retain that implementation and verify the first unfinished WBS behavior/evidence, not rebuild the earlier form editor.
+
+This update registers and validates the plan; it does NOT certify all 68 tasks, deploy the new UI, run real mail/client/user acceptance or release anything. Full historical requirement reconciliation remains OPEN because the original document-read batch was again platform-blocked; original sources and ET-T01–24 / 121 user-case identities are retained, not guessed or waived. Separate source / interaction / dev deployment / acceptance counts; no whole-product percentage until the full denominator is reconciled. Earlier completion headings below describe their historical scope only and do not close this WBS.
+<!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 END -->
+
 ## 2026-10-14 — Email editor source checkpoint (ET-1 through ET-5 partial)
 
 ## Current email editor refinement — 2026-10-14

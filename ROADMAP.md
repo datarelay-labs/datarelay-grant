@@ -1,5 +1,39 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+<!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 BEGIN -->
+## ACTIVE P0 — competitor-derived UI implementation ONLY
+
+**Owner directive 2026-10-14: finish this UI implementation completely before any other work.**
+`PRIORITY=P0_COMPETITOR_UI_ONLY`; `ALLOW_UNRELATED_WORK=false`.
+Canonical detailed execution plan: [10 milestones / 68 registered WBS tasks](docs/COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md).
+Per-task evidence: [UI evidence ledger](docs/COMPETITOR_UI_EVIDENCE_20261014.json).
+Every task states its visible outcome, implementation target, dependencies, verification ID and binary PASS criteria.
+
+| Order | Milestone / deliverable |
+| --- | --- |
+| U0 | Source-to-requirement coverage, canonical priority and evidence discipline; complete historical reconciliation is still OPEN. |
+| U1 | Canvas, outline, contextual inspector, safe selection and mobile/keyboard interaction. |
+| U2 | Inventory, thumbnails, nine-event content, variables, scope, presets/reset and whole-draft history. |
+| U3 | Required mail hierarchy, bounded styling, protected decisions/details and PIN/OTP/MFA guidance. |
+| U4 | Same-render preview, synthetic samples, stale-result safety, actionable errors and diagnostics. |
+| U5 | Draft/published distinction, before/after, authoritative policy impact, CAS, history/rollback and migration. |
+| U6 | Required brand/logo/assets/CID and exact-saved-revision reviewed self-test mail; no silent deferral. |
+| U7 | Exact-source tests/build, mounted tasks, dev visibility, accessibility, actual user/client acceptance. |
+| U8 | Earlier accepted competitor-derived Grant UI gaps; reuse verified prior work and preserve Foundation ownership. |
+| U9 | Zero unmapped accepted requirements, all mandatory evidence, coherent final status and priority-lock exit. |
+
+**Next action:** continue the existing source lane's FIRST UNFINISHED WBS/evidence task at actual current HEAD. Source advanced to `3c12a12` during planning; do not restart completed canvas/publication work or ET-1/2 because older summaries say otherwise. Reconcile its current tests/CI and missing UI outcomes against this WBS, then continue dependency order. No second worker/worktree.
+
+**PASS is not a form field or green unit count.** Track source / mounted interaction / dev deployment / actual acceptance separately. Final completion requires every applicable mandatory gate and zero unmatched historical requirements. Current historical document-read retry was platform-blocked; that coverage remains OPEN, not silently omitted. A blocked required row cannot be counted PASS or unlock unrelated work; select another dependency-ready row INSIDE this scope only.
+
+Foundation common UI stays upstream and unchanged. Preserve G12, Inbox stash and ongoing work. Existing approvals/safety boundaries remain; this priority does not authorize production, secrets/permissions, destructive effects, live SMTP, real external execution, merge or release. Optional ET-7 and unrelated M1–M8/SM work are paused until this scope closes or the owner explicitly changes it.
+
+Document structure was checked: 68 task rows, 10 milestones, 20 family dispositions and 7 audit mappings. Five invalid-completion/missing-evidence cases were rejected by a local checker prototype.
+The checker prototype is NOT SHIPPED: static-style fixes were platform-blocked. It remains uncommitted for normal future reconciliation. Final product completion is OPEN; the per-task evidence and historical-coverage gates above remain mandatory.
+**All older priority/next-action/blanket completion statements below are historical where they conflict with this owner-directed block.**
+<!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 END -->
+
+
 ## P0-ET UI REFINEMENT — owner accepted 2026-10-14; implementation active
 
 Current priority supersedes the old research/renderer-first handoff: **ET-3A canvas

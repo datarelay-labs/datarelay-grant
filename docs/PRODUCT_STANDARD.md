@@ -1,5 +1,14 @@
 # DataRelay Grant Product Standard
 
+<!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 BEGIN -->
+## Mandatory competitor-UI acceptance reference — 2026-10-14
+
+The owner's accepted UI requirements are decomposed in [COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md](COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md), with per-task outcomes, dependencies, verification and PASS gates. Sections 10.10/10.11 and all earlier accepted product behavior remain normative; no accepted requirement may be dropped or reclassified optional without a new explicit owner decision. U0.03/U9.01 must reconcile every retained historical requirement before a no-omission claim.
+
+Grant must complete this exclusive UI scope before unrelated work. Foundation common UI remains Foundation-owned and is not modified here. Source, mounted interaction, development delivery and actual user/mail-client acceptance are distinct evidence levels; API-only or settings-form-only implementations do not satisfy the selected-block editor. Current source contributions are reused, not repeated. Original approval/security invariants and separate high-risk approvals remain unchanged.
+<!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 END -->
+
+
 Version: 1.0 draft
 Accepted product direction: 2026-10-07
 G10A email decision/verification lifecycle direction owner-accepted: 2026-10-08
