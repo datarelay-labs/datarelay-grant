@@ -1,3 +1,14 @@
+**2026-10-15 administrator/requester workflow implementation:** owner visual review
+identified that the product did not explain who configures approval authority versus who
+submits requests. A new P0-AUR lane is active. Source now separates User workspace,
+Approval administration and System administration; adds a Workflow setup landing page;
+expands first-run administrator setup to accounts/groups/integrations/templates/policy/
+activation; and changes New request from internal Approval profile language to Request type
+plus a read-only Assigned approval plan. Targeted unit/SSR regression is **44/44 PASS**. Full Web regression is **743/743 PASS**
+and TypeScript/production build PASS. Native Browser E2E is **46/46 PASS** across six isolated backends.
+Exact-candidate dev-preview redeploy remains pending. The prior
+competitor-UI U9.04 is therefore not accepted/closed by the earlier visual review.
+
 **2026-10-15 operator acceptance continuation:** competitor-UI technical acceptance and coordination reconciliation are complete under the owner-directed WBS §1.1 model. Browser E2E **46/46 PASS**, Canvas **49/49 PASS**, U6.06 exact saved-revision one-shot test-send PASS, real unchanged-candidate Grant SMTP-to-Gmail multipart/DKIM/SPF boundary verified, U7.04-U7.07 PASS, U9.02 acceptance reconciliation PASS, and **U9.03 coordination/readback PASS**. Repository-wide independent-human `FULL_USER_E2E`, direct Outlook/Apple observations, native Control/Stellar acceptance, merge/release and production remain separate and are not claimed. **U9.04 final owner visual acknowledgement is the only remaining competitor-UI lane gate.**
 
 R1 deployment reconciliation remains valid: 52 implementation-qualified rows -> 50 dev-deployment PASS + U7.02/U7.03 N/A. The later owner-directed operator acceptance promotes the applicable competitor-UI acceptance cells without changing R1's deployment-only meaning. See COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md.

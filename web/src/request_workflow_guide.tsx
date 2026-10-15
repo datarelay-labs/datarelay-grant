@@ -8,7 +8,7 @@ export function RequestIntakeSteps({
   policySelected: boolean; detailsEntered: boolean;
 }) {
   const steps = [
-    {number:'01',title:'Choose policy',description:'Select what needs approval.',complete:policySelected,now:!policySelected},
+    {number:'01',title:'Choose request type',description:'Select the administrator-published request type.',complete:policySelected,now:!policySelected},
     {number:'02',title:'Describe action',description:'Enter title and target.',complete:policySelected && detailsEntered,now:policySelected && !detailsEntered},
     {number:'03',title:'Review before creating',description:'Check everything, then confirm.',complete:false,now:policySelected && detailsEntered},
   ];

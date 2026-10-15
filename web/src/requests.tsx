@@ -184,7 +184,7 @@ export function NewRequest({ navigate, predecessorId, isAdmin = false }: { navig
   }
  }
  return <div className="grant-new-request"><Card title="Create an approval request"
-  description="Start with a policy and the target. You can check everything before sending it to an approver.">
+  description="Choose a request type, enter the target, and review the administrator-assigned approval plan before submitting.">
   <RequestIntakeSteps policySelected={Boolean(selected)} detailsEntered={Boolean(title.trim() && target.trim())} />
   {task.feedback}
   {createOutcomeUnknown && (
@@ -193,11 +193,11 @@ export function NewRequest({ navigate, predecessorId, isAdmin = false }: { navig
   {predecessor && <p>Replacement for cancelled request <code>{predecessor.id}</code>.
     A new explicit approval is required.</p>}
   <Form busy={task.busy || createOutcomeUnknown} onSubmit={reviewRequest} label="Review request">
-   <section className="grant-intake-section" aria-label="Choose active approval policy" id="grant-policy-choice">
-    <h3>Step 1 · Choose what needs approval</h3>
-    <p>Pick the policy for this task. Grant automatically finds the assigned reviewers.</p>
-    <Select label="Approval profile" value={profile} onChange={chooseProfile}>
-     <option value="">Select an active approval policy</option>
+   <section className="grant-intake-section" aria-label="Choose active request type" id="grant-policy-choice">
+    <h3>Step 1 · Choose a request type</h3>
+    <p>Pick what you need to request. Grant applies the approvers, notification template, verification and deadline configured by an administrator.</p>
+    <Select label="Request type" value={profile} onChange={chooseProfile}>
+     <option value="">Select a request type</option>
      {availableProfiles.map(p=><option key={p.id} value={p.id}>{p.name} · {p.action_kind}</option>)}
     </Select>
     <RequestPolicyAvailability loaded={Boolean(currentContext)}
@@ -235,7 +235,7 @@ export function NewRequest({ navigate, predecessorId, isAdmin = false }: { navig
    </section>
    <section className="grant-intake-section" aria-label="Review before creating" id="grant-request-review">
     <h3>Step 3 · Review, then confirm</h3>
-    <p className="grant-intake-review-note">Select <strong>Review request</strong> below to check the exact policy, action and target. Review does not submit anything. A separate confirmation appears below the form; read it before selecting <strong>Confirm create request</strong>.</p>
+    <p className="grant-intake-review-note">Select <strong>Review request</strong> below to check the request type, assigned approval plan, action and target. Review does not submit anything. A separate confirmation appears below the form; read it before selecting <strong>Confirm create request</strong>.</p>
    </section>
   </Form>
   {reviewError && <Alert tone="warning" title="Review required">{reviewError}</Alert>}

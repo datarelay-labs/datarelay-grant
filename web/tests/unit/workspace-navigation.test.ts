@@ -36,7 +36,7 @@ describe('Grant PF-8 two-level approval workspace', () => {
     const config = productConfig({ ...baseUser, role: 'admin' });
     const paths = config.navigation.map((item) => item.path);
     expect(paths).toEqual(expect.arrayContaining([
-      '/home', '/approvals', '/my-requests', '/requests', '/delegations',
+      '/home', '/requests/new', '/approvals', '/my-requests', '/requests', '/delegations', '/admin/setup',
       '/profiles', '/approvers', '/notifications', '/integrations',
       '/system', '/operations', '/audit',
     ]));
@@ -48,28 +48,32 @@ describe('Grant PF-8 two-level approval workspace', () => {
 
   it('renders task-first accordion with no duplicated root-level work links', () => {
     const html = renderNavigation(baseUser);
-    expect(html).toContain('data-nav-parent-id="my-work"');
+    expect(html).toContain('data-nav-parent-id="user-workspace"');
     expect(html).toContain('aria-expanded="true"');
     expect(html).toContain('My approvals');
     expect(html).toContain('My requests');
     expect(html).toContain('Delegations');
-    expect(html).toContain('Requests');
+    expect(html).toContain('New request');
+    expect(html).not.toContain('All requests');
     expect(html).toContain('role="group"');
-    expect(html).not.toContain('data-nav-parent-id="configuration"');
-    expect(html).not.toContain('data-nav-parent-id="administration"');
+    expect(html).not.toContain('data-nav-parent-id="approval-administration"');
+    expect(html).not.toContain('data-nav-parent-id="system-administration"');
     expect(html).not.toContain('Approval policies');
     expect(html).not.toContain('Audit explorer');
   });
 
   it('shows admin-only configuration and administration as collapsed parents', () => {
     const html = renderNavigation({ ...baseUser, role: 'admin' });
-    expect(html).toContain('data-nav-parent-id="my-work"');
-    expect(html).toContain('data-nav-parent-id="configuration"');
-    expect(html).toContain('data-nav-parent-id="administration"');
+    expect(html).toContain('data-nav-parent-id="user-workspace"');
+    expect(html).toContain('data-nav-parent-id="approval-administration"');
+    expect(html).toContain('data-nav-parent-id="system-administration"');
     expect(html).toContain('aria-expanded="false"');
     expect(html).toContain('hidden=""');
     expect(html).toContain('Approval policies');
-    expect(html).toContain('Notifications');
+    expect(html).toContain('Workflow setup');
+    expect(html).toContain('Approver groups');
+    expect(html).toContain('Notification templates');
+    expect(html).toContain('All requests');
     expect(html).toContain('Integrations');
     expect(html).toContain('System management');
     expect(html).toContain('Operations');
@@ -78,7 +82,7 @@ describe('Grant PF-8 two-level approval workspace', () => {
 
   it('opens the current admin deep-linked section without changing backend rights', () => {
     const html = renderNavigation({ ...baseUser, role: 'admin' }, '/audit');
-    expect(html).toContain('data-nav-parent-id="administration"');
+    expect(html).toContain('data-nav-parent-id="system-administration"');
     expect(html).toContain('aria-current="page"');
     expect(html).not.toContain('aria-label="System management" disabled=""');
   });

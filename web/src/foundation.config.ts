@@ -68,11 +68,10 @@ export const operationsAdapter: OperationsAdapter = {
 };
 
 // Flat route records continue to power Grant's existing title/router lookup.
- // The Foundation-owned ProductShell projects these shared section references
- // into accessible two-level navigation without changing app.tsx.
-const WORK_SECTION = { id: 'my-work', label: 'My work', icon: 'activity', defaultExpanded: true } as const;
-const CONFIG_SECTION = { id: 'configuration', label: 'Configuration', icon: 'settings' } as const;
-const ADMIN_SECTION = { id: 'administration', label: 'Administration', icon: 'settings' } as const;
+// Foundation projects the sections into role-filtered two-level navigation.
+const USER_SECTION = { id: 'user-workspace', label: 'User workspace', icon: 'activity', defaultExpanded: true } as const;
+const APPROVAL_ADMIN_SECTION = { id: 'approval-administration', label: 'Approval administration', icon: 'settings' } as const;
+const SYSTEM_ADMIN_SECTION = { id: 'system-administration', label: 'System administration', icon: 'settings' } as const;
 
 export function productConfig(user: User) {
   const admin = user.role === 'admin';
@@ -85,54 +84,72 @@ export function productConfig(user: User) {
       homePath: '/home',
     },
     navigation: [
-      { id: 'home', label: 'Home', path: '/home', icon: 'home' },
-      { id: 'approvals', label: 'My approvals', path: '/approvals', icon: 'activity', group: 'Work', section: WORK_SECTION },
-      { id: 'requests', label: 'Requests', path: '/requests', icon: 'home', group: 'Work', section: WORK_SECTION },
-      { id: 'my-requests', label: 'My requests', path: '/my-requests', icon: 'activity', group: 'Work', section: WORK_SECTION },
-      { id: 'delegations', label: 'Delegations', path: '/delegations', icon: 'users', group: 'Work', section: WORK_SECTION },
+      { id: 'home', label: 'Home', path: '/home', icon: 'home', group: 'User workspace', section: USER_SECTION },
+      { id: 'new-request', label: 'New request', path: '/requests/new', icon: 'activity', group: 'User workspace', section: USER_SECTION },
+      { id: 'approvals', label: 'My approvals', path: '/approvals', icon: 'activity', group: 'User workspace', section: USER_SECTION },
+      { id: 'my-requests', label: 'My requests', path: '/my-requests', icon: 'activity', group: 'User workspace', section: USER_SECTION },
+      { id: 'delegations', label: 'Delegations', path: '/delegations', icon: 'users', group: 'User workspace', section: USER_SECTION },
       {
-        id: 'profiles',
-        label: 'Approval policies',
-        path: '/profiles',
+        id: 'workflow-setup',
+        label: 'Workflow setup',
+        path: '/admin/setup',
         icon: 'settings',
-        group: 'Configuration',
-        section: CONFIG_SECTION,
+        group: 'Approval administration',
+        section: APPROVAL_ADMIN_SECTION,
         requiredCapability: 'grant.approval_policy.manage',
       },
       {
         id: 'approvers',
-        label: 'Approvers',
+        label: 'Approver groups',
         path: '/approvers',
         icon: 'settings',
-        group: 'Configuration',
-        section: CONFIG_SECTION,
+        group: 'Approval administration',
+        section: APPROVAL_ADMIN_SECTION,
         requiredCapability: 'grant.approval_policy.manage',
-      },
-      {
-        id: 'notifications',
-        label: 'Notifications',
-        path: '/notifications',
-        icon: 'settings',
-        group: 'Configuration',
-        section: CONFIG_SECTION,
-        requiredCapability: 'grant.notifications.manage',
       },
       {
         id: 'integrations',
         label: 'Integrations',
         path: '/integrations',
         icon: 'settings',
-        group: 'Configuration',
-        section: CONFIG_SECTION,
+        group: 'Approval administration',
+        section: APPROVAL_ADMIN_SECTION,
         requiredCapability: 'grant.integrations.manage',
+      },
+      {
+        id: 'notifications',
+        label: 'Notification templates',
+        path: '/notifications',
+        icon: 'settings',
+        group: 'Approval administration',
+        section: APPROVAL_ADMIN_SECTION,
+        requiredCapability: 'grant.notifications.manage',
+      },
+      {
+        id: 'profiles',
+        label: 'Approval policies',
+        path: '/profiles',
+        icon: 'settings',
+        group: 'Approval administration',
+        section: APPROVAL_ADMIN_SECTION,
+        requiredCapability: 'grant.approval_policy.manage',
+      },
+      {
+        id: 'requests',
+        label: 'All requests',
+        path: '/requests',
+        icon: 'activity',
+        group: 'Approval administration',
+        section: APPROVAL_ADMIN_SECTION,
+        requiredCapability: 'grant.requests.admin',
       },
       {
         id: 'operations',
         label: 'Operations',
         path: '/operations',
         icon: 'activity',
-        group: 'Administration',
-        section: ADMIN_SECTION,
+        group: 'System administration',
+        section: SYSTEM_ADMIN_SECTION,
         requiredCapability: 'health.read',
       },
       {
@@ -140,8 +157,8 @@ export function productConfig(user: User) {
         label: 'Audit explorer',
         path: '/audit',
         icon: 'activity',
-        group: 'Administration',
-        section: ADMIN_SECTION,
+        group: 'System administration',
+        section: SYSTEM_ADMIN_SECTION,
         requiredCapability: 'audit.read',
       },
       {
@@ -149,13 +166,14 @@ export function productConfig(user: User) {
         label: 'System management',
         path: '/system',
         icon: 'settings',
-        group: 'Administration',
-        section: ADMIN_SECTION,
+        group: 'System administration',
+        section: SYSTEM_ADMIN_SECTION,
         requiredCapability: 'health.read',
       },
     ],
     capabilities: {
       'grant.integrations.manage': admin,
+      'grant.requests.admin': admin,
       'grant.approval_policy.manage': admin,
       'grant.notifications.manage': admin,
       'grant.smtp.test': admin ? 'supported' : 'unavailable',

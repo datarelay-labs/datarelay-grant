@@ -1,5 +1,29 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## ACTIVE P0-AUR — administrator/requester workflow separation (owner 2026-10-15)
+
+The owner rejected the prior ambiguous mixed navigation after live visual review and
+accepted a two-plane product model: administrators configure reusable approval authority;
+requesters consume the published configuration. This explicit owner requirement
+supersedes the prior U9.04-only waiting state and reopens product UX implementation.
+
+Canonical design/WBS: [ADMIN_REQUESTER_WORKFLOW_ARCHITECTURE_20261015.md](docs/ADMIN_REQUESTER_WORKFLOW_ARCHITECTURE_20261015.md).
+
+Current implementation batch:
+- User workspace: Home, New request, My approvals, My requests, Delegations.
+- Approval administration: Workflow setup, Approver groups, Integrations,
+  Notification templates, Approval policies, All requests.
+- System administration remains a separate administrator lane.
+- Administrator first-run guidance now covers Accounts -> Groups -> Integrations ->
+  Notification templates -> Draft policy -> Test/Activate -> first request.
+- Requester New request uses Request type and a read-only Assigned approval plan;
+  approver/template/verification/deadline remain administrator-owned.
+- Targeted RED -> GREEN regression: 44/44 PASS.
+- Full Web regression: 743/743 PASS; TypeScript and production build PASS.
+- Native Browser E2E: 46/46 PASS across six isolated backends.
+- Exact-candidate development-preview redeploy and owner visual review remain the next gates.
+- Foundation common UI is unchanged. No merge/release/production authority is implied.
+
 **2026-10-15 operator acceptance continuation:** competitor-UI technical acceptance and coordination reconciliation are complete. Mounted Browser E2E is **46/46 PASS** across six isolated product backends; Canvas qualification is **49/49 PASS**. U6.06 exact saved-revision Review -> Confirm one-shot test-send PASS is composed with separately verified unchanged-candidate Grant SMTP-to-Gmail multipart transport/DKIM/SPF evidence. U7.04-U7.07 PASS under WBS §1.1. U9.01/U9.02/U9.03 PASS. **Only U9.04 owner visual acknowledgement remains** before this competitor-UI priority lock may be removed. Repository-wide independent-human `FULL_USER_E2E`, direct Outlook/Apple client observation, native Control/Stellar acceptance, merge/release and production remain separate and are not claimed.
 
 <!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 BEGIN -->

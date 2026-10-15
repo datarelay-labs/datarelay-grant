@@ -8,6 +8,7 @@ import {
   ThemeRoot,
 } from '@datarelay-labs/foundation';
 import { Administration, Security } from './administration';
+import { AdminWorkflowSetup } from './admin_workflow_setup';
 import { GrantAuthFrame } from './grant_auth_frame';
 import { AuditExplorer } from './audit_explorer';
 import { Approvers } from './approvers';
@@ -188,6 +189,8 @@ function AuthenticatedGrantApp() {
     page = <Delegations user={user} />;
   } else if (path === '/security') {
     page = <Security user={user} onSignedOut={signedOut} onRefresh={refresh} />;
+  } else if (user.role === 'admin' && path === '/admin/setup') {
+    page = <AdminWorkflowSetup navigate={navigate} />;
   } else if (user.role === 'admin' && path === '/operations') {
     page = <Operations navigate={navigate} />;
   } else if (user.role === 'admin' && /^\/operations\/queue\/[a-z_]+$/.test(path)

@@ -77,6 +77,37 @@ Grant competes on **approval-to-execution integrity**, not on workflow-canvas br
 10. **Operational exceptions are first-class.** Overdue approvals, failed delivery,
     unused approvals, UNKNOWN execution, and failed execution must be visible.
 
+## 3.1 Administrator configuration and requester consumption
+
+Grant separates reusable administrator configuration from ordinary user work.
+
+Administrators own:
+- local user/approver accounts and registered email identities;
+- approver groups and routing topology;
+- integrations and controlled action families;
+- notification template sets;
+- approval policies, verification requirements, deadlines and grant validity;
+- policy testing and explicit activation.
+
+Requesters consume an ACTIVE administrator-published request type. They provide only
+request-specific data allowed by that type. The requester MAY review the effective
+approval plan, but MUST NOT be given ordinary request-creation controls that rewrite
+the assigned approver/group, notification template, verification floor, deadline or
+execution-grant policy.
+
+The canonical requester flow is:
+
+Request type -> request details -> read-only assigned approval plan -> Review -> Confirm.
+
+The canonical administrator flow is:
+
+Accounts -> Approver groups -> Integrations -> Notification templates ->
+Draft approval policy -> Test -> Activate.
+
+An administrator may later define a narrowly scoped policy that permits requester
+choice from an allowlisted approver set, but that is explicit policy behavior and
+must not become an unrestricted default.
+
 ## 4. Canonical object model
 
 ### 4.1 ApprovalPolicy
@@ -925,29 +956,35 @@ preserve focus/keyboard behavior.
 Canonical primary navigation:
 
 ~~~text
-Home
-
-Work
+User workspace
+├── Home
+├── New request
 ├── My approvals
-└── Requests
+├── My requests
+└── Delegations
 
-Configuration
-├── Approval policies
-├── Notifications
+Approval administration          # administrator only
+├── Workflow setup
+├── Approver groups
 ├── Integrations
-└── Approvers          # appears when G3/G4 capabilities exist
+├── Notification templates
+├── Approval policies
+└── All requests
 
-Administration
-└── Administration
+System administration            # administrator only
+├── Operations
+├── Audit explorer
+└── System management
 
 Signed-in user
 └── Account & Security
 ~~~
 
-Primary navigation represents user goals, not every configuration object. Account
-security, theme and sign-out live with the signed-in user in the Foundation shell.
-New request is a primary action from Home/Requests rather than a permanent sidebar
-destination.
+User workspace represents day-to-day requester/approver goals. Approval administration
+contains reusable configuration owned by administrators. System administration contains
+platform/operations controls. Account security, theme and sign-out remain with the
+signed-in user in the Foundation shell. New request is a permanent user-workspace task
+because selecting a published Request type is now the canonical start of requester work.
 
 Canonical Administration content remains task-oriented:
 

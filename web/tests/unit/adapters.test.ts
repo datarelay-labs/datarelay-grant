@@ -53,13 +53,14 @@ describe('Foundation consumer contracts',()=>{
  it('admin navigation follows the task-oriented Foundation information architecture',()=>{
   const admin={...user,role:'admin' as const};const config=productConfig(admin);
   expect(config.product.homePath).toBe('/home');
-  expect(config.navigation.map(item=>item.path)).toEqual(expect.arrayContaining(['/home','/approvals','/requests','/profiles','/notifications','/integrations','/system']));
-  expect(config.navigation.find(item=>item.path==='/approvals')?.group).toBe('Work');
-  expect(config.navigation.find(item=>item.path==='/profiles')?.group).toBe('Configuration');
-  expect(config.navigation.find(item=>item.path==='/notifications')?.group).toBe('Configuration');
+  expect(config.navigation.map(item=>item.path)).toEqual(expect.arrayContaining(['/home','/requests/new','/approvals','/requests','/admin/setup','/profiles','/notifications','/integrations','/system']));
+  expect(config.navigation.find(item=>item.path==='/approvals')?.group).toBe('User workspace');
+  expect(config.navigation.find(item=>item.path==='/profiles')?.group).toBe('Approval administration');
+  expect(config.navigation.find(item=>item.path==='/notifications')?.group).toBe('Approval administration');
   expect(config.navigation.find(item=>item.path==='/system')?.label).toBe('System management');
   expect(config.navigation.find(item=>item.path==='/security')).toBeUndefined();
   expect(config.navigation.find(item=>item.path==='/email-templates')).toBeUndefined();
+  expect(config.capabilities['grant.requests.admin']).toBe(true);
   expect(config.capabilities['users.manage']).toBe('supported');
  });
 });

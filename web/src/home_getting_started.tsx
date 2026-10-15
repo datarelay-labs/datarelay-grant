@@ -16,7 +16,7 @@ export function HomeGettingStarted({
   const choices = [
     {
       number: '01',symbol: '+',title: 'Create approval request',
-      description: 'Choose a policy, name the target, and send it for review.',
+      description: 'Choose a request type, enter the target, and use the administrator-assigned approval plan.',
       action: 'Start a request',destination: '/requests/new',
       detail: 'No operation runs when you create a request.',
     },
@@ -45,8 +45,8 @@ export function HomeGettingStarted({
       </div>
       {user.role === 'admin' &&
         <button type="button" className="grant-guided-admin-link"
-          onClick={() => navigate('/profiles')}>
-          Administrator? Set up approval policies <span aria-hidden="true">→</span>
+          onClick={() => navigate('/admin/setup')}>
+          Administrator? Open workflow setup <span aria-hidden="true">→</span>
         </button>}
     </div>
     <div className="grant-guided-cards">

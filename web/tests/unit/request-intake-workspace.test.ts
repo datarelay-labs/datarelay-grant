@@ -61,8 +61,8 @@ describe('P0 competitor-derived task-first New Request workspace', () => {
 
   it('provides a policy-choice empty state, without fabricating a default approver', () => {
     const html = markup(null);
-    expect(html).toContain('Selected approval policy');
-    expect(html).toContain('Choose an active policy');
+    expect(html).toContain('Assigned approval plan');
+    expect(html).toContain('Choose a request type');
     expect(html).not.toContain('one approver');
     expect(html).not.toContain('Policy is approved');
   });
@@ -72,8 +72,10 @@ describe('P0 competitor-derived task-first New Request workspace', () => {
     for (const word of [
       'Production Deployment', 'service.deploy', 'N_OF_M', '2 required',
       '3600 seconds', '1800 seconds', 'EMAIL_PIN_PLUS_MFA',
-      'Active version 7', 'Integration reference',
+      'Published request type', 'Policy version</dt><dd>7', 'Integration reference',
     ]) expect(html).toContain(word);
+    expect(html).toContain('Administrator-assigned group');
+    expect(html).toContain('System default notification');
     expect(html).toContain('<details');
     expect(html).not.toContain('Execute</button>');
     expect(html).not.toContain('Approve</button>');
@@ -92,8 +94,8 @@ describe('P0 competitor-derived task-first New Request workspace', () => {
 
   it('does not claim disabled policy is request-eligible', () => {
     const html = markup({ ...active, enabled: false });
-    expect(html).toContain('Policy unavailable');
-    expect(html).not.toContain('Active version 7');
+    expect(html).toContain('Request type unavailable');
+    expect(html).not.toContain('Published request type');
   });
 
   it('escapes untrusted policy names, references, and operation in the visible context', () => {
@@ -111,7 +113,7 @@ describe('P0 competitor-derived task-first New Request workspace', () => {
     const html = renderToStaticMarkup(createElement(NewRequest, {
       navigate: () => undefined,
     }));
-    expect(html).toContain('Step 1 · Choose what needs approval');
+    expect(html).toContain('Step 1 · Choose a request type');
     expect(html).toContain('Step 2 · Tell the reviewer what you need');
     expect(html).toContain('Step 3 · Review, then confirm');
     expect(html).toContain('Request creation progress');
@@ -138,7 +140,7 @@ describe('First-time New Request availability guidance', () => {
     const html = renderToStaticMarkup(createElement(RequestPolicyAvailability, {
       loaded: false, hasAvailablePolicies: false, isAdmin: false, onManagePolicies: () => undefined,
     }));
-    expect(html).toContain('Loading approval policies');
+    expect(html).toContain('Loading request types');
     expect(html).not.toContain('No active approval policy');
   });
 
@@ -146,7 +148,7 @@ describe('First-time New Request availability guidance', () => {
     const html = renderToStaticMarkup(createElement(RequestPolicyAvailability, {
       loaded: true, hasAvailablePolicies: false, isAdmin: true, onManagePolicies: () => undefined,
     }));
-    expect(html).toContain('No active approval policy');
+    expect(html).toContain('No active request type');
     expect(html).toContain('Open Approval Policies');
     expect(html).not.toContain('Automatically activate');
   });
@@ -167,7 +169,7 @@ describe('First-time New Request availability guidance', () => {
     const html = renderToStaticMarkup(createElement(NewRequest, {
       navigate: () => undefined, isAdmin: true,
     }));
-    expect(html).toContain('Loading approval policies');
+    expect(html).toContain('Loading request types');
     expect(html).not.toContain('Open Approval Policies');
     expect(html).not.toContain('Activate policy');
   });

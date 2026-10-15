@@ -32,7 +32,7 @@ describe('Guided Grant workflow for a first-time user',()=>{
  it('makes active policy then essential fields then explicit review distinguishable',()=>{
   const html=renderToStaticMarkup(createElement(RequestIntakeSteps,{policySelected:true,detailsEntered:false}));
   expect(html).toContain('Request creation progress');
-  expect(html).toContain('Choose policy');
+  expect(html).toContain('Choose request type');
   expect(html).toContain('Describe action');
   expect(html).toContain('Review before creating');
   expect(html).not.toContain('Auto approve');

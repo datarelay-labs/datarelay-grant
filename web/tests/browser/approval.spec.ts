@@ -2,7 +2,7 @@ import {test,expect,type Page} from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 const fixture=()=>JSON.parse(fs.readFileSync(path.resolve('../.e2e/fixture.json'),'utf8'));
-async function login(page:Page,name:string){await page.goto('/requests');await page.getByLabel('Username',{exact:true}).fill(name);await page.getByLabel('Password',{exact:true}).fill(fixture().password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByRole('heading',{name:'Requests',exact:true})).toBeVisible();}
+async function login(page:Page,name:string){await page.goto('/home');await page.getByLabel('Username',{exact:true}).fill(name);await page.getByLabel('Password',{exact:true}).fill(fixture().password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();}
 
 // Only test-only isolated SMTP MIME is decoded here. Long capability URLs
 // are quoted-printable-folded by Python's real mail transport.
@@ -23,8 +23,8 @@ test('P0-2C task-first activity stays collapsed, keyboard accessible and does no
   const rp = await requester.newPage();
   const ap = await approver.newPage();
   await login(rp,'requester');
-  await rp.getByRole('button',{name:'New request',exact:true}).click();
-  await rp.getByLabel('Approval profile',{exact:true}).selectOption(f.profile_id);
+  await rp.locator('#dr-main-content').getByRole('button',{name:'New request',exact:true}).click();
+  await rp.getByLabel('Request type',{exact:true}).selectOption(f.profile_id);
   await rp.getByLabel('Request title',{exact:true}).fill('Decision-first activity regression');
   await rp.getByLabel('Target',{exact:true}).fill('isolated-test-target');
   await rp.getByLabel('Reason',{exact:true}).fill('Synthetic role-scoped UI disclosure test');
@@ -63,8 +63,8 @@ for(const pass of [1,2]){
   const rp=await requester.newPage(),ap=await approver.newPage(),sp=await stranger.newPage();
   const errors:string[]=[];for(const p of [rp,ap,sp])p.on('pageerror',e=>errors.push(e.message));
   await login(rp,'requester');await login(ap,'approver');await login(sp,'stranger');
-  await rp.getByRole('button',{name:'New request',exact:true}).click();
-  await rp.getByLabel('Approval profile',{exact:true}).selectOption(f.profile_id);
+  await rp.locator('#dr-main-content').getByRole('button',{name:'New request',exact:true}).click();
+  await rp.getByLabel('Request type',{exact:true}).selectOption(f.profile_id);
   await rp.getByLabel('Request title',{exact:true}).fill('Browser request '+pass);
   await rp.getByLabel('Target',{exact:true}).fill('isolated-test-target');
   await rp.getByLabel('Reason',{exact:true}).fill('Two-user end-to-end verification; no external production action.');
@@ -112,7 +112,7 @@ test('Foundation login and grouped Grant shell follow the DataRelay family layou
  const context=await browser.newContext({viewport:{width:1280,height:800}});const page=await context.newPage();
  await page.goto('/home');await expect(page.locator('.dr-auth-layout')).toBeVisible();await expect(page.getByRole('heading',{name:'Welcome to DataRelay',exact:true})).toBeVisible();await expect(page.getByText('Please sign in to continue.',{exact:true})).toBeVisible();
  await page.getByLabel('Username',{exact:true}).fill('admin');await page.getByLabel('Password',{exact:true}).fill(fixture().password);await page.getByRole('button',{name:'Sign in',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'My work',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Configuration',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Good to see you, admin',exact:true})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'User workspace',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Approval administration',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Good to see you, admin',exact:true})).toBeVisible();
  await context.close();
 });
 
@@ -235,8 +235,8 @@ test('G9 v2 imports explicitly mapped settings as disabled Drafts via the real a
 
 test('requester cancels and creates a newly approved replacement through the UI',async({browser,request})=>{
  const f=fixture();const context=await browser.newContext();const page=await context.newPage();
- await login(page,'requester');await page.getByRole('button',{name:'New request',exact:true}).click();
- await page.getByLabel('Approval profile',{exact:true}).selectOption(f.profile_id);
+ await login(page,'requester');await page.locator('#dr-main-content').getByRole('button',{name:'New request',exact:true}).click();
+ await page.getByLabel('Request type',{exact:true}).selectOption(f.profile_id);
  await page.getByLabel('Request title',{exact:true}).fill('Replace cancelled operation');
  await page.getByLabel('Target',{exact:true}).fill('old-test-target');
  await page.getByRole('button',{name:'Review request',exact:true}).click();
@@ -474,8 +474,8 @@ test('G5 two-user request for information pauses approval until response',async(
  const requester=await browser.newContext(),approver=await browser.newContext();
  const rp=await requester.newPage(),ap=await approver.newPage();
  await login(rp,'requester');await login(ap,'approver');
- await rp.getByRole('button',{name:'New request',exact:true}).click();
- await rp.getByLabel('Approval profile',{exact:true}).selectOption(f.profile_id);
+ await rp.locator('#dr-main-content').getByRole('button',{name:'New request',exact:true}).click();
+ await rp.getByLabel('Request type',{exact:true}).selectOption(f.profile_id);
  await rp.getByLabel('Request title',{exact:true}).fill('G5 collaboration browser request');
  await rp.getByLabel('Target',{exact:true}).fill('isolated-target-for-info');
  await rp.getByRole('button',{name:'Review request',exact:true}).click();
@@ -628,7 +628,7 @@ test('G1 browser policy selectors create a matching request and keep latest draf
 
  await login(rp,'requester');
  await rp.goto('/requests/new');
- await rp.getByLabel('Approval profile',{exact:true}).selectOption(policy.id);
+ await rp.getByLabel('Request type',{exact:true}).selectOption(policy.id);
  for(const [field,value] of [
    ['Source tenant','finance'],
    ['Environment','production'],
@@ -943,13 +943,13 @@ test('U8.01 role-guided Home routes requester approver and administrator to the 
    await expect(page.getByRole('button').filter({hasText:'Track my requests'})).toBeVisible();
    if(role==='requester'){
     await page.getByRole('button').filter({hasText:'Create approval request'}).click();
-    await expect(page).toHaveURL(/\/requests\/new$/);await expect(page.getByText('Step 1 · Choose what needs approval',{exact:true})).toBeVisible();
+    await expect(page).toHaveURL(/\/requests\/new$/);await expect(page.getByText('Step 1 · Choose a request type',{exact:true})).toBeVisible();
    }else if(role==='approver'){
     await page.getByRole('button').filter({hasText:'Review assigned work'}).click();
     await expect(page).toHaveURL(/\/approvals$/);await expect(page.getByLabel('Work view',{exact:true})).toHaveValue('needs');
    }else{
-    const setup=page.getByRole('button',{name:/Administrator\? Set up approval policies/});await expect(setup).toBeVisible();await setup.click();
-    await expect(page).toHaveURL(/\/profiles$/);await expect(page.locator('#grant-policies-title')).toHaveText('Approval policies');
+    const setup=page.getByRole('button',{name:/Administrator\? Open workflow setup/});await expect(setup).toBeVisible();await setup.click();
+    await expect(page).toHaveURL(/\/admin\/setup$/);await expect(page.getByRole('heading',{name:'Configure once, reuse on every request'})).toBeVisible();
    }
   }finally{await context.close();}
  }
@@ -961,10 +961,10 @@ test('U8.05 administrator first-run guide resolves real setup routes and never s
   await login(page,'admin');await page.goto('/profiles');
   const guide=page.locator('section.grant-admin-setup');
   await expect(guide.getByRole('heading',{name:'Set up your first approval workflow',exact:true})).toBeVisible();
-  await expect(guide).toContainText('not a verified connection');await expect(guide).toContainText('drafts do not authorize requests');
+  await expect(guide).toContainText('not a verified connection');await expect(guide).toContainText('bind request type, routing and notifications');await expect(guide).toContainText('activation requires separate confirmation');
   await guide.getByRole('link',{name:/Open integrations/}).click();await expect(page).toHaveURL(/\/integrations$/);
   await page.goto('/profiles');await expect(page.locator('section.grant-admin-setup')).toBeVisible();
-  await page.locator('section.grant-admin-setup').getByRole('link',{name:/Manage approvers/}).click();await expect(page).toHaveURL(/\/approvers$/);
+  await page.locator('section.grant-admin-setup').getByRole('link',{name:/Manage approver groups/}).click();await expect(page).toHaveURL(/\/approvers$/);
   await page.goto('/profiles');const current=page.locator('section.grant-admin-setup');
   const create=current.getByRole('button',{name:/Create draft policy/});await expect(create).toBeEnabled();await create.click();
   await expect(page.getByRole('heading',{name:'New policy',exact:true})).toBeVisible();
@@ -996,7 +996,7 @@ test('B1 approver Inbox task-first mobile 320/375 and keyboard queue controls',a
    await login(page,'approver');
    // RC41 quick navigation must not squeeze the real page H1 offscreen,
    // and a member cannot search pages requiring administrator capability.
-   await expect(page.getByRole('heading',{name:'Requests',exact:true})).toBeVisible();
+   await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();
    await page.getByRole('button',{name:'Search product navigation'}).click();
    const quickSearch=page.getByRole('search',{name:'Product navigation search'});
    await expect(quickSearch).toBeVisible();
@@ -1480,8 +1480,8 @@ test('P0-2D role-scoped RequestDetail deadline truth and separate human confirm'
     const rp = await requester.newPage();
     const ap = await approver.newPage();
     await login(rp, 'requester');
-    await rp.getByRole('button', {name: 'New request', exact: true}).click();
-    await rp.getByLabel('Approval profile', {exact: true}).selectOption(fixture().profile_id);
+    await rp.locator('#dr-main-content').getByRole('button', {name: 'New request', exact: true}).click();
+    await rp.getByLabel('Request type', {exact: true}).selectOption(fixture().profile_id);
     await rp.getByLabel('Request title', {exact: true}).fill('P0-2D deadline review parity');
     await rp.getByLabel('Target', {exact: true}).fill('isolated-review-deadline');
     await rp.getByRole('button', {name: 'Review request', exact: true}).click();
@@ -1518,8 +1518,8 @@ test('P0-2E approved grant scope differs from requested action and external exec
     rp.on('pageerror',(error)=>errors.push(error.message));
     ap.on('pageerror',(error)=>errors.push(error.message));
     await login(rp,'requester');
-    await rp.getByRole('button',{name:'New request',exact:true}).click();
-    await rp.getByLabel('Approval profile',{exact:true}).selectOption(fixture().profile_id);
+    await rp.locator('#dr-main-content').getByRole('button',{name:'New request',exact:true}).click();
+    await rp.getByLabel('Request type',{exact:true}).selectOption(fixture().profile_id);
     await rp.getByLabel('Request title',{exact:true}).fill('P0-2E grant scope preview');
     await rp.getByLabel('Target',{exact:true}).fill('isolated-grant-scope-target');
     await rp.getByRole('button',{name:'Review request',exact:true}).click();
@@ -1570,8 +1570,8 @@ test('P0-2B issued email link opens no-login PIN, explicit Confirm, then rejects
   const errors:string[]=[];
   page.on('pageerror',e=>errors.push(e.message));
   await login(rp,'requester');
-  await rp.getByRole('button',{name:'New request',exact:true}).click();
-  await rp.getByLabel('Approval profile',{exact:true}).selectOption(f.profile_id);
+  await rp.locator('#dr-main-content').getByRole('button',{name:'New request',exact:true}).click();
+  await rp.getByLabel('Request type',{exact:true}).selectOption(f.profile_id);
   const title='P0-2B issued-link human decision '+crypto.randomUUID().slice(0,8);
   const target='isolated-mail-approval-target';
   await rp.getByLabel('Request title',{exact:true}).fill(title);
@@ -1676,8 +1676,8 @@ test('P0-2B issued Deny link requires same-mailbox OTP and explicit reason/Confi
  try{
   const rp=await requester.newPage(),page=await reader.newPage();
   await login(rp,'requester');
-  await rp.getByRole('button',{name:'New request',exact:true}).click();
-  await rp.getByLabel('Approval profile',{exact:true}).selectOption(f.otp_profile_id);
+  await rp.locator('#dr-main-content').getByRole('button',{name:'New request',exact:true}).click();
+  await rp.getByLabel('Request type',{exact:true}).selectOption(f.otp_profile_id);
   const title='P0-2B OTP Deny requirement '+crypto.randomUUID().slice(0,8);
   await rp.getByLabel('Request title',{exact:true}).fill(title);
   await rp.getByLabel('Target',{exact:true}).fill('fixture-otp-only-target');
