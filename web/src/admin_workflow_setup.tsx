@@ -47,6 +47,13 @@ const ADMIN_STEPS = [
     action: 'Test and activate policies',
     destination: '/profiles',
   },
+  {
+    number: '07',
+    title: 'Create the first request',
+    description: 'Use an active request type. The requester sees the assigned approval plan as read-only.',
+    action: 'Open New request',
+    destination: '/requests/new',
+  },
 ] as const;
 
 export function AdminWorkflowSetup({ navigate }: { navigate: Navigate }) {
