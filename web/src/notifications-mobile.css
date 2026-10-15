@@ -91,4 +91,14 @@
     flex: 1 1 auto;
     min-width: 0;
   }
+
+  .grant-notification-template-directory-card > .dr-card__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grant-notification-template-directory-card > .dr-card__header > .dr-card__actions,
+  .grant-notification-template-directory-card > .dr-card__header > .dr-card__actions > .dr-button {
+    width: 100%;
+  }
 }

@@ -310,7 +310,8 @@ export function RequestList({
     {listError&&<Alert tone="critical" title="Unable to refresh current worklist">
       {listError}
     </Alert>}
-    <Card title={heading} description="Search and filters apply to all role-visible records on the server, before pagination. Decisions, notifications and execution remain separate."
+    <Card className="grant-request-list-card"
+      title={heading} description="Search and filters apply to all role-visible records on the server, before pagination. Decisions, notifications and execution remain separate."
       actions={<div className="grant-actions">
         {nextAssigned && <Button onClick={() => navigate('/requests/' + nextAssigned.id)}>
           Review next assigned request

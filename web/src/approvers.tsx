@@ -72,6 +72,7 @@ export function ApproverGroupDirectory({
   const matches=loaded?filterApproverGroups(groups,search,view,accounts):[];
   return (
     <Card
+      className="grant-approver-groups-directory-card"
       title="Approver groups"
       description="Review group membership before editing. Reusable groups support any-one, all, quorum and sequential approval policies."
       actions={<Button disabled={busy} onClick={onCreate}>Create approver group</Button>}

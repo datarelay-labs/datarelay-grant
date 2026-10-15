@@ -938,6 +938,7 @@ export function Notifications() {
 
       {view === 'templates' && templateView === 'list' ? (
         <Card
+          className="grant-notification-template-directory-card"
           title="Email Templates"
           description="Each set owns the complete Grant 1.0 event family. Existing requests keep their original snapshot."
           actions={<Button disabled={!templatesLoaded || task.busy} onClick={startCreate}>Create email template</Button>}

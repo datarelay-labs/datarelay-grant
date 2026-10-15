@@ -39,6 +39,7 @@ export function IntegrationConnectionDirectory({
   const matches = listIntegrationConnections(rows, search);
   return (
     <Card
+      className="grant-integration-directory-card"
       title="Registered connections"
       description="Examine installation-approved receivers and decision verification before explicitly reviewing an external diagnostic."
       actions={<Button disabled={busy} onClick={onOpenCreation}>Add connection</Button>}

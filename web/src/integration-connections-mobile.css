@@ -74,4 +74,14 @@
   }
 
   .grant-connection-mobile-card code { word-break: break-word; overflow-wrap: anywhere; }
+
+  .grant-integration-directory-card > .dr-card__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grant-integration-directory-card > .dr-card__header > .dr-card__actions,
+  .grant-integration-directory-card > .dr-card__header > .dr-card__actions > .dr-button {
+    width: 100%;
+  }
 }

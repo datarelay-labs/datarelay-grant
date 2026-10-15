@@ -998,6 +998,41 @@ test('AUR-2.6 direct User Management landing preserves mobile shell context',asy
  }finally{await context.close();}
 });
 
+test('AUR request inbox card headers stay readable on 390px mobile',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:390,height:844}});
+ const page=await context.newPage();
+ try{
+  await login(page,'admin');
+  for(const route of ['/requests','/approvals']){
+   await page.goto(route);
+   const card=page.locator('.dr-card').first();
+   const heading=card.locator('.dr-card__heading');
+   const description=card.locator('.dr-card__description');
+   const actions=card.locator('.dr-card__actions');
+   await expect(heading).toBeVisible();
+   await expect(description).toBeVisible();
+   await expect(actions).toBeVisible();
+   const geometry=await page.evaluate(()=>{
+    const card=document.querySelector('.dr-card')!;
+    const heading=card.querySelector('.dr-card__heading')!.getBoundingClientRect();
+    const description=card.querySelector('.dr-card__description')!.getBoundingClientRect();
+    const actions=card.querySelector('.dr-card__actions')!.getBoundingClientRect();
+    return {
+     headingWidth:heading.width,
+     descriptionWidth:description.width,
+     headingBottom:heading.bottom,
+     actionsTop:actions.top,
+     overflow:document.documentElement.scrollWidth>innerWidth,
+    };
+   });
+   expect(geometry.headingWidth).toBeGreaterThan(250);
+   expect(geometry.descriptionWidth).toBeGreaterThan(250);
+   expect(geometry.actionsTop).toBeGreaterThanOrEqual(geometry.headingBottom);
+   expect(geometry.overflow).toBeFalsy();
+  }
+ }finally{await context.close();}
+});
+
 // B1 responsive/keyboard SOURCE qualification on loopback disposable fixture.
 // Two viewport sizes are tested; this is not two independent real people.
 test('B1 approver Inbox task-first mobile 320/375 and keyboard queue controls',async({browser})=>{

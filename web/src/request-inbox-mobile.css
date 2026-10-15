@@ -91,3 +91,23 @@
     min-width: 0;
   }
 }
+
+
+@media (max-width: 600px) {
+  .grant-request-list-card > .dr-card__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--dr-space-3);
+  }
+
+  .grant-request-list-card > .dr-card__header > .dr-card__heading,
+  .grant-request-list-card > .dr-card__header > .dr-card__actions {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .grant-request-list-card > .dr-card__header > .dr-card__actions .grant-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

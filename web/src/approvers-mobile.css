@@ -81,6 +81,16 @@
     width: 100%;
     min-width: 0;
   }
+
+  .grant-approver-groups-directory-card > .dr-card__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grant-approver-groups-directory-card > .dr-card__header > .dr-card__actions,
+  .grant-approver-groups-directory-card > .dr-card__header > .dr-card__actions > .dr-button {
+    width: 100%;
+  }
 }
 
 /* Product-owned list/detail focus targets; native Focus-visible preserves
