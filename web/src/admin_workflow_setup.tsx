@@ -93,7 +93,7 @@ export function AdminWorkflowSetup({ navigate }: { navigate: Navigate }) {
 
     <Card title="What requesters see"
       description="The requester workflow intentionally hides administrator-owned choices.">
-      <ol className="grant-admin-setup-steps" aria-label="Requester approval workflow">
+      <ol className="grant-admin-setup-steps grant-admin-setup-steps--requester" aria-label="Requester approval workflow">
         <li>
           <span className="grant-admin-setup-num" aria-hidden="true">01</span>
           <div className="grant-admin-setup-step">

@@ -48,5 +48,6 @@ describe('administrator configuration is separated from requester work', () => {
     expect(html).not.toContain('Requester selects approver');
     expect(html).not.toContain('Requester selects template');
     expect(html).toContain('href="/system?view=accounts"');
+    expect(html).toContain('grant-admin-setup-steps--requester');
   });
 });
