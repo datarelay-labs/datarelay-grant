@@ -31,6 +31,18 @@ def refuse_storage(operation: str, error: Exception) -> None:
     raise SystemExit(f"{operation}_REFUSED: {reason}") from None
 
 
+def refuse_configuration(command: str, error: Exception) -> None:
+    """Return bounded operator guidance for installation configuration failures."""
+    operation = command.replace("-", "_").upper()
+    if isinstance(error, FileNotFoundError):
+        reason = "Installation configuration is missing"
+    elif isinstance(error, ValueError) and not isinstance(error, json.JSONDecodeError):
+        reason = str(error)
+    else:
+        reason = "Invalid or inaccessible installation configuration"
+    raise SystemExit(f"{operation}_REFUSED: {reason}") from None
+
+
 def main():
     parser = argparse.ArgumentParser(description="DataRelay Grant single-installation CLI")
     parser.add_argument("--config", default=".dev/config.json")
@@ -55,7 +67,6 @@ def main():
     os.umask(0o077)
     config = Path(args.config).resolve()
     if args.command == "init":
-        config.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         data = {
             "database": str(config.parent / "grant.sqlite"),
             "encryption_key": Fernet.generate_key().decode(),
@@ -63,12 +74,23 @@ def main():
             "dev_mode": args.dev,
             "callback_urls": [],
         }
-        Settings(**{**data, "database": Path(data["database"])})
-        with config.open("x") as output:
-            json.dump(data, output, indent=2)
+        try:
+            Settings(**{**data, "database": Path(data["database"])})
+            config.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            with config.open("x") as output:
+                json.dump(data, output, indent=2)
+        except FileExistsError:
+            raise SystemExit("INIT_REFUSED: Configuration already exists") from None
+        except ValueError as exc:
+            refuse_configuration("init", exc)
+        except OSError:
+            raise SystemExit("INIT_REFUSED: Unable to create protected configuration") from None
         print("Configuration created. No users, integrations or external credentials created.")
         return
-    settings = Settings.load(config)
+    try:
+        settings = Settings.load(config)
+    except (FileNotFoundError, json.JSONDecodeError, KeyError, TypeError, ValueError, OSError) as exc:
+        refuse_configuration(args.command, exc)
     if args.command == "restore":
         try:
             Database.restore(args.input, args.output)

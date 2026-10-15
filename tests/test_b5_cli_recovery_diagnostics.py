@@ -38,6 +38,32 @@ def assert_clean_refusal(result, code):
     assert "encryption_key" not in result.stderr
 
 
+def test_init_existing_config_refuses_without_traceback_or_private_path(tmp_path):
+    config = initialized(tmp_path)
+    repeat = cli(config, "init", "--dev")
+    assert_clean_refusal(repeat, "INIT_REFUSED")
+    assert "already exists" in repeat.stderr
+    assert str(config) not in repeat.stderr
+
+
+def test_check_missing_config_reports_bounded_error(tmp_path):
+    config = tmp_path / "missing.json"
+    missing = cli(config, "check")
+    assert_clean_refusal(missing, "CHECK_REFUSED")
+    assert "configuration is missing" in missing.stderr
+    assert str(config) not in missing.stderr
+
+
+def test_check_malformed_config_reports_bounded_error(tmp_path):
+    config = tmp_path / "malformed.json"
+    config.write_text("{bad json\n")
+    config.chmod(0o600)
+    malformed = cli(config, "check")
+    assert_clean_refusal(malformed, "CHECK_REFUSED")
+    assert "Invalid or inaccessible installation configuration" in malformed.stderr
+    assert str(config) not in malformed.stderr
+
+
 def test_check_missing_database_remains_uncreated_and_reports_bounded_error(tmp_path):
     config = initialized(tmp_path)
     missing = cli(config, "check")
