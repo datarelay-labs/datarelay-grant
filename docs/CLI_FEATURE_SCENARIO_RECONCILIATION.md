@@ -145,7 +145,7 @@ Every applicable FCS has a **DIRECT_OPERATOR** observation and **AUDITOR_RECONCI
 | FCS-026 | "Find real external Control/Stellar status" | Confirm mock ledger/fixture is not native Control execution or Stellar ingestion; missing external readback plainly blocked |
 | FCS-027 | "Use help, recover from an invalid operation" | All seven `grant` subcommands/flags, wrong placement, missing flags, help/errors/nonzero exit; no traceback/secrets/internal-only advice |
 | FCS-028 | "Use the product with a restricted identity" | Anonymous, member, approver, admin and integration token visibility vs action matrices; UI controls and API deny in agreement |
-| FCS-029 | "Identify current candidate/version" | Git HEAD, private Foundation lock, deployed Web assets, SQLite schema v12, CLI/check and docs consistent; stale runtime correlation only |
+| FCS-029 | "Identify current candidate/version" | Git HEAD, private Foundation lock, deployed Web assets, current SQLite schema v14, CLI/check and docs consistent; stale runtime correlation only |
 | FCS-030 | "Finish a clean operator shift" | Audit-owned file/process cleanup, retain legitimate installation and durable evidence, final findings/owner routing, zero runtime mutation |
 
 The scenario register is **30/30 indexed cases**. Additional current supported commands, variants, features or roles discovered at execution time must be added as indexed rows with unique IDs instead of silently reducing the denominator. A superseded or inapplicable scenario requires `NOT_APPLICABLE` with explicit product-standard evidence.
