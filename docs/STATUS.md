@@ -1663,4 +1663,15 @@ The existing Dry-run/Review/Confirm lifecycle and server RBAC remain
 unchanged; this does not implement host backup or DB restore.
 Two RED-first new unit regressions plus all affected existing suites
 **24/24 PASS**, Web TypeScript and Vite production build PASS.
-Other SM-1 tasks and SM-2 timezone/backend settings remain OPEN.
+
+**SM-1 safe capability routing is now complete.** Password Management opens
+existing personal `/security` password/MFA self-service as **read only** and
+never claims a system-wide password policy editor. HTTPS and Network expose
+separate selected-task views containing only the already authenticated
+`/admin/info` configured service origin plus explicit deployment-operator
+ownership; there is no certificate/listener/proxy apply control. Retention
+remains unavailable because no scheduler exists. Focused Foundation/System
+Management units are **7/7 PASS**, TypeScript and production build PASS, and
+the authenticated Grant browser scenario covering HTTPS → Back → Network →
+Back → Password Management plus existing System Health/shortcuts is **PASS**.
+SM-2 timezone persistence/backend settings remain OPEN.

@@ -32,7 +32,7 @@ Foundation RC41 also supplies optional read-only/review UI primitives (e.g. TLS 
 ## Ordered P0 implementation and acceptance
 
 1. **SM-0 Evidence/contract: DONE 2026-10-14.** Record the Control/Grant adapter split, exact package pin, and real capability matrix in this document and the canonical roadmap; correct the mistaken "M2 complete means complete Control-like System Management" interpretation. Preserve all existing Foundation and Grant implementation.
-2. **SM-1 Low-risk product-owned routes and read-only parity: PARTIAL.** Reuse Foundation's nine canonical task labels/layout, existing Grant `/security`, `/admin/info`, `/admin/health`, scoped audit and configuration export/preview, and verified source data only. Where a true view-only operation exists, offer the accurate `View` action and scope-specific guidance; unsupported capabilities must stay explicitly unavailable. RED-first focused Web/API checks and exact read-only server projection precede any new `read_only` declaration. Keep additional Grant mail tasks.
+2. **SM-1 Low-risk product-owned routes and read-only parity: DONE.** Reuse Foundation's nine canonical task labels/layout, existing Grant `/security`, `/admin/info`, `/admin/health`, scoped audit and configuration export/preview, and verified source data only. Password Management now opens personal password/MFA self-service as read-only; HTTPS and Network expose only the authenticated configured service-origin projection with explicit deployment-operator ownership and no apply controls; Backup & Import opens the existing Draft-only portability path. Retention remains explicitly unavailable because no scheduler exists. Focused unit, type/build and authenticated browser route/focus checks pass. Keep additional Grant mail tasks.
 3. **SM-2 Persisted non-destructive settings: OPEN.** Implement an independently designed Grant-native IANA display timezone contract with user override/default, authenticated server persistence, backend validation, audit and correct UTC data handling; align password self-service discovery without falsely implying global policy support. RED→GREEN, role matrix, typecheck and preview readback required.
 4. **SM-3 Privileged host/security settings: OWNER-GATED.** Real HTTPS/TLS, reverse-proxy network apply, platform credential policy, secret lifecycle, and certificate changes need explicit owner-approved target/host permissions, a trusted on-prem adapter contract, safe review/CAS/idempotency/audit and rollback. No host/proxy/listener or user credential changes are authorized by this document.
 5. **SM-4 Retention and recovery mutations: OWNER-GATED.** Real retention scheduler/deletion, backup/import apply and DB restore need accepted source-specific semantics, reversible disposable qualification, recovery protections and separately authorized durable effects. Foundation panels and a mocked preview are not execution proof.
@@ -60,6 +60,23 @@ preview, mapping and later Confirm and is **not** a database restore.
 
 New first-party unit cases were intentionally RED before the wiring,
 then GREEN with existing Admin/Integrations/configuration tests
-**24/24 PASS**, TypeScript and Vite production build PASS. This
-**does not** close SM-1 as a whole or the Control-reference nine-task
-feature parity; it only exposes actual previously orphaned functionality.
+**24/24 PASS**, TypeScript and Vite production build PASS.
+
+## SM-1 closeout — truthful existing capability routes
+
+The remaining low-risk existing capability routes are now wired without
+inventing host control. `Password Management` is a read-only task that opens
+the existing `/security` password/MFA self-service and explicitly states that
+there is no system-wide password-policy editor. `HTTPS` and `Network` are
+read-only selected-task views backed by the authenticated `/admin/info`
+projection; they show the configured service origin and deployment-operator
+ownership only, and explicitly do not claim certificate, listener, redirect,
+proxy apply or reconnect control. `Retention` remains unavailable because
+Grant still has no web-managed scheduler.
+
+Focused Foundation/System Management units are **7/7 PASS**, TypeScript and
+Vite production build PASS, and the authenticated Grant browser scenario
+covering HTTPS, Network, Password Management, System Health and existing
+shortcuts is **PASS**. This closes **SM-1 only**. SM-2 timezone persistence,
+SM-3 privileged host/security effects, SM-4 retention/restore mutations and
+SM-5 complete same-head acceptance remain separate.

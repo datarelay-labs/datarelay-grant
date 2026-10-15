@@ -56,7 +56,7 @@ import type { User } from './types';
 import { OperationalSecurityReadinessReadout, type OperationalSecurityReadiness } from './operational_security_readiness';
 import './administration-detail.css';
 
-type AdminSection = 'health' | 'accounts' | 'audit' | 'mail' | 'lifecycle' | null;
+type AdminSection = 'https' | 'health' | 'accounts' | 'audit' | 'mail' | 'network' | 'lifecycle' | null;
 
 export function readAdministrationInitialView(search: string): AdminSection {
   const params = new URLSearchParams(search);
@@ -66,10 +66,12 @@ export function readAdministrationInitialView(search: string): AdminSection {
 }
 
 const administrationSectionLabels: Record<Exclude<AdminSection, null>, string> = {
+  https: 'HTTPS',
   health: 'System Health',
   accounts: 'User Management',
   audit: 'Audit',
   mail: 'Mail delivery test',
+  network: 'Network',
   lifecycle: 'Backup & Import',
 };
 
@@ -127,11 +129,11 @@ export function Administration({ user }: { user: User }) {
   // Foundation owns all shared task names, descriptions, layout and grouping.
   const tasks = useMemo(
     () => createStandardAdministrationTasks({
-      'core.https': { availability: 'unavailable', access: 'view', notes: 'TLS is configured by the approved deployment reverse proxy.' },
+      'core.https': { availability: availability(user, 'system.info.read'), access: 'view', target: { kind: 'action', actionId: 'grant.deployment.https' }, notes: 'View the configured Grant service origin. Listener, certificate and redirect changes remain deployment-operator owned.' },
       'core.users': { availability: availability(user, 'users.manage'), access: user.role === 'admin' ? 'manage' : 'view', target: { kind: 'action', actionId: 'grant.accounts' }, effects: ['security_sensitive'] },
-      'core.password': { availability: 'unavailable', access: 'view', notes: 'Personal password and MFA changes are available under Account & security; no system-wide password policy editor exists.' },
+      'core.password': { availability: availability(user, 'identity.password.change'), access: 'view', target: { kind: 'path', path: '/security' }, notes: 'Open personal password and MFA self-service. No system-wide password policy editor exists.' },
       'core.timezone': { availability: 'unavailable', access: 'view', notes: 'Grant does not provide a system timezone configuration API.' },
-      'core.network': { availability: 'unavailable', access: 'view', notes: 'Listener and proxy settings are managed by the deployment operator.' },
+      'core.network': { availability: availability(user, 'system.info.read'), access: 'view', target: { kind: 'action', actionId: 'grant.deployment.network' }, notes: 'View the configured Grant service origin. Listener and reverse-proxy changes remain deployment-operator owned.' },
       'core.retention': { availability: 'unavailable', access: 'view', notes: 'No web-managed record retention policy editor exists.' },
       'core.backup-import': { availability: availability(user, 'grant.lifecycle.guidance'), access: 'view', target: { kind: 'action', actionId: 'grant.lifecycle.guidance' }, notes: 'Operator procedure only; no web restore or import is authorized.' },
       'core.audit': { availability: availability(user, 'audit.read'), access: 'view', target: { kind: 'action', actionId: 'grant.audit' } },
@@ -205,12 +207,18 @@ export function Administration({ user }: { user: User }) {
   }, [section, directLanding]);
 
   function openTask(selected: AdministrationHubTask) {
+    if (selected.target?.kind === 'path') {
+      window.location.assign(selected.target.path);
+      return;
+    }
     const next: Record<string, AdminSection> = {
       'core.health': 'health',
       'core.users': 'accounts',
       'core.audit': 'audit',
       'grant.smtp.test': 'mail',
       'core.backup-import': 'lifecycle',
+      'core.https': 'https',
+      'core.network': 'network',
     };
     const destination=next[selected.id]??null;
     sectionRef.current=destination;
@@ -419,6 +427,17 @@ export function Administration({ user }: { user: User }) {
           Back to administration tasks
         </Button>
       </div>
+      {section === 'https' ? (
+        <Card title="Configured HTTPS surface">
+          <p>This is a read-only Grant projection of the configured public origin.
+            It does not claim certificate-chain, listener, redirect or reverse-proxy control.</p>
+          <dl className="grant-facts">
+            <dt>Service origin</dt><dd>{info?.facts.find((fact) => fact.id === 'origin')?.value ?? 'Unavailable'}</dd>
+            <dt>Configuration owner</dt><dd>Deployment operator</dd>
+          </dl>
+        </Card>
+      ) : null}
+
       {section === 'health' ? <div className="grant-stack">
         <SystemStatus health={health} info={info} />
         <OperationalSecurityReadinessReadout status={operationalSecurity} />
@@ -584,6 +603,17 @@ export function Administration({ user }: { user: User }) {
               </ul>
             )}
           </div>
+        </Card>
+      ) : null}
+
+      {section === 'network' ? (
+        <Card title="Configured network surface">
+          <p>This view reports the configured Grant service origin only.
+            Published listeners, proxy routing and reconnect-safe changes remain operator-owned.</p>
+          <dl className="grant-facts">
+            <dt>Service origin</dt><dd>{info?.facts.find((fact) => fact.id === 'origin')?.value ?? 'Unavailable'}</dd>
+            <dt>Configuration owner</dt><dd>Deployment operator</dd>
+          </dl>
         </Card>
       ) : null}
 
