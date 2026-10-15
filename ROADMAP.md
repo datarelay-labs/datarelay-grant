@@ -1,5 +1,17 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-15 — Grant acceptance contracts corrected for product purpose
+
+The current canonical test contracts supersede older E2E wording where they conflict:
+- `docs/CLI_FEATURE_SCENARIO_RECONCILIATION.md` is a **non-destructive first-time-user Feature ↔ public CLI/Web/API ↔ operator workflow reconciliation**. Grant has no AI-assisted test lane. It covers 24 GF features, 31 FCS scenarios and the real seven local CLI subcommands without pretending Web-first product functions need CLI twins.
+- `docs/FULL_USER_E2E_SCENARIOS.md` is the **core Grant product-quality loop**: first-time admin setup (Accounts → Approver groups → Integrations → Notification templates → Draft policy → Test → Activate), requester/approver real-browser journeys, designated independent mailboxes, local CLI/recovery, negative/race/concurrency/usability and Grant consume/replay/result truth. The core matrix is 111 indexed scenarios.
+- X-001..X-011 are now the separate **EXTERNAL_INTEGRATION_ACCEPTANCE** profile for real Control effect-once/readback and deployed Stellar receiver verification. They remain strict evidence gates when those integration claims are in scope, but unavailable external owners no longer block Grant's own Full User E2E development loop.
+- Ordinary FULL_USER_E2E closes only after findings are exhausted/remediated and one brand-new complete clean confirmation passes on the frozen candidate. Two complete same-HEAD confirmations are required only for RELEASE_QUALIFICATION.
+- Requester/approver independence means separate accounts, inboxes, browser/session contexts and role knowledge. It does not require multiple biological humans; CHATGPT_CHAT may operate isolated personas when legitimately authorized. Scripts/fixtures remain supporting evidence only.
+- Combined indexed matrix is 122 = 111 core + 11 external. No test was executed merely by this documentation correction; merge/release/production/external effects remain separately authorized.
+
+Older dated roadmap rows remain historical evidence and do not override this section.
+
 ## ACTIVE P0-AUR — administrator/requester workflow separation (owner 2026-10-15)
 
 The owner rejected the prior ambiguous mixed navigation after live visual review and

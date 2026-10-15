@@ -1,6 +1,6 @@
-# DataRelay Grant 1.0 — Feature ↔ CLI/Web/API ↔ AI-assisted Operator Workflow Reconciliation
+# DataRelay Grant 1.0 — Feature ↔ Public Surface ↔ Operator Workflow Reconciliation
 
-> **Role:** Canonical NON-DESTRUCTIVE feature ↔ public CLI/Web/API ↔ Direct User ↔ AI-assisted User ↔ operator-workflow reconciliation contract for Grant (not the Full User E2E run).
+> **Role:** Canonical NON-DESTRUCTIVE feature ↔ public CLI/Web/API ↔ first-time operator workflow reconciliation contract for Grant (not the Full User E2E run). The filename stays stable for DRLink-family trigger compatibility even though Grant is Web-first.
 > **Repository:** `datarelay-labs/datarelay-grant`; **path:** `docs/CLI_FEATURE_SCENARIO_RECONCILIATION.md`.
 > **Companion:** `docs/FULL_USER_E2E_SCENARIOS.md`, `docs/FULL_USER_E2E.md`, `docs/USER_SCENARIOS.md`.
 > **Baseline when drafted:** Grant Draft PR #100 at `e07e8864b14b7c30ae4c65ec2d563525ca05533d`; pin the *actual current* HEAD again at run time. Document content is not execution evidence.
@@ -12,7 +12,7 @@
 
 A request for "Grant CLI 기능 시나리오", "CLI 기능 시나리오 연계 테스트", "Feature CLI Scenario reconciliation" or this exact document is an instruction to **execute this audit** unless the user explicitly asks only to write/review a plan. An unqualified "Full User E2E" runs the companion document instead.
 
-**Question:** Can a first-time Grant user/operator discover *every genuinely supported Grant capability*, choose the correct public CLI or Web/API route, complete the same workflow both directly and with AI assistance grounded only in user-visible output, understand its safe lifecycle, and recover from mistakes—without undocumented internal calls, hidden syntax, false success messages, mismatched role permissions or misleading Foundation task badges?
+**Question:** Can a first-time Grant user/operator discover *every genuinely supported Grant capability*, choose the correct public CLI or Web/API route, understand the complete safe lifecycle, and recover from mistakes—without undocumented internal calls, hidden syntax, memorized implementation knowledge, false success messages, mismatched role permissions or misleading Foundation task badges?
 
 The first audit is **read-only against any already-running Grant installation**. All state-changing command spellings, policy writes, credential issuance, mail sends, restores, owner-controlled Control/Stellar callbacks, and host security settings are **discovery/source/isolated-test evidence only**. This differs intentionally from Full User E2E, which requires explicitly designated disposable systems and real authorized actions.
 
@@ -28,10 +28,6 @@ A feature intentionally operated through Web/API **does not require a fabricated
 ## 2. Run ownership, independence, exact candidate and safety
 
 - **Executor:** ChatGPT acting as a first-time installation operator and a separately reasoned source auditor; both lanes documented. The acting operator uses public `grant --help`, command help, visible status/errors, and permitted read-only output before receiving internal source enumeration. A script that replays a fixed command list does not qualify as persona discovery. Scripts may audit file/coverage inventory *after* the public discovery evidence is frozen.
-- **AI-assisted mirror is REQUIRED test methodology, not a Grant product feature.** Grant does not need to ship a native AI button/CLI for this lane to apply. For every applicable feature/FCS, the same user goal is exercised twice:
-  - `DIRECT_USER_LANE`: a first-time persona discovers the public Grant CLI/Web UI from labels/help/errors and follows it directly;
-  - `AI_ASSISTED_USER_LANE`: an equivalent fresh persona states the same natural-language goal to an AI adviser and follows advice grounded **only** in public CLI/UI/help/error/status output already visible to that persona.
-  The adviser must not receive Product Standard, source code, test code, hidden endpoints, expected syntax, scenario answers or auditor findings before the lane is frozen. The same model family may perform the roles, but an auditor context that has already read the oracle cannot simply rename itself "novice"; use a fresh isolated actor context/thread where available. If truthful knowledge isolation is unavailable, record `BLOCKED_KNOWLEDGE_ISOLATION`, never an invented AI PASS. A future native Grant AI feature would be tested as an additional product surface; its absence does **not** waive this AI-supported-user mirror.
 - **Audit vs test environment:** Don't change a live DB, user, approval policy, credential, sender, listener, reverse proxy, token, service, network or mailbox. No state-changing endpoint/CLI invocation as a probe, including `init`/`user-add`/`serve`/`restore`/`recovery-resume`. Even `backup` creates an artifact and is not run on the assigned live installation as part of this audit. Prove these paths through safe help and existing isolated deterministic tests. `check` only on an assigned authorized existing installation; it is deliberately read-only and cannot bootstrap a missing DB.
 - **Safety denial:** Prior platform-denied fixture-password extraction or detailed authenticated browser DOM operations must not be retried or routed through a different tool/host. Use safely permitted public UI, actual independently authorized sessions, or mark `BLOCKED_TOOLING`.
 - **Single active audit:** Reserve a unique private `e2e-reports/grant-cli-reconciliation-<UTC-RUN_ID>/` with mode 0700 and a coordination lock containing run ID, PID/owner, UTC, HEAD and document SHA256; don't replace a live lock. Keep evidence 0600 when sensitive. No lock acquisition merely to prepare this document.
@@ -54,7 +50,7 @@ Discover directly from the actual candidate root `uv run --frozen grant --help` 
 | CLI-06 | `restore --input EXISTING_BACKUP --output NEW_DB` | NEW SQLite destination, sessions clear, delivery/consume paused, no overwrite | `--help` and isolated tests only |
 | CLI-07 | `recovery-resume [--acknowledge-external-reconciliation]` | Explicit post-restore reconciliation acknowledgement; may invalidate open grants | `--help` and isolated evidence only |
 
-CLI-00 is a global entry rather than an eighth subcommand. Audit **7/7 subcommand discoverability**, every listed public option and negative parser/exit-path variant. Do not silently assume Grant exposes DRLink's `show/set/unset/test` grammar, an AI/MCP administrative CLI, or direct approval decisions through this local CLI.
+CLI-00 is a global entry rather than an eighth subcommand. Audit **7/7 subcommand discoverability**, every listed public option and negative parser/exit-path variant. Do not silently assume Grant exposes DRLink's `show/set/unset/test` grammar or direct human-approval decisions through this local installation CLI.
 
 Read-only example discovery:
 
@@ -100,24 +96,24 @@ For each row, derive actual public Web/API/CLI coverage *independently*; don't c
 | GF-021 | Foundation shared auth/sidebar/administration task presentation | pinned Foundation RC41 + Grant adapters | FOUNDATION_OWNED_COMMON_UI; consumer evidence only |
 | GF-022 | HTTPS manager, platform password policy, timezone, network, retention UI | System Management (currently unavailable) | NOT_IMPLEMENTED_CURRENT_GRANT; P0-SM gap, no fake Manage |
 | GF-023 | Optional Foundation on-prem security Wheel/host enforcement | shared Wheel not installed in Grant | NOT_INSTALLED; separate Grant adapter/owner effect required |
-| GF-024 | Actual user acceptance/2 independent mailboxes/production | Full E2E + owner authorization | NOT_CLI_AUDIT; cannot infer PASS |
+| GF-024 | Actual user acceptance with independent requester/approver accounts, sessions and mailboxes | Full User E2E | NOT_CLI_AUDIT; cannot infer PASS from this read-only audit |
 
 For each GF row record public discovery, required role, CLI ID or justified Web/API-only designation, UI path, API authority, read/list/preview actions, write/confirm/recovery stages, audit receipt, known unavailable controls and linked scenario ID(s). Every supported Web/API-only feature must have a discoverable user workflow; treating missing CLI as a defect only when a CLI is actually promised.
 
 ## 5. Per-feature reconciliation procedure
 
-1. **Direct public lane first:** assign a concrete novice mission and start from `grant --help` or the first-party task navigation. Record *what the user actually discovers*, next action, confusing labels, unavailable tasks, stale/help-only/hidden paths, and recovery wording. Do not preload endpoint names, exact syntax or expected results.
-2. **AI-assisted mirror:** start from the same natural-language mission in a fresh equivalent persona state. Give the AI adviser only the user's goal plus user-visible Grant output. Record the adviser's first guidance, the public action the persona follows, any error-correction exchange, and whether Direct/AI lanes converge on the same canonical workflow and safety boundary.
-3. **Independent auditor only after the relevant black-box evidence is frozen:** enumerate `grant/cli.py` argparse subcommands, current route declarations in `grant/identity_routes.py`, `grant/admin.py`, `grant/domain_routes.py` and mounted `web/src`. Compare actual capabilities against Product Standard and documented effects. Never feed source-derived answers back into an in-progress persona lane.
+1. **Public black-box lane first:** assign a concrete first-time-user mission and start from `grant --help` or the first-party task navigation. Record *what the user actually discovers*, next action, confusing labels, unavailable tasks, stale/help-only/hidden paths, and recovery wording. Do not preload endpoint names, exact syntax, source-derived navigation, or expected results.
+2. **Freeze user evidence before internals:** once the user has either completed the discoverable workflow or reached a genuine dead end, preserve that evidence. A script, source grep, API catalog, or test oracle may not repair the acting user's path retroactively.
+3. **Independent auditor after the relevant black-box evidence is frozen:** enumerate `grant/cli.py` argparse subcommands, current route declarations in `grant/identity_routes.py`, `grant/admin.py`, `grant/domain_routes.py` and mounted `web/src`. Compare actual capabilities against Product Standard and documented effects. Never feed source-derived answers back into an in-progress user lane.
 4. **Reconcile lifecycle:** DISCOVER → PRECONDITIONS → READ/INSPECT → REVIEW/CONFIRM (if supported) → SERVER-SCOPED READBACK → FAILURE/CONFLICT/REVOKE → RECOVER/OFFBOARD. Mutation-bearing stages are *audited*, not executed on a shared runtime.
 5. **Negative check:** unknown/duplicate/legacy syntax; missing required options; wrong role and tenant/approver; malformed data; stale update; ambiguous POST; no linked recovery; duplicate email decision; unsupported setting greyed out. Use isolated deterministic tests when a mutation is necessary to prove rejection.
 6. **Cross-surface state truth:** distinguish `policy DRAFT` from `ACTIVE`, `HOLD` from `APPROVED`, `mail transport accepted` from mailbox receipt, `approve` from external consume, `REPORTED_SUCCEEDED` from independently verified execution, and `restore PAUSED` from authorized resume.
 7. **Documentation:** verify CLI help, `docs/OPERATIONS.md`, `docs/PRODUCT_STANDARD.md`, `docs/USER_SCENARIOS.md`, `docs/G11_EXTERNAL_ACCEPTANCE.md`, shared Foundation consumer lock docs and page wording. Unimplemented features must have a truthful "Unavailable/owner-managed" explanation, not green supported badges.
-8. **Classification:** `FEATURE_WITH_PUBLIC_WORKFLOW`, `WEB_API_ONLY_JUSTIFIED`, `CLI_NO_JUSTIFICATION`, `CLI_ORPHAN`, `DISCOVERY_GAP`, `AI_GUIDANCE_DRIFT`, `AI_HIDDEN_ORACLE_LEAK`, `ROLE_AUTHORITY_DRIFT`, `STATE_SEMANTICS_DRIFT`, `UNSAFE_NEXT_ACTION`, `PROCEDURE_OR_DOC_DRIFT`, `CLI_PARSER_VARIANT_DRIFT`, `EXTERNAL_GATE_PENDING`, `NOT_INSTALLED`. No row can be left without a reason and evidence.
+8. **Classification:** `FEATURE_WITH_PUBLIC_WORKFLOW`, `WEB_API_ONLY_JUSTIFIED`, `CLI_NO_JUSTIFICATION`, `CLI_ORPHAN`, `DISCOVERY_GAP`, `ROLE_AUTHORITY_DRIFT`, `STATE_SEMANTICS_DRIFT`, `UNSAFE_NEXT_ACTION`, `PROCEDURE_OR_DOC_DRIFT`, `CLI_PARSER_VARIANT_DRIFT`, `EXTERNAL_GATE_PENDING`, `NOT_INSTALLED`. No row can be left without a reason and evidence.
 
 ## 6. Mandatory scenario register — FCS (non-destructive audit)
 
-Every applicable FCS has a **DIRECT_OPERATOR**, **AI_ASSISTED_OPERATOR**, and **AUDITOR_RECONCILIATION** observation. Direct and AI lanes begin from the same mission but independent novice knowledge. For a not-yet-implemented feature, both personas must discover the honest public unavailability/recovery path and the auditor classifies `PRODUCT_GAP_OPEN`; never invent runtime or AI PASS. No actual approval or credential issuance occurs here.
+Every applicable FCS has a **FIRST_TIME_OPERATOR** observation and a separate **AUDITOR_RECONCILIATION** observation. For a not-yet-implemented feature, the operator must discover the honest public unavailability/recovery path and the auditor classifies `PRODUCT_GAP_OPEN`; never invent runtime PASS from source existence. No actual approval or credential issuance occurs here.
 
 | ID | User/operator mission (discover from public surface) | Exact reconciliation and negative oracle |
 | --- | --- | --- |
@@ -151,8 +147,9 @@ Every applicable FCS has a **DIRECT_OPERATOR**, **AI_ASSISTED_OPERATOR**, and **
 | FCS-028 | "Use the product with a restricted identity" | Anonymous, member, approver, admin and integration token visibility vs action matrices; UI controls and API deny in agreement |
 | FCS-029 | "Identify current candidate/version" | Git HEAD, private Foundation lock, deployed Web assets, current SQLite schema v15, CLI/check and docs consistent; stale runtime correlation only |
 | FCS-030 | "Finish a clean operator shift" | Audit-owned file/process cleanup, retain legitimate installation and durable evidence, final findings/owner routing, zero runtime mutation |
+| FCS-031 | "Configure Grant from a blank administrator perspective, then hand it to a requester" | Discover and validate the canonical setup order: Accounts → Approver groups → Integrations → Notification templates → Draft policy → Test → Activate; then verify Requester sees only the published request type and read-only assigned approval plan, not unrestricted admin routing controls |
 
-The scenario register is **30/30 indexed cases**. Additional current supported commands, variants, features or roles discovered at execution time must be added as indexed rows with unique IDs instead of silently reducing the denominator. A superseded or inapplicable scenario requires `NOT_APPLICABLE` with explicit product-standard evidence.
+The scenario register is **31/31 indexed cases**. Additional current supported commands, variants, features or roles discovered at execution time must be added as indexed rows with unique IDs instead of silently reducing the denominator. A superseded or inapplicable scenario requires `NOT_APPLICABLE` with explicit product-standard evidence.
 
 ### Required deeper walkthroughs (public first; no live mutation)
 
@@ -160,9 +157,11 @@ The scenario register is **30/30 indexed cases**. Additional current supported c
 
 **FCS-010 → FCS-018, approval human authority:** The operator starts from visible Web navigation and infers requester, approver and admin pathways. Audit the exact action shown before any confirmation, selected approval seat, policy version and tenant scope, role-specific deadline/overdue, and email verification requirements. A clicked "Approve" before final Confirm is *not* committed. There must be no CLI/bypass that silently creates a human decision or promotes an MFA/notification test to a grant.
 
-**FCS-019 → FCS-026, integrations versus observed effects:** An integration credential is not an approver identity; successful HTTP callback response is not execution. Compare source contracts `/api/v1/requests/{id}/consume`, `/result` and related webhook events with the independent Control/Stellar evidence requirements. No actual sending, consuming or callback to an owner-controlled destination occurs during the audit. For live effect evidence refer to Full User E2E and `docs/G11_EXTERNAL_ACCEPTANCE.md`.
+**FCS-019 → FCS-026, integrations versus observed effects:** An integration credential is not an approver identity; successful HTTP callback response is not execution. Compare source contracts `/api/v1/requests/{id}/consume`, `/result` and related webhook events with the separate native Control/Stellar evidence requirements. No actual sending, consuming or callback to an owner-controlled destination occurs during this audit. Core Full User E2E verifies Grant's disposable consume/replay/result boundary; real Control/Stellar effects belong to the separate External Integration Acceptance profile in `docs/FULL_USER_E2E_SCENARIOS.md` and `docs/G11_EXTERNAL_ACCEPTANCE.md`.
 
-**FCS-024/FCS-025, System Management parity:** Reconcile screen task labels, supported/read-only/unavailable badges, actual Grant route and backend authority. Report the current P0-SM product gap rather than claiming that shared Foundation RC41 implements missing host policy or timezone persistence. Record evidence of existing Draft import and safe export separately from a private DB backup and recovery.
+**FCS-024/FCS-025, System Management parity:** Reconcile screen task labels, supported/read-only/unavailable badges, actual Grant route and backend authority. Report the current P0-SM product gap rather than claiming that shared Foundation RC41 implements missing host policy. Record evidence of existing Draft import and safe export separately from a private DB backup and recovery.
+
+**FCS-031, first-time administrator onboarding:** This is the primary Grant-specific coherence scenario. Starting only from the signed-in task navigation, an administrator must be able to discover the required setup order without reading source or an internal runbook: Accounts → Approver groups → Integrations → Notification templates → Draft policy → Test → Activate. A requester must then see the published request type and its fixed approval plan, while ordinary request creation must not expose unrestricted administrator routing/template/verification controls.
 
 ## 7. Cross-surface coverage and contradictions
 
@@ -194,10 +193,9 @@ e2e-reports/grant-cli-reconciliation-<UTC-RUN_ID>/
   ledgers/fcs-results.tsv
   ledgers/findings.tsv
   ledgers/coverage.tsv
-  operator/direct-*.txt
-  operator/ai-assisted-*.txt
+  operator/first-time-*.txt
   auditor/reconciliation-*.txt
-  scenarios/FCS-001.txt ... FCS-030.txt
+  scenarios/FCS-001.txt ... FCS-031.txt
   cleanup/audit-owned-processes.txt
   summary.txt
 ~~~
@@ -206,13 +204,13 @@ Minimum schemas (TSV must be escaped/encoded, not ambiguous pasted multiline):
 - `features.tsv`: `FEATURE_ID, FEATURE, AUTHORITY, IMPLEMENTATION_STATUS, ROLE, CLI_ID, WEB_ROUTE, API_ROUTE, EXTERNAL_GATE, SCENARIO_IDS, RESULT, EVIDENCE`.
 - `commands.tsv`: `CLI_ID, SUBCOMMAND, FLAG_SET, HELP_DISCOVERED, MUTATION_POSSIBLE, RUNTIME_READ_ALLOWED, PRODUCT_FEATURE, NEGATIVE_COVERAGE, RESULT, EVIDENCE`.
 - `feature-command-scenarios.tsv`: `FEATURE_ID, CLI_ID_OR_WEB_API_JUSTIFICATION, WORKFLOW_STEPS, SCENARIO_IDS, DISPOSITION, EVIDENCE`.
-- `fcs-results.tsv`: `SCENARIO_ID, APPLICABLE, DIRECT_OPERATOR_RESULT, AI_ASSISTED_OPERATOR_RESULT, AUDITOR_RESULT, FINAL_RESULT, BLOCK_REASON, EVIDENCE`.
+- `fcs-results.tsv`: `SCENARIO_ID, APPLICABLE, FIRST_TIME_OPERATOR_RESULT, AUDITOR_RESULT, FINAL_RESULT, BLOCK_REASON, EVIDENCE`.
 - `findings.tsv`: `FINDING_ID, SEVERITY, USER_BLOCKING, STATUS, CLASSIFICATION, FEATURE_ID, SURFACE, REPRODUCER, OWNER, EVIDENCE`.
 - `coverage.tsv`: `METRIC, NUMERATOR, DENOMINATOR, PERCENT, EVIDENCE`.
 
-Compute counts *from ledger rows* rather than writing an independent manual PASS: `PUBLIC_CLI_SUBCOMMANDS=7`, `PUBLIC_CLI_SUBCOMMANDS_DISCOVERED`, `CLI_GLOBAL_AND_SUBCOMMAND_FLAGS_COVERED`, `SUPPORTED_FEATURES_WITH_DISPOSITION`, `UNJUSTIFIED_CLI_GAPS`, `UNJUSTIFIED_WEB_ONLY_GAPS`, `UNAVAILABLE_MISREPRESENTED_AS_SUPPORTED`, `FCS_APPLICABLE`/`PASS`/`FAIL`/`BLOCKED`, `DIRECT_USER_FEATURE_COVERAGE`, `AI_ASSISTED_FEATURE_COVERAGE`, `DIRECT_USER_FCS_COVERAGE`, `AI_ASSISTED_FCS_COVERAGE`, `AI_GUIDANCE_DRIFT_COUNT`, `AI_HIDDEN_ORACLE_LEAK_COUNT`, `AUDITOR_KNOWLEDGE_LEAK_COUNT`, `DOC_COMMAND_DRIFT`, `ROLE_SCOPE_DRIFT`, `WORKFLOW_DEAD_ENDS`, `EVIDENCE_SUMMARY_MISMATCH_COUNT`, `RUNTIME_MUTATION_ATTEMPT_COUNT` and `CLEANUP_RESIDUE_COUNT`.
+Compute counts *from ledger rows* rather than writing an independent manual PASS: `PUBLIC_CLI_SUBCOMMANDS=7`, `PUBLIC_CLI_SUBCOMMANDS_DISCOVERED`, `CLI_GLOBAL_AND_SUBCOMMAND_FLAGS_COVERED`, `SUPPORTED_FEATURES_WITH_DISPOSITION`, `UNJUSTIFIED_CLI_GAPS`, `UNJUSTIFIED_WEB_ONLY_GAPS`, `UNAVAILABLE_MISREPRESENTED_AS_SUPPORTED`, `FCS_APPLICABLE`/`PASS`/`FAIL`/`BLOCKED`, `FIRST_TIME_OPERATOR_FEATURE_COVERAGE`, `FIRST_TIME_OPERATOR_FCS_COVERAGE`, `AUDITOR_KNOWLEDGE_LEAK_COUNT`, `DOC_COMMAND_DRIFT`, `ROLE_SCOPE_DRIFT`, `WORKFLOW_DEAD_ENDS`, `EVIDENCE_SUMMARY_MISMATCH_COUNT`, `RUNTIME_MUTATION_ATTEMPT_COUNT` and `CLEANUP_RESIDUE_COUNT`.
 
-All 30 FCS IDs and all 24 GF feature IDs must appear exactly once in their own canonical ledger; FCS rows may reference multiple GF IDs. All seven CLI subcommands and every *current* supported public option must appear. The Direct and AI-assisted user lanes are mandatory test perspectives even when Grant ships no native AI feature. A native product AI surface, if absent, may be `NOT_APPLICABLE_NO_NATIVE_AI_PRODUCT_SURFACE`; that classification does not remove the AI-assisted-user mirror.
+All 31 FCS IDs and all 24 GF feature IDs must appear exactly once in their own canonical ledger; FCS rows may reference multiple GF IDs. All seven CLI subcommands and every *current* supported public option must appear. This audit tests Grant's actual public CLI/Web/API surfaces and first-time operator discoverability only.
 
 Never retain passwords, PIN/OTP/TOTP values, cookies, auth headers, full emailed capability URLs, API keys, private config/key, token issuance output, actual encrypted DB, private backup content, screenshots of secrets or plaintext mail. Save redacted source identities, request IDs and SHA256 of eligible nonsecret artifacts only.
 
@@ -225,7 +223,7 @@ Never retain passwords, PIN/OTP/TOTP values, cookies, auth headers, full emailed
 
 Results: `PASS`, `FAIL`, `PARTIAL`, `BLOCKED_ENVIRONMENT`, `BLOCKED_TOOLING`, `STALE_RUNTIME_CORRELATION_ONLY`, `NOT_APPLICABLE`. A blocked mandatory scenario is not PASS. Product or test limitations found before completion are not quietly turned into "test unsupported" exceptions.
 
-**CLI feature reconciliation PASS** only when every applicable GF/FCS row has Direct-user, AI-assisted-user and auditor evidence; Direct/AI feature and FCS coverage are 100%; all seven command families and flags are discoverable and correctly documented; Web/API-only features are justified; both user lanes converge on the same safe lifecycle/recovery; AI guidance contains no hidden-oracle leakage or noncanonical action; no unjustified hidden/duplicate path, major terminology/permission/state drift or unresolved P0/P1/user-blocking P2 remains; summary counters exactly match ledgers; runtime mutation attempts = 0; audit-owned residue = 0. A **release-qualified** reconciliation additionally needs committed clean contract, exact installed candidate, authorized full runtime and the independent Full User E2E gate. Otherwise label `AUDIT_COMPLETE_WITH_OPEN_PRODUCT_GAPS` or `BLOCKED`, not release PASS.
+**CLI feature reconciliation PASS** only when every applicable GF/FCS row has first-time-operator and auditor evidence; first-time operator feature/FCS coverage is 100%; all seven command families and flags are discoverable and correctly documented; Web/API-only features are justified; the operator can complete or truthfully stop the supported lifecycle using only public guidance; no unjustified hidden/duplicate path, major terminology/permission/state drift or unresolved P0/P1/user-blocking P2 remains; summary counters exactly match ledgers; runtime mutation attempts = 0; audit-owned residue = 0. A **release-qualified** reconciliation additionally needs committed clean contract, exact installed candidate, authorized full runtime and the independent Full User E2E gate. Otherwise label `AUDIT_COMPLETE_WITH_OPEN_PRODUCT_GAPS` or `BLOCKED`, not release PASS.
 
 **Run discipline:** Accumulate all defects first; continue independent scenarios; freeze findings; only afterwards implement fixes as bounded tasks in the relevant owner repo (Foundation common UI vs Grant adapters). Recheck affected scenarios and do one final complete confirmation when release rules require it. The audit must not mutate the product to "repair" evidence mid-pass.
 
@@ -234,7 +232,7 @@ Results: `PASS`, `FAIL`, `PARTIAL`, `BLOCKED_ENVIRONMENT`, `BLOCKED_TOOLING`, `S
 ## 10. Companion relationship and precise next action
 
 - This document is a **non-destructive consistency audit** that should normally run before state-changing Full User E2E. It does **not** run an actual `grant init`, user creation, approval, delivery, restore, consume, or native Control/Stellar result.
-- `docs/FULL_USER_E2E_SCENARIOS.md` owns genuine disposable CLI/Browser/API/mail/external-operation execution, two independent personas/mailboxes, negative paths, replay/concurrency/load, final evidence and owner-controlled stop gates.
+- `docs/FULL_USER_E2E_SCENARIOS.md` owns genuine disposable CLI/Browser/API/mail core Grant execution, independent requester/approver accounts/mailboxes, negative paths, replay/concurrency/load and final evidence. Its separate External Integration Acceptance profile owns real Control/Stellar effects when authorized.
 - `docs/FULL_USER_E2E.md`, `docs/USER_SCENARIOS.md`, `docs/SURFACE_RECONCILIATION.md` and `docs/INTEGRATION.md` remain existing mandatory user-acceptance contracts; this plan does not downgrade them.
 
-**When actually requested to run:** resolve current Git head/contract SHA once, verify the available read-only surface/tooling, execute Direct-user and AI-assisted-user public discovery from independent novice contexts, freeze those black-box observations before source enumeration, reconcile all GF/FCS rows, classify true capability gaps, preserve a complete ledger, exhaust independent checks, then report once. Do **not** start this run solely because the document was written.
+**When actually requested to run:** resolve current Git head/contract SHA once, verify the available read-only surface/tooling, execute first-time-user public discovery without manuals/source/test answers, freeze that black-box evidence before source enumeration, reconcile all GF/FCS rows, classify true capability gaps, preserve a complete ledger, exhaust independent checks, then report once. Do **not** start this run solely because the document was written.

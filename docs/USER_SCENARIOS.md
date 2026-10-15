@@ -37,9 +37,10 @@ Before domain workflow confirmation, verify the shared user frame in a real brow
 These checks validate shared presentation only. Grant server-side authorization and
 approval/execution authority remain independently verified by the domain scenarios below.
 
-## Two independent complete passes
+## Complete core journey and final clean confirmation
 
-Perform each pass with NEW isolated browser contexts and separate sign-ins:
+For the final clean Full User E2E confirmation, use NEW isolated browser contexts,
+separate requester/approver sign-ins and independent mailboxes:
 
 1. Requester opens Requests, signs in and chooses New request. Select the configured
    profile, enter target, title and reason, and submit. The detail shows the exact
@@ -58,8 +59,10 @@ Perform each pass with NEW isolated browser contexts and separate sign-ins:
 6. On separate requests, confirm Deny in the UI and verify no commitment. Verify
    cancellation also blocks commitment. Fresh API creation is allowed for consumer
    interface setup/assertions; human decisions must use the actual approval UI.
-7. Capture the resulting UI and assert no browser runtime errors. Close all contexts
-   and repeat the complete journey with new independent sign-ins and request IDs.
+7. Capture the resulting UI and assert no browser runtime errors. Close all contexts.
+   After the finding/remediation loop is complete, the canonical Full User E2E contract
+   requires one brand-new complete clean confirmation with new sign-ins and request IDs;
+   release qualification repeats the complete confirmation twice on the same HEAD.
 
 ## Request replacement through the UI
 
@@ -106,7 +109,11 @@ Run real CLI initialization and schema-version checks. Back up and restore into 
 paths; delivery/consume remain paused, sessions clear, restored open requests are
 invalidated on acknowledged resume, and uncertain commitments become UNKNOWN.
 
-## External acceptance (cannot be replaced by the above)
+## Separate External Integration Acceptance (cannot be replaced by core E2E)
+
+The following is not part of core `FULL_USER_E2E` PASS. It is the separately authorized
+external-integration profile required when qualifying native DataRelay/Stellar claims.
+Core Grant testing continues when these owners/environments are unavailable.
 
 R1-M3: one real DataRelay product must submit its actual operation, block execution
 without a fresh valid commitment, execute through its existing operation path, and
@@ -115,6 +122,7 @@ R1-M4: record deployed Stellar version, actual outgoing configuration and actual
 receiver path. Find correlated approved/denied events in that receiver, verify tenant
 binding and feedback-loop exclusion. An echo receiver is insufficient.
 SMTP: confirm a real designated user's inbox received the message.
-R1-M5: repeat applicable journeys and recovery on one frozen candidate, record
+R1-M5: repeat applicable external journeys and recovery on one frozen candidate, record
 external evidence, hashes and CI. Owner acceptance/publication remain separate.
-No missing external evidence is converted into a success by this scenario document.
+No missing external evidence is converted into a native-integration success, and no
+missing external target blocks an otherwise complete core Grant Full User E2E result.
