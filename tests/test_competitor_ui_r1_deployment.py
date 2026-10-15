@@ -18,17 +18,27 @@ def _r1_ids():
     return ids
 
 
-def test_r1_reconciles_exact_52_rows_without_claiming_acceptance():
+def test_r1_reconciles_exact_52_rows_without_claiming_acceptance_itself():
     ids = _r1_ids()
     assert len(ids) == 52
     rows = {row["id"]: row for row in LEDGER["tasks"]}
     assert {key for key in ids if rows[key]["dev_deployment"] == "PASS"} == set(ids) - {"U7.02", "U7.03"}
     assert {key for key in ids if rows[key]["dev_deployment"] == "NOT_APPLICABLE_WITH_JUSTIFICATION"} == {"U7.02", "U7.03"}
-    assert all(rows[key]["acceptance"] != "PASS" for key in ids)
-    assert {rows[key]["acceptance"] for key in ids} <= {"NOT_RUN", "BLOCKED", "NOT_APPLICABLE_WITH_JUSTIFICATION"}
-    assert "U8.08" not in ids
+    # R1 remains historical deployment evidence. A later owner-authorized
+    # operator-acceptance pass may promote the row, but that promotion must
+    # come from the dedicated operator artifact rather than from R1 itself.
     for key in ids:
+        if rows[key]["acceptance"] == "PASS":
+            assert any(
+                evidence.get("gate") == "acceptance"
+                and evidence.get("result") == "PASS"
+                and evidence.get("artifact") == "docs/COMPETITOR_UI_OPERATOR_E2E_20261015.md"
+                for evidence in rows[key]["evidence"]
+            )
+        else:
+            assert rows[key]["acceptance"] == "NOT_APPLICABLE_WITH_JUSTIFICATION"
         assert f"| {key} |" in REPORT
+    assert "U8.08" not in ids
 
 
 def test_r1_report_pins_deployment_provenance_without_external_effect_claim():

@@ -1,82 +1,76 @@
-"""R3 must record real acceptance blockers without converting fixtures into PASS."""
+"""Owner-directed competitor-UI operator acceptance must not be confused with release Full User E2E."""
 import json
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
 LEDGER=json.loads((ROOT/"docs/COMPETITOR_UI_EVIDENCE_20261014.json").read_text())
-REPORT=(ROOT/"docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md").read_text()
+OPERATOR=(ROOT/"docs/COMPETITOR_UI_OPERATOR_E2E_20261015.md").read_text()
 ROWS={row["id"]:row for row in LEDGER["tasks"]}
 
 
-def test_r3_five_real_gates_are_blocked_not_passed():
+def test_operator_acceptance_closes_five_ui_lane_gates():
     for key in ("U6.06","U7.04","U7.05","U7.06","U7.07"):
-        assert ROWS[key]["status"] == "OPEN"
-        assert ROWS[key]["blocker"]
-        assert "BLOCKED" in ROWS[key]["blocker"] or "blocked" in ROWS[key]["blocker"]
-    assert ROWS["U7.07"]["interaction"] == "BLOCKED"
-    assert ROWS["U6.06"]["acceptance"] == "BLOCKED"
-    assert ROWS["U7.04"]["acceptance"] == "BLOCKED"
-    assert ROWS["U7.05"]["acceptance"] == "BLOCKED"
-    assert ROWS["U7.06"]["acceptance"] == "BLOCKED"
+        assert ROWS[key]["status"] == "PASS"
+        assert ROWS[key]["blocker"] is None
+    assert ROWS["U6.06"]["interaction"] == "PASS"
+    assert ROWS["U6.06"]["acceptance"] == "PASS"
+    assert ROWS["U7.04"]["interaction"] == "PASS"
+    assert ROWS["U7.04"]["acceptance"] == "PASS"
+    assert ROWS["U7.05"]["interaction"] == "PASS"
+    assert ROWS["U7.05"]["acceptance"] == "PASS"
+    assert ROWS["U7.06"]["interaction"] == "PASS"
+    assert ROWS["U7.06"]["acceptance"] == "PASS"
+    assert ROWS["U7.07"]["interaction"] == "PASS"
 
 
-def test_r3_reconciles_child_acceptance_without_false_pass():
+def test_operator_acceptance_promotes_connected_child_rows():
     ids=[]
     for row in LEDGER["tasks"]:
         key=row["id"]
-        if key.startswith(("U1.","U2.","U3.","U4.","U5.")) or key in {"U6.01","U6.02","U6.03","U6.04","U6.05"} or (key.startswith("U8.") and key != "U8.08"):
+        if key.startswith(("U1.","U2.","U3.","U4.","U5.")) or key in {
+            "U6.01","U6.02","U6.03","U6.04","U6.05"
+        } or (key.startswith("U8.") and key != "U8.08"):
             ids.append(key)
     assert len(ids)==50
-    assert all(ROWS[key]["acceptance"]=="BLOCKED" for key in ids)
-    assert all(ROWS[key]["status"]=="OPEN" for key in ids)
-    assert ROWS["U7.02"]["acceptance"]=="NOT_APPLICABLE_WITH_JUSTIFICATION"
-    assert ROWS["U7.03"]["acceptance"]=="NOT_APPLICABLE_WITH_JUSTIFICATION"
-    assert ROWS["U7.02"]["status"]=="PASS"
-    assert ROWS["U7.03"]["status"]=="PASS"
+    assert all(ROWS[key]["acceptance"]=="PASS" for key in ids)
+    assert all(ROWS[key]["status"]=="PASS" for key in ids)
 
 
-def test_r3_report_preserves_no_effect_boundary():
-    assert "SMTP host configured: **YES**" in REPORT
-    assert "Existing session rows: **1**; session/cookie material was not read or reused." in REPORT
-    assert "Gmail connector: **connected during R3 continuation**" in REPORT
-    assert "Current-candidate Gmail rendering test: **received**" in REPORT
-    assert "Outlook Email connector: available but not connected." in REPORT
-    assert "Outbox worker enabled: **NO**" in REPORT
-    assert "No acceptance gate is falsely marked PASS." in REPORT
+def test_u902_is_technical_acceptance_reconciliation_pass():
+    row=ROWS["U9.02"]
+    assert row["status"]=="PASS"
+    assert row["source"]=="PASS"
+    assert row["acceptance"]=="PASS"
+    assert row["blocker"] is None
+    assert LEDGER["operator_acceptance"]["status"]=="TECHNICAL_PASS_PENDING_OWNER_U9_04"
+    assert LEDGER["operator_acceptance"]["browser_e2e"]=="46/46 PASS"
+    assert LEDGER["operator_acceptance"]["canvas"]=="49/49 PASS"
 
 
-def test_gmail_connection_is_supporting_historical_evidence_not_current_acceptance():
-    u606=ROWS["U6.06"]
-    u704=ROWS["U7.04"]
-    assert "DataRelay Grant SMTP configuration and real Gmail receipt are now verified" in u606["blocker"]
-    assert "zero email_templates rows" in u606["blocker"]
-    assert "Current-candidate Gmail transport/MIME subcell is verified" in u704["blocker"]
-    assert "Gmail Web/Mobile visual rendering has not been directly observed" in u704["blocker"]
-    assert u606["acceptance"]=="BLOCKED"
-    assert u704["acceptance"]=="BLOCKED"
-    assert "Gmail connector: **connected during R3 continuation**" in REPORT
-    assert "Current-candidate Gmail rendering test: **received**" in REPORT
+def test_release_full_user_e2e_is_still_not_claimed():
+    assert LEDGER["product_acceptance_claimed"] is False
+    assert LEDGER["operator_acceptance"]["full_user_e2e_release_claimed"] is False
+    assert "not a claim that the repository-wide `FULL_USER_E2E` release contract passed" in OPERATOR
+    assert "independent-human/two-mailbox requirement" in OPERATOR
+    assert "original 121 scenario IDs" in OPERATOR
 
 
-def test_current_candidate_gmail_mime_is_verified_but_not_grant_smtp_or_full_client_matrix():
-    u606=ROWS["U6.06"]
-    u704=ROWS["U7.04"]
-    assert "DataRelay Grant SMTP configuration and real Gmail receipt are now verified" in u606["blocker"]
-    assert "zero email_templates rows" in u606["blocker"]
-    assert "Current-candidate Gmail transport/MIME subcell is verified" in u704["blocker"]
-    assert "Gmail Web/Mobile visual rendering has not been directly observed" in u704["blocker"]
-    assert u606["acceptance"]=="BLOCKED"
-    assert u704["acceptance"]=="BLOCKED"
-    assert "Current-candidate Gmail rendering test: **received**" in REPORT
-    assert "7,840 HTML bytes" in REPORT
+def test_direct_mail_clients_remain_explicit_follow_up():
+    assert LEDGER["operator_acceptance"]["direct_outlook_apple_client_claimed"] is False
+    assert "Direct Gmail UI, Outlook and Apple Mail observations remain follow-up and are not claimed" in OPERATOR
+    assert "DKIM PASS" in OPERATOR
+    assert "SPF PASS" in OPERATOR
 
 
-def test_grant_smtp_receipt_is_real_but_u606_waits_for_exact_saved_revision():
-    u606=ROWS["U6.06"]
-    assert "DataRelay Grant SMTP configuration and real Gmail receipt are now verified" in u606["blocker"]
-    assert "zero email_templates rows" in u606["blocker"]
-    assert u606["status"]=="OPEN"
-    assert u606["acceptance"]=="BLOCKED"
-    assert "DKIM/SPF PASS" in REPORT
-    assert "exact product-saved template revision" in REPORT
-    assert "worker false" in REPORT
+def test_u606_is_composed_boundary_evidence_not_fake_gmail_identity():
+    evidence=" ".join(str(item.get("result_detail","")) for item in ROWS["U6.06"]["evidence"])
+    assert "exact saved-revision product-flow" in evidence
+    assert "DataRelay Grant SMTP-to-Gmail" in evidence
+    assert "not claimed to be the Gmail receipt" in evidence
+    assert "receipt_confirmed=false" in evidence
+
+
+def test_owner_review_is_the_only_ui_lane_closure_gate_left():
+    assert ROWS["U9.03"]["status"]=="OPEN"
+    assert ROWS["U9.04"]["status"]=="OPEN"
+    assert LEDGER["operator_acceptance"]["owner_acknowledgement"]=="PENDING_U9_04"
