@@ -22,8 +22,9 @@ Current implementation batch:
 - Original AUR targeted RED -> GREEN regression: 44/44 PASS; AUR-2.6 focused regression: 10/10 PASS.
 - Current AUR-2.6 candidate full Web regression: 744/744 PASS; TypeScript and production build PASS.
 - Current AUR-2.6 candidate native Browser E2E: 46/46 PASS across six isolated backends.
-- Development preview still serves the prior qualified `b694199` bytes until the newly committed AUR-2.6 candidate is redeployed and read back.
-- Exact-head CI and development-preview redeploy/readback are the next machine gates; owner visual review follows.
+- Exact AUR-2.6 product HEAD `404c200` development preview redeploy PASS; deployed index SHA256 `a3bfc5194498a3c4fac87cd04954a76d1adbff528f841c02370386eca53fd6ff`, JS SHA256 `7e9102ecae7139853305b085eba9b1b75bce2267b3f7be82858d3c9cbb53bc33`; HTTPS root 200, protected unauthenticated admin API 401, worker disabled.
+- Exact product-head automatic CI SUCCESS: Grant checks `38697863839`; Engineering System `38697864193`.
+- Final owner visual review is the only remaining P0-AUR gate.
 - Foundation common UI is unchanged. No merge/release/production authority is implied.
 
 **2026-10-15 operator acceptance continuation:** competitor-UI technical acceptance and coordination reconciliation are complete. Mounted Browser E2E is **46/46 PASS** across six isolated product backends; Canvas qualification is **49/49 PASS**. U6.06 exact saved-revision Review -> Confirm one-shot test-send PASS is composed with separately verified unchanged-candidate Grant SMTP-to-Gmail multipart transport/DKIM/SPF evidence. U7.04-U7.07 PASS under WBS §1.1. U9.01/U9.02/U9.03 PASS. **Only U9.04 owner visual acknowledgement remains** before this competitor-UI priority lock may be removed. Repository-wide independent-human `FULL_USER_E2E`, direct Outlook/Apple client observation, native Control/Stellar acceptance, merge/release and production remain separate and are not claimed.

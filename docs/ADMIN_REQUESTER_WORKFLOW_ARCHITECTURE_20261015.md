@@ -123,7 +123,7 @@ Administrator-facing:
 | AUR-3.1 | Full Web unit regression | 101 files / 744 tests PASS | PASS |
 | AUR-3.2 | TypeScript + production build | typecheck + Vite production build PASS | PASS |
 | AUR-3.3 | Browser requester/admin navigation regression | native Browser E2E 46/46 PASS across 6 isolated backends | PASS |
-| AUR-3.4 | Redeploy development preview and owner visual review | AUR-2.6 candidate qualified; deploy/CI pending | DEPLOY PENDING |
+| AUR-3.4 | Redeploy development preview and owner visual review | product HEAD 404c200 deployed; Grant/Engineering CI SUCCESS; owner review pending | DEPLOY + CI PASS / OWNER REVIEW PENDING |
 
 ## 6. Acceptance
 
