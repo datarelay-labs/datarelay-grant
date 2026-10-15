@@ -1,3 +1,5 @@
+**2026-10-15 AUR-2.6 visual-review follow-up:** Workflow setup now opens the existing User Management detail directly with an allowlisted view=accounts deep link. Non-allowlisted, duplicate or extra query parameters fail closed to the normal System Management task list. Focused unit regression is 10/10 PASS; full Web is 744/744 PASS, TypeScript/Vite production build PASS, and native isolated Browser E2E is 46/46 PASS across six backend batches. Dev-preview redeploy and exact-head CI remain active because product source changed.
+
 **2026-10-15 administrator/requester workflow implementation:** owner visual review
 identified that the product did not explain who configures approval authority versus who
 submits requests. A new P0-AUR lane is active. Source now separates User workspace,

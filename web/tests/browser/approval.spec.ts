@@ -958,7 +958,12 @@ test('U8.01 role-guided Home routes requester approver and administrator to the 
 test('U8.05 administrator first-run guide resolves real setup routes and never skips draft/test activation gates',async({browser})=>{
  const context=await browser.newContext({viewport:{width:1280,height:800}});const page=await context.newPage();
  try{
-  await login(page,'admin');await page.goto('/profiles');
+  await login(page,'admin');
+  await page.goto('/admin/setup');
+  await page.getByRole('link',{name:/Open user management/}).click();
+  await expect(page).toHaveURL(/\/system\?view=accounts$/);
+  await expect(page.getByRole('heading',{name:'User Management',exact:true,level:2})).toBeVisible();
+  await page.goto('/profiles');
   const guide=page.locator('section.grant-admin-setup');
   await expect(guide.getByRole('heading',{name:'Set up your first approval workflow',exact:true})).toBeVisible();
   await expect(guide).toContainText('not a verified connection');await expect(guide).toContainText('bind request type, routing and notifications');await expect(guide).toContainText('activation requires separate confirmation');

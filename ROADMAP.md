@@ -18,12 +18,12 @@ Current implementation batch:
   Notification templates -> Draft policy -> Test/Activate -> first request.
 - Requester New request uses Request type and a read-only Assigned approval plan;
   approver/template/verification/deadline remain administrator-owned.
-- Targeted RED -> GREEN regression: 44/44 PASS.
-- Full Web regression: 743/743 PASS; TypeScript and production build PASS.
-- Native Browser E2E: 46/46 PASS across six isolated backends.
-- Exact product HEAD `b694199` development preview redeploy PASS; deployed index SHA256 `1de01d5252c6fa54b0016374592edb024460a604a3b940264fcd72dcad43040f`, JS SHA256 `756805a20099c566057400fc65a275528d708a63d2a589562a1c879133f3eecc`.
-- Exact product-head automatic CI SUCCESS: Grant checks `38693361892`; Engineering System `38693362243`.
-- Final owner visual review remains the next product gate.
+- Visual-review follow-up AUR-2.6: Workflow setup now deep-links directly to the existing User Management detail through an allowlisted view=accounts route; unrelated or duplicate query values fail closed to the System Management task list.
+- Original AUR targeted RED -> GREEN regression: 44/44 PASS; AUR-2.6 focused regression: 10/10 PASS.
+- Current AUR-2.6 candidate full Web regression: 744/744 PASS; TypeScript and production build PASS.
+- Current AUR-2.6 candidate native Browser E2E: 46/46 PASS across six isolated backends.
+- Development preview still serves the prior qualified `b694199` bytes until the newly committed AUR-2.6 candidate is redeployed and read back.
+- Exact-head CI and development-preview redeploy/readback are the next machine gates; owner visual review follows.
 - Foundation common UI is unchanged. No merge/release/production authority is implied.
 
 **2026-10-15 operator acceptance continuation:** competitor-UI technical acceptance and coordination reconciliation are complete. Mounted Browser E2E is **46/46 PASS** across six isolated product backends; Canvas qualification is **49/49 PASS**. U6.06 exact saved-revision Review -> Confirm one-shot test-send PASS is composed with separately verified unchanged-candidate Grant SMTP-to-Gmail multipart transport/DKIM/SPF evidence. U7.04-U7.07 PASS under WBS §1.1. U9.01/U9.02/U9.03 PASS. **Only U9.04 owner visual acknowledgement remains** before this competitor-UI priority lock may be removed. Repository-wide independent-human `FULL_USER_E2E`, direct Outlook/Apple client observation, native Control/Stellar acceptance, merge/release and production remain separate and are not claimed.

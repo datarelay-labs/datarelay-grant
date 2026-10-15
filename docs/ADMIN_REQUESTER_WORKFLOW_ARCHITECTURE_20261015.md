@@ -119,10 +119,11 @@ Administrator-facing:
 | AUR-2.3 | Show assigned Approval plan read-only | request workspace test | IMPLEMENTED |
 | AUR-2.4 | State that approver/template/verification are administrator-owned | request workspace test | IMPLEMENTED |
 | AUR-2.5 | Preserve technical policy/version references under secondary details | request workspace test | IMPLEMENTED |
-| AUR-3.1 | Full Web unit regression | 101 files / 743 tests PASS | PASS |
+| AUR-2.6 | Open User Management directly from administrator setup | allowlisted deep-link unit + browser test | IMPLEMENTED |
+| AUR-3.1 | Full Web unit regression | 101 files / 744 tests PASS | PASS |
 | AUR-3.2 | TypeScript + production build | typecheck + Vite production build PASS | PASS |
 | AUR-3.3 | Browser requester/admin navigation regression | native Browser E2E 46/46 PASS across 6 isolated backends | PASS |
-| AUR-3.4 | Redeploy development preview and owner visual review | product HEAD b694199 deployed; Grant/Engineering CI SUCCESS; owner review pending | DEPLOY + CI PASS / OWNER REVIEW PENDING |
+| AUR-3.4 | Redeploy development preview and owner visual review | AUR-2.6 candidate qualified; deploy/CI pending | DEPLOY PENDING |
 
 ## 6. Acceptance
 

@@ -10,6 +10,7 @@ const ADMIN_STEPS = [
     description: 'Create the people who may request or approve work. Email addresses and roles are owned by administrators.',
     action: 'Open user management',
     destination: '/system',
+    href: '/system?view=accounts',
   },
   {
     number: '02',
@@ -69,9 +70,15 @@ export function AdminWorkflowSetup({ navigate }: { navigate: Navigate }) {
           <div className="grant-admin-setup-step">
             <strong>{step.title}</strong>
             <small>{step.description}</small>
-            <button type="button" onClick={() => navigate(step.destination)}>
-              {step.action} <span aria-hidden="true">→</span>
-            </button>
+            {'href' in step ? (
+              <a href={step.href}>
+                {step.action} <span aria-hidden="true">→</span>
+              </a>
+            ) : (
+              <button type="button" onClick={() => navigate(step.destination)}>
+                {step.action} <span aria-hidden="true">→</span>
+              </button>
+            )}
           </div>
         </li>)}
       </ol>

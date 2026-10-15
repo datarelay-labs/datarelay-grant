@@ -1,7 +1,7 @@
 import {createElement} from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {describe,expect,it} from 'vitest';
-import {GrantConfigurationPortabilityTask} from '../../src/administration';
+import {GrantConfigurationPortabilityTask,readAdministrationInitialView} from '../../src/administration';
 import {readIntegrationsInitialView} from '../../src/integrations';
 
 describe('Foundation System Management existing Grant capability wiring',()=>{
@@ -13,6 +13,15 @@ describe('Foundation System Management existing Grant capability wiring',()=>{
     expect(html).not.toContain('Restore database');
     expect(html).not.toContain('Confirm restore');
     expect(html).not.toContain('Execute now');
+  });
+
+
+  it('deep-links only the allowlisted User Management task from administrator setup',()=>{
+    expect(readAdministrationInitialView('?view=accounts')).toBe('accounts');
+    for(const input of ['', '?view=health', '?view=accounts%00', '?other=accounts',
+      '?view=accounts&view=health', '?view=accounts&other=x']){
+      expect(readAdministrationInitialView(input)).toBe(null);
+    }
   });
 
   it('opens only the safe existing diagnostic tab from a canonical allowlisted query',()=>{

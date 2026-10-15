@@ -58,6 +58,13 @@ import './administration-detail.css';
 
 type AdminSection = 'health' | 'accounts' | 'audit' | 'mail' | 'lifecycle' | null;
 
+export function readAdministrationInitialView(search: string): AdminSection {
+  const params = new URLSearchParams(search);
+  const keys = [...params.keys()];
+  if (keys.length !== 1 || keys[0] !== 'view' || params.getAll('view').length !== 1) return null;
+  return params.get('view') === 'accounts' ? 'accounts' : null;
+}
+
 const administrationSectionLabels: Record<Exclude<AdminSection, null>, string> = {
   health: 'System Health',
   accounts: 'User Management',
@@ -93,8 +100,9 @@ export function Administration({ user }: { user: User }) {
   const [health, setHealth] = useState<HealthProjection>();
   const [operationalSecurity, setOperationalSecurity] = useState<OperationalSecurityReadiness | null>(null);
   const [info, setInfo] = useState<SystemInfoProjection>();
-  const [section, setSection] = useState<AdminSection>(null);
-  const sectionRef=useRef<AdminSection>(null);
+  const initialSection = typeof window === 'undefined' ? null : readAdministrationInitialView(window.location.search);
+  const [section, setSection] = useState<AdminSection>(initialSection);
+  const sectionRef=useRef<AdminSection>(initialSection);
   const [reviewedMail,setReviewedMail]=useState<AdministrationMailReview|null>(null);
   const [mailAttempted,setMailAttempted]=useState(false);
   const mailTestGuard=useRef(createAdministrationMailAttemptGuard());

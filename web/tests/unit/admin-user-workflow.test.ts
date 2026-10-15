@@ -46,5 +46,6 @@ describe('administrator configuration is separated from requester work', () => {
     ]) expect(html).toContain(phrase);
     expect(html).not.toContain('Requester selects approver');
     expect(html).not.toContain('Requester selects template');
+    expect(html).toContain('href="/system?view=accounts"');
   });
 });
