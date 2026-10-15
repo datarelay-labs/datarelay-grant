@@ -5,8 +5,11 @@ Approval administration and System administration; adds a Workflow setup landing
 expands first-run administrator setup to accounts/groups/integrations/templates/policy/
 activation; and changes New request from internal Approval profile language to Request type
 plus a read-only Assigned approval plan. Targeted unit/SSR regression is **44/44 PASS**. Full Web regression is **743/743 PASS**
-and TypeScript/production build PASS. Native Browser E2E is **46/46 PASS** across six isolated backends.
-Exact-candidate dev-preview redeploy remains pending. The prior
+and TypeScript/production build PASS. Native Browser E2E is **46/46 PASS** across six isolated backends. The exact product
+HEAD `b694199` is deployed to the development HTTPS preview with index SHA256
+`1de01d5252c6fa54b0016374592edb024460a604a3b940264fcd72dcad43040f` and JS
+SHA256 `756805a20099c566057400fc65a275528d708a63d2a589562a1c879133f3eecc`;
+worker remains disabled. Exact product-head automatic CI is SUCCESS: Grant checks `38693361892` and Engineering System `38693362243`. Final owner visual review remains pending. The prior
 competitor-UI U9.04 is therefore not accepted/closed by the earlier visual review.
 
 **2026-10-15 operator acceptance continuation:** competitor-UI technical acceptance and coordination reconciliation are complete under the owner-directed WBS §1.1 model. Browser E2E **46/46 PASS**, Canvas **49/49 PASS**, U6.06 exact saved-revision one-shot test-send PASS, real unchanged-candidate Grant SMTP-to-Gmail multipart/DKIM/SPF boundary verified, U7.04-U7.07 PASS, U9.02 acceptance reconciliation PASS, and **U9.03 coordination/readback PASS**. Repository-wide independent-human `FULL_USER_E2E`, direct Outlook/Apple observations, native Control/Stellar acceptance, merge/release and production remain separate and are not claimed. **U9.04 final owner visual acknowledgement is the only remaining competitor-UI lane gate.**
