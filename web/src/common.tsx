@@ -1,6 +1,7 @@
 import { useState, useId, type ReactNode, type FormEvent } from 'react';
 import { Alert, Button, StatusBadge } from '@datarelay-labs/foundation';
 import { errorText } from './api';
+import { formatDisplayEpoch } from './display_timezone';
 export function useTask() {
  const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [notice, setNotice] = useState('');
  async function run(task: () => Promise<void>) { if (busy) return; setBusy(true); setError(''); setNotice(''); try { await task(); } catch (e) { setError(errorText(e)); } finally { setBusy(false); } }
@@ -21,4 +22,4 @@ export function State({ value }: { value: string }) {
  const tone = ['APPROVED', 'DELIVERED', 'REPORTED_SUCCEEDED'].includes(value) ? 'success' : ['DENIED', 'FAILED', 'REPORTED_FAILED'].includes(value) ? 'critical' : ['HELD', 'EXPIRED', 'UNKNOWN'].includes(value) ? 'warning' : 'neutral';
  return <StatusBadge tone={tone}>{value.replaceAll('_', ' ')}</StatusBadge>;
 }
-export function when(value: number | null | undefined): string { return value ? new Date(value * 1000).toLocaleString() : '—'; }
+export function when(value: number | null | undefined): string { return value ? formatDisplayEpoch(value) : '—'; }

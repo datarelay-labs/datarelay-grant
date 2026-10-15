@@ -276,7 +276,7 @@ For all X rows capture `ORIGIN_PRODUCT_VERSION`, `EFFECT_TARGET_APPROVAL`, `REQU
 | S-014 | Backup source wrong name/URI reserved chars/missing PAUSED marker | Exact source integrity and new-path output guard, no partial restore |
 | S-015 | Restart during reserved consume/outbound send | Lease reconciliation, idempotent replay and UNKNOWN preserved; no duplicate effect |
 | S-016 | Recovery-paused installation attempts send/consume/resend | Fail closed until explicit separately approved reconciliation/resume |
-| S-017 | Incompatible backup/version or old v8 schema | Read-only check refuses implicit migration, protected pre-upgrade snapshot, isolated v8→v14 upgrade regression |
+| S-017 | Incompatible backup/version or old v8 schema | Read-only check refuses implicit migration, protected pre-upgrade snapshot, isolated v8→v15 upgrade regression |
 | S-018 | Missing Foundation package/incorrect pinned bundle/Web assets | Exact-head staging/CI failure, no fake fallback to incompatible shared UI |
 | S-019 | Admin System Management unsupported task clicked | Honest unavailable/read-only messaging, not a dead Manage button; raise outstanding P0-SM defect |
 | S-020 | Mobile/keyboard/no JS accessible labels | No hidden essential confirmation, wrong focus, horizontal overflow or screen-reader ambiguity |

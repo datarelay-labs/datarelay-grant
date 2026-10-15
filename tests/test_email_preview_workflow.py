@@ -158,7 +158,7 @@ def test_v13_to_v14_attempt_table_migration_preserves_existing_product_rows(env)
         conn.execute("PRAGMA user_version=13")
     upgraded = Database(env.db.path)
     with upgraded.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 14
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 15
         columns = {row[1] for row in conn.execute("PRAGMA table_info(notification_test_attempts)")}
         assert {"actor_id","attempt_id","template_id","preview_hash","event_id","state","created_at","updated_at"} <= columns
         after = {table: [tuple(row) for row in conn.execute("SELECT * FROM " + table + " ORDER BY 1")] for table in preserved}

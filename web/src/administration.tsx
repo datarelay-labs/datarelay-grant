@@ -54,9 +54,11 @@ import {
 import { Form, Select, useTask } from './common';
 import type { User } from './types';
 import { OperationalSecurityReadinessReadout, type OperationalSecurityReadiness } from './operational_security_readiness';
+import { formatDisplayIso } from './display_timezone';
+import { AdminDisplayTimezoneSettings, PersonalDisplayTimezoneSettings } from './display_timezone_settings';
 import './administration-detail.css';
 
-type AdminSection = 'https' | 'health' | 'accounts' | 'audit' | 'mail' | 'network' | 'lifecycle' | null;
+type AdminSection = 'https' | 'health' | 'accounts' | 'audit' | 'mail' | 'network' | 'timezone' | 'lifecycle' | null;
 
 export function readAdministrationInitialView(search: string): AdminSection {
   const params = new URLSearchParams(search);
@@ -72,6 +74,7 @@ const administrationSectionLabels: Record<Exclude<AdminSection, null>, string> =
   audit: 'Audit',
   mail: 'Mail delivery test',
   network: 'Network',
+  timezone: 'Display timezone',
   lifecycle: 'Backup & Import',
 };
 
@@ -132,7 +135,7 @@ export function Administration({ user }: { user: User }) {
       'core.https': { availability: availability(user, 'system.info.read'), access: 'view', target: { kind: 'action', actionId: 'grant.deployment.https' }, notes: 'View the configured Grant service origin. Listener, certificate and redirect changes remain deployment-operator owned.' },
       'core.users': { availability: availability(user, 'users.manage'), access: user.role === 'admin' ? 'manage' : 'view', target: { kind: 'action', actionId: 'grant.accounts' }, effects: ['security_sensitive'] },
       'core.password': { availability: availability(user, 'identity.password.change'), access: 'view', target: { kind: 'path', path: '/security' }, notes: 'Open personal password and MFA self-service. No system-wide password policy editor exists.' },
-      'core.timezone': { availability: 'unavailable', access: 'view', notes: 'Grant does not provide a system timezone configuration API.' },
+      'core.timezone': { availability: availability(user, 'display.timezone.manage'), access: user.role === 'admin' ? 'manage' : 'view', target: { kind: 'action', actionId: 'grant.display-timezone' }, notes: 'Set the platform IANA display default. Personal account overrides remain independent; stored timestamps remain UTC.' },
       'core.network': { availability: availability(user, 'system.info.read'), access: 'view', target: { kind: 'action', actionId: 'grant.deployment.network' }, notes: 'View the configured Grant service origin. Listener and reverse-proxy changes remain deployment-operator owned.' },
       'core.retention': { availability: 'unavailable', access: 'view', notes: 'No web-managed record retention policy editor exists.' },
       'core.backup-import': { availability: availability(user, 'grant.lifecycle.guidance'), access: 'view', target: { kind: 'action', actionId: 'grant.lifecycle.guidance' }, notes: 'Operator procedure only; no web restore or import is authorized.' },
@@ -219,6 +222,7 @@ export function Administration({ user }: { user: User }) {
       'core.backup-import': 'lifecycle',
       'core.https': 'https',
       'core.network': 'network',
+      'core.timezone': 'timezone',
     };
     const destination=next[selected.id]??null;
     sectionRef.current=destination;
@@ -590,7 +594,7 @@ export function Administration({ user }: { user: User }) {
                   <li key={event.id} className="grant-admin-mobile-audit-card">
                     <div className="grant-admin-mobile-audit-heading">
                       <strong>{event.action}</strong>
-                      <small>{event.timestamp}</small>
+                      <small>{formatDisplayIso(event.timestamp)}</small>
                     </div>
                     <dl className="grant-admin-mobile-audit-facts">
                       <div><dt>Actor</dt><dd>{event.actor ?? 'Unavailable'}</dd></div>
@@ -616,6 +620,8 @@ export function Administration({ user }: { user: User }) {
           </dl>
         </Card>
       ) : null}
+
+      {section === 'timezone' ? <AdminDisplayTimezoneSettings /> : null}
 
       {section === 'mail' ? (
         <Card
@@ -690,6 +696,7 @@ export function Security({
   return (
     <div className="grant-stack">
       {task.feedback}
+      <PersonalDisplayTimezoneSettings />
       <Card title="Change password">
         <PasswordChangeForm
           busy={task.busy}

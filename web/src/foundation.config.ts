@@ -180,6 +180,7 @@ export function productConfig(user: User) {
       'grant.lifecycle.guidance': admin ? 'read_only' : 'unavailable',
       'health.read': admin ? 'read_only' : 'unavailable',
       'system.info.read': admin ? 'read_only' : 'unavailable',
+      'display.timezone.manage': admin ? 'supported' : 'unavailable',
       'users.read': admin ? 'read_only' : 'unavailable',
       'users.manage': admin ? 'supported' : 'unavailable',
       'audit.read': admin ? 'read_only' : 'unavailable',

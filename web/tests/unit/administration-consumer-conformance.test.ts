@@ -77,9 +77,14 @@ function structuralReport(user: User, dispatchTaskIds = productRegisteredActions
   );
   return verifyAdministrationConsumer({
     composition,
-    registeredPaths: config.navigation.flatMap(
-      (item) => 'path' in item && typeof item.path === 'string' ? [item.path] : [],
-    ),
+    registeredPaths: [
+      ...config.navigation.flatMap(
+        (item) => 'path' in item && typeof item.path === 'string' ? [item.path] : [],
+      ),
+      // Account & security is a real shell route reached from the user menu and
+      // System Management Password Management task, not a primary nav record.
+      '/security',
+    ],
     registeredActionIds,
     requiredCoreTaskIds: user.role === 'admin'
       ? ['core.users', 'core.audit', 'core.health'] : [],
@@ -118,7 +123,8 @@ describe('B2 Grant exact B1 Foundation consumer conformance', () => {
   it('documents the exact real product callback inventory without declaring an E2E PASS', () => {
     expect(productRegisteredActions().sort()).toEqual([
       'core.users', 'core.audit', 'core.health',
-      'core.backup-import', 'grant.smtp.test',
+      'core.backup-import', 'core.https', 'core.network', 'core.timezone',
+      'grant.smtp.test',
     ].sort());
   });
 });

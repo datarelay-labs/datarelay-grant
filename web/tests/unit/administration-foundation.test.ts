@@ -39,6 +39,7 @@ describe('Grant administration consumes the public Foundation shared Hub', () =>
     expect(html).toContain('aria-label="View HTTPS"');
     expect(html).toContain('aria-label="View Password Management"');
     expect(html).toContain('aria-label="View Network"');
+    expect(html).toContain('aria-label="Manage Display timezone"');
     expect(html).toContain('aria-label="View System Health"');
     expect(html).toContain('aria-label="Manage Mail delivery test"');
     expect(html).not.toContain('aria-label="Manage HTTPS"');

@@ -16,6 +16,8 @@ from pathlib import Path
 
 from .mail_templates import DEFAULT_EVENT_TEMPLATES, DEFAULT_MAIL_TEMPLATE
 
+CURRENT_SCHEMA_VERSION = 15
+
 
 def _ensure_private_database_path(path: Path) -> None:
     """Reserve or open only a regular database inode, private before SQLite.
@@ -72,7 +74,8 @@ CREATE TABLE IF NOT EXISTS users (
  id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE, email TEXT NOT NULL,
  password_hash TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('admin','member')),
  enabled INTEGER NOT NULL DEFAULT 1, totp_secret TEXT, totp_last_step INTEGER NOT NULL DEFAULT -1,
- recovery_hashes TEXT NOT NULL DEFAULT '[]', created_at REAL NOT NULL
+ recovery_hashes TEXT NOT NULL DEFAULT '[]', created_at REAL NOT NULL,
+ display_timezone TEXT
 );
 CREATE TABLE IF NOT EXISTS sessions (
  token_hash TEXT PRIMARY KEY, id TEXT NOT NULL UNIQUE, user_id TEXT NOT NULL REFERENCES users(id),
@@ -179,6 +182,7 @@ CREATE TABLE IF NOT EXISTS runtime (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 INSERT OR IGNORE INTO runtime(key,value) VALUES('paused','0');
 INSERT OR IGNORE INTO runtime(key,value) VALUES('notification_brand_name','DataRelay Grant');
 INSERT OR IGNORE INTO runtime(key,value) VALUES('notification_sender_display_name','DataRelay Grant');
+INSERT OR IGNORE INTO runtime(key,value) VALUES('display_timezone_default','UTC');
 CREATE TABLE IF NOT EXISTS approver_groups (
  id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE, enabled INTEGER NOT NULL DEFAULT 1,
  created_at REAL NOT NULL, updated_at REAL NOT NULL
@@ -284,7 +288,7 @@ CREATE TABLE IF NOT EXISTS notification_assets (
  id TEXT PRIMARY KEY, media_type TEXT NOT NULL, width INTEGER NOT NULL, height INTEGER NOT NULL,
  data BLOB NOT NULL, created_by TEXT NOT NULL, created_at REAL NOT NULL
 );
-PRAGMA user_version=14;
+PRAGMA user_version=15;
 """
 
 
@@ -322,7 +326,7 @@ def _existing_installation(path: Path) -> Iterator[tuple[sqlite3.Connection, int
         raise ValueError("Installation database is missing or not a regular file")
     with closing(sqlite3.connect(f"{path.absolute().as_uri()}?mode=ro", uri=True)) as conn:
         version = conn.execute("PRAGMA user_version").fetchone()[0]
-        if version not in range(1, 15):
+        if version not in range(1, CURRENT_SCHEMA_VERSION + 1):
             raise ValueError("Unsupported installation database schema")
         if conn.execute("PRAGMA quick_check").fetchone()[0] != "ok":
             raise ValueError("Installation database integrity check failed")
@@ -342,7 +346,7 @@ class Database:
         _ensure_private_database_path(path)
         with closing(self.connect()) as conn:
             version = conn.execute("PRAGMA user_version").fetchone()[0]
-            if version not in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14):
+            if version not in range(CURRENT_SCHEMA_VERSION + 1):
                 raise RuntimeError("Unsupported database schema; do not downgrade this binary")
             conn.execute("PRAGMA journal_mode=WAL")
             if version == 1:
@@ -383,6 +387,9 @@ class Database:
                 version = 13
             if version == 13:
                 self._migrate_v13_to_v14(conn)
+                version = 14
+            if version == 14:
+                self._migrate_v14_to_v15(conn)
             conn.executescript(SCHEMA)
 
     @staticmethod
@@ -821,6 +828,24 @@ class Database:
             conn.rollback()
             raise
 
+    @staticmethod
+    def _migrate_v14_to_v15(conn: sqlite3.Connection) -> None:
+        # Display timezone is presentation metadata only. Existing UTC epoch
+        # values, approval records, requests and delivery evidence are untouched.
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            columns = {row[1] for row in conn.execute("PRAGMA table_info(users)")}
+            if "display_timezone" not in columns:
+                conn.execute("ALTER TABLE users ADD COLUMN display_timezone TEXT")
+            conn.execute(
+                "INSERT OR IGNORE INTO runtime(key,value) VALUES('display_timezone_default','UTC')"
+            )
+            conn.execute("PRAGMA user_version=15")
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+
     def connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(str(self.path), timeout=10, isolation_level=None)
         conn.row_factory = sqlite3.Row
@@ -878,7 +903,9 @@ class Database:
         with closing(sqlite3.connect(f"{source.absolute().as_uri()}?mode=ro", uri=True)) as old:
             if old.execute("PRAGMA quick_check").fetchone()[0] != "ok":
                 raise ValueError("Backup integrity check failed")
-            if old.execute("PRAGMA user_version").fetchone()[0] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14):
+            if old.execute("PRAGMA user_version").fetchone()[0] not in range(
+                1, CURRENT_SCHEMA_VERSION + 1
+            ):
                 raise ValueError("Backup schema mismatch")
             with (
                 _private_sqlite_output(destination) as staged,

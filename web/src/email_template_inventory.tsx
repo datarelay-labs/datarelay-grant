@@ -6,6 +6,7 @@ import type {TemplateDraft} from './notification_preview';
 import {inertEmailDocument} from './notification_preview';
 import {syntheticEmailSample} from './email_preview_model';
 import type {NotificationTemplateSet} from './types';
+import {formatDisplayEpoch} from './display_timezone';
 
 export function duplicateEmailTemplateDraft(source:NotificationTemplateSet,existingNames:string[]):TemplateDraft {
  const taken=new Set(existingNames.map(name=>name.trim().toLowerCase()));let index=1,candidate='';
@@ -47,7 +48,7 @@ export function EmailTemplateTile({template,disabled,onEdit,onDuplicate}:{templa
   <div className="grant-email-template-summary"><h3>{template.name}</h3>
    <p>{template.enabled?'Enabled':'Disabled'} · {template.published_revision?'Published v'+template.published_revision:'Not published'}</p>
    <p>{template.draft_revision?'Saved draft v'+template.draft_revision:'Saved draft'} · {template.design?'Visual template':'Legacy text template'}</p>
-   <p aria-label="Template last updated">Updated {new Date(template.updated_at*1000).toLocaleString()}</p>
+   <p aria-label="Template last updated">Updated {formatDisplayEpoch(template.updated_at)}</p>
    <p>{typeof template.active_policy_count==='number'?'Used by '+template.active_policy_count+' active '+(template.active_policy_count===1?'policy':'policies'):'Policy impact is available during publication review.'}</p>
    <small>Thumbnail uses synthetic request data and the saved draft, not a delivered message.</small>
    <div className="grant-actions"><Button type="button" variant="secondary" disabled={disabled} onClick={onEdit}>Edit draft</Button>

@@ -5,9 +5,10 @@ from datetime import UTC, datetime
 
 from fastapi import Request, Response
 
-from .auth import digest
+from .auth import digest, require_current_authority
 from .db import audit
-from .models import Login, MfaCode, PasswordChange
+from .display_timezone import update_user, user_projection
+from .models import DisplayTimezoneUpdate, Login, MfaCode, PasswordChange
 
 
 def iso(value):
@@ -49,6 +50,25 @@ def register_identity(app, human):
             "user": None if pending else auth.user(principal),
             "csrf": auth.csrf(token),
         }
+
+    @app.get("/api/v1/auth/display-timezone")
+    def display_timezone(request: Request):
+        principal = human(request)
+        with db.transaction(write=False) as conn:
+            require_current_authority(conn, principal)
+            return user_projection(conn, principal.id)
+
+    @app.put("/api/v1/auth/display-timezone")
+    def update_display_timezone(body: DisplayTimezoneUpdate, request: Request):
+        principal = human(request)
+        with db.transaction() as conn:
+            require_current_authority(conn, principal)
+            return update_user(
+                conn,
+                user_id=principal.id,
+                timezone=body.timezone,
+                expected_timezone=body.expected_timezone,
+            )
 
     @app.post("/api/v1/auth/logout")
     def logout(request: Request, response: Response):

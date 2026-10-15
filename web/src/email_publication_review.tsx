@@ -3,6 +3,7 @@ import {Alert,Button,TextField} from '@datarelay-labs/foundation';
 import {api,ApiError,errorText} from './api';
 import {NotificationRenderedPreview} from './notification_preview';
 import type {NotificationTemplateSet} from './types';
+import {formatDisplayEpoch} from './display_timezone';
 
 type Rendered={subject:string;body:string;html:string};
 export type EmailPublicationReview={template_id:string;expected_updated_at:number;review_hash:string;source_revision:number|null;published_revision:number|null;
@@ -112,14 +113,14 @@ export function EmailPublicationPanel({template,draftSignature,dirty,previewCurr
   </Alert>}
   {versions&&<section aria-label="Published version history"><h3>Published versions</h3>
    {!versions.length?<p>No published revisions.</p>:<ul>{versions.map(version=><li key={version.revision}>
-    <strong>v{version.revision}</strong> · {version.reason} · {new Date(version.created_at*1000).toLocaleString()} · Author <code>{version.created_by}</code>
+    <strong>v{version.revision}</strong> · {version.reason} · {formatDisplayEpoch(version.created_at)} · Author <code>{version.created_by}</code>
     <Button type="button" variant="secondary" disabled={busy||disabled} onClick={()=>void historicalPreview(version.revision)}>Preview published v{version.revision}</Button>
     <Button type="button" variant="secondary" disabled={blocked||!eligible||version.revision===template?.published_revision} onClick={()=>void prepare(version.revision)}>Review rollback from v{version.revision}</Button>
    </li>)}</ul>}<p>Showing the most recent 50 published revisions. Rollback publishes a new revision; history is never rewritten.</p>
   </section>}
   {historical&&historical.template_id===template?.id&&<section aria-label="Historical email preview" aria-busy={busy}>
    <h3>Published v{historical.revision} · Read-only</h3>
-   <p>Author <code>{historical.created_by}</code> · {new Date(historical.created_at*1000).toLocaleString()}. Viewing this version changes no draft or publication.</p>
+   <p>Author <code>{historical.created_by}</code> · {formatDisplayEpoch(historical.created_at)}. Viewing this version changes no draft or publication.</p>
    <label>Historical preview event <select disabled={busy} value={historical.event} onChange={event=>void historicalPreview(historical.revision,event.target.value)}>
     {Object.keys(template.templates).map(event=><option key={event} value={event}>{event.replaceAll('_',' ')}</option>)}
    </select></label>

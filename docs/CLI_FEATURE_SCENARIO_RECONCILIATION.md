@@ -141,11 +141,11 @@ Every applicable FCS has a **DIRECT_OPERATOR** observation and **AUDITOR_RECONCI
 | FCS-022 | "Find audit trail and privacy-safe export" | Discover actor/scope filters, bounded event search and request chain, unauthorized data denial, exported count consistency |
 | FCS-023 | "Recover failed/unknown notifications" | Discover Operations delivery-failed queue, resend Review→Confirm, stable ID, no automatic duplicate or false mailbox receipt |
 | FCS-024 | "Export/import configuration" | System Management Backup & Import → `/integrations?view=diagnostics`; exact-query parser, schema v1 metadata dry-run vs v2 Draft-only import, no DB restore |
-| FCS-025 | "Manage supported system settings" | Nine Control-reference task labels vs Grant real permissions; current HTTPS/password-policy/timezone/network/retention unavailable; Foundation-owned visual issues routed upstream |
+| FCS-025 | "Manage supported system settings" | Nine Control-reference task labels vs Grant real permissions; Display timezone has Grant-native authenticated user/default persistence while HTTPS/network stay deployment-read-only and platform password policy/retention remain unavailable; Foundation-owned visual issues routed upstream |
 | FCS-026 | "Find real external Control/Stellar status" | Confirm mock ledger/fixture is not native Control execution or Stellar ingestion; missing external readback plainly blocked |
 | FCS-027 | "Use help, recover from an invalid operation" | All seven `grant` subcommands/flags, wrong placement, missing flags, help/errors/nonzero exit; no traceback/secrets/internal-only advice |
 | FCS-028 | "Use the product with a restricted identity" | Anonymous, member, approver, admin and integration token visibility vs action matrices; UI controls and API deny in agreement |
-| FCS-029 | "Identify current candidate/version" | Git HEAD, private Foundation lock, deployed Web assets, current SQLite schema v14, CLI/check and docs consistent; stale runtime correlation only |
+| FCS-029 | "Identify current candidate/version" | Git HEAD, private Foundation lock, deployed Web assets, current SQLite schema v15, CLI/check and docs consistent; stale runtime correlation only |
 | FCS-030 | "Finish a clean operator shift" | Audit-owned file/process cleanup, retain legitimate installation and durable evidence, final findings/owner routing, zero runtime mutation |
 
 The scenario register is **30/30 indexed cases**. Additional current supported commands, variants, features or roles discovered at execution time must be added as indexed rows with unique IDs instead of silently reducing the denominator. A superseded or inapplicable scenario requires `NOT_APPLICABLE` with explicit product-standard evidence.

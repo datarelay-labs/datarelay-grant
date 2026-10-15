@@ -16,6 +16,7 @@ import { Delegations } from './delegations';
 import { ApiError, setCsrf } from './api';
 import { useTask } from './common';
 import { authAdapter, productConfig, readSession } from './foundation.config';
+import { readDisplayTimezone, setDisplayTimezone } from './display_timezone';
 import { grantRc41NavigationDiscovery } from './foundation_rc41';
 import { Home } from './home';
 import { Integrations } from './integrations';
@@ -56,7 +57,14 @@ function AuthenticatedGrantApp() {
 
   async function refresh() {
     try {
-      setSession(await readSession());
+      const next = await readSession();
+      if (next.user) {
+        const display = await readDisplayTimezone();
+        setDisplayTimezone(display.effective);
+      } else {
+        setDisplayTimezone('UTC');
+      }
+      setSession(next);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) signedOut();
       else throw error;

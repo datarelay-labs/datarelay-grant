@@ -344,6 +344,16 @@ class Token(Input):
     )
 
 
+class DisplayTimezoneUpdate(Input):
+    timezone: str | None = Field(max_length=128)
+    expected_timezone: str | None = Field(max_length=128)
+
+
+class AdminDisplayTimezoneUpdate(Input):
+    timezone: str = Field(min_length=1, max_length=128)
+    expected_timezone: str = Field(min_length=1, max_length=128)
+
+
 class PasswordChange(Input):
     current_password: str = Field(min_length=1, max_length=256)
     new_password: str = Field(min_length=8, max_length=256)

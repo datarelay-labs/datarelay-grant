@@ -1674,4 +1674,4 @@ remains unavailable because no scheduler exists. Focused Foundation/System
 Management units are **7/7 PASS**, TypeScript and production build PASS, and
 the authenticated Grant browser scenario covering HTTPS → Back → Network →
 Back → Password Management plus existing System Health/shortcuts is **PASS**.
-SM-2 timezone persistence/backend settings remain OPEN.
+SM-2 timezone persistence/backend settings are now source-implemented and deterministically qualified: authenticated user override + admin platform default, IANA validation, stale-write CAS, audit, UTC-only business timestamp storage, schema-v15 migration, Account & Security personal settings, and the System Management platform-default action. Focused backend/Web/browser checks and full Web regression are green; pushed-head CI/development-preview reconciliation belongs to SM-5. SM-3/SM-4 remain owner-gated.

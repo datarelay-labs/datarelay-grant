@@ -480,7 +480,7 @@ def test_policy_ttl_override_and_v10_database_upgrade_preserves_snapshot(env):
         conn.execute("PRAGMA user_version=10")
     Database(env.settings.database)
     with env.db.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 14
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 15
         assert conn.execute(
             "SELECT COUNT(*) FROM decision_issuances WHERE request_id=?",
             (request["id"],),

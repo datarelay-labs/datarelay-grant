@@ -183,6 +183,45 @@ test('Grant Foundation Administration shortcuts and selected task focus work on 
  }finally{await context.close();}
 });
 
+test('SM-2 display timezone default and personal override require review and persist on real Grant routes',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:1280,height:800}});const page=await context.newPage();
+ try{
+  await login(page,'admin');
+  await page.goto('/system');
+  await page.getByRole('button',{name:'Manage Display timezone',exact:true}).click();
+  await expect(page.getByText('Platform display timezone',{exact:true})).toBeVisible();
+  await expect(page.getByText('UTC',{exact:true}).first()).toBeVisible();
+  await page.getByLabel('Default IANA timezone',{exact:true}).fill('Asia/Seoul');
+  await page.getByRole('button',{name:'Review default timezone',exact:true}).click();
+  await expect(page.getByText('Proposed default: Asia/Seoul.',{exact:false})).toBeVisible();
+  await page.getByRole('button',{name:'Confirm default timezone',exact:true}).click();
+  await expect(page.getByText('Platform display timezone default saved.',{exact:false})).toBeVisible();
+  await expect(page.getByText('Asia/Seoul',{exact:true}).first()).toBeVisible();
+
+  await page.goto('/security');
+  await expect(page.getByText('Display timezone',{exact:true})).toBeVisible();
+  await expect(page.getByText('Asia/Seoul',{exact:true}).first()).toBeVisible();
+  await page.getByLabel('Personal IANA timezone',{exact:true}).fill('America/New_York');
+  await page.getByRole('button',{name:'Review timezone change',exact:true}).click();
+  await expect(page.getByText('Proposed override: America/New_York.',{exact:false})).toBeVisible();
+  await page.getByRole('button',{name:'Confirm timezone change',exact:true}).click();
+  await expect(page.getByText('Display timezone preference saved.',{exact:false})).toBeVisible();
+  await expect(page.getByText('America/New_York',{exact:true}).first()).toBeVisible();
+
+  // Restore the disposable fixture so later browser tests inherit the canonical default.
+  await page.getByLabel('Personal IANA timezone',{exact:true}).fill('');
+  await page.getByRole('button',{name:'Review timezone change',exact:true}).click();
+  await page.getByRole('button',{name:'Confirm timezone change',exact:true}).click();
+  await expect(page.getByText('Use platform default',{exact:true})).toBeVisible();
+  await page.goto('/system');
+  await page.getByRole('button',{name:'Manage Display timezone',exact:true}).click();
+  await page.getByLabel('Default IANA timezone',{exact:true}).fill('UTC');
+  await page.getByRole('button',{name:'Review default timezone',exact:true}).click();
+  await page.getByRole('button',{name:'Confirm default timezone',exact:true}).click();
+  await expect(page.getByText('UTC',{exact:true}).first()).toBeVisible();
+ }finally{await context.close();}
+});
+
 // Synthetic fixture and one existing administrator session only. This is UI
 // regression evidence, NOT independently authenticated full User E2E.
 test('G9 configuration preview shows manual migration tasks without an Apply action',async({browser})=>{

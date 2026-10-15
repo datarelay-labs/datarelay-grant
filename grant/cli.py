@@ -12,7 +12,7 @@ from cryptography.fernet import Fernet
 
 from .auth import Auth
 from .config import Settings
-from .db import Database
+from .db import CURRENT_SCHEMA_VERSION, Database
 from .models import NewUser
 
 
@@ -106,7 +106,7 @@ def main():
             version, paused = Database.inspect_existing(settings.database)
         except (ValueError, OSError, sqlite3.DatabaseError) as exc:
             refuse_storage("CHECK", exc)
-        if version != 14:
+        if version != CURRENT_SCHEMA_VERSION:
             raise SystemExit("SCHEMA_UPGRADE_REQUIRED: backup first; check does not migrate")
         print("DATABASE=ok")
         print("PAUSED=" + paused)

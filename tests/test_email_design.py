@@ -89,7 +89,7 @@ def test_v12_upgrade_keeps_legacy_snapshot_and_mail_bytes(tmp_path):
     # Exact preceding table layout, populated with synthetic legacy content.
     old_schema = SCHEMA.replace(
         " design_json TEXT, draft_revision INTEGER NOT NULL DEFAULT 1, published_revision INTEGER,", ""
-    ).replace("PRAGMA user_version=14;", "PRAGMA user_version=12;")
+    ).replace("PRAGMA user_version=15;", "PRAGMA user_version=12;")
     path = tmp_path / "legacy.sqlite"
     with sqlite3.connect(path) as conn:
         conn.executescript(old_schema)
@@ -99,15 +99,15 @@ def test_v12_upgrade_keeps_legacy_snapshot_and_mail_bytes(tmp_path):
         before = hashlib.sha256(repr(conn.execute("SELECT * FROM et2_legacy_payloads").fetchall()).encode()).hexdigest()
     db = Database(path)
     with db.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 14
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 15
         columns = {row[1] for row in conn.execute("PRAGMA table_info(email_templates)")}
         assert {"design_json", "draft_revision", "published_revision"} <= columns
         after = hashlib.sha256(repr([tuple(row) for row in conn.execute("SELECT * FROM et2_legacy_payloads")]).encode()).hexdigest()
         assert after == before
-    assert Database.inspect_existing(path)[0] == 14
+    assert Database.inspect_existing(path)[0] == 15
     backup = tmp_path / "backup.sqlite"
     db.backup(backup)
-    assert Database.inspect_existing(backup)[0] == 14
+    assert Database.inspect_existing(backup)[0] == 15
 
 
 def test_legacy_design_opt_in_preserves_future_published_baseline(env):

@@ -199,7 +199,7 @@ NOT a disaster-recovery restore: it intentionally excludes credentials,
 current requests, execution state and full installation identity. Never
 restore a customer installation from a v2 configuration bundle.
 
-Backup/restore and schema-v14 upgrade checks must retain historical audit,
+Backup/restore and schema-v15 upgrade checks must retain historical audit,
 versioned policies, imported Drafts and full message templates, request
 action fingerprints, approver groups, delegations, comments and credential
 status. Isolated database copies are not evidence that external execution
@@ -384,15 +384,17 @@ If a change-request deadline expires, the requester may create a new linked
 replacement without cancelling the now-expired original. Every replacement
 requires fresh action-bound approval; the original timeline remains immutable.
 
-The current development candidate uses additive schema v14:
+The current development candidate uses additive schema v15:
 v8 is the prior collaboration baseline, v9 introduces durable approval
 assignments and policy-versioned Deny reasons, v10 adds protected email PIN
 issuance and confirmation, v11 introduces customer verification snapshots
 and short-lived extra-email OTP challenges, v12 adds scoped fresh Grant
 account TOTP evidence bound to a live signed-in session, v13 adds versioned
-visual notification design/publication and immutable asset metadata, and v14
-adds durable reviewed notification test-send attempts. Legacy v1-v13 schemas
-migrate forward through supported steps, including re-entry safety for
+visual notification design/publication and immutable asset metadata, v14
+adds durable reviewed notification test-send attempts, and v15 adds only
+presentation metadata for the platform display-timezone default and optional
+per-user IANA timezone override. Persisted business timestamps remain UTC.
+Legacy v1-v14 schemas migrate forward through supported steps, including re-entry safety for
 previously added columns. Existing persisted requests do NOT
 automatically acquire fresh loginless decision links on migration.
 Back up before a non-disposable upgrade and validate on an isolated

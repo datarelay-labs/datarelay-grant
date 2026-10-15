@@ -273,7 +273,7 @@ def test_v11_to_v12_migration_does_not_implicitly_verify_old_context(env):
         conn.execute("PRAGMA user_version=11")
     Database(env.settings.database)
     with env.db.transaction(write=False) as conn:
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == 14
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == 15
         proof = conn.execute(
             "SELECT mfa_verified_at,verified_user_id,mfa_session_id "
             "FROM decision_confirmations"

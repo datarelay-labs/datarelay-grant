@@ -17,11 +17,17 @@ from .configuration_portability_v2 import (
 )
 from .configuration_preview import preview_configuration
 from .db import audit
+from .display_timezone import admin_projection, update_default
 from .errors import GrantError
 from .foundation_delivery import notification_destinations
-from .models import NewUser
+from .models import AdminDisplayTimezoneUpdate, NewUser
 from .operational_readiness import operational_readiness
 from .operations import operations_summary
+
+
+def _display_timezone_default(app) -> str:
+    with app.state.db.transaction(write=False) as conn:
+        return admin_projection(conn)["default"]
 
 
 def register_admin(app, actor):
@@ -37,9 +43,35 @@ def register_admin(app, actor):
                     "value": "Single organization; development candidate",
                 },
                 {"id": "time", "label": "Stored time", "value": "UTC"},
+                {
+                    "id": "display_timezone_default",
+                    "label": "Default display timezone",
+                    "value": _display_timezone_default(app),
+                },
                 {"id": "origin", "label": "Service origin", "value": app.state.settings.origin},
             ]
         }
+
+    @app.get("/api/v1/admin/display-timezone")
+    def display_timezone(request: Request):
+        principal = actor(request)
+        principal.require_admin()
+        with app.state.db.transaction(write=False) as conn:
+            require_current_authority(conn, principal)
+            return admin_projection(conn)
+
+    @app.put("/api/v1/admin/display-timezone")
+    def update_display_timezone(body: AdminDisplayTimezoneUpdate, request: Request):
+        principal = actor(request)
+        principal.require_admin()
+        with app.state.db.transaction() as conn:
+            require_current_authority(conn, principal)
+            return update_default(
+                conn,
+                actor_id=principal.id,
+                timezone=body.timezone,
+                expected_timezone=body.expected_timezone,
+            )
 
     @app.get("/api/v1/admin/users")
     def users(request: Request):
