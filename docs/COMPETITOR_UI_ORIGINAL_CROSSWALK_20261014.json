@@ -82,7 +82,7 @@
       "observed_at": "2026-10-14T03:40:16.634038+00:00"
     },
     {
-      "path": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "path": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "sha256": "c60a04d422a567fa5a5b02c5812ee1dde3a949697cf1ca6ee6b26f0688a264ee",
       "line_count": 517,
       "access": "PASS_ORIGINAL_TOOL_TARGET_RETRY",
@@ -434,7 +434,7 @@
   "original_user_scenarios": [
     {
       "id": "U-001",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 128,
       "objective_verbatim": "Requester signs in for the first time",
       "oracle_verbatim": "From public login find credentials/MFA flow, enter own account; server session equals requester; wrong credentials rejected without protected-data leak",
@@ -452,7 +452,7 @@
     },
     {
       "id": "U-002",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 129,
       "objective_verbatim": "Requester starts first approval",
       "oracle_verbatim": "Home → New Request; select actual ACTIVE policy, title/reason, integration target/action; read final Review then explicit Confirm; before Confirm no POST, after one server request ID/action fingerprint/policy version",
@@ -470,7 +470,7 @@
     },
     {
       "id": "U-003",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 130,
       "objective_verbatim": "Requester fixes invalid/missing fields",
       "oracle_verbatim": "Invalid active policy, missing target, unexpected JSON or stale choice displays actionable form errors; no partial request, no duplicate external ID or silent source changes",
@@ -488,7 +488,7 @@
     },
     {
       "id": "U-004",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 131,
       "objective_verbatim": "Approver independently finds task",
       "oracle_verbatim": "Separate browser login, My approvals Inbox; exact assigned seat/action/target/deadline, server-scoped overdue and quorum count; unrelated request not visible",
@@ -506,7 +506,7 @@
     },
     {
       "id": "U-005",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 132,
       "objective_verbatim": "Approver holds an eligible request",
       "oracle_verbatim": "Request Detail → Hold → inspect Review → Confirm held; prior pending unchanged before Confirm, durable HELD/revision afterwards, consume cannot commit, original deadline unchanged",
@@ -524,7 +524,7 @@
     },
     {
       "id": "U-006",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 133,
       "objective_verbatim": "Approver approves the held request",
       "oracle_verbatim": "Exact action/target/reviewer seat shown; Approve Review→Confirm; durable APPROVED and chosen-seat evidence; notification delivery and actual execution still separate",
@@ -542,7 +542,7 @@
     },
     {
       "id": "U-007",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 134,
       "objective_verbatim": "Approver denies a different request",
       "oracle_verbatim": "Deny Review→Confirm; DENIED state, requester sees explanation, no commitment/external effect permitted",
@@ -560,7 +560,7 @@
     },
     {
       "id": "U-008",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 135,
       "objective_verbatim": "Requester cancels an open request",
       "oracle_verbatim": "Cancel Review→Confirm; durable CANCELLED, old link/queued notification cannot restore approval; unsafe consume denied",
@@ -578,7 +578,7 @@
     },
     {
       "id": "U-009",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 136,
       "objective_verbatim": "Requester replaces an earlier request",
       "oracle_verbatim": "From cancelled/changes-requested Request Detail, Create replacement; fresh external ID, modified target, predecessor reference; new immutable action and new approval",
@@ -596,7 +596,7 @@
     },
     {
       "id": "U-010",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 137,
       "objective_verbatim": "Approver asks for information and requester replies",
       "oracle_verbatim": "Add scoped comment/INFO_REQUESTED, requester sees follow-up and responds; required approval seat remains undecided",
@@ -614,7 +614,7 @@
     },
     {
       "id": "U-011",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 138,
       "objective_verbatim": "Approver requests a change",
       "oracle_verbatim": "CHANGES_REQUESTED; requester navigates to fresh replacement request, old action never updated in place; chronology and link correct",
@@ -632,7 +632,7 @@
     },
     {
       "id": "U-012",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 139,
       "objective_verbatim": "Current delegate acts in approved interval",
       "oracle_verbatim": "Admin/approver creates bounded delegation, delegate signs in separately; only current authorized seat exposed; after revocation/expiry stale delegate denied",
@@ -650,7 +650,7 @@
     },
     {
       "id": "U-013",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 140,
       "objective_verbatim": "Requests/My requests/Approvals filters",
       "oracle_verbatim": "Filter lifecycle/action/date/approver, pagination/partial counts, mobile list; reset and stale GET handling show current server scope, not cached foreign rows",
@@ -668,7 +668,7 @@
     },
     {
       "id": "U-014",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 141,
       "objective_verbatim": "Unrelated person attempts access",
       "oracle_verbatim": "Separate member attempts request detail, approval action and admin-only routes; HTTP 403/404 as appropriate, no existence leak or unauthorized write",
@@ -686,7 +686,7 @@
     },
     {
       "id": "U-015",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 142,
       "objective_verbatim": "Current session terminates",
       "oracle_verbatim": "Sign out, browser back/refresh; protected data unavailable, revoked session cannot reissue decision",
@@ -704,7 +704,7 @@
     },
     {
       "id": "U-016",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 143,
       "objective_verbatim": "Two full independent end-user passes",
       "oracle_verbatim": "Repeat all applicable U scenarios with **new** independently operated Requester A, Approver B sessions, distinct mail receipts and request IDs on the same frozen build",
@@ -722,7 +722,7 @@
     },
     {
       "id": "A-001",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 149,
       "objective_verbatim": "Admin signs in and finds Foundation shell",
       "oracle_verbatim": "Role-correct grouped navigation, keyboard/mobile accessibility, actual nine standard System Management tasks plus Grant-owned mail tasks",
@@ -740,7 +740,7 @@
     },
     {
       "id": "A-002",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 150,
       "objective_verbatim": "Manage one approved disposable account",
       "oracle_verbatim": "User Management → Review create account → Confirm one POST; exact username/role, initial password absent from review/log; unrelated role denied",
@@ -758,7 +758,7 @@
     },
     {
       "id": "A-003",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 151,
       "objective_verbatim": "Manage current user password/MFA and sessions",
       "oracle_verbatim": "Account & Security password change, TOTP enrollment/verification/recovery codes, session list/revoke and fresh login; no global policy-editor claim",
@@ -776,7 +776,7 @@
     },
     {
       "id": "A-004",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 152,
       "objective_verbatim": "Register a safe receiver",
       "oracle_verbatim": "Integrations Add connection with actual approved HTTPS origin, type and tenant, decision verification minimum, separate final review; registered != connected",
@@ -794,7 +794,7 @@
     },
     {
       "id": "A-005",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 153,
       "objective_verbatim": "Create single-approver and group-based policy",
       "oracle_verbatim": "Verify approver/group roster, approval mode SINGLE/ANY/ALL/QUORUM/SEQUENTIAL and server accepted member order",
@@ -812,7 +812,7 @@
     },
     {
       "id": "A-006",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 154,
       "objective_verbatim": "Edit and test a Draft",
       "oracle_verbatim": "Full policy fields action/tenant/mode/MFA, Draft→Testing, isolated nonexecuting test, explicit Test→Activate, prove Draft alone cannot authorize",
@@ -830,7 +830,7 @@
     },
     {
       "id": "A-007",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 155,
       "objective_verbatim": "Clone/version/disable policy",
       "oracle_verbatim": "Clone→Draft; changed version, active selector and notification snapshot; stale save server 409, no silent lost Deny/MFA floor",
@@ -848,7 +848,7 @@
     },
     {
       "id": "A-008",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 156,
       "objective_verbatim": "Concurrent two-admin edit",
       "oracle_verbatim": "Two real admin sessions load same policy/template; first saves, second stale CAS fails and must Review latest; no lost update",
@@ -867,7 +867,7 @@
     },
     {
       "id": "A-009",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 157,
       "objective_verbatim": "Define full event-template set",
       "oracle_verbatim": "All required event types, preview safe variables, adjust branding; save Review→Confirm only if current version, no injection/script execution",
@@ -888,7 +888,7 @@
     },
     {
       "id": "A-010",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 158,
       "objective_verbatim": "Send isolated admin test mail",
       "oracle_verbatim": "Explicit send-to-current-admin preview, separate confirmation; transport success not actual receipt, no unapproved recipient",
@@ -909,7 +909,7 @@
     },
     {
       "id": "A-011",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 159,
       "objective_verbatim": "Review delivery failures",
       "oracle_verbatim": "Notification Delivery Health filters, failed event, idempotent resend review/confirm and signed transport audit, no unintended external action",
@@ -927,7 +927,7 @@
     },
     {
       "id": "A-012",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 160,
       "objective_verbatim": "Issue and revoke scoped integration credential",
       "oracle_verbatim": "Separate request:create, grant:consume, result:write and read-only scopes; one-time raw secret; later metadata/revoke and failed replay",
@@ -945,7 +945,7 @@
     },
     {
       "id": "A-013",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 161,
       "objective_verbatim": "Examine Audit Explorer and admin history",
       "oracle_verbatim": "Filter request ID/action/actor, open bounded evidence chain and permitted export; admin-read-only evidence, no secrets/unbounded disclosure",
@@ -963,7 +963,7 @@
     },
     {
       "id": "A-014",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 162,
       "objective_verbatim": "Use protected Draft configuration portability",
       "oracle_verbatim": "System Management Backup & Import → Integrations Diagnostics; export v2, preview mapped Draft import with explicit confirmation, no active policy or host DB restore",
@@ -981,7 +981,7 @@
     },
     {
       "id": "A-015",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 163,
       "objective_verbatim": "Inspect system readiness and exceptions",
       "oracle_verbatim": "Actually persisted API facts and recovery marker; missing/mocked SSL, backup, Control/Stellar, retention state shown as unknown/unavailable",
@@ -999,7 +999,7 @@
     },
     {
       "id": "A-016",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 164,
       "objective_verbatim": "Verify Control-reference System Management parity",
       "oracle_verbatim": "HTTPS, users, password-policy, timezone, network, retention, backup/import, audit, health each real supported View/Manage or truthful unavailable; current P0-SM gap is FAIL/OPEN until delivered by respective owner",
@@ -1017,7 +1017,7 @@
     },
     {
       "id": "A-017",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 165,
       "objective_verbatim": "Close admin session and clean temporary records",
       "oracle_verbatim": "Revoke only test-owned credentials/accounts as authorized; ensure no persistent extra admin or unsafe email sender/policy activation remains",
@@ -1035,7 +1035,7 @@
     },
     {
       "id": "E-001",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 173,
       "objective_verbatim": "Requester submits eligible new request",
       "oracle_verbatim": "Selected Approver B receives original request in a genuine independent mailbox; redact subject/body/token; store sender/recipient/arrival metadata and source request ID",
@@ -1054,7 +1054,7 @@
     },
     {
       "id": "E-002",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 174,
       "objective_verbatim": "Approver B opens emailed link without Requester A's session",
       "oracle_verbatim": "GET is non-mutating and shows verified target/request/seat; original request state unchanged",
@@ -1073,7 +1073,7 @@
     },
     {
       "id": "E-003",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 175,
       "objective_verbatim": "Correct issued PIN, then Hold/Approve/Deny choice",
       "oracle_verbatim": "Only bound recipient/current seat verifies; final explicit Confirm produces selected durable human vote, not just clicked link",
@@ -1092,7 +1092,7 @@
     },
     {
       "id": "E-004",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 176,
       "objective_verbatim": "Wrong/missing/expired/replayed PIN or capability link",
       "oracle_verbatim": "No decision, bounded attempts/rate limits, no token disclosure or downgrade",
@@ -1111,7 +1111,7 @@
     },
     {
       "id": "E-005",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 177,
       "objective_verbatim": "Required OTP via approved second challenge",
       "oracle_verbatim": "Fresh one-time token generation/delivery/verification; expiry/replay/recipient mismatch fail",
@@ -1130,7 +1130,7 @@
     },
     {
       "id": "E-006",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 178,
       "objective_verbatim": "Fresh MFA/TOTP by existing account assurance",
       "oracle_verbatim": "Prove fresh required factor and correct floor; same-mailbox OTP is NOT an independent factor, stale TOTP fails",
@@ -1149,7 +1149,7 @@
     },
     {
       "id": "E-007",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 179,
       "objective_verbatim": "Raise verification floor while link is outstanding",
       "oracle_verbatim": "Cannot approve at weaker old floor, version/current-floor anti-downgrade and reissue requirement enforced",
@@ -1168,7 +1168,7 @@
     },
     {
       "id": "E-008",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 180,
       "objective_verbatim": "Change/revoke selected seat after issuance",
       "oracle_verbatim": "Previously eligible person loses authority, newly selected seat receives bound intent, old link unusable",
@@ -1187,7 +1187,7 @@
     },
     {
       "id": "E-009",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 181,
       "objective_verbatim": "Reissue/resend link and attempt old/new intent",
       "oracle_verbatim": "Exactly one valid current choice, stale/expired choice rejected, delivery retry is not duplicate vote",
@@ -1206,7 +1206,7 @@
     },
     {
       "id": "E-010",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 182,
       "objective_verbatim": "Multi-seat ALL/SEQUENTIAL quorum fanout",
       "oracle_verbatim": "Correct recipients and ordering, each seat counted once, full quorum only after last authorized decision",
@@ -1225,7 +1225,7 @@
     },
     {
       "id": "E-011",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 183,
       "objective_verbatim": "Distinct actual mailboxes A and B prove custody",
       "oracle_verbatim": "No aliases/one shared inbox; separate human owns each consent/recipient and actual received message",
@@ -1244,7 +1244,7 @@
     },
     {
       "id": "E-012",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 184,
       "objective_verbatim": "Delayed/failed/retried SMTP after cancellation",
       "oracle_verbatim": "Stable event IDs, transport state != receipt, expired/cancelled requests do not revive",
@@ -1263,7 +1263,7 @@
     },
     {
       "id": "E-013",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 185,
       "objective_verbatim": "Two full mail/decision passes at same candidate",
       "oracle_verbatim": "New tokens, challenges, inbox receipts, request IDs and independent browser contexts for pass 1 and pass 2",
@@ -1282,7 +1282,7 @@
     },
     {
       "id": "L-001",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 224,
       "objective_verbatim": "Discover `grant --help`, seven command families, global `--config` and each `--help`",
       "oracle_verbatim": "Correct documented grammar, no hidden server mutation during help",
@@ -1297,7 +1297,7 @@
     },
     {
       "id": "L-002",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 225,
       "objective_verbatim": "`init` NEW isolated configuration, with `--dev` and approved origin",
       "oracle_verbatim": "Private config mode 0600, fresh key, NO default user/DB, refusal on same config existing",
@@ -1312,7 +1312,7 @@
     },
     {
       "id": "L-003",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 226,
       "objective_verbatim": "`check` before first DB and on invalid schema",
       "oracle_verbatim": "Nonzero `CHECK_REFUSED` / `SCHEMA_UPGRADE_REQUIRED`, no new DB, no automatic migration",
@@ -1327,7 +1327,7 @@
     },
     {
       "id": "L-004",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 227,
       "objective_verbatim": "`user-add` admin and member with private repeated getpass",
       "oracle_verbatim": "Only requested users stored, role recognized, no password echo/dump, duplicate/short/mismatch refusal",
@@ -1342,7 +1342,7 @@
     },
     {
       "id": "L-005",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 228,
       "objective_verbatim": "`serve` isolated loopback and normal browser login",
       "oracle_verbatim": "Actual responsive Grant HTTP/HTTPS proxy as approved, PID/port identity, clean stop/restart with same DB",
@@ -1357,7 +1357,7 @@
     },
     {
       "id": "L-006",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 229,
       "objective_verbatim": "`check` on existing versioned installation",
       "oracle_verbatim": "`DATABASE=ok`, correct `PAUSED` and `SMTP` status, no writable remediation, no accidental send",
@@ -1372,7 +1372,7 @@
     },
     {
       "id": "L-007",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 230,
       "objective_verbatim": "`backup --output` a new private filename",
       "oracle_verbatim": "Same DB snapshot identity and SQLite quick_check, 0600 publication, no key leak, backup did not migrate old supported schema",
@@ -1387,7 +1387,7 @@
     },
     {
       "id": "L-008",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 231,
       "objective_verbatim": "Backup to existing path / missing or symlink/nonregular source",
       "oracle_verbatim": "Bounded `BACKUP_REFUSED`, no overwrite, no partial temp, no fabricated empty backup",
@@ -1402,7 +1402,7 @@
     },
     {
       "id": "L-009",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 232,
       "objective_verbatim": "`restore --input --output` into NEW private DB",
       "oracle_verbatim": "Sessions invalidated, delivery/consume PAUSED, saved snapshots/credentials under same key; old DB unchanged",
@@ -1417,7 +1417,7 @@
     },
     {
       "id": "L-010",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 233,
       "objective_verbatim": "Restore invalid/duplicate/output-symlink/reserved-character path",
       "oracle_verbatim": "`RESTORE_REFUSED` on bad state, no overwrite, no partial output, exact actual input filename selected",
@@ -1432,7 +1432,7 @@
     },
     {
       "id": "L-011",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 234,
       "objective_verbatim": "`recovery-resume` without verified reconciliation; only authorized acknowledgement afterwards",
       "oracle_verbatim": "No accidental resume; after separately approved explicit acknowledge restored open/uncommitted grants cancelled, uncertain committed effects UNKNOWN",
@@ -1447,7 +1447,7 @@
     },
     {
       "id": "L-012",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 235,
       "objective_verbatim": "Reopen original and clone in isolation, inspect offboarding",
       "oracle_verbatim": "Original remains unchanged, restored state/private key consistent, only disposable owned service/temp files cleaned",
@@ -1462,7 +1462,7 @@
     },
     {
       "id": "X-001",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 245,
       "objective_verbatim": "Approved real DataRelay Control operation registered with an existing Control-native safeguarded sender and destination",
       "oracle_verbatim": "Record actual installed Control version/HEAD/target, native operation ID and immutable action hash; product-owned guard not bypassed",
@@ -1477,7 +1477,7 @@
     },
     {
       "id": "X-002",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 246,
       "objective_verbatim": "Request without current approved human seat attempts Control execution",
       "oracle_verbatim": "Existing Control operation refuses before native effect; durable destination ledger unchanged",
@@ -1492,7 +1492,7 @@
     },
     {
       "id": "X-003",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 247,
       "objective_verbatim": "Valid approved human request triggers native Control operation exactly once",
       "oracle_verbatim": "Actual Control send boundary commits single native effect, independent destination/ledger readback matches tenant/action/request",
@@ -1507,7 +1507,7 @@
     },
     {
       "id": "X-004",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 248,
       "objective_verbatim": "Duplicate consume/retry, crash-after-effect-before-ACK, restart",
       "oracle_verbatim": "Identical replay doesn't create second business effect; uncertain result reconciled against native operation ledger",
@@ -1522,7 +1522,7 @@
     },
     {
       "id": "X-005",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 249,
       "objective_verbatim": "DENIED, HELD, EXPIRED, CANCELLED or stale delegated approval attempts execute",
       "oracle_verbatim": "Every case rejected by Control-side enforcement, not Grant helper-only warning",
@@ -1537,7 +1537,7 @@
     },
     {
       "id": "X-006",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 250,
       "objective_verbatim": "Stellar Cyber delivered receiver is connected to approved test tenant/case/alert",
       "oracle_verbatim": "Log deployed Stellar version/config and supported receiver route, actual tenant/case/alert correlation, signed destination record",
@@ -1552,7 +1552,7 @@
     },
     {
       "id": "X-007",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 251,
       "objective_verbatim": "APPROVED/DENIED case event reaches Stellar and is actually ingested",
       "oracle_verbatim": "Independent native Stellar search/readback confirms exact event identity/state; no acceptance from an echo/HMAC fixture alone",
@@ -1567,7 +1567,7 @@
     },
     {
       "id": "X-008",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 252,
       "objective_verbatim": "Forged, stale, malformed, duplicated, feedback-origin or wrong-tenant outcome received",
       "oracle_verbatim": "Native/Grant ingress rejects or deduplicates as contracted; no self-triggering feedback loop",
@@ -1582,7 +1582,7 @@
     },
     {
       "id": "X-009",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 253,
       "objective_verbatim": "Delayed/failed sender retry followed by restoration",
       "oracle_verbatim": "Event IDs stable, error/backoff shown, no new human approval or business effect created",
@@ -1597,7 +1597,7 @@
     },
     {
       "id": "X-010",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 254,
       "objective_verbatim": "Mail transport to independent recipient",
       "oracle_verbatim": "Received original and final decision mails in actual unrelated mailboxes, not just SMTP 250/HTTP 200",
@@ -1612,7 +1612,7 @@
     },
     {
       "id": "X-011",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 255,
       "objective_verbatim": "External cleanup of authorized test-owned effects",
       "oracle_verbatim": "Native observer confirms no unapproved residue; never delete production records to satisfy cleanup",
@@ -1627,7 +1627,7 @@
     },
     {
       "id": "S-001",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 263,
       "objective_verbatim": "Wrong role / unrelated member / self-approval / integration-token approval",
       "oracle_verbatim": "Server denies with no request existence or human-seat privilege escalation",
@@ -1642,7 +1642,7 @@
     },
     {
       "id": "S-002",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 264,
       "objective_verbatim": "Stale policy edit from another administrator",
       "oracle_verbatim": "Atomic 409/CAS, unchanged saved policy/template and explicit reload/re-review",
@@ -1658,7 +1658,7 @@
     },
     {
       "id": "S-003",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 265,
       "objective_verbatim": "Duplicate request external ID, rapid Confirm, ambiguous timeout",
       "oracle_verbatim": "At most one durable request/decision, operator must reconcile instead of auto-resubmit",
@@ -1673,7 +1673,7 @@
     },
     {
       "id": "S-004",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 266,
       "objective_verbatim": "Mutate immutable action/tenant/source between review and submit",
       "oracle_verbatim": "Block or force new request, never silently carry approval to changed action",
@@ -1688,7 +1688,7 @@
     },
     {
       "id": "S-005",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 267,
       "objective_verbatim": "Expired approval seat and reminder deadline race",
       "oracle_verbatim": "No post-deadline approve, monotonic server expiry, no browser-clock privilege",
@@ -1703,7 +1703,7 @@
     },
     {
       "id": "S-006",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 268,
       "objective_verbatim": "Cancellation vs consume race",
       "oracle_verbatim": "Exactly one permitted outcome, no work executed without pre-commit valid grant",
@@ -1718,7 +1718,7 @@
     },
     {
       "id": "S-007",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 269,
       "objective_verbatim": "Revoke/deactivate credential during external attempt",
       "oracle_verbatim": "Later scopes denied, no unaudited reuse or raw-secret leak",
@@ -1733,7 +1733,7 @@
     },
     {
       "id": "S-008",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 270,
       "objective_verbatim": "Link/PIN/OTP/TOTP tamper, replay, brute-force limit",
       "oracle_verbatim": "No decision, bounded/recorded failures, no weakening assurance floor",
@@ -1748,7 +1748,7 @@
     },
     {
       "id": "S-009",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 271,
       "objective_verbatim": "Browser refresh/logout while confirmation pending",
       "oracle_verbatim": "No extra POST; ambiguous result requires fresh authoritative read",
@@ -1764,7 +1764,7 @@
     },
     {
       "id": "S-010",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 272,
       "objective_verbatim": "Wrong host/tenant/case/alert and callback URL redirect",
       "oracle_verbatim": "Registered destination and TLS/tenant authority enforced, no arbitrary external send",
@@ -1779,7 +1779,7 @@
     },
     {
       "id": "S-011",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 273,
       "objective_verbatim": "Oversized, malformed, duplicate-key, nonfinite, nested feedback JSON",
       "oracle_verbatim": "Bounded refusal and audit; no state corruption or event amplification",
@@ -1794,7 +1794,7 @@
     },
     {
       "id": "S-012",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 274,
       "objective_verbatim": "SMTP unavailable/retrying, webhook HTTP timeout, duplicate queue attempt",
       "oracle_verbatim": "Stable bounded retries, explicit FAILED/UNKNOWN, no human-approval or execution claim",
@@ -1809,7 +1809,7 @@
     },
     {
       "id": "S-013",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 275,
       "objective_verbatim": "DB filesystem permission failure, symlink/nonregular file, no free space",
       "oracle_verbatim": "Private storage refusal, no insecure publication, no stack trace/secret contents",
@@ -1824,7 +1824,7 @@
     },
     {
       "id": "S-014",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 276,
       "objective_verbatim": "Backup source wrong name/URI reserved chars/missing PAUSED marker",
       "oracle_verbatim": "Exact source integrity and new-path output guard, no partial restore",
@@ -1839,7 +1839,7 @@
     },
     {
       "id": "S-015",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 277,
       "objective_verbatim": "Restart during reserved consume/outbound send",
       "oracle_verbatim": "Lease reconciliation, idempotent replay and UNKNOWN preserved; no duplicate effect",
@@ -1854,7 +1854,7 @@
     },
     {
       "id": "S-016",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 278,
       "objective_verbatim": "Recovery-paused installation attempts send/consume/resend",
       "oracle_verbatim": "Fail closed until explicit separately approved reconciliation/resume",
@@ -1869,7 +1869,7 @@
     },
     {
       "id": "S-017",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 279,
       "objective_verbatim": "Incompatible backup/version or old v8 schema",
       "oracle_verbatim": "Read-only check refuses implicit migration, protected pre-upgrade snapshot, isolated v8→v12 upgrade regression",
@@ -1884,7 +1884,7 @@
     },
     {
       "id": "S-018",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 280,
       "objective_verbatim": "Missing Foundation package/incorrect pinned bundle/Web assets",
       "oracle_verbatim": "Exact-head staging/CI failure, no fake fallback to incompatible shared UI",
@@ -1900,7 +1900,7 @@
     },
     {
       "id": "S-019",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 281,
       "objective_verbatim": "Admin System Management unsupported task clicked",
       "oracle_verbatim": "Honest unavailable/read-only messaging, not a dead Manage button; raise outstanding P0-SM defect",
@@ -1916,7 +1916,7 @@
     },
     {
       "id": "S-020",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 282,
       "objective_verbatim": "Mobile/keyboard/no JS accessible labels",
       "oracle_verbatim": "No hidden essential confirmation, wrong focus, horizontal overflow or screen-reader ambiguity",
@@ -1932,7 +1932,7 @@
     },
     {
       "id": "S-021",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 283,
       "objective_verbatim": "Unauthorized CSV/JSON audit export or oversized query",
       "oracle_verbatim": "Role-scoped bounded/redacted output and no partial secret disclosure",
@@ -1947,7 +1947,7 @@
     },
     {
       "id": "S-022",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 284,
       "objective_verbatim": "Service offline, expired session, stale inbox GET",
       "oracle_verbatim": "Recoverable public error; no ghost verified counts, stale/foreign request or misleading healthy status",
@@ -1962,7 +1962,7 @@
     },
     {
       "id": "S-023",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 285,
       "objective_verbatim": "Invalid Draft-only import mapping/conflict/version",
       "oracle_verbatim": "Preview blocks, no policy activation or secret transfer, no partial import",
@@ -1977,7 +1977,7 @@
     },
     {
       "id": "S-024",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 286,
       "objective_verbatim": "Unrecognized legacy/hidden CLI aliases/options",
       "oracle_verbatim": "Help/parser errors nonzero with correct public guidance; no undocumented privileged grammar",
@@ -1992,7 +1992,7 @@
     },
     {
       "id": "C-001",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 298,
       "objective_verbatim": "Two administrators edit same policy/template/group revision",
       "oracle_verbatim": "One commits, other CAS/409 and review required; no lost update",
@@ -2008,7 +2008,7 @@
     },
     {
       "id": "C-002",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 299,
       "objective_verbatim": "Same selected approver opens twice/confirms concurrently",
       "oracle_verbatim": "Exactly one seat decision and one audit outcome",
@@ -2023,7 +2023,7 @@
     },
     {
       "id": "C-003",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 300,
       "objective_verbatim": "Two different valid quorum reviewers confirm nearly together",
       "oracle_verbatim": "Correct ANY/ALL/QUORUM/SEQUENTIAL state, no skipped seat",
@@ -2038,7 +2038,7 @@
     },
     {
       "id": "C-004",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 301,
       "objective_verbatim": "Requester cancel races with approver decision/consumer commit",
       "oracle_verbatim": "Transactional winner honored, rejected contender cannot produce extra work",
@@ -2053,7 +2053,7 @@
     },
     {
       "id": "C-005",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 302,
       "objective_verbatim": "Multiple email PIN/OTP/reissue confirmations for same bound seat",
       "oracle_verbatim": "No replay or weaker verification, at most one current decision",
@@ -2068,7 +2068,7 @@
     },
     {
       "id": "C-006",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 303,
       "objective_verbatim": "Concurrent consume retries and result reports, native crash simulation if approved",
       "oracle_verbatim": "Single execution claim/effect, result bound to correct action/tenant",
@@ -2083,7 +2083,7 @@
     },
     {
       "id": "C-007",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 304,
       "objective_verbatim": "Many notification callback retries including receiver restart",
       "oracle_verbatim": "Same event identity, idempotent delivery/reconciliation, no mail-execution conflation",
@@ -2098,7 +2098,7 @@
     },
     {
       "id": "C-008",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 305,
       "objective_verbatim": "Multiple independent browser users/filter changes while list GETs complete out of order",
       "oracle_verbatim": "Latest query/scope shown, no cross-user disclosure or wrong empty state",
@@ -2113,7 +2113,7 @@
     },
     {
       "id": "C-009",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 306,
       "objective_verbatim": "Recovery/backup attempt while operations are paused or recovering",
       "oracle_verbatim": "Existing pause/safety guards, isolated restore evidence and no reopened spent grants",
@@ -2128,7 +2128,7 @@
     },
     {
       "id": "C-010",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 307,
       "objective_verbatim": "Two complete E2E passes and final candidate identity",
       "oracle_verbatim": "Separate requests/emails/users, exact identical frozen HEAD/build for PASS1 and PASS2",
@@ -2143,7 +2143,7 @@
     },
     {
       "id": "P-001",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 315,
       "objective_verbatim": "Browser login/new-request/confirmation baseline latency p50/p95/p99",
       "oracle_verbatim": "Auth roles correct, request created once",
@@ -2158,7 +2158,7 @@
     },
     {
       "id": "P-002",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 316,
       "objective_verbatim": "Reviewer Inbox/policy filtering with growing isolated request history",
       "oracle_verbatim": "Current-seat/latest-query truth, bounded pagination",
@@ -2173,7 +2173,7 @@
     },
     {
       "id": "P-003",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 317,
       "objective_verbatim": "SMTP notification fanout across authorized approver group",
       "oracle_verbatim": "Per-recipient delivery IDs, no unapproved recipient",
@@ -2188,7 +2188,7 @@
     },
     {
       "id": "P-004",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 318,
       "objective_verbatim": "Many parallel human request/decision attempts from distinct disposable identities",
       "oracle_verbatim": "No cross-user/tenant leak, no duplicated same seat",
@@ -2203,7 +2203,7 @@
     },
     {
       "id": "P-005",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 319,
       "objective_verbatim": "Native Control consume-replay contention (owner-authorized only)",
       "oracle_verbatim": "Exactly one native effect, no split-brain receipt",
@@ -2218,7 +2218,7 @@
     },
     {
       "id": "P-006",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 320,
       "objective_verbatim": "Callback retry/timeout/delay after simulated receiver restart",
       "oracle_verbatim": "Durable queue bounded, correct eventual state",
@@ -2233,7 +2233,7 @@
     },
     {
       "id": "P-007",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 321,
       "objective_verbatim": "Create/approve/cancel during read-heavy audit and health polling",
       "oracle_verbatim": "No lost audit events, user-visible commands remain responsive",
@@ -2248,7 +2248,7 @@
     },
     {
       "id": "P-008",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 322,
       "objective_verbatim": "Longer controlled idle session and worker soak within approved budget",
       "oracle_verbatim": "Bounded memory/process growth, no auto sign-in bypass",
@@ -2263,7 +2263,7 @@
     },
     {
       "id": "P-009",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 323,
       "objective_verbatim": "Function-under-load collision: policy CAS + request create + mail retry",
       "oracle_verbatim": "No stale policy downgrade or changed immutable action",
@@ -2278,7 +2278,7 @@
     },
     {
       "id": "P-010",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 324,
       "objective_verbatim": "Stop stress and restart checked disposable service",
       "oracle_verbatim": "Recoverable verified state, no orphan temp/extra send, normal short user journey still PASS",
@@ -2293,7 +2293,7 @@
     },
     {
       "id": "V-001",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 334,
       "objective_verbatim": "Login desktop 1280, 390, 375 and 320 width",
       "oracle_verbatim": "Sign-in form visible without scrolling past help; proper field labels, errors and MFA/recovery; no horizontal overflow",
@@ -2311,7 +2311,7 @@
     },
     {
       "id": "V-002",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 335,
       "objective_verbatim": "ProductShell desktop navigation, collapse/expand and mobile drawer",
       "oracle_verbatim": "Home/My work/Configuration/Administration and Account & Security reachable with keyboard, focus and active-route clarity",
@@ -2329,7 +2329,7 @@
     },
     {
       "id": "V-003",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 336,
       "objective_verbatim": "Home → New Request → Approvals → Request Detail",
       "oracle_verbatim": "Prominent next actions, numbered workflow, explicit review/final confirm, current server status and role-scoped queue",
@@ -2347,7 +2347,7 @@
     },
     {
       "id": "V-004",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 337,
       "objective_verbatim": "Policies/group/Notification/Integration workspace on mobile",
       "oracle_verbatim": "Same scoped records and enabled actions as desktop; cards/tables do not invent data or eliminate controls",
@@ -2365,7 +2365,7 @@
     },
     {
       "id": "V-005",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 338,
       "objective_verbatim": "System Management reference vs actual Grant",
       "oracle_verbatim": "Correct nine core task names, current support/read-only/unavailable truth, product-specific Mail & Notifications; missing real backend actions remain P0 Gap",
@@ -2383,7 +2383,7 @@
     },
     {
       "id": "V-006",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 339,
       "objective_verbatim": "Approve/Deny/Hold on keyboard and screen reader",
       "oracle_verbatim": "Selection does not POST before separate confirmation, readable exact action/reviewer seat and correct focus return",
@@ -2401,7 +2401,7 @@
     },
     {
       "id": "V-007",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 340,
       "objective_verbatim": "Error/loading/zero records and unsupported controls",
       "oracle_verbatim": "No green 0 before GET, no stale success after error, no fake \"Manage\" or backend-less DNS/TLS/retention toggle",
@@ -2419,7 +2419,7 @@
     },
     {
       "id": "V-008",
-      "source": "docs/FULL_USER_E2E_SCENARIOS.md",
+      "source": "docs/history/COMPETITOR_UI_ORIGINAL_FULL_USER_E2E_SCENARIOS_20261014.md",
       "line": 341,
       "objective_verbatim": "Themes/different zoom/touch targets",
       "oracle_verbatim": "Foundation-supported interactions maintain contrast/readable density; Grant-specific issue vs shared upstream owner distinguished",
