@@ -71,6 +71,10 @@ def test_u606_is_composed_boundary_evidence_not_fake_gmail_identity():
 
 
 def test_owner_review_is_the_only_ui_lane_closure_gate_left():
-    assert ROWS["U9.03"]["status"]=="OPEN"
+    assert ROWS["U9.03"]["status"]=="PASS"
+    assert ROWS["U9.03"]["blocker"] is None
     assert ROWS["U9.04"]["status"]=="OPEN"
+    assert "owner visual review/acknowledgement" in ROWS["U9.04"]["blocker"]
+    assert LEDGER["operator_acceptance"]["u9_03"]=="PASS"
+    assert LEDGER["operator_acceptance"]["remaining_gate"]=="U9.04_OWNER_VISUAL_ACKNOWLEDGEMENT"
     assert LEDGER["operator_acceptance"]["owner_acknowledgement"]=="PENDING_U9_04"
