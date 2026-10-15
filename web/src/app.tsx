@@ -152,6 +152,7 @@ function AuthenticatedGrantApp() {
             <>
               <LoginForm
                 busy={task.busy}
+                allowPasswordReveal
                 onSubmit={(input) =>
                   task.run(async () => {
                     await authAdapter.signIn(input);

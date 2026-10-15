@@ -111,7 +111,8 @@ for(const pass of [1,2]){
 test('Foundation login and grouped Grant shell follow the DataRelay family layout',async({browser})=>{
  const context=await browser.newContext({viewport:{width:1280,height:800}});const page=await context.newPage();
  await page.goto('/home');await expect(page.locator('.dr-auth-layout')).toBeVisible();await expect(page.getByRole('heading',{name:'Welcome to DataRelay',exact:true})).toBeVisible();await expect(page.getByText('Please sign in to continue.',{exact:true})).toBeVisible();
- await page.getByLabel('Username',{exact:true}).fill('admin');await page.getByLabel('Password',{exact:true}).fill(fixture().password);await page.getByRole('button',{name:'Sign in',exact:true}).click();
+ const password=page.getByLabel('Password',{exact:true});await expect(password).toHaveAttribute('type','password');await expect(page.getByRole('button',{name:'Show password',exact:true})).toBeVisible();await page.getByRole('button',{name:'Show password',exact:true}).click();await expect(password).toHaveAttribute('type','text');await page.getByRole('button',{name:'Hide password',exact:true}).click();await expect(password).toHaveAttribute('type','password');
+ await page.getByLabel('Username',{exact:true}).fill('admin');await password.fill(fixture().password);await page.getByRole('button',{name:'Sign in',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'User workspace',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Approval administration',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Good to see you, admin',exact:true})).toBeVisible();
  await context.close();
 });
