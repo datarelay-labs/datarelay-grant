@@ -114,6 +114,7 @@ Administrator-facing:
 | AUR-1.4 | Add Workflow setup landing page, including balanced requester-summary presentation | component SSR + owner visual test | IMPLEMENTED |
 | AUR-1.5 | Move All requests to admin lane | capability-filter test | IMPLEMENTED |
 | AUR-1.6 | Preserve System administration as separate admin lane | SSR navigation test | IMPLEMENTED |
+| AUR-1.7 | Keep mobile task-card headings readable when header actions are present across affected user/admin worklists | 390px geometry browser regression + owner visual review | IMPLEMENTED |
 | AUR-2.1 | Expand admin first-run setup to accounts/groups/integrations/templates/policy/test/request | unit test | IMPLEMENTED |
 | AUR-2.2 | Rename requester Approval profile to Request type | request workspace test | IMPLEMENTED |
 | AUR-2.3 | Show assigned Approval plan read-only | request workspace test | IMPLEMENTED |
@@ -122,8 +123,8 @@ Administrator-facing:
 | AUR-2.6 | Open User Management directly from administrator setup as the focused standalone detail; return to catalog only through Back | allowlisted deep-link + desktop/mobile browser test | IMPLEMENTED |
 | AUR-3.1 | Full Web unit regression | current product 101 files / 744 tests PASS | PASS |
 | AUR-3.2 | TypeScript + production build | current typecheck + Vite production build PASS | PASS |
-| AUR-3.3 | Browser requester/admin navigation regression | exact product HEAD 47b1232 native Browser E2E 47/47 PASS across 6 isolated backends; affected visual-flow subset 3/3 PASS | PASS |
-| AUR-3.4 | Redeploy development preview and owner visual review | product HEAD 47b1232 deployed; exact live index/JS/CSS hashes reverified; corrected desktop/mobile workflow, User Management and New request surfaces visually reviewed with no additional concrete defect | PASS |
+| AUR-3.3 | Browser requester/admin navigation regression | exact product HEAD 59a4012 native Browser E2E 49/49 PASS across 7 isolated backends; new mobile configuration-card 1/1 PASS and existing/mobile/request-inbox affected subset 3/3 PASS | PASS |
+| AUR-3.4 | Redeploy development preview and owner visual review | product HEAD 59a4012 deployed; exact live index/JS/CSS hashes reverified; extended 20-surface sweep plus final 390px Approver groups, Integrations, Notification templates, All requests and My approvals review found no additional concrete defect | PASS |
 
 ## 6. Acceptance
 
@@ -136,6 +137,8 @@ PASS requires all of the following on one exact candidate:
 - New request uses Request type terminology;
 - selected request type shows an Assigned approval plan without requester controls
   for approver/template/verification/deadline;
+- Grant-owned mobile directory and request-worklist card actions do not compress
+  the title/description area or introduce horizontal overflow;
 - existing explicit human decision, CAS, MFA/PIN, notification and execution-boundary
   tests remain green;
 - development preview is rebuilt from the exact tested candidate before owner visual review.
