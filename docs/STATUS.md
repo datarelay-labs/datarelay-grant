@@ -1,3 +1,5 @@
+**2026-10-15 acceptance continuation:** U6.06 fresh normal-product execution was platform-blocked before credential-bearing login execution; no session secret reuse, DB insertion or mail send occurred. Gmail has no U6.06 receipt. U7.04-U7.07 remain real-client/person/tooling blocked; U9.01 stays PASS, U9.02-U9.04 remain OPEN. Fresh PR/CI/dev-preview hashes are recorded in docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md.
+
 R1 deployment reconciliation: 52 implementation-qualified rows -> 50 dev-deployment PASS + U7.02/U7.03 N/A; acceptance unchanged. See COMPETITOR_UI_R1_DEPLOYMENT_RECONCILIATION_20261014.md.
 
 <!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 BEGIN -->

@@ -3332,9 +3332,27 @@
           "test_id": "V-U6.06",
           "observed_at": "2026-10-14T13:10:00Z",
           "result_detail": "The known Grant development preview was successfully restarted after owner resume and now loads the corrected SMTP config. HTTPS root and login return 200; protected admin info returns 401 unauthenticated. SMTP host/user/password are present, smtp_from matches the authenticated sender, STARTTLS is enabled, worker remains disabled. U6.06 remains open only on the absence of an exact product-saved template revision."
+        },
+        {
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "gate": "interaction",
+          "observed_at": "2026-10-15T00:43:02Z",
+          "result": "BLOCKED",
+          "result_detail": "Fresh U6.06 normal-product execution was attempted. Remote Desktop Commander start_process was blocked before execution by OpenAI safety inspection when a normal login credential would have been supplied. Existing owner session material was not extracted/reused. Current DB remained email_templates=0 and notification_test_attempts=0; no U6.06 message was sent.",
+          "source_head": "5ba526df3015561dd5608bd7eebca7de1256b7b3",
+          "test_id": "V-U6.06"
+        },
+        {
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "gate": "acceptance",
+          "observed_at": "2026-10-15T00:43:02Z",
+          "result": "BLOCKED",
+          "result_detail": "Connected Gmail search on 2026-10-15 found zero messages matching U6.06. Only the two prior 2026-10-14 R3 SMTP qualification receipts from smtp@rick.kr were present. Exact product-saved-revision receipt therefore remains unfulfilled.",
+          "source_head": "5ba526df3015561dd5608bd7eebca7de1256b7b3",
+          "test_id": "V-U6.06"
         }
       ],
-      "blocker": "BLOCKED_PRECONDITION: DataRelay Grant SMTP configuration and real Gmail receipt are now verified, including corrected sender, STARTTLS, DKIM/SPF PASS and current-candidate multipart HTML/text. The only remaining U6.06 criterion is an exact product-saved template revision, but the current dev DB has zero email_templates rows; do not bypass authentication by inserting one directly.",
+      "blocker": "BLOCKED_TOOLING: DataRelay Grant SMTP configuration and real Gmail receipt are now verified, including corrected sender, STARTTLS and DKIM/SPF PASS, but the current dev DB still has zero email_templates rows. A fresh normal admin login -> product API save -> preview review -> one-shot test-send attempt was attempted on dev-atlas and OpenAI safety inspection blocked the Remote Desktop command before execution when credential material would have been supplied. Existing session/cookie/token material was not read or reused; no DB row was inserted and no new email was sent.",
       "development_status": "PASS"
     },
     {
@@ -3579,9 +3597,27 @@
           "test_id": "V-U7.04",
           "observed_at": "2026-10-14T12:13:23.976837+00:00",
           "result_detail": "A current-candidate Gmail message now exists and MIME content is verified, but actual-client visual acceptance is still incomplete because no direct Gmail Web/Mobile layout observation, Outlook observation, or Apple Mail/iOS observation has been captured."
+        },
+        {
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "gate": "interaction",
+          "observed_at": "2026-10-15T00:43:02Z",
+          "result": "BLOCKED",
+          "result_detail": "Fresh Gmail search confirmed two prior R3 messages from smtp@rick.kr and no U6.06 message. Gmail connector provides mailbox/MIME evidence, not direct Gmail Web/Mobile visual rendering. Outlook Email is available as a plugin but not installed/connected; Apple Mail/iOS is unavailable.",
+          "source_head": "5ba526df3015561dd5608bd7eebca7de1256b7b3",
+          "test_id": "V-U7.04"
+        },
+        {
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "gate": "acceptance",
+          "observed_at": "2026-10-15T00:43:02Z",
+          "result": "BLOCKED",
+          "result_detail": "Actual-client matrix still lacks direct Gmail Web/Mobile visual observations plus Outlook and Apple Mail/iOS same-revision observations; browser emulation/connector MIME read cannot substitute.",
+          "source_head": "5ba526df3015561dd5608bd7eebca7de1256b7b3",
+          "test_id": "V-U7.04"
         }
       ],
-      "blocker": "BLOCKED_ENVIRONMENT: Current-candidate Gmail transport/MIME subcell is verified, but Gmail Web/Mobile visual rendering has not been directly observed; Outlook Email remains unconnected and Apple Mail/iOS client sessions are unavailable. Full actual-client matrix remains incomplete.",
+      "blocker": "BLOCKED_ENVIRONMENT: Current-candidate Gmail transport/MIME subcell is verified, but Gmail Web/Mobile visual rendering has not been directly observed. Connected Gmail contains the two prior R3 SMTP qualification messages but no new U6.06 exact-saved-revision message. Outlook Email plugin is available but not installed/connected, and no Apple Mail/iOS client session is available. The required actual-client matrix remains incomplete.",
       "development_status": "PASS"
     },
     {
@@ -3640,6 +3676,15 @@
           "test_id": "V-U7.05",
           "observed_at": "2026-10-14T11:27:07.389400+00:00",
           "result_detail": "Acceptance cannot PASS until the required real environment/participant condition is supplied. The development DB contains enabled accounts, but no two independently acting real participants with independently controlled mailboxes are available to ChatGPT for a genuine two-human pass."
+        },
+        {
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "gate": "interaction",
+          "observed_at": "2026-10-15T00:43:02Z",
+          "result": "BLOCKED",
+          "result_detail": "Current Full User E2E contract still requires two independently acting real humans and two independently controlled mailboxes; one person controlling multiple logins is explicitly non-qualifying. Those actors/mailboxes are not available in this execution environment, so no real-user scenario was fabricated.",
+          "source_head": "5ba526df3015561dd5608bd7eebca7de1256b7b3",
+          "test_id": "V-U7.05"
         }
       ],
       "blocker": "BLOCKED_ENVIRONMENT: The development DB contains enabled accounts, but no two independently acting real participants with independently controlled mailboxes are available to ChatGPT for a genuine two-human pass.",
@@ -3701,6 +3746,15 @@
           "test_id": "V-U7.06",
           "observed_at": "2026-10-14T11:27:07.389400+00:00",
           "result_detail": "Acceptance cannot PASS until the required real environment/participant condition is supplied. No authorized first-time/novice participant is available for measured action-count and elapsed-time observations."
+        },
+        {
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "gate": "interaction",
+          "observed_at": "2026-10-15T00:43:02Z",
+          "result": "BLOCKED",
+          "result_detail": "No authorized first-time/novice participant is available for the required measured <=5 purposeful actions and <=180-second task observations. Automation or owner/developer estimates are not substituted.",
+          "source_head": "5ba526df3015561dd5608bd7eebca7de1256b7b3",
+          "test_id": "V-U7.06"
         }
       ],
       "blocker": "BLOCKED_ENVIRONMENT: No authorized first-time/novice participant is available for measured action-count and elapsed-time observations.",
@@ -3785,9 +3839,27 @@
           "test_id": "V-U7.07",
           "observed_at": "2026-10-14T23:07:09.454970+00:00",
           "result_detail": "Read-only DB join verified one active human session for username admin, email rick@rick.kr, role admin, mfa_pending=false. No session token/cookie/hash was read or reused. This resolves the prior absence-of-legitimate-owner-session fact, but does not prove the required same-UI-task interaction because ChatGPT has no authorized GUI/session-control path."
+        },
+        {
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "gate": "dev_deployment",
+          "observed_at": "2026-10-15T00:43:02Z",
+          "result": "PASS",
+          "result_detail": "Fresh readback on 2026-10-15: https://221.139.249.116:18443/login HTTP 200; live index SHA256 594455180760fd845b19ada721ed7836acd2136e7d27a5460c52e2e577af125d equals deployed index; deployed JS SHA256 0c9f1a20569fa18d1e9b5dac3b11c0903ebf0eb27b13b5127b21b35d1f80936b; worker disabled; SMTP config preserved. git diff 391b309..current HEAD over grant/web is empty, so later commits do not alter product source.",
+          "source_head": "5ba526df3015561dd5608bd7eebca7de1256b7b3",
+          "test_id": "V-U7.07"
+        },
+        {
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "gate": "interaction",
+          "observed_at": "2026-10-15T00:43:02Z",
+          "result": "BLOCKED",
+          "result_detail": "No authorized GUI/session-control tool is available to ChatGPT. Existing legitimate owner-authenticated session is not reused by extracting cookies/tokens, so the required authenticated same-UI-task evidence remains blocked.",
+          "source_head": "5ba526df3015561dd5608bd7eebca7de1256b7b3",
+          "test_id": "V-U7.07"
         }
       ],
-      "blocker": "BLOCKED_TOOLING: A legitimate owner-authenticated admin session now exists on the deployed development preview (admin/rick@rick.kr, MFA pending false, active session verified without reading token material). ChatGPT still has no authorized GUI/session-control path to perform the required same-UI-task interaction; owner-performed evidence or a supported browser-control path is still required.",
+      "blocker": "BLOCKED_TOOLING: dev preview is healthy and byte-identified; current repository HEAD has no grant/web product diff after product source 391b309. Direct HTTPS GET returns index SHA256 594455180760fd845b19ada721ed7836acd2136e7d27a5460c52e2e577af125d and deployed JS SHA256 0c9f1a20569fa18d1e9b5dac3b11c0903ebf0eb27b13b5127b21b35d1f80936b. A legitimate owner-authenticated session exists, but ChatGPT has no authorized GUI/session-control path for the required same-UI-task interaction and will not extract/reuse its cookie/token.",
       "development_status": "PASS"
     },
     {
@@ -4272,8 +4344,18 @@
       "interaction": "NOT_RUN",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
-      "blocker": "R3_BLOCKED: applicable real acceptance remains blocked at U6.06/U7.04/U7.05/U7.06/U7.07.",
+      "evidence": [
+        {
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "gate": "source",
+          "observed_at": "2026-10-15T00:43:02Z",
+          "result": "BLOCKED",
+          "result_detail": "U9.01 traceability is PASS and U0-U8 development is 64/64 PASS, but applicable real acceptance still has five open gates: U6.06, U7.04, U7.05, U7.06 and U7.07. U9.02 cannot PASS while any required cell is blocked.",
+          "source_head": "5ba526df3015561dd5608bd7eebca7de1256b7b3",
+          "test_id": "V-U9.02"
+        }
+      ],
+      "blocker": "R3_BLOCKED: applicable real acceptance remains blocked at U6.06/U7.04/U7.05/U7.06/U7.07 after fresh 2026-10-15 execution/readback.",
       "development_status": "NOT_APPLICABLE_CLOSURE_GATE"
     },
     {
@@ -4288,8 +4370,18 @@
       "interaction": "NOT_RUN",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
-      "blocker": "Depends on U9.02 real-acceptance closure.",
+      "evidence": [
+        {
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "gate": "source",
+          "observed_at": "2026-10-15T00:43:02Z",
+          "result": "BLOCKED",
+          "result_detail": "Fresh reconciliation observed branch feat/grant-g10a-g0-integrated-candidate at local=origin=5ba526df3015561dd5608bd7eebca7de1256b7b3; Draft PR #100 open/draft/unmerged/mergeable; Grant checks 38656269819 SUCCESS and Engineering System 38656270099 SUCCESS; dev preview live index/JS hashes re-read. U9.02 remains blocked, so this is supporting readback, not U9.03 PASS.",
+          "source_head": "5ba526df3015561dd5608bd7eebca7de1256b7b3",
+          "test_id": "V-U9.03"
+        }
+      ],
+      "blocker": "Dependency U9.02 remains open. Fresh branch/HEAD/PR/CI/dev-hash readback completed on 2026-10-15 but cannot close U9.03 before acceptance reconciliation.",
       "development_status": "NOT_APPLICABLE_CLOSURE_GATE"
     },
     {
@@ -4304,8 +4396,18 @@
       "interaction": "NOT_RUN",
       "dev_deployment": "NOT_RUN",
       "acceptance": "NOT_RUN",
-      "evidence": [],
-      "blocker": "Depends on U9.02/U9.03 and final owner acknowledgement; merge/release remain separate.",
+      "evidence": [
+        {
+          "artifact": "docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md",
+          "gate": "source",
+          "observed_at": "2026-10-15T00:43:02Z",
+          "result": "BLOCKED",
+          "result_detail": "Exit gate is not met because mandatory real acceptance remains blocked. No priority lock removal, merge, release or production action was performed.",
+          "source_head": "5ba526df3015561dd5608bd7eebca7de1256b7b3",
+          "test_id": "V-U9.04"
+        }
+      ],
+      "blocker": "Depends on unresolved U9.02 real acceptance and U9.03 final coherence; exclusive UI priority lock remains active. Merge/release remain separately gated.",
       "development_status": "NOT_APPLICABLE_CLOSURE_GATE"
     }
   ],

@@ -65,3 +65,16 @@ Private evidence root: `/home/aella/datarelay-grant-r3-evidence/grant-r3-2026101
 5. A legitimate authorized Grant dev-preview login path for ChatGPT or owner-performed browser evidence for U7.07.
 
 No production, release, merge or external business operation is authorized by this report.
+
+## 2026-10-15 acceptance/closure continuation
+
+- Exact repository HEAD at start: `5ba526df3015561dd5608bd7eebca7de1256b7b3`; local/origin matched. Original G12 diff remained the only pre-existing tracked modification.
+- U6.06 normal product path was attempted using a fresh login/session approach, not an existing cookie/token. `Remote_Desktop_Commander.start_process` was blocked by OpenAI safety inspection **before execution** when the normal credential would have been supplied. No bypass, direct DB insert, session extraction or new mail send occurred.
+- Current preview DB remained `email_templates=0`, `notification_test_attempts=0`.
+- Connected Gmail search found **0** `U6.06` messages and only the two prior 2026-10-14 R3 messages from `smtp@rick.kr`; those prior receipts remain supporting SMTP evidence only.
+- Outlook Email plugin discovery shows the connector is available but **not installed/connected**. No Apple Mail/iOS client session exists. Direct Gmail Web/Mobile visual observation is also unavailable through the Gmail connector, so U7.04 remains OPEN.
+- U7.05 remains OPEN because the contract requires two independently acting real humans and independently controlled mailboxes; no fixture/shared-user substitution was used.
+- U7.06 remains OPEN because no authorized first-time participant exists for measured action/time targets.
+- U7.07 deployment provenance was freshly re-read: HTTPS login HTTP 200; live index SHA256 `594455180760fd845b19ada721ed7836acd2136e7d27a5460c52e2e577af125d`; deployed JS SHA256 `0c9f1a20569fa18d1e9b5dac3b11c0903ebf0eb27b13b5127b21b35d1f80936b`; worker disabled. Current HEAD has no `grant/` or `web/` product diff after product source `391b309`. Authenticated same-UI-task interaction remains BLOCKED_TOOLING because no authorized GUI/session-control path is available and owner session secrets were not reused.
+- GitHub readback remained coherent: Draft PR #100 open/draft/unmerged/mergeable; Grant checks `38656269819` SUCCESS; Engineering System `38656270099` SUCCESS.
+- U9.01 remains PASS. U9.02 cannot close while the five real acceptance gates above are blocked; U9.03 has fresh supporting readback but remains dependency-blocked; U9.04 remains OPEN and the exclusive priority lock is retained. No merge/release/production action was performed.

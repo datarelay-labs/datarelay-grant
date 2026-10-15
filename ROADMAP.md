@@ -1,5 +1,7 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+**2026-10-15 acceptance continuation:** U6.06 fresh normal-product execution was platform-blocked before credential-bearing login execution; no session secret reuse, DB insertion or mail send occurred. Gmail has no U6.06 receipt. U7.04-U7.07 remain real-client/person/tooling blocked; U9.01 stays PASS, U9.02-U9.04 remain OPEN. Fresh PR/CI/dev-preview hashes are recorded in docs/COMPETITOR_UI_R3_ACCEPTANCE_EXECUTION_20261014.md.
+
 <!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 BEGIN -->
 ## ACTIVE P0 — competitor-derived UI implementation ONLY
 
