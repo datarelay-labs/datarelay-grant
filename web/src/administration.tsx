@@ -102,6 +102,7 @@ export function Administration({ user }: { user: User }) {
   const [info, setInfo] = useState<SystemInfoProjection>();
   const initialSection = typeof window === 'undefined' ? null : readAdministrationInitialView(window.location.search);
   const [section, setSection] = useState<AdminSection>(initialSection);
+  const [directLanding, setDirectLanding] = useState(Boolean(initialSection));
   const sectionRef=useRef<AdminSection>(initialSection);
   const [reviewedMail,setReviewedMail]=useState<AdministrationMailReview|null>(null);
   const [mailAttempted,setMailAttempted]=useState(false);
@@ -192,7 +193,8 @@ export function Administration({ user }: { user: User }) {
   useEffect(() => {
     if (section) {
       selectedDetailRef.current?.focus({ preventScroll: true });
-      selectedDetailRef.current?.scrollIntoView({ block: 'start' });
+      if (directLanding) window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      else selectedDetailRef.current?.scrollIntoView({ block: 'start' });
       return;
     }
     if (focusNavigationAfterClose.current) {
@@ -200,7 +202,7 @@ export function Administration({ user }: { user: User }) {
       taskNavigationRef.current?.focus({ preventScroll: true });
       taskNavigationRef.current?.scrollIntoView({ block: 'start' });
     }
-  }, [section]);
+  }, [section, directLanding]);
 
   function openTask(selected: AdministrationHubTask) {
     const next: Record<string, AdminSection> = {
@@ -212,6 +214,7 @@ export function Administration({ user }: { user: User }) {
     };
     const destination=next[selected.id]??null;
     sectionRef.current=destination;
+    setDirectLanding(false);
     setReviewedMail(null);
     setReviewedAccount(null);
     setReviewedCreation(null);
@@ -221,6 +224,7 @@ export function Administration({ user }: { user: User }) {
 
   function returnToAdministrationTasks() {
     sectionRef.current = null;
+    setDirectLanding(false);
     setReviewedMail(null);
     setReviewedAccount(null);
     setReviewedCreation(null);
@@ -364,36 +368,38 @@ export function Administration({ user }: { user: User }) {
   return (
     <div className={'grant-stack grant-admin-workspace' + (section ? ' grant-admin-workspace--detail' : '')}>
       {task.feedback}
-      <div className="grant-admin-task-navigation" ref={taskNavigationRef} tabIndex={-1}>
-      <AdministrationHub
-        {...grantRc41AdministrationDiscovery}
-        productId="grant"
-        showHeader={false}
-        tasks={tasks}
-        extensionGroups={extensionGroups}
-        showUnavailable
-        intro={
-          <div className="grant-admin-heading">
-            <p>Shared system administration is provided by DataRelay Product Foundation.
-              Unsupported Grant operations have no active Configure action.</p>
-            <div className="grant-admin-shortcuts" aria-label="Administration task shortcuts">
-              <Button variant="secondary" onClick={() => window.location.assign('/security')}>
-                My account & MFA
-              </Button>
-              {availability(user, 'grant.integrations.manage') === 'supported' ? (
-                <Button variant="secondary" onClick={() => window.location.assign('/integrations')}>
-                  Configuration preview
-                </Button>
-              ) : null}
-              <Button variant="secondary" disabled={task.busy} onClick={() => void task.run(load)}>
-                Refresh
-              </Button>
-            </div>
-          </div>
-        }
-        onOpen={openTask}
-      />
-      </div>
+      {!section || !directLanding ? (
+        <div className="grant-admin-task-navigation" ref={taskNavigationRef} tabIndex={-1}>
+          <AdministrationHub
+            {...grantRc41AdministrationDiscovery}
+            productId="grant"
+            showHeader={false}
+            tasks={tasks}
+            extensionGroups={extensionGroups}
+            showUnavailable
+            intro={
+              <div className="grant-admin-heading">
+                <p>Shared system administration is provided by DataRelay Product Foundation.
+                  Unsupported Grant operations have no active Configure action.</p>
+                <div className="grant-admin-shortcuts" aria-label="Administration task shortcuts">
+                  <Button variant="secondary" onClick={() => window.location.assign('/security')}>
+                    My account & MFA
+                  </Button>
+                  {availability(user, 'grant.integrations.manage') === 'supported' ? (
+                    <Button variant="secondary" onClick={() => window.location.assign('/integrations')}>
+                      Configuration preview
+                    </Button>
+                  ) : null}
+                  <Button variant="secondary" disabled={task.busy} onClick={() => void task.run(load)}>
+                    Refresh
+                  </Button>
+                </div>
+              </div>
+            }
+            onOpen={openTask}
+          />
+        </div>
+      ) : null}
 
       {section ? (
         <div

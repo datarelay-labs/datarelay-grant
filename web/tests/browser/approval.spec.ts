@@ -963,6 +963,10 @@ test('U8.05 administrator first-run guide resolves real setup routes and never s
   await page.getByRole('link',{name:/Open user management/}).click();
   await expect(page).toHaveURL(/\/system\?view=accounts$/);
   await expect(page.getByRole('heading',{name:'User Management',exact:true,level:2})).toBeVisible();
+  await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);
+  await expect(page.getByText('Find administration tasks',{exact:true})).toHaveCount(0);
+  await page.getByRole('button',{name:'Back to administration tasks',exact:true}).click();
+  await expect(page.getByText('Find administration tasks',{exact:true})).toBeVisible();
   await page.goto('/profiles');
   const guide=page.locator('section.grant-admin-setup');
   await expect(guide.getByRole('heading',{name:'Set up your first approval workflow',exact:true})).toBeVisible();
@@ -976,6 +980,21 @@ test('U8.05 administrator first-run guide resolves real setup routes and never s
   await expect(page.getByText('Create a draft. Saving alone never makes a policy live.',{exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:'Activate policy',exact:true})).toHaveCount(0);
   await expect(page.getByRole('button',{name:'Test policy',exact:true})).toHaveCount(0);
+ }finally{await context.close();}
+});
+
+test('AUR-2.6 direct User Management landing preserves mobile shell context',async({browser})=>{
+ const context=await browser.newContext({viewport:{width:390,height:844}});
+ const page=await context.newPage();
+ try{
+  await login(page,'admin');
+  await page.goto('/admin/setup');
+  await page.getByRole('link',{name:/Open user management/}).click();
+  await expect(page).toHaveURL(/\/system\?view=accounts$/);
+  await expect(page.getByRole('heading',{name:'User Management',exact:true,level:2})).toBeVisible();
+  await expect.poll(()=>page.evaluate(()=>scrollY)).toBe(0);
+  await expect(page.getByText('Find administration tasks',{exact:true})).toHaveCount(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
  }finally{await context.close();}
 });
 
