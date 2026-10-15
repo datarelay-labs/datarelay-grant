@@ -1125,6 +1125,77 @@ test('B4 full notification template set create and update require exact Review t
  }finally{await context.close();}
 });
 
+// U6.06 operator-driven disposable product E2E. This exercises the exact
+// saved template -> reviewed preview -> one-shot Confirm test-send path through
+// the mounted Grant UI and durable attempt-status API. Delivery terminates only
+// at the isolated local SMTP fixture; the separate real-Gmail receipt evidence
+// remains an external transport proof, not a claim that this fixture is Gmail.
+test('U6.06 saved revision test email reviews exact state and sends once',async({browser,request})=>{
+ test.setTimeout(120000);
+ const f=fixture();
+ const context=await browser.newContext({viewport:{width:1280,height:800}});
+ const page=await context.newPage();
+ try{
+  await login(page,'admin');
+  await page.goto('/notifications');
+  const title='U6.06 isolated '+crypto.randomUUID().slice(0,8);
+  await page.getByRole('button',{name:'Create email template',exact:true}).click();
+  await page.getByLabel('Template set name',{exact:true}).fill(title);
+  await page.getByRole('button',{name:'Review draft save',exact:true}).click();
+  await page.getByRole('button',{name:'Confirm template set creation',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Refresh saved template set',exact:true})).toBeVisible();
+  const sets=await(await context.request.get('/api/v1/notification-template-sets')).json();
+  const created=sets.find((item:any)=>item.name===title);
+  expect(created).toBeTruthy();
+  await page.getByRole('button',{name:'Refresh saved template set',exact:true}).click();
+
+  const section=page.locator('details').filter({has:page.locator('summary',{hasText:'Saved revision preview and test email'})});
+  await section.locator(':scope > summary').click();
+  const review=page.getByRole('button',{name:'Review: Send test to me',exact:true});
+  await expect(review).toBeEnabled();
+  const before=await(await request.get(f.receiver)).json();
+  const mailBefore=before.mail.length;
+  await review.click();
+  await expect(page.getByText('Confirm test email to my account',{exact:true})).toBeVisible();
+  await expect(page.getByText(created.id,{exact:true})).toBeVisible();
+
+  const sendResponse=page.waitForResponse(response=>
+    response.request().method()==='POST'
+      &&response.url().includes('/api/v1/notification-template-sets/'+created.id+'/test-send'));
+  await page.getByRole('button',{name:'Confirm send test email',exact:true}).click();
+  const sent=await sendResponse;
+  expect(sent.status()).toBe(200);
+  const result=await sent.json();
+  expect(result.state).toBe('ACCEPTED');
+  expect(result.transport_accepted).toBe(true);
+  expect(result.receipt_confirmed).toBe(false);
+  expect(result.execution_allowed).toBe(false);
+
+  const status=await context.request.get(
+    '/api/v1/notification-template-sets/'+created.id+'/test-send-attempts/'+result.attempt_id,
+  );
+  expect(status.status()).toBe(200);
+  const durable=await status.json();
+  expect(durable.state).toBe('ACCEPTED');
+  expect(durable.transport_accepted).toBe(true);
+  expect(durable.receipt_confirmed).toBe(false);
+  expect(durable.execution_allowed).toBe(false);
+  expect(durable.event_id).toBe(result.event_id);
+
+  await expect.poll(async()=>(
+    await(await request.get(f.receiver)).json()
+  ).mail.length).toBe(mailBefore+1);
+  const after=await(await request.get(f.receiver)).json();
+  const mime=decodeFixtureMime(after.mail.at(-1));
+  expect(mime).toContain('0000');
+  expect(mime).not.toContain('/api/v1/decision-intents/');
+  await expect(page.getByText('Test email outcome requires reconciliation',{exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Reconcile test-email attempt',exact:true}).click();
+  await expect(page.getByText('Transport acceptance is confirmed for the reviewed one-shot attempt.',{exact:false})).toBeVisible();
+  expect((await(await request.get(f.receiver)).json()).mail).toHaveLength(mailBefore+1);
+ }finally{await context.close();}
+});
+
 // B5 synthetic administrator UI. The browser delays A's real backend GET
 // without forging a response; a later B selection must win and an unsearched
 // draft must not export a stale applied result.
