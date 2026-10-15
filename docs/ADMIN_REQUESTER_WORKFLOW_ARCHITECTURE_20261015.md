@@ -123,7 +123,7 @@ Administrator-facing:
 | AUR-3.1 | Full Web unit regression | current product 101 files / 744 tests PASS | PASS |
 | AUR-3.2 | TypeScript + production build | current typecheck + Vite production build PASS | PASS |
 | AUR-3.3 | Browser requester/admin navigation regression | exact product HEAD 47b1232 native Browser E2E 47/47 PASS across 6 isolated backends; affected visual-flow subset 3/3 PASS | PASS |
-| AUR-3.4 | Redeploy development preview and owner visual review | product HEAD 47b1232 deployed with all visual corrections; Grant/Engineering CI SUCCESS; owner acknowledgement pending | DEPLOY + CI PASS / OWNER ACK PENDING |
+| AUR-3.4 | Redeploy development preview and owner visual review | product HEAD 47b1232 deployed; exact live index/JS/CSS hashes reverified; corrected desktop/mobile workflow, User Management and New request surfaces visually reviewed with no additional concrete defect | PASS |
 
 ## 6. Acceptance
 
