@@ -39,15 +39,24 @@ def test_r2_has_exact_16_mandatory_groups_and_one_optional_nonadoption():
     }]
 
 
-def test_r2_closes_historical_denominator_but_not_product_acceptance():
+def test_r2_closes_historical_denominator_without_claiming_acceptance_itself():
     assert LEDGER["historical_coverage_complete"] is True
     assert LEDGER["historical_requirement_denominator"] == 241
     assert sum(LEDGER["historical_requirement_denominator_breakdown"].values()) == 241
     assert LEDGER["product_acceptance_claimed"] is False
     rows = {row["id"]: row for row in LEDGER["tasks"]}
     assert {key for key in ("U0.01", "U0.03", "U8.08", "U9.01") if rows[key]["status"] == "PASS"} == {"U0.01", "U0.03", "U8.08", "U9.01"}
-    assert rows["U9.02"]["status"] == "OPEN"
-    assert rows["U6.06"]["acceptance"] == "BLOCKED"
+    # R2 proves historical traceability only. A later owner-authorized
+    # acceptance pass may close U6.06/U9.02, but that evidence must come
+    # from the dedicated operator acceptance artifact rather than R2.
+    assert rows["U9.02"]["status"] == "PASS"
+    assert rows["U6.06"]["acceptance"] == "PASS"
+    for key in ("U6.06", "U9.02"):
+        assert any(
+            evidence.get("result") == "PASS"
+            and evidence.get("artifact") == "docs/COMPETITOR_UI_OPERATOR_E2E_20261015.md"
+            for evidence in rows[key]["evidence"]
+        )
 
 
 @pytest.mark.parametrize("tamper", ["recovered", "missing_group", "promise_hash", "acceptance"])
