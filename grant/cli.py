@@ -35,7 +35,10 @@ def refuse_configuration(command: str, error: Exception) -> None:
     """Return bounded operator guidance for installation configuration failures."""
     operation = command.replace("-", "_").upper()
     if isinstance(error, FileNotFoundError):
-        reason = "Installation configuration is missing"
+        reason = (
+            "Installation configuration is missing; use --config PATH or create "
+            "the default .dev/config.json with grant init"
+        )
     elif isinstance(error, ValueError) and not isinstance(error, json.JSONDecodeError):
         reason = str(error)
     else:
@@ -45,24 +48,85 @@ def refuse_configuration(command: str, error: Exception) -> None:
 
 def main():
     parser = argparse.ArgumentParser(description="DataRelay Grant single-installation CLI")
-    parser.add_argument("--config", default=".dev/config.json")
+    parser.add_argument(
+        "--config",
+        default=".dev/config.json",
+        help="Installation configuration path (default: .dev/config.json)",
+    )
     sub = parser.add_subparsers(dest="command", required=True)
-    init = sub.add_parser("init")
+    init = sub.add_parser(
+        "init",
+        help="Create a new protected installation configuration",
+        description=(
+            "Create a new protected installation configuration. "
+            "This does not create users or a database."
+        ),
+    )
     init.add_argument("--origin", default="http://127.0.0.1:8794")
     init.add_argument("--dev", action="store_true")
-    user = sub.add_parser("user-add")
+    user = sub.add_parser(
+        "user-add",
+        help="Create a local user account",
+        description=(
+            "Create a local user account in an existing installation. "
+            "The password is prompted twice without echo."
+        ),
+    )
     user.add_argument("--username", required=True)
     user.add_argument("--email", required=True)
     user.add_argument("--role", choices=["admin", "member"], default="member")
-    sub.add_parser("serve")
-    backup = sub.add_parser("backup")
+    sub.add_parser(
+        "serve",
+        help="Serve Grant on the configured loopback port",
+        description=(
+            "Serve Grant on 127.0.0.1 using the configured origin port. "
+            "TLS/reverse-proxy exposure is deployment-operator owned."
+        ),
+    )
+    backup = sub.add_parser(
+        "backup",
+        help="Create a private SQLite backup at a new path",
+        description=(
+            "Create a private SQLite backup of existing installation state at a NEW path. "
+            "This does not upgrade the database."
+        ),
+    )
     backup.add_argument("--output", type=Path, required=True)
-    restore = sub.add_parser("restore")
+    restore = sub.add_parser(
+        "restore",
+        help="Restore a backup into a new paused database",
+        description=(
+            "Restore a validated backup into a NEW database. "
+            "Sessions are cleared and delivery/consumption remains PAUSED."
+        ),
+    )
     restore.add_argument("--input", type=Path, required=True)
     restore.add_argument("--output", type=Path, required=True)
-    sub.add_parser("check")
-    resume = sub.add_parser("recovery-resume")
-    resume.add_argument("--acknowledge-external-reconciliation", action="store_true")
+    sub.add_parser(
+        "check",
+        help="Inspect existing installation health without mutation",
+        description=(
+            "Inspect existing database/schema/recovery-pause/SMTP state without "
+            "initializing or migrating installation state."
+        ),
+    )
+    resume = sub.add_parser(
+        "recovery-resume",
+        help="Resume a restored installation after external reconciliation",
+        description=(
+            "Resume a restored installation only after external reconciliation. "
+            "Acknowledged resume cancels restored open requests and marks unfinished "
+            "committed executions UNKNOWN."
+        ),
+    )
+    resume.add_argument(
+        "--acknowledge-external-reconciliation",
+        action="store_true",
+        help=(
+            "Confirm external reconciliation; restored open requests are cancelled "
+            "and unfinished committed executions become UNKNOWN"
+        ),
+    )
     args = parser.parse_args()
     os.umask(0o077)
     config = Path(args.config).resolve()

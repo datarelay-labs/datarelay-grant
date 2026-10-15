@@ -94,7 +94,7 @@ For each row, derive actual public Web/API/CLI coverage *independently*; don't c
 | GF-019 | Operational queues, health, exceptions, delivery retry | Admin Web/API; CLI-04 for local inspection | WEB_API_ONLY_JUSTIFIED / CLI read counterpart |
 | GF-020 | Safe configuration export, preview and Draft-only import | System Management Backup & Import → Integrations diagnostics | WEB_API_ONLY_JUSTIFIED; distinct from DB restore |
 | GF-021 | Foundation shared auth/sidebar/administration task presentation | pinned Foundation RC41 + Grant adapters | FOUNDATION_OWNED_COMMON_UI; consumer evidence only |
-| GF-022 | HTTPS manager, platform password policy, timezone, network, retention UI | System Management (currently unavailable) | NOT_IMPLEMENTED_CURRENT_GRANT; P0-SM gap, no fake Manage |
+| GF-022 | System Management HTTPS, platform password policy, display timezone, network and retention tasks | System Management + Account & Security | MIXED_CURRENT_GRANT: Display timezone is persisted/supported; HTTPS/network are deployment read-only; platform password policy and retention remain unavailable; no fake Manage |
 | GF-023 | Optional Foundation on-prem security Wheel/host enforcement | shared Wheel not installed in Grant | NOT_INSTALLED; separate Grant adapter/owner effect required |
 | GF-024 | Actual user acceptance with independent requester/approver accounts, sessions and mailboxes | Full User E2E | NOT_CLI_AUDIT; cannot infer PASS from this read-only audit |
 

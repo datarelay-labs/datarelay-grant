@@ -100,7 +100,9 @@ class Settings:
         if path.stat().st_mode & 0o077:
             raise ValueError("configuration with secrets must be owner-readable only (0600)")
         data = json.loads(path.read_text())
-        data["database"] = Path(data["database"]).expanduser().resolve()
+        # Keep the final configured path component visible to database safety
+        # guards instead of resolving and silently following a symlink here.
+        data["database"] = Path(os.path.abspath(Path(data["database"]).expanduser()))
         data["web_root"] = (
             Path(data.get("web_root", Path(__file__).resolve().parents[1] / "web/dist"))
             .expanduser()

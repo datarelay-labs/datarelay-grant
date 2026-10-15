@@ -20,7 +20,8 @@ describe('First-run Grant administrator guided setup without new permission',()=
    'Open user management','Manage approver groups','Open integrations',
    'Manage notification templates','Create draft policy','View policy list',
    'Open New request','No business action is executed']) expect(html).toContain(phrase);
-  expect(html).toContain('href="/system"');
+  expect(html).toContain('href="/system?view=accounts"');
+  expect(html).not.toContain('href="/system"');
   expect(html).toContain('href="/integrations"');
   expect(html).toContain('href="/approvers"');
   expect(html).toContain('href="/notifications"');

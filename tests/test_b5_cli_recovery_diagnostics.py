@@ -4,6 +4,7 @@ Every installation and backup is isolated in pytest's private tmp_path;
 these tests never use a live SMTP service, customer state or release archive.
 """
 
+import json
 import sqlite3
 import stat
 import subprocess
@@ -51,7 +52,62 @@ def test_check_missing_config_reports_bounded_error(tmp_path):
     missing = cli(config, "check")
     assert_clean_refusal(missing, "CHECK_REFUSED")
     assert "configuration is missing" in missing.stderr
+    assert "--config" in missing.stderr
+    assert ".dev/config.json" in missing.stderr
     assert str(config) not in missing.stderr
+
+
+def test_cli_help_explains_command_purpose_and_recovery_risk():
+    root = subprocess.run(
+        [sys.executable, "-m", "grant.cli", "--help"],
+        capture_output=True, text=True, check=False, timeout=30,
+    )
+    assert root.returncode == 0
+    for phrase in (
+        "Create a new protected installation configuration",
+        "Create a local user account",
+        "Serve Grant on the configured loopback port",
+        "Inspect existing installation health without mutation",
+        "Create a private SQLite backup at a new path",
+        "Restore a backup into a new paused database",
+        "Resume a restored installation",
+    ):
+        assert phrase in root.stdout
+
+    resume = subprocess.run(
+        [sys.executable, "-m", "grant.cli", "recovery-resume", "--help"],
+        capture_output=True, text=True, check=False, timeout=30,
+    )
+    assert resume.returncode == 0
+    normalized_resume = " ".join(resume.stdout.split())
+    for phrase in (
+        "cancels restored open requests",
+        "unfinished committed executions UNKNOWN",
+        "external reconciliation",
+    ):
+        assert phrase in normalized_resume
+
+
+def test_check_and_backup_reject_configured_database_symlink(tmp_path):
+    config = initialized(tmp_path)
+    real_database = tmp_path / "grant.sqlite"
+    Database(real_database)
+    symlink_database = tmp_path / "database-link.sqlite"
+    symlink_database.symlink_to(real_database)
+
+    payload = json.loads(config.read_text())
+    payload["database"] = str(symlink_database)
+    config.write_text(json.dumps(payload))
+    config.chmod(0o600)
+
+    checked = cli(config, "check")
+    assert_clean_refusal(checked, "CHECK_REFUSED")
+    assert "symlink" in checked.stderr.lower() or "regular file" in checked.stderr.lower()
+
+    destination = tmp_path / "must-not-exist.sqlite"
+    backed_up = cli(config, "backup", "--output", str(destination))
+    assert_clean_refusal(backed_up, "BACKUP_REFUSED")
+    assert not destination.exists()
 
 
 def test_check_malformed_config_reports_bounded_error(tmp_path):

@@ -29,7 +29,7 @@ export function AdminFirstRunSetup({
         <div className="grant-admin-setup-step">
           <strong>Create approver accounts</strong>
           <small>{status(enabledAccounts, 'enabled accounts', 'enabled account')} — email and role are administrator-owned</small>
-          <a href="/system">Open user management <span aria-hidden="true">→</span></a>
+          <a href="/system?view=accounts">Open user management <span aria-hidden="true">→</span></a>
         </div>
       </li>
       <li><span className="grant-admin-setup-num" aria-hidden="true">02</span>
