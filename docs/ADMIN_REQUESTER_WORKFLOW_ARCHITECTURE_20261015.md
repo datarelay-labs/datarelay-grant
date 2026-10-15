@@ -111,7 +111,7 @@ Administrator-facing:
 | AUR-1.1 | Rename user navigation parent to User workspace | SSR navigation test | IMPLEMENTED |
 | AUR-1.2 | Add permanent New request user navigation | SSR navigation test | IMPLEMENTED |
 | AUR-1.3 | Add Approval administration parent | SSR navigation test | IMPLEMENTED |
-| AUR-1.4 | Add Workflow setup landing page | component SSR test | IMPLEMENTED |
+| AUR-1.4 | Add Workflow setup landing page, including balanced requester-summary presentation | component SSR + owner visual test | IMPLEMENTED |
 | AUR-1.5 | Move All requests to admin lane | capability-filter test | IMPLEMENTED |
 | AUR-1.6 | Preserve System administration as separate admin lane | SSR navigation test | IMPLEMENTED |
 | AUR-2.1 | Expand admin first-run setup to accounts/groups/integrations/templates/policy/test/request | unit test | IMPLEMENTED |
@@ -119,11 +119,11 @@ Administrator-facing:
 | AUR-2.3 | Show assigned Approval plan read-only | request workspace test | IMPLEMENTED |
 | AUR-2.4 | State that approver/template/verification are administrator-owned | request workspace test | IMPLEMENTED |
 | AUR-2.5 | Preserve technical policy/version references under secondary details | request workspace test | IMPLEMENTED |
-| AUR-2.6 | Open User Management directly from administrator setup | allowlisted deep-link unit + browser test | IMPLEMENTED |
-| AUR-3.1 | Full Web unit regression | 101 files / 744 tests PASS | PASS |
-| AUR-3.2 | TypeScript + production build | typecheck + Vite production build PASS | PASS |
-| AUR-3.3 | Browser requester/admin navigation regression | native Browser E2E 46/46 PASS across 6 isolated backends | PASS |
-| AUR-3.4 | Redeploy development preview and owner visual review | product HEAD a7d988d deployed after correcting missing setup step 07; Grant/Engineering CI SUCCESS; owner acknowledgement pending | DEPLOY + CI PASS / OWNER ACK PENDING |
+| AUR-2.6 | Open User Management directly from administrator setup as the focused standalone detail; return to catalog only through Back | allowlisted deep-link + desktop/mobile browser test | IMPLEMENTED |
+| AUR-3.1 | Full Web unit regression | current product 101 files / 744 tests PASS | PASS |
+| AUR-3.2 | TypeScript + production build | current typecheck + Vite production build PASS | PASS |
+| AUR-3.3 | Browser requester/admin navigation regression | exact product HEAD 47b1232 native Browser E2E 47/47 PASS across 6 isolated backends; affected visual-flow subset 3/3 PASS | PASS |
+| AUR-3.4 | Redeploy development preview and owner visual review | product HEAD 47b1232 deployed with all visual corrections; Grant/Engineering CI SUCCESS; owner acknowledgement pending | DEPLOY + CI PASS / OWNER ACK PENDING |
 
 ## 6. Acceptance
 
