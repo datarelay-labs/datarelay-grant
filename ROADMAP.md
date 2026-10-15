@@ -18,13 +18,13 @@ Current implementation batch:
   Notification templates -> Draft policy -> Test/Activate -> first request.
 - Requester New request uses Request type and a read-only Assigned approval plan;
   approver/template/verification/deadline remain administrator-owned.
-- Visual-review follow-up AUR-2.6: Workflow setup now deep-links directly to the existing User Management detail through an allowlisted view=accounts route; unrelated or duplicate query values fail closed to the System Management task list.
-- Original AUR targeted RED -> GREEN regression: 44/44 PASS; AUR-2.6 focused regression: 10/10 PASS.
-- Current AUR-2.6 candidate full Web regression: 744/744 PASS; TypeScript and production build PASS.
-- Current AUR-2.6 candidate native Browser E2E: 46/46 PASS across six isolated backends.
-- Exact AUR-2.6 product HEAD `404c200` development preview redeploy PASS; deployed index SHA256 `a3bfc5194498a3c4fac87cd04954a76d1adbff528f841c02370386eca53fd6ff`, JS SHA256 `7e9102ecae7139853305b085eba9b1b75bce2267b3f7be82858d3c9cbb53bc33`; HTTPS root 200, protected unauthenticated admin API 401, worker disabled.
-- Exact product-head automatic CI SUCCESS: Grant checks `38697863839`; Engineering System `38697864193`.
-- Final owner visual review is the only remaining P0-AUR gate.
+- Visual-review follow-up AUR-2.6 remains complete: Workflow setup deep-links directly to the existing User Management detail through an allowlisted view=accounts route; unrelated or duplicate query values fail closed to the System Management task list.
+- Subsequent visual review found one real AUR-2.1 defect only: Administrator setup order omitted canonical step 07 `Create the first request`. RED-first coverage now pins 01-07, and desktop plus 390px exact-product visual review confirms the corrected sequence without horizontal overflow.
+- Full Web regression: 101 files / 744 tests PASS; TypeScript and production build PASS.
+- Native Browser E2E: 46/46 PASS across six isolated backends.
+- Exact corrected product HEAD `a7d988d` development preview redeploy PASS as `web-aur-a7d988d`; deployed index SHA256 `9c82ef3249a3503195930580005d0a1338e751029978b9aac85854e7ba2e903c`, JS SHA256 `e726e889db2d387dd5ffb42fc99e1b129449ffc290c4a275a72b71dde4efa092`; HTTPS root 200, protected unauthenticated APIs 401, worker disabled.
+- Exact product-head automatic CI SUCCESS: Grant checks `38704220986`; Engineering System `38704222154`.
+- Authenticated scripted access to the deployed preview was platform-safety blocked and not bypassed. Final owner visual acknowledgement of the corrected deployed preview is the only remaining P0-AUR gate.
 - Foundation common UI is unchanged. No merge/release/production authority is implied.
 
 **2026-10-15 operator acceptance continuation:** competitor-UI technical acceptance and coordination reconciliation are complete. Mounted Browser E2E is **46/46 PASS** across six isolated product backends; Canvas qualification is **49/49 PASS**. U6.06 exact saved-revision Review -> Confirm one-shot test-send PASS is composed with separately verified unchanged-candidate Grant SMTP-to-Gmail multipart transport/DKIM/SPF evidence. U7.04-U7.07 PASS under WBS §1.1. U9.01/U9.02/U9.03 PASS. **Only U9.04 owner visual acknowledgement remains** before this competitor-UI priority lock may be removed. Repository-wide independent-human `FULL_USER_E2E`, direct Outlook/Apple client observation, native Control/Stellar acceptance, merge/release and production remain separate and are not claimed.
