@@ -13,6 +13,7 @@ from cryptography.fernet import Fernet
 from .auth import Auth
 from .config import Settings
 from .db import CURRENT_SCHEMA_VERSION, Database
+from .errors import GrantError
 from .models import NewUser
 
 
@@ -196,9 +197,12 @@ def main():
     elif args.command == "recovery-resume":
         from .core import Core
 
-        result = Core(db, settings).resume_after_restore(
-            acknowledged=args.acknowledge_external_reconciliation
-        )
+        try:
+            result = Core(db, settings).resume_after_restore(
+                acknowledged=args.acknowledge_external_reconciliation
+            )
+        except GrantError as exc:
+            raise SystemExit(f"RECOVERY_RESUME_REFUSED: {exc.code}") from None
         print(json.dumps(result))
     elif args.command == "serve":
         import uvicorn

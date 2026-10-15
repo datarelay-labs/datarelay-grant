@@ -168,3 +168,23 @@ def test_backup_missing_database_fails_without_creating_output(tmp_path):
     assert_clean_refusal(response, "BACKUP_REFUSED")
     assert not destination.exists()
     assert not (tmp_path / "grant.sqlite").exists()
+
+
+def test_recovery_resume_without_ack_is_bounded_refusal(tmp_path):
+    config = initialized(tmp_path)
+    source = tmp_path / "grant.sqlite"
+    Database(source)
+    backup = tmp_path / "backup.sqlite"
+    restored = tmp_path / "restored.sqlite"
+    assert cli(config, "backup", "--output", str(backup)).returncode == 0
+    assert cli(config, "restore", "--input", str(backup), "--output", str(restored)).returncode == 0
+
+    payload = json.loads(config.read_text())
+    payload["database"] = str(restored)
+    restored_config = tmp_path / "restored.json"
+    restored_config.write_text(json.dumps(payload))
+    restored_config.chmod(0o600)
+
+    refused = cli(restored_config, "recovery-resume")
+    assert_clean_refusal(refused, "RECOVERY_RESUME_REFUSED")
+    assert "EXTERNAL_RECONCILIATION_ACK_REQUIRED" in refused.stderr
