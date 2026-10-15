@@ -4,51 +4,76 @@
 > **Canonical repository/path:** `datarelay-labs/datarelay-grant` / `docs/FULL_USER_E2E_SCENARIOS.md`.
 > **Companion:** `docs/CLI_FEATURE_SCENARIO_RECONCILIATION.md` is a **separate non-destructive** feature/CLI/UX coherence audit.
 > **Existing authority retained:** `docs/FULL_USER_E2E.md`, `docs/USER_SCENARIOS.md`, `docs/SURFACE_RECONCILIATION.md`, `docs/INTEGRATION.md`, `docs/G11_EXTERNAL_ACCEPTANCE.md`, `docs/OPERATIONS.md` and the current Engineering System `standards/USER_ACCEPTANCE.md`. Read these **entirely before execution**.
-> **Drafting reference:** Inspected DRLink's `docs/FULL_USER_E2E_SCENARIOS.md` on dev-drlink worktree `v300-drl3-0` at source HEAD `1dc619a4`, adapting its role/negative/recovery/performance/evidence contracts to Grant's Web-first approval and one-installation CLI (not DRLink's Server/Agent topology).
+> **Design reference:** Adapted from the current DRLink canonical contract resolved through `/home/aella/datarelay-link-current`: `datarelay-labs/datarelay-link/docs/FULL_USER_E2E_SCENARIOS.md`, source HEAD `a26c6465730dc388590113aa1967191b109f75b2`, file SHA256 `215f388eedc0cb97a3ba61e6425191fa3c77aa4a083a63244f08c8e1e3d6b50e`. Preserve its black-box persona, AI-mirror, exhaustive coverage, failure-accumulation and evidence semantics while adapting DRLink-specific multi-host/relay flows to Grant's Web-first approval product.
 > **Initial candidate while drafting:** Grant Draft PR #100 `e07e8864b14b7c30ae4c65ec2d563525ca05533d`. This is not frozen or accepted; resolve actual source, test-contract and installed build identities at test time.
 > **Foundation ownership:** Foundation project owns common login/sidebar/administration UI and public SDK. Grant owns approval-domain pages, Grant-specific backend/adapters, policies, mail decisions and native product integration. Found Foundation UI defects must be assigned upstream rather than independently rewritten here.
-> **Status:** PREPARED / NOT EXECUTED. This document does not grant external effect, production or release authority.
+> **Status:** NORMATIVE TEST CONTRACT / NOT EXECUTED ON THE CURRENT CANDIDATE. This document does not grant external effect, production or release authority.
 
 ## 1. Trigger, coverage profiles and completion claims
 
-A user request for "Grant Full User E2E", "Grant 사용자 E2E", "전수 사용자 테스트", or execution of this exact document starts the `FULL_USER_E2E` process **only once necessary owner/safety prerequisites are met**. A request **to prepare the documents** authorizes writing/validation/commit only: **no E2E execution now**.
+A user request for "Grant Full User E2E", "Grant 사용자 E2E", "전수 사용자 테스트", or execution of this exact document is an **immediate execution command**: resolve this canonical contract and exact candidate, then start every safe independent persona/test lane whose prerequisites are already satisfied. Missing owner/safety/environment/tooling prerequisites block only their dependent scenarios; they do not convert the whole request into planning or pause unrelated runnable lanes. A request **to prepare the documents**, as in the current task, authorizes writing/validation/commit only: **no E2E execution now**.
 
 | Profile | Scope | Legal conclusion |
 | --- | --- | --- |
 | `CLI_FEATURE_SCENARIO` | Separate public CLI/feature/workflow audit | Never user E2E |
 | `TARGETED_USER_E2E` | Explicitly narrowed domain(s), e.g. signed-in Home→Request→Approval or mobile | Only targeted result; remaining scenarios `NOT_RUN_BY_SCOPE` |
 | `DISPOSABLE_PRODUCT_E2E` | Exact built Grant Web+API, disposable DB/accounts and real local SMTP/HTTP fixture | Product candidate E2E evidence, not independent mail/native external acceptance |
-| `FULL_USER_E2E` | All applicable mandatory real user/admin/operator/negative/recovery/performance and independent real mailbox/external requirements | Full PASS only with all required native/user gates |
+| `FULL_USER_E2E` | All applicable mandatory persona-led browser/CLI/admin/negative/recovery/performance plus independent mailbox/native-effect requirements | Full product-quality PASS only when every applicable lane has real public-surface and durable/independent evidence |
 | `RELEASE_QUALIFICATION` | Full two-pass candidate with exact installed HEAD, machine/CI/provenance and separate owner signoff | No merge/release automatically implied |
 
-**False-PASS prevention:** A Grant SMTP send accepted by a fixture does not prove a real inbox received it. A Grant-generated HTTP callback does not prove Stellar Cyber ingestion. A Grant helper or simulated Control SQLite effect does not prove the real Control operation executed. React SSR/unit tests and synthetic Playwright fixture accounts are not direct human user E2E. An email decision link `GET` does not itself approve. A safe source-only preview with workers/SMTP disabled cannot pass end-to-end delivery.
+**False-PASS prevention:** A Grant SMTP send accepted by a fixture does not prove a real inbox received it. A Grant-generated HTTP callback does not prove Stellar Cyber ingestion. A Grant helper or simulated Control SQLite effect does not prove the real Control operation executed. React SSR/unit tests, API fixtures and scripted Playwright accounts are supporting evidence, not persona-led public-surface E2E. An email decision link `GET` does not itself approve. A safe source-only preview with workers/SMTP disabled cannot pass end-to-end delivery.
 
-**Owner-controlled gates currently deferred:** actual deployed Control/Stellar effect and result, genuine independent two-human/two-mailbox Full User E2E, PR merge, production and release require separate explicit authorization. No planned scenario constitutes authorization. A missing prerequisite is `BLOCKED_OWNER_AUTHORIZATION` or `BLOCKED_ENVIRONMENT`, never silently skipped as PASS.
+**Owner-controlled gates currently deferred:** actual deployed Control/Stellar effects, host/proxy/security mutations, destructive recovery/load beyond an approved disposable boundary, PR merge, production and release require separate explicit authorization. Persona-led Full User E2E itself is executable by ChatGPT when legitimate independent accounts/inboxes/sessions are available; a separate owner visual/UAT signoff is not a substitute for E2E and is not self-passed by ChatGPT. A missing prerequisite blocks only the dependent scenario as `BLOCKED_OWNER_AUTHORIZATION`, `BLOCKED_ENVIRONMENT` or `BLOCKED_TOOLING`; it does not pause unrelated runnable lanes or silently become PASS.
 
 ## 2. Acting roles and independent users
 
-ChatGPT is the requested primary implementation/testing assistant and may operate **genuinely permitted** user browser/CLI actions. If the owner instead operates the browser manually and sends evidence, record `OWNER_PERFORMED_WITH_CHATGPT_AUDIT`, not an invented direct ChatGPT login. A logically separate auditor may inspect source/API receipts **after** direct public user evidence is captured.
+ChatGPT is the default FULL_USER_E2E executor and final auditor unless the owner explicitly selects another authorized tester. ChatGPT must act as multiple **knowledge-isolated real-user personas** on genuinely permitted browser/CLI/mailbox surfaces; the test does not require multiple biological humans. If the owner performs a browser action manually and supplies evidence, record `OWNER_PERFORMED_WITH_CHATGPT_AUDIT` for that lane rather than inventing a ChatGPT login. Source/API/internal receipts are auditor evidence **only after the relevant Direct and AI-assisted public-surface evidence is frozen**.
 
 | Persona | Mission and identity rule | Information allowed initially |
 | --- | --- | --- |
 | `ADMIN` | Administer disposable installation, users, groups, policies, notifications, integration credentials, audit | Approved admin account and product URL; no hidden fixture/token |
 | `REQUESTER_A` | Request a bounded harmless action, track it, answer questions and replace/cancel | Own account, reason, target and discoverable policy |
-| `APPROVER_B` | Receive independently delivered approval mail and consciously decide Hold/Approve/Deny | Independently controlled person/inbox B, selected seat, no requester cookies |
+| `APPROVER_B` | Receive independently delivered approval mail and consciously decide Hold/Approve/Deny | Independent account/inbox/browser context B, selected seat, no requester cookies or requester-only knowledge |
 | `UNRELATED_C` | Verify unrelated user cannot enumerate protected request/admin actions | Separate authorized member identity without seat |
 | `DELEGATE_D` | Act only on a specifically delegated/current seat | Separate eligible identity and bounded delegation |
 | `OPERATOR` | Safely install/check/recover disposable Grant with public `grant` CLI | Trusted sandbox paths, operator access, no user decision authority |
 | `CONTROL_OBSERVER` | Verify approved native action at real Control-owned execution boundary | Separate read-only Control effect ledger/destination |
 | `STELLAR_OBSERVER` | Verify approved supported real Stellar tenant/case/alert receiver state | Actual deployed receiver version and independent readback |
 
-Two actual approval persons/mailboxes must not be aliases in one inbox. A single person controlling two test logins is a useful fixture, not the contract's genuine two-human acceptance. User role, person identity, mailbox, browser context and local server role must be recorded separately. Admin cannot impersonate a human vote. Never send raw credentials, mail decision tokens, PIN/OTP/TOTP, cookies or bearer keys in ChatGPT evidence.
+Requester and approver must be **independent identities, independent inboxes and independent browser/session contexts**; aliases that collapse into one inbox/session do not qualify. The same authorized ChatGPT executor may act as both personas only through isolated actor contexts that do not share cookies, mailbox state or prior-role knowledge. Record account identity (redacted), mailbox, browser context and product role separately. Admin cannot impersonate a human vote. A future owner/human UAT may add assurance but is a separate acceptance surface. Never send raw credentials, mail decision tokens, PIN/OTP/TOTP, cookies or bearer keys in ChatGPT evidence.
 
 ### Direct-user discipline
 
 - Acting users begin with a **mission**, navigate real built pages and react to public labels, normal errors and their own email—not a source-derived exact command checklist.
 - Before switching persona, establish a new legitimate session/inbox and reset previous actor's knowledge; no cookie copying or reading saved fixture passwords.
-- Browser drivers may record permitted click, keyboard, screenshot and network assertions, but helper scripts alone are supplementary evidence, not human acceptance.
+- Browser drivers may record permitted click, keyboard, screenshot and network assertions, but helper scripts alone are supplementary evidence, not persona-led acceptance.
+- During an active black-box lane, the acting persona does not inspect product source, test source, internal SQLite, hidden APIs, fixtures or scenario-answer tables. Those become auditor/remediation inputs only after that lane's public evidence is frozen.
 - Prior platform-denied fixture-credential extraction and detailed browser DOM operations must never be retried or rerouted via other tools/hosts/scripts. Record `BLOCKED_TOOLING` when real-user interaction cannot be performed.
 - The auditor verifies server-side revision, role scopes, email receipt, durable operations, external readback and cleanup separately. Successful UI toast alone is not evidence of a durable transition.
+
+### AI-assisted mirror discipline
+
+The DRLink-derived AI lane is a **supportability/usability test**, not a claim that Grant contains a native AI feature.
+
+For every applicable requester, approver, administrator and operator use case:
+
+1. run the Direct persona from the public Grant surface first and freeze that evidence;
+2. start an equivalent fresh AI-supported persona with the same natural-language goal and equivalent starting product state;
+3. give the AI adviser only that goal plus public labels/help/error/status/email content the persona is legitimately allowed to see;
+4. record the adviser's first answer unedited, the user's public action, any error-correction exchange and the final product outcome;
+5. prohibit Product Standard, source/tests, hidden routes, expected IDs, scenario oracle or auditor findings from entering the adviser/persona context before disposition;
+6. compare Direct and AI-assisted paths for canonical action, role boundary, Review→Confirm semantics, recovery guidance and final durable state.
+
+A native Grant AI surface, if later implemented, receives its own product scenarios; its absence does not waive this mirror. If a fresh knowledge-isolated actor cannot be established after the auditor has read the oracle, mark only the affected AI lane `BLOCKED_KNOWLEDGE_ISOLATION`. Automated prompt replay is supplemental evidence and cannot produce AI-assisted persona PASS.
+
+~~~text
+PRIMARY_USER_EVIDENCE_MODE=PERSONA_LED_PUBLIC_UX
+DIRECT_USER_USE_CASE_COVERAGE_REQUIRED=100%
+AI_ASSISTED_USE_CASE_COVERAGE_REQUIRED=100%
+SCRIPTED_USER_SCENARIO_EXECUTION_COUNT=0
+AUTOMATED_HARNESS_USER_SUBSTITUTION_COUNT=0
+AUDITOR_KNOWLEDGE_LEAK_COUNT=0
+~~~
 
 ## 3. Required isolated topology and preflight authorization
 
@@ -99,7 +124,7 @@ P0_SYSTEM_MANAGEMENT_GAPS=       WORKER_AND_SMTP_STATUS=
 Preflight MUST:
 1. Resolve current Grant `AGENTS.md`, `.engineering/project.yaml`, all applicable existing user-acceptance/integration/operator documents linked above, plus full current tests contract and Engineering System `USER_ACCEPTANCE`.
 2. Record the currently approved source/test contract SHA, pinned Foundation artifact, installed HTML/JS/CSS and backend identity, actual schema/health; stale installed preview does not yield product-current evidence.
-3. Require real independent actor B and two independent inboxes for human/mail gate. A fixture alias, single SMTP capture endpoint or unattended coded click does not qualify.
+3. Require independent requester/approver account identities, two independent inboxes and isolated browser/session contexts for the mail/decision gate. They may be operated by the same authorized ChatGPT test executor through separate actor contexts; a fixture alias, shared inbox/session or unattended coded click does not qualify.
 4. Obtain explicit written owner approval and safe rollback boundary **before** modifying host/proxy/credentials/SMTP, sending to third-party servers, performing external Control actions, using real Stellar receiver or deleting/restoring data.
 5. Prepare separately namespaced disposable requests, policies, messages and credentials, avoiding shared production records. Capture baseline delivery queue and users/requests.
 6. For native Control, identify existing guarded *product-owned* execution path and durable ledger for at-most-once effect. For Stellar, record deployed version, actual receiver/tenant/case/alert/auth contract and independent destination readback.
@@ -112,7 +137,7 @@ Preflight MUST:
 2. **First persona-led discovery sweep:** Use the user goals in sections 5-12 below. Accumulate failures before modifying any source. A failed scenario stops only truly dependent or unsafe downstream work. Keep other isolated role/scenario lanes running.
 3. **Source/remediation boundary:** After the sweep is exhausted, freeze findings. Repair Grant bugs in a separate scoped development phase; send common Foundation UI bugs to its project for its own versioned handoff. Do not edit a frozen installed user candidate mid-pass.
 4. **Reruns:** Run affected scenarios on the actual new build/HEAD with a new trace; retain explicit superseded evidence. Do not restart the entire suite after each small fix, but any qualifying source/build change resets release PASS1/PASS2.
-5. **Final Full User E2E:** On ONE frozen exact installed HEAD run **two NEW complete independent human/browser/mailbox passes**, with fresh IDs, legitimate separate actors and inbox evidence, after all actionable issues are closed. Both PASS1 and PASS2 must match `QUALIFIED_HEAD` and the installed build.
+5. **Final Full User E2E:** On ONE frozen exact installed HEAD run **two NEW complete persona-led passes** after all actionable issues are closed. Each pass uses fresh request IDs, isolated requester/approver account+browser+mailbox contexts, Direct and AI-assisted use-case mirrors, and independent durable/mail/native readback. The same authorized ChatGPT executor may perform the isolated personas; owner/human UAT remains a separate acceptance surface. Both PASS1 and PASS2 must match `QUALIFIED_HEAD` and the installed build.
 6. **Release sequencing:** Only after Browser PASS → Full User E2E two-pass PASS → HEAD freeze → native required CI/provenance/SBOM/hash/public smoke → owner acceptance. No merge, tag, production deployment or actual external effect follows automatically from this document.
 
 Failure disposition while collecting: `RECORD_VISIBLE_EVIDENCE → CLASSIFY_SEVERITY → CONTINUE_INDEPENDENT_LANES`. Do not enter a source-fix loop at the first failure, do not quietly skip a user-reproducible defect, and do not repeatedly execute risky setup or external actions merely to attach another scenario label.
@@ -140,7 +165,7 @@ Every applicable scenario is recorded individually, even when several share the 
 | U-013 | Requests/My requests/Approvals filters | Filter lifecycle/action/date/approver, pagination/partial counts, mobile list; reset and stale GET handling show current server scope, not cached foreign rows |
 | U-014 | Unrelated person attempts access | Separate member attempts request detail, approval action and admin-only routes; HTTP 403/404 as appropriate, no existence leak or unauthorized write |
 | U-015 | Current session terminates | Sign out, browser back/refresh; protected data unavailable, revoked session cannot reissue decision |
-| U-016 | Two full independent end-user passes | Repeat all applicable U scenarios with **new** independently operated Requester A, Approver B sessions, distinct mail receipts and request IDs on the same frozen build |
+| U-016 | Two full independent end-user passes | Repeat all applicable U scenarios with **new isolated** Requester A and Approver B account/browser/mailbox contexts, distinct mail receipts/request IDs and required AI-assisted mirrors on the same frozen build; operator may be ChatGPT when legitimately authorized |
 
 ### 5.2 Administrator product-configuration workflows
 
@@ -383,9 +408,9 @@ All run/test/evidence paths are templates until an authorized E2E run creates th
 
 Canonical TSV schemas:
 
-- `scenario-results.tsv`: `SCENARIO_ID, PROFILE, APPLICABLE, MANDATORY, PASS_NUMBER, ACTING_PERSONA, PERSONA_EXECUTION_MODE, PRECONDITION, DIRECT_RESULT, ACTUAL_SERVER_STATE, EXTERNAL_RESULT, FINAL_RESULT, BLOCK_REASON, EVIDENCE`.
+- `scenario-results.tsv`: `SCENARIO_ID, PROFILE, APPLICABLE, MANDATORY, PASS_NUMBER, ACTING_PERSONA, PERSONA_EXECUTION_MODE, PRECONDITION, DIRECT_RESULT, AI_ASSISTED_RESULT, ACTUAL_SERVER_STATE, EXTERNAL_RESULT, FINAL_RESULT, BLOCK_REASON, EVIDENCE`.
 - `feature-command-coverage.tsv`: `FEATURE_ID, CLI_ID_OR_WEB_API, SCENARIO_IDS, EXPECTED_VARIANTS, EXECUTED_VARIANTS, NEGATIVE_COVERED, READBACK, RESULT, EVIDENCE`.
-- `persona-sessions.tsv`: `PERSONA_ID, ACCOUNT_ID_REDACTED, BROWSER_CONTEXT_ID, INBOX_ID_REDACTED, ACTUAL_HUMAN_INDEPENDENT, HEAD, AUTH_RESULT, START_UTC, END_UTC, EVIDENCE`.
+- `persona-sessions.tsv`: `PERSONA_ID, ACCOUNT_ID_REDACTED, BROWSER_CONTEXT_ID, INBOX_ID_REDACTED, ACTOR_ISOLATION, KNOWLEDGE_ISOLATION, HEAD, AUTH_RESULT, START_UTC, END_UTC, EVIDENCE`.
 - `external-evidence.tsv`: `PRODUCT_KIND, VERSION, REQUEST_ID, ACTION_HASH, OPERATION_OR_EVENT_ID, TENANT_CASE_ALERT_REDACTED, DESTINATION_READBACK, EFFECT_COUNT, RESULT, EVIDENCE`.
 - `findings.tsv`: `FINDING_ID, SEVERITY, USER_BLOCKING, OWNER_REPO, STATUS, SCENARIO_IDS, REPRODUCER, READBACK_DIFF, EVIDENCE, FIX_HEAD, RERUN_ID`.
 - `execution-lanes.tsv`: `LANE_ID, PERSONA, DEPENDENCIES, START_UTC, END_UTC, RESOURCE_PREFIX, RESULT, EVIDENCE`.
@@ -394,7 +419,7 @@ Every mandatory scenario row from **U-001..U-016, A-001..A-017, E-001..E-013, L-
 
 A scenario's evidence must show:
 1. role/persona mission, legitimate starting knowledge and product URL/head;
-2. public path/CLI actual action taken with timestamp;
+2. Direct-user public path/CLI actual action taken with timestamp plus, when applicable, the isolated AI-assisted mirror's goal/first guidance/action/result;
 3. pre-state and exact immutable identifiers (request ID/action hash/current seat/policy version or CLI database schema);
 4. expected vs observed UI, server durable readback and *independent* mailbox/native effect when applicable;
 5. negative/timeout/replay/recovery observation;
@@ -402,13 +427,13 @@ A scenario's evidence must show:
 7. screenshot/log/artifact hashes and redacted custody trail;
 8. cleanup/termination of only authorized test-owned resources.
 
-If summary counts disagree with evidence (`REPORT_CONSISTENCY_FAIL`), regenerate from ledgers; do not edit underlying evidence to match a preferred PASS. Existing API fixture pass, local Chromium pass, Web unit and official CI are separately labeled `SUPPORTING_AUTOMATED_EVIDENCE`, not an actual human/native scenario.
+If summary counts disagree with evidence (`REPORT_CONSISTENCY_FAIL`), regenerate from ledgers; do not edit underlying evidence to match a preferred PASS. Existing API fixture pass, local Chromium pass, Web unit and official CI are separately labeled `SUPPORTING_AUTOMATED_EVIDENCE`, not a persona-led public-surface/native-effect scenario.
 
 ## 12. Status, finding severity, blockers and acceptance
 
 Each scenario must use exactly one final state:
 
-- `PASS`: observed on exact allowed installed build by stated real acting persona with requisite durable/nonsecret independent evidence.
+- `PASS`: observed on the exact allowed installed build by the stated persona-led public-surface actor (ChatGPT or owner-selected tester) with requisite durable/nonsecret independent evidence and required AI-assisted mirror.
 - `FAIL`: expected supported product behavior failed; real product defect.
 - `PARTIAL`: only some assertions executed/verified; blocks Full PASS.
 - `FAIL_PRECONDITION`: same-run required product behavior has already failed, so dependent scenario cannot pass; link prior failure.
@@ -434,7 +459,7 @@ A blocked tool or missing owner authorization is **not a Grant product failure**
 **A final FULL_USER_E2E PASS is prohibited unless ALL apply:**
 
 1. Every applicable mandatory scenario actually executed on the correct installed candidate and has direct-user evidence and durable state proof; no unresolved FAIL, PARTIAL, BLOCKED or invalidated row.
-2. Requester and approver are independently operated real humans and two independent mailboxes, **two fresh complete user passes** on **the same exact frozen installed HEAD**; no scripted account impersonation.
+2. Requester and approver use independent accounts, browser/session contexts and two independent mailboxes; **two fresh complete persona-led passes** run on **the same exact frozen installed HEAD** with no cookie/account impersonation, scripted-user substitution or shared-inbox shortcut. ChatGPT may operate the isolated personas; separate owner/human UAT does not replace this gate.
 3. Real email received and consent/PIN/OTP/fresh MFA, current-policy verification floor, tenant/current seat, Revoked/reissue/replay rejection verified.
 4. Real Control-owned operation is protected at its normal native boundary, completed **once**, and independently read back from the actual destination; not a Grant-only helper or simulated database.
 5. Actual deployed Stellar receiver reports the correlated tenant/case/alert decision and correctly excludes Grant self-feedback/forged or stale results.
@@ -468,7 +493,14 @@ CURRENT_SCHEMA_VERSION=
 PASS1_HEAD=
 PASS2_HEAD=
 QUALIFIED_HEAD=
-TWO_INDEPENDENT_HUMANS_AND_MAILBOXES=
+INDEPENDENT_ACCOUNTS_MAILBOXES_AND_SESSIONS=
+PERSONA_EXECUTOR=CHATGPT_CHAT|OWNER_SELECTED_TESTER
+PRIMARY_USER_EVIDENCE_MODE=PERSONA_LED_PUBLIC_UX
+DIRECT_USER_USE_CASE_COVERAGE=
+AI_ASSISTED_USE_CASE_COVERAGE=
+SCRIPTED_USER_SCENARIO_EXECUTION_COUNT=
+AUTOMATED_HARNESS_USER_SUBSTITUTION_COUNT=
+AUDITOR_KNOWLEDGE_LEAK_COUNT=
 REAL_SIGNED_IN_BROWSER_EVIDENCE=
 REQUESTER_APPROVER_AND_UNRELATED_ROLES=
 CLI_COMMANDS_EXECUTED_AND_VARIANTS=
@@ -501,7 +533,35 @@ EVIDENCE_ROOT=
 NEXT_ACTION=
 ~~~
 
-**Minimal future execution order:** `CLI feature reconciliation` may run safely first; obtain actual owner-approved personas/inboxes/external lab; `Surface Reconciliation`; full real-user discovery sweep; freeze findings; one bounded remediation batch per owning repository; affected rerun; new exact-HEAD two-pass full confirmation; independent native/CI/provenance and owner acceptance. **Do not execute these steps merely because this document has been authored.**
+**Minimal future execution order:** run `CLI feature reconciliation` first when appropriate; resolve legitimate independent Grant accounts/inboxes and only the owner-gated external effects actually needed; `Surface Reconciliation`; start Direct and AI-assisted black-box persona lanes from user goals; continue all independent scenarios to exhaustion; freeze findings; remediate only after the sweep; affected rerun; then a brand-new exact-HEAD two-pass complete confirmation with independent native/CI/provenance evidence. Owner visual/UAT and release authorization remain separate. **Do not execute these steps merely because this document has been authored.**
+
+## 14. Relationship to CLI Feature/Scenario Reconciliation and release
+
+These two contracts deliberately prove different things:
+
+~~~text
+CLI_FEATURE_SCENARIO_RECONCILIATION
+= runtime non-destructive workflow-contract coherence
+= every supported capability has a current, discoverable, role-correct public lifecycle
+= Direct-user + AI-assisted-user black-box discovery before source/auditor reconciliation
+
+FULL_USER_E2E
+= live persona-led product behavior on approved disposable/nonproduction state
+= actual create/edit/approve/deny/cancel/deliver/restore/recover flows
+= real independent inbox evidence and approved native external readback where applicable
+= repetition, concurrency, negative recovery, functional-under-load and post-stress truth
+~~~
+
+Neither substitutes for the other. On the same exact supported candidate:
+
+~~~text
+CLI_FEATURE_SCENARIO_RECONCILIATION=PASS
+FULL_USER_E2E=PASS
+=> PRODUCT_QUALITY_CLOSURE=PASS
+=> NO_KNOWN_IN_SCOPE_PRODUCT_OR_WORKFLOW_DEFECTS=YES
+~~~
+
+`PRODUCT_QUALITY_CLOSURE=PASS` is **not** a release declaration. Merge, tag, production deployment, destructive host changes, real external effects, and owner acceptance remain separately governed and require their own authority.
 
 ## Appendix — planned P0-ET visual email editor checks (2026-10-14; NOT RUN)
 
@@ -513,5 +573,6 @@ publish/immutable snapshots, actual email-client rendering, offline/security
 and legacy compatibility. Map these to A-009/A-010, E-001–E-013 and V-001–V-008
 when their implementation exists; add explicit run-ledger rows then. This
 appendix does not change the current 121-scenario registry or claim any test
-executed. Real mail delivery and independent-human/native-effect gates still
-require their existing approvals. Foundation shared UI defects stay upstream.
+executed. Real mail delivery, independent account/inbox/session evidence and
+owner-gated native-effect gates still require their applicable prerequisites.
+Foundation shared UI defects stay upstream.
