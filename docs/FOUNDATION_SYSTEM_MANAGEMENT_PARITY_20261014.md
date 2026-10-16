@@ -1,5 +1,20 @@
 # Foundation System Management parity — Grant vs Control (2026-10-14)
 
+## 2026-10-16 current consumer state — Foundation RC50
+
+The original RC41 text below is retained as the historical parity baseline.
+The current Grant consumer candidate now pins private Foundation RC50, exact
+artifact source 746e0a78f8dba782c00eba675099f24f647f1f09, package family
+0.1.0-rc.50. See docs/FOUNDATION_RC50_GRANT_ADOPTION_2026-10-16.md.
+
+RC50 supplies the complete thirteen-task Control-reference vocabulary and
+current Control-derived common login/shell/Administration presentation.
+Grant exposes its real supported/read-only destinations and leaves unsupported
+product-owned effects truthfully unavailable; installing RC50 alone does not
+create missing Grant host, ACL, RBAC, retention, SMTP or administrator-session
+APIs.
+
+
 Status: **P0 accepted user-visible capability gap; SM-0/SM-1/SM-2 implemented, SM-3/SM-4 owner-gated, SM-5 acceptance open.**
 Scope: DataRelay Grant development candidate only; neither Control nor shared Foundation source is modified here.
 

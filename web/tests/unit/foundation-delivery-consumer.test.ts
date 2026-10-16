@@ -10,7 +10,7 @@ const snapshot = [
     queue: { queued: 4, retryPending: 0, deadLetter: 1 }, lastOutcome: 'accepted' },
 ] as const;
 
-describe('Grant RC41 Foundation notification adoption', () => {
+describe('Grant RC50 Foundation notification adoption', () => {
   it('shows only recorded product queue states with real SMTP/webhook split', () => {
     const html = renderToStaticMarkup(createElement(GrantNotificationDeliveryReadout, { destinations: snapshot }));
     expect(html).toContain('Notification delivery');

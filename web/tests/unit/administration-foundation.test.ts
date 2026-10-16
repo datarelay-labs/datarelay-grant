@@ -25,14 +25,16 @@ describe('Grant administration consumes the public Foundation shared Hub', () =>
     expect(html).toContain('User Management');
     expect(html).toContain('Backup &amp; Import');
     expect(html).toContain('System Health');
-    // The Foundation-owned nine task labels must remain visible and consistent,
-    // including controls Grant has intentionally not implemented.
+    // RC50 owns the complete thirteen-task Control-reference vocabulary.
+    // Unsupported Grant effects remain visible as truthful unavailable tasks.
     for (const task of [
       'HTTPS', 'User Management', 'Password Management',
-      'Display timezone', 'Network', 'Retention', 'Backup &amp; Import',
+      'Management Access (ACL)', 'Multi-Factor Authentication',
+      'Roles & Permissions', 'Sessions',
+      'Display timezone', 'Network', 'Retention', 'Backup & Import',
       'Audit', 'System Health',
     ]) {
-      expect(html).toContain(task);
+      expect(html).toContain(task.replace('&', '&amp;'));
     }
     expect(html).not.toContain('dr-admin-hub__header');
     expect(html).toContain('aria-label="Manage User Management"');
@@ -45,6 +47,14 @@ describe('Grant administration consumes the public Foundation shared Hub', () =>
     expect(html).not.toContain('aria-label="Manage HTTPS"');
     expect(html).not.toContain('aria-label="Manage Password Management"');
     expect(html).not.toContain('aria-label="Manage Network"');
+    expect(html).toContain('Management Access (ACL)');
+    expect(html).toContain('Multi-Factor Authentication');
+    expect(html).toContain('Roles &amp; Permissions');
+    expect(html).toContain('Sessions');
+    expect(html).not.toContain('aria-label="Manage Management Access (ACL)"');
+    expect(html).not.toContain('aria-label="Manage Multi-Factor Authentication"');
+    expect(html).not.toContain('aria-label="Manage Roles & Permissions"');
+    expect(html).not.toContain('aria-label="Manage Sessions"');
   });
 
   it('does not advertise unsupported SMTP configuration as an enabled action', () => {

@@ -47,10 +47,10 @@ import {
   productConfig,
 } from './foundation.config';
 import {
-  grantRc41AccountDiscovery,
-  grantRc41AdministrationDiscovery,
-  grantRc41SessionDiscovery,
-} from './foundation_rc41';
+  grantRc50AccountDiscovery,
+  grantRc50AdministrationDiscovery,
+  grantRc50SessionDiscovery,
+} from './foundation_rc50';
 import { Form, Select, useTask } from './common';
 import type { User } from './types';
 import { OperationalSecurityReadinessReadout, type OperationalSecurityReadiness } from './operational_security_readiness';
@@ -135,6 +135,10 @@ export function Administration({ user }: { user: User }) {
       'core.https': { availability: availability(user, 'system.info.read'), access: 'view', target: { kind: 'action', actionId: 'grant.deployment.https' }, notes: 'View the configured Grant service origin. Listener, certificate and redirect changes remain deployment-operator owned.' },
       'core.users': { availability: availability(user, 'users.manage'), access: user.role === 'admin' ? 'manage' : 'view', target: { kind: 'action', actionId: 'grant.accounts' }, effects: ['security_sensitive'] },
       'core.password': { availability: availability(user, 'identity.password.change'), access: 'view', target: { kind: 'path', path: '/security' }, notes: 'Open personal password and MFA self-service. No system-wide password policy editor exists.' },
+      'core.acl': { availability: 'unavailable', access: 'view', notes: 'Grant does not yet expose a product-owned SSH/Web/API management allowlist. Deployment access remains operator-owned.' },
+      'core.mfa': { availability: 'unavailable', access: 'view', notes: 'Personal TOTP and recovery are available under Account & Security; Grant does not yet expose administrator-wide MFA lifecycle management.' },
+      'core.rbac': { availability: 'unavailable', access: 'view', notes: 'Grant currently enforces its native admin/member roles but does not expose a separate administrator role-policy editor.' },
+      'core.sessions': { availability: 'unavailable', access: 'view', notes: 'Personal session review/revoke is available under Account & Security; Grant does not expose an administrator-wide session directory.' },
       'core.timezone': { availability: availability(user, 'display.timezone.manage'), access: user.role === 'admin' ? 'manage' : 'view', target: { kind: 'action', actionId: 'grant.display-timezone' }, notes: 'Set the platform IANA display default. Personal account overrides remain independent; stored timestamps remain UTC.' },
       'core.network': { availability: availability(user, 'system.info.read'), access: 'view', target: { kind: 'action', actionId: 'grant.deployment.network' }, notes: 'View the configured Grant service origin. Listener and reverse-proxy changes remain deployment-operator owned.' },
       'core.retention': { availability: 'unavailable', access: 'view', notes: 'No web-managed record retention policy editor exists.' },
@@ -383,7 +387,7 @@ export function Administration({ user }: { user: User }) {
       {!section || !directLanding ? (
         <div className="grant-admin-task-navigation" ref={taskNavigationRef} tabIndex={-1}>
           <AdministrationHub
-            {...grantRc41AdministrationDiscovery}
+            {...grantRc50AdministrationDiscovery}
             productId="grant"
             showHeader={false}
             tasks={tasks}
@@ -452,7 +456,7 @@ export function Administration({ user }: { user: User }) {
           <Card title="Accounts">
             <p>Review the authoritative Grant account roster before changing access.
               Disabling an account revokes its sessions and may affect pending approval seats.</p>
-            <AccountList {...grantRc41AccountDiscovery} accounts={accounts} actions={(account) => (
+            <AccountList {...grantRc50AccountDiscovery} accounts={accounts} actions={(account) => (
               user.role === 'admin' && account.status === 'enabled' && account.id !== user.id
                 ? <Button variant="danger"
                     disabled={task.busy || accountDisableAttempts.includes(account.id)}
@@ -754,7 +758,7 @@ export function Security({
       </Card>
       <Card title="Active sessions">
         <SessionList
-          {...grantRc41SessionDiscovery}
+          {...grantRc50SessionDiscovery}
           sessions={sessions}
           onRevoke={(id) =>
             task.run(async () => {

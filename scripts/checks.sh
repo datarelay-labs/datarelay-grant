@@ -54,7 +54,7 @@ case "${1:-all}" in
     mkdir -p "$ROOT/.dev"
     batch_dir="$(mktemp -d "$ROOT/.dev/grant-browser-batches-XXXXXX")"
     trap 'rm -rf -- "$batch_dir"' EXIT
-    npm --prefix web run test:browser -- --list > "$batch_dir/collected.txt"
+    GRANT_BROWSER_DISCOVERY=1 npm --prefix web run test:browser -- --list > "$batch_dir/collected.txt"
     sed -n '/^  .* › /s/^  //p' "$batch_dir/collected.txt" > "$batch_dir/all-tests.txt"
     expected="$(sed -n 's/^Total: \([0-9][0-9]*\) tests* in .*/\1/p' "$batch_dir/collected.txt" | tail -1)"
     discovered="$(wc -l < "$batch_dir/all-tests.txt" | tr -d ' ')"
@@ -62,21 +62,35 @@ case "${1:-all}" in
       printf 'BROWSER_DISCOVERY_INVALID expected=%s actual=%s\n' "$expected" "$discovered" >&2
       exit 2
     fi
-    # Eight scenarios per fixture keeps ordinary login attempts well under
-    # the enforced per-user window. All URLs and credentials stay in the
-    # local disposable browser fixture; never modify live auth limits.
-    split -l 8 -d -a 2 "$batch_dir/all-tests.txt" "$batch_dir/batch-"
+    # Four scenarios per fixture keeps login/state accumulation well under
+    # the enforced per-user window and bounds disposable server lifetime.
+    # All URLs and credentials stay in the local disposable browser fixture;
+    # never modify live auth limits.
+    split -l 4 -d -a 2 "$batch_dir/all-tests.txt" "$batch_dir/batch-"
     evidence_dir="$(mktemp -d "$ROOT/.dev/grant-browser-evidence-XXXXXX")"
     verified=0
     batches=0
     for test_list in "$batch_dir"/batch-[0-9][0-9]; do
       batch_count="$(wc -l < "$test_list" | tr -d ' ')"
       printf 'BROWSER_BATCH_START=%s tests=%s isolated_backend=YES\n' "$batches" "$batch_count"
-      npm --prefix web run test:browser -- --test-list "$test_list"
+      batch_port="$(python3 - <<'PYPORT'
+import socket
+s = socket.socket()
+s.bind(("127.0.0.1", 0))
+print(s.getsockname()[1])
+s.close()
+PYPORT
+)"
+      batch_fixture="$batch_dir/fixture-$batches.json"
+      batch_output="$batch_dir/results-$batches"
+      printf 'BROWSER_BATCH_PORT=%s fixture=isolated output=isolated\n' "$batch_port"
+      GRANT_E2E_PORT="$batch_port" GRANT_E2E_FIXTURE_PATH="$batch_fixture" \
+        GRANT_E2E_OUTPUT_DIR="$batch_output" \
+        npm --prefix web run test:browser -- --test-list "$test_list"
       # The Playwright JSON report is overwritten by the next standalone
       # run. Retain every batch's actual evidence rather than claiming the
       # final batch's JSON qualifies the entire browser suite.
-      python3 - "$ROOT/web/test-results/browser-results.json" "$batch_count" <<'PYREPORT'
+      python3 - "$batch_output/browser-results.json" "$batch_count" <<'PYREPORT'
 import json
 import sys
 from pathlib import Path
@@ -88,7 +102,7 @@ assert stats.get("unexpected") == 0 and stats.get("skipped") == 0
 assert stats.get("flaky") == 0 and not report.get("errors")
 print(f"BROWSER_BATCH_VERIFIED={expected}/{expected}")
 PYREPORT
-      cp "$ROOT/web/test-results/browser-results.json" "$evidence_dir/batch-$batches.json"
+      cp "$batch_output/browser-results.json" "$evidence_dir/batch-$batches.json"
       verified=$((verified + batch_count))
       batches=$((batches + 1))
     done

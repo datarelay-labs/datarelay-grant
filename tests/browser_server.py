@@ -142,9 +142,11 @@ def main():
             integration["id"],
             ["request:create", "request:read", "grant:consume", "result:write"],
         )
-        fixtures = ROOT / ".e2e"
-        fixtures.mkdir(exist_ok=True, mode=0o700)
-        (fixtures / "fixture.json").write_text(
+        fixture_path = Path(
+            os.environ.get("GRANT_E2E_FIXTURE_PATH", str(ROOT / ".e2e" / "fixture.json"))
+        )
+        fixture_path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        fixture_path.write_text(
             json.dumps(
                 {
                     "password": password,
@@ -158,6 +160,7 @@ def main():
                 }
             )
         )
+        fixture_path.chmod(0o600)
         try:
             uvicorn.run(
                 app,

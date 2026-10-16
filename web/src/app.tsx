@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Button,
   Card,
-  LoginForm,
+  DataRelayIcon,
+  DataRelayLoginPage,
   MfaChallengeForm,
   ProductShell,
   ThemeRoot,
@@ -17,7 +18,7 @@ import { ApiError, setCsrf } from './api';
 import { useTask } from './common';
 import { authAdapter, productConfig, readSession } from './foundation.config';
 import { readDisplayTimezone, setDisplayTimezone } from './display_timezone';
-import { grantRc41NavigationDiscovery } from './foundation_rc41';
+import { grantRc50NavigationDiscovery } from './foundation_rc50';
 import { Home } from './home';
 import { Integrations } from './integrations';
 import { Notifications } from './notifications';
@@ -86,7 +87,7 @@ function AuthenticatedGrantApp() {
 
   if (loading) {
     return (
-      <ThemeRoot theme={theme}>
+      <ThemeRoot theme={theme} className="dr-control-reference">
         <GrantAuthFrame
           productName="DataRelay Grant"
           productSubtitle="Approval Control Platform"
@@ -115,57 +116,55 @@ function AuthenticatedGrantApp() {
   if (!user) {
     const mfa = session?.state === 'mfa_required';
     return (
-      <ThemeRoot theme={theme}>
-        <GrantAuthFrame
-          productName="DataRelay Grant"
-          productSubtitle="Approval Control Platform"
-          description="Request. Approve. Execute. Control sensitive actions with explicit human authorization."
-          title={mfa ? 'Verify your identity' : 'Welcome to DataRelay'}
-          subtitle={mfa ? 'Complete multi-factor authentication to continue.' : 'Please sign in to continue.'}
-        >
-          {task.feedback}
-          {mfa ? (
-            <>
-              <MfaChallengeForm
-                busy={task.busy}
-                methods={['totp', 'recovery_code']}
-                onSubmit={(input) =>
-                  task.run(async () => {
-                    await authAdapter.verifyMfa!(input);
-                    await refresh();
-                  })
-                }
-              />
-              <Button
-                variant="ghost"
-                onClick={() =>
-                  void task.run(async () => {
-                    await authAdapter.signOut();
-                    signedOut();
-                  })
-                }
-              >
-                Back to sign in
-              </Button>
-            </>
-          ) : (
-            <>
-              <LoginForm
-                busy={task.busy}
-                allowPasswordReveal
-                onSubmit={(input) =>
-                  task.run(async () => {
-                    await authAdapter.signIn(input);
-                    await refresh();
-                  })
-                }
-              />
-              <p className="dr-auth-form__guidance">
-                Accounts are created by an administrator. Self-service registration is not available.
-              </p>
-            </>
-          )}
-        </GrantAuthFrame>
+      <ThemeRoot theme={theme} className="dr-control-reference">
+        {mfa ? (
+          <GrantAuthFrame
+            productName="DataRelay Grant"
+            productSubtitle="Approval Control Platform"
+            description="Request. Approve. Execute. Control sensitive actions with explicit human authorization."
+            title="Verify your identity"
+            subtitle="Complete multi-factor authentication to continue."
+          >
+            {task.feedback}
+            <MfaChallengeForm
+              busy={task.busy}
+              methods={['totp', 'recovery_code']}
+              onSubmit={(input) =>
+                task.run(async () => {
+                  await authAdapter.verifyMfa!(input);
+                  await refresh();
+                })
+              }
+            />
+            <Button
+              variant="ghost"
+              onClick={() =>
+                void task.run(async () => {
+                  await authAdapter.signOut();
+                  signedOut();
+                })
+              }
+            >
+              Back to sign in
+            </Button>
+          </GrantAuthFrame>
+        ) : (
+          <DataRelayLoginPage
+            productName="DataRelay Grant"
+            productSubtitle="Approval Control Platform"
+            description="Request. Approve. Execute. Control sensitive actions with explicit human authorization."
+            submitLabel="Sign in"
+            allowPasswordReveal
+            busy={task.busy}
+            onSubmit={(input) =>
+              task.run(async () => {
+                await authAdapter.signIn(input);
+                await refresh();
+              })
+            }
+            {...(task.error ? { errorCategory: 'failed' as const, errorMessage: task.error } : {})}
+          />
+        )}
       </ThemeRoot>
     );
   }
@@ -232,9 +231,10 @@ function AuthenticatedGrantApp() {
   }
 
   return (
-    <ThemeRoot theme={theme}>
+    <ThemeRoot theme={theme} className="dr-control-reference">
       <ProductShell
-        {...grantRc41NavigationDiscovery}
+        {...grantRc50NavigationDiscovery}
+        className="dr-control-shell"
         product={config.product}
         navigation={config.navigation}
         capabilities={config.capabilities}
@@ -244,12 +244,15 @@ function AuthenticatedGrantApp() {
         pageSubtitle="Human approval is explicit. Delivery and execution remain separate."
         principal={{ displayName: user.username, detail: user.email }}
         headerActions={
-          <Button
-            variant="secondary"
+          <button
+            type="button"
+            className="dr-control-shell__header-icon"
+            aria-label="Toggle color theme"
+            title={theme === 'light' ? 'Use dark theme' : 'Use light theme'}
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
           >
-            Use {theme === 'light' ? 'dark' : 'light'} theme
-          </Button>
+            <DataRelayIcon name={theme === 'dark' ? 'sun' : 'moon'} width={16} height={16} />
+          </button>
         }
         accountActions={[
           {

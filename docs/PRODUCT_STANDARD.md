@@ -1026,7 +1026,7 @@ auditable durable receipts and appropriate recovery/rollback. Host security,
 network/listener changes, credential policy and destructive data operations need
 separate owner authorization for the actual target and effects.
 
-Foundation's shared `AdministrationHub` and optional RC41 review panels are
+Foundation's shared `AdministrationHub` and the currently pinned Foundation review panels are
 presentation and/or pure library code; their presence does not prove product
 backend installation. Existing Grant self-service account password/MFA, admin
 accounts, audit, health and Draft-only configuration portability should be

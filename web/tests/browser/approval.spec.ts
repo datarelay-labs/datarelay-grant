@@ -1,7 +1,7 @@
 import {test,expect,type Page} from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-const fixture=()=>JSON.parse(fs.readFileSync(path.resolve('../.e2e/fixture.json'),'utf8'));
+const fixture=()=>JSON.parse(fs.readFileSync(process.env.GRANT_E2E_FIXTURE_PATH ?? path.resolve('../.e2e/fixture.json'),'utf8'));
 async function login(page:Page,name:string){await page.goto('/home');await page.getByLabel('Username',{exact:true}).fill(name);await page.getByLabel('Password',{exact:true}).fill(fixture().password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();}
 
 // Only test-only isolated SMTP MIME is decoded here. Long capability URLs
@@ -110,10 +110,10 @@ for(const pass of [1,2]){
 
 test('Foundation login and grouped Grant shell follow the DataRelay family layout',async({browser})=>{
  const context=await browser.newContext({viewport:{width:1280,height:800}});const page=await context.newPage();
- await page.goto('/home');await expect(page.locator('.dr-auth-layout')).toBeVisible();await expect(page.getByRole('heading',{name:'Welcome to DataRelay',exact:true})).toBeVisible();await expect(page.getByText('Please sign in to continue.',{exact:true})).toBeVisible();
+ await page.goto('/home');await expect(page.locator('.dr-auth-layout')).toBeVisible();await expect(page.locator('.dr-login-page')).toBeVisible();await expect(page.locator('.dr-control-reference')).toBeVisible();await expect(page.getByRole('heading',{name:'Welcome to DataRelay',exact:true})).toBeVisible();await expect(page.getByText('Please sign in to continue.',{exact:true})).toBeVisible();
  const password=page.getByLabel('Password',{exact:true});await expect(password).toHaveAttribute('type','password');await expect(page.getByRole('button',{name:'Show password',exact:true})).toBeVisible();await page.getByRole('button',{name:'Show password',exact:true}).click();await expect(password).toHaveAttribute('type','text');await page.getByRole('button',{name:'Hide password',exact:true}).click();await expect(password).toHaveAttribute('type','password');
  await page.getByLabel('Username',{exact:true}).fill('admin');await password.fill(fixture().password);await page.getByRole('button',{name:'Sign in',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'User workspace',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Approval administration',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Good to see you, admin',exact:true})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.locator('.dr-control-shell')).toBeVisible();await expect(page.getByRole('button',{name:'Toggle color theme',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'User workspace',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Approval administration',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Good to see you, admin',exact:true})).toBeVisible();
  await context.close();
 });
 
@@ -135,7 +135,7 @@ test('Foundation member account action reaches personal security, not Administra
 
 test('Foundation administration and mobile approval page are real adapters',async({browser})=>{
  const context=await browser.newContext({viewport:{width:390,height:844}});const page=await context.newPage();await login(page,'admin');
- await page.goto('/system');await expect(page.getByText('System Health',{exact:true})).toBeVisible();await expect(page.getByText('User Management',{exact:true})).toBeVisible();await page.getByRole('button',{name:'View System Health',exact:true}).click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
+ await page.goto('/system');await expect(page.getByText('System Health',{exact:true})).toBeVisible();await expect(page.getByText('User Management',{exact:true})).toBeVisible();for(const label of ['Management Access (ACL)','Multi-Factor Authentication','Roles & Permissions','Sessions']) await expect(page.getByText(label,{exact:true})).toBeVisible();await page.getByRole('button',{name:'View System Health',exact:true}).click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
  await page.goto('/integrations');await expect(page.getByRole('list',{name:'Registered connections mobile list'}).getByText('Isolated DataRelay fixture',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Review connection test',exact:true}).click();
  await expect(page.getByRole('button',{name:'Confirm connection test',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Confirm connection test',exact:true}).click();
@@ -1109,7 +1109,7 @@ test('B1 approver Inbox task-first mobile 320/375 and keyboard queue controls',a
   const page=await context.newPage();
   try{
    await login(page,'approver');
-   // RC41 quick navigation must not squeeze the real page H1 offscreen,
+   // RC50 quick navigation must not squeeze the real page H1 offscreen,
    // and a member cannot search pages requiring administrator capability.
    await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();
    await page.getByRole('button',{name:'Search product navigation'}).click();

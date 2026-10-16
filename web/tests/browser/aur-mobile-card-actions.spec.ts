@@ -2,7 +2,7 @@ import {test,expect,type Page} from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const fixture=()=>JSON.parse(fs.readFileSync(path.resolve('../.e2e/fixture.json'),'utf8'));
+const fixture=()=>JSON.parse(fs.readFileSync(process.env.GRANT_E2E_FIXTURE_PATH ?? path.resolve('../.e2e/fixture.json'),'utf8'));
 
 async function login(page:Page){
   await page.goto('/home');
