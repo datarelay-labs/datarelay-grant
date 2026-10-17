@@ -184,6 +184,10 @@ def main():
             refuse_storage("BACKUP", exc)
         print("Backup created. Protect the installation encryption key separately.")
         return
+    # Refuse an unacknowledged recovery before Database() can create or
+    # rewrite a restored SQLite file (including journal/header metadata).
+    if args.command == "recovery-resume" and not args.acknowledge_external_reconciliation:
+        raise SystemExit("RECOVERY_RESUME_REFUSED: EXTERNAL_RECONCILIATION_ACK_REQUIRED")
     db = Database(settings.database)
     if args.command == "user-add":
         password = getpass.getpass("New password (8+ chars; uppercase, number, special): ")

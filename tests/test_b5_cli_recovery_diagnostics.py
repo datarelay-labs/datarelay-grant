@@ -185,6 +185,21 @@ def test_recovery_resume_without_ack_is_bounded_refusal(tmp_path):
     restored_config.write_text(json.dumps(payload))
     restored_config.chmod(0o600)
 
+    before_refusal = restored.read_bytes()
     refused = cli(restored_config, "recovery-resume")
     assert_clean_refusal(refused, "RECOVERY_RESUME_REFUSED")
     assert "EXTERNAL_RECONCILIATION_ACK_REQUIRED" in refused.stderr
+    # A missing acknowledgement must not initialize or rewrite recovery storage.
+    assert restored.read_bytes() == before_refusal
+    assert Database.inspect_existing(restored) == (CURRENT_SCHEMA_VERSION, "1")
+
+
+def test_recovery_resume_without_ack_does_not_initialize_missing_database(tmp_path):
+    config = initialized(tmp_path)
+    database = tmp_path / "grant.sqlite"
+    assert not database.exists()
+
+    refused = cli(config, "recovery-resume")
+    assert_clean_refusal(refused, "RECOVERY_RESUME_REFUSED")
+    assert "EXTERNAL_RECONCILIATION_ACK_REQUIRED" in refused.stderr
+    assert not database.exists()
