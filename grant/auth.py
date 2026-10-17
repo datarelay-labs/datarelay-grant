@@ -13,9 +13,14 @@ import sqlite3
 import time
 from dataclasses import dataclass
 
-import pyotp
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
+from datarelay_onprem_security.totp import (
+    new_recovery_codes,
+    new_totp_secret,
+    provisioning_uri,
+    verify_totp,
+)
 
 from .config import Settings
 from .db import Database, audit, json_text, uid
@@ -314,7 +319,7 @@ class Auth:
 
     def enroll(self, actor: Principal) -> dict:
         self.rate("enroll:" + actor.id, 5, 300)
-        secret = pyotp.random_base32()
+        secret = new_totp_secret()
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
             user = conn.execute("SELECT * FROM users WHERE id=?", (actor.id,)).fetchone()
@@ -326,14 +331,14 @@ class Auth:
             )
         return {
             "secret": secret,
-            "otpauth_uri": pyotp.TOTP(secret).provisioning_uri(
-                user["username"], issuer_name="DataRelay Grant"
+            "otpauth_uri": provisioning_uri(
+                secret, issuer="DataRelay Grant", account=user["username"]
             ),
         }
 
     def confirm_enrollment(self, actor: Principal, code: str) -> list[str]:
         self.rate("mfa:" + actor.id, 10, 300)
-        recovery = [secrets.token_hex(10) for _ in range(8)]
+        recovery = list(new_recovery_codes(8))
         with self.db.transaction() as conn:
             require_current_authority(conn, actor)
             row = conn.execute(
@@ -344,7 +349,11 @@ class Auth:
                 raise GrantError("NO_PENDING_ENROLLMENT")
             pending = self.settings.unseal(row[0])
             step = int(time.time() // 30)
-            if pending["until"] < time.time() or not pyotp.TOTP(pending["secret"]).verify(code):
+            # Use Foundation's RFC 6238 verifier. Grant retains the protected
+            # enrollment/session store and enforces its own authorization.
+            if pending["until"] < time.time() or verify_totp(
+                pending["secret"], code, now=time.time(), allowed_drift_steps=0
+            ) is None:
                 raise GrantError("INVALID_MFA_CODE", 401)
             conn.execute(
                 "UPDATE users SET totp_secret=?,totp_last_step=?,recovery_hashes=? WHERE id=?",
@@ -383,17 +392,20 @@ class Auth:
                     "UPDATE users SET recovery_hashes=? WHERE id=?", (json_text(hashes), actor.id)
                 )
             else:
-                totp = pyotp.TOTP(self.settings.unseal(user["totp_secret"]))
-                current = int(now // 30)
-                matching = [
-                    s
-                    for s in (current - 1, current, current + 1)
-                    if s > user["totp_last_step"] and hmac.compare_digest(totp.at(s * 30), code)
-                ]
-                if not matching:
+                prior_counter = int(user["totp_last_step"])
+                matched_counter = verify_totp(
+                    self.settings.unseal(user["totp_secret"]),
+                    code,
+                    now=now,
+                    last_counter=prior_counter if prior_counter >= 0 else None,
+                )
+                if matched_counter is None:
                     raise GrantError("INVALID_MFA_CODE", 401)
+                # Keep counter consumption and session admission in ONE native
+                # SQLite transaction. Grant approval-email MFA is unrelated.
                 conn.execute(
-                    "UPDATE users SET totp_last_step=? WHERE id=?", (max(matching), actor.id)
+                    "UPDATE users SET totp_last_step=? WHERE id=?",
+                    (matched_counter, actor.id),
                 )
             conn.execute(
                 "UPDATE sessions SET mfa_pending=0,expires_at=? WHERE token_hash=?",

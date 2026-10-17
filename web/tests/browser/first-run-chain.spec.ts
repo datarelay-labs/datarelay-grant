@@ -19,7 +19,7 @@ async function signIn(page: Page, username: string) {
   await page.goto('/home');
   await page.getByLabel('Username', { exact: true }).fill(username);
   await page.getByLabel('Password', { exact: true }).fill(fixture().password);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Home', exact: true })).toBeVisible();
 }
 

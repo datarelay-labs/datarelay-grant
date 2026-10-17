@@ -273,6 +273,7 @@ source = { editable = "." }
 dependencies = [
     { name = "argon2-cffi" },
     { name = "cryptography" },
+    { name = "datarelay-onprem-security" },
     { name = "fastapi" },
     { name = "httpx" },
     { name = "pillow" },
@@ -293,6 +294,7 @@ dev = [
 requires-dist = [
     { name = "argon2-cffi", specifier = ">=23,<26" },
     { name = "cryptography", specifier = ">=44,<47" },
+    { name = "datarelay-onprem-security", path = ".foundation/packs/datarelay_onprem_security-0.10.0.dev0-py3-none-any.whl" },
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "httpx", specifier = ">=0.28,<1" },
     { name = "pillow", specifier = "==12.3.0" },
@@ -308,6 +310,23 @@ dev = [
     { name = "pyyaml", specifier = "==6.0.2" },
     { name = "ruff", specifier = ">=0.11,<1" },
 ]
+
+[[package]]
+name = "datarelay-onprem-security"
+version = "0.10.0.dev0"
+source = { path = ".foundation/packs/datarelay_onprem_security-0.10.0.dev0-py3-none-any.whl" }
+wheels = [
+    { filename = "datarelay_onprem_security-0.10.0.dev0-py3-none-any.whl", hash = "sha256:cfff22d3d24efb9bb7d6f5701515ac4616cb82029c62245494ae84bd1df81969" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cryptography", marker = "extra == 'host-backup'", specifier = "==50.0.2" },
+    { name = "cryptography", marker = "extra == 'host-transport'", specifier = "==50.0.2" },
+    { name = "uvicorn", marker = "extra == 'embedded-server'", specifier = "==0.54.0" },
+    { name = "uvicorn", marker = "extra == 'host-transport'", specifier = "==0.54.0" },
+]
+provides-extras = ["embedded-server", "host-backup", "host-transport"]
 
 [[package]]
 name = "fastapi"

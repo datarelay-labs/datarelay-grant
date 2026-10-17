@@ -8,6 +8,7 @@ dependencies = [
     "uvicorn>=0.34,<1",
     "argon2-cffi>=23,<26",
     "cryptography>=44,<47",
+    "datarelay-onprem-security==0.10.0.dev0",
     "pyotp>=2.9,<3",
     "httpx>=0.28,<1",
     "pillow==12.3.0",
@@ -33,3 +34,6 @@ addopts = "-q"
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+
+[tool.uv.sources]
+datarelay-onprem-security = { path = ".foundation/packs/datarelay_onprem_security-0.10.0.dev0-py3-none-any.whl" }

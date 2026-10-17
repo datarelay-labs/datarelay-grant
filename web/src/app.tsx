@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   DataRelayIcon,
-  DataRelayLoginPage,
   MfaChallengeForm,
   ProductShell,
   ThemeRoot,
@@ -11,6 +10,7 @@ import {
 import { Administration, Security } from './administration';
 import { AdminWorkflowSetup } from './admin_workflow_setup';
 import { GrantAuthFrame } from './grant_auth_frame';
+import { GrantF31ControlLogin } from './foundation_f31_login';
 import { AuditExplorer } from './audit_explorer';
 import { Approvers } from './approvers';
 import { Delegations } from './delegations';
@@ -149,20 +149,16 @@ function AuthenticatedGrantApp() {
             </Button>
           </GrantAuthFrame>
         ) : (
-          <DataRelayLoginPage
-            productName="DataRelay Grant"
-            productSubtitle="Approval Control Platform"
-            description="Request. Approve. Execute. Control sensitive actions with explicit human authorization."
-            submitLabel="Sign in"
-            allowPasswordReveal
-            busy={task.busy}
-            onSubmit={(input) =>
-              task.run(async () => {
-                await authAdapter.signIn(input);
+          <GrantF31ControlLogin
+            onAuthenticated={() => {
+              void task.run(async () => {
                 await refresh();
-              })
-            }
-            {...(task.error ? { errorCategory: 'failed' as const, errorMessage: task.error } : {})}
+                // A direct /login bookmark is public only. After the native
+                // session is established, land in the Grant requester/admin
+                // workspace rather than rendering a signed-in Not Found page.
+                if (path === '/login') navigate('/home');
+              });
+            }}
           />
         )}
       </ThemeRoot>
