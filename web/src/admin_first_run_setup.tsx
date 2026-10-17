@@ -49,7 +49,7 @@ export function AdminFirstRunSetup({
       <li><span className="grant-admin-setup-num" aria-hidden="true">04</span>
         <div className="grant-admin-setup-step">
           <strong>Create notification templates</strong>
-          <small>{status(savedTemplateSets, 'template sets', 'template set')} — requesters do not select templates</small>
+          <small>{status(savedTemplateSets, 'template sets', 'template set')} — save, preview, then Review &amp; publish and Confirm publication before policy testing. A saved draft is not published.</small>
           <a href="/notifications">Manage notification templates <span aria-hidden="true">→</span></a>
         </div>
       </li>

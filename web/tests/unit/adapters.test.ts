@@ -1,6 +1,6 @@
 import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
 import {verifyAuthAdapter,verifyCapabilityProjection} from '@datarelay-labs/testkit';
-import {api,ApiError,setCsrf} from '../../src/api';
+import {api,ApiError,errorText,setCsrf} from '../../src/api';
 import {authAdapter,productConfig} from '../../src/foundation.config';
 import type {User} from '../../src/types';
 const user:User={id:'actor',username:'test-user',email:'test@example.invalid',role:'member',mfa_enabled:false};
@@ -23,6 +23,14 @@ describe('Grant HTTP adapter',()=>{
  });
  it.each(['https://unrelated.invalid','//unrelated.invalid','/../admin','/a\\b'])('rejects non-product path %s',async(path)=>{
   await expect(api(path)).rejects.toBeInstanceOf(ApiError);expect(fetchMock).not.toHaveBeenCalled();
+ });
+ it('explains unpublished custom templates without weakening the policy test gate',()=>{
+  const message=errorText(new ApiError(409,'EMAIL_TEMPLATE_UNPUBLISHED'));
+  for(const phrase of ['saved but not published','Notification templates','Review & publish','Confirm publication','run its isolated test again','No policy activation occurred']){
+    expect(message).toContain(phrase);
+  }
+  expect(message).not.toContain('EMAIL_TEMPLATE_UNPUBLISHED');
+  expect(errorText(new ApiError(409,'POLICY_STALE'))).toContain('POLICY_STALE');
  });
  it('does not echo arbitrary server response bodies',async()=>{
   fetchMock.mockResolvedValueOnce(new Response('<secret>do not display</secret>',{status:500}));

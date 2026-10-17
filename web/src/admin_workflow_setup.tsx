@@ -29,7 +29,7 @@ const ADMIN_STEPS = [
   {
     number: '04',
     title: 'Create notification templates',
-    description: 'Prepare approval-request, reminder and result messages once. Requesters do not choose mail templates.',
+    description: 'Create and save your nine-event template set, check the current preview, then Review & publish and Confirm publication. Saved drafts alone cannot pass policy testing. Requesters never choose templates.',
     action: 'Manage notification templates',
     destination: '/notifications',
   },

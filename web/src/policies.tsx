@@ -1064,6 +1064,11 @@ export function Profiles() {
                   </option>
                 ))}
               </Select>
+              <p className="grant-field-guide">
+                Built-in default is ready to use. For a custom template set, saving a draft is not
+                publication. Open Notification templates, verify the latest preview, then select
+                Review &amp; publish and Confirm publication before testing this policy.
+              </p>
             </PolicyEditorSection>
           </Form>
           </div>

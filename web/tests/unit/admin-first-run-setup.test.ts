@@ -27,6 +27,9 @@ describe('First-run Grant administrator guided setup without new permission',()=
   expect(html).toContain('href="/notifications"');
   expect(html).toContain('href="/requests/new"');
   expect(html).toContain('href="#grant-policy-list"');
+  expect(html).toContain('A saved draft is not published.');
+  expect(html).toContain('Review &amp; publish');
+  expect(html).toContain('Confirm publication');
   expect(html).not.toContain('Automatically activate');
   expect(html).not.toContain('Execute now');
  });

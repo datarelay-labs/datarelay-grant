@@ -149,7 +149,7 @@ Every applicable scenario is recorded individually, even when several share the 
 
 | ID | Admin objective | Mandatory action and expected saved receipt |
 | --- | --- | --- |
-| A-001 | Admin signs in and finds Foundation shell | Role-correct grouped navigation, keyboard/mobile accessibility, actual nine standard System Management tasks plus Grant-owned mail tasks |
+| A-001 | Admin signs in and finds Foundation shell | Role-correct grouped navigation, keyboard/mobile accessibility, all thirteen current Foundation RC50 standard System Management tasks with truthful supported/read-only/unavailable states, plus Grant-owned mail tasks |
 | A-002 | Manage one approved disposable account | User Management → Review create account → Confirm one POST; exact username/role, initial password absent from review/log; unrelated role denied |
 | A-003 | Manage current user password/MFA and sessions | Account & Security password change, TOTP enrollment/verification/recovery codes, session list/revoke and fresh login; no global policy-editor claim |
 | A-004 | Register a safe receiver | Integrations Add connection with actual approved HTTPS origin, type and tenant, decision verification minimum, separate final review; registered != connected |
@@ -157,7 +157,7 @@ Every applicable scenario is recorded individually, even when several share the 
 | A-006 | Edit and test a Draft | Full policy fields action/tenant/mode/MFA, Draft→Testing, isolated nonexecuting test, explicit Test→Activate, prove Draft alone cannot authorize |
 | A-007 | Clone/version/disable policy | Clone→Draft; changed version, active selector and notification snapshot; stale save server 409, no silent lost Deny/MFA floor |
 | A-008 | Concurrent two-admin edit | Two real admin sessions load same policy/template; first saves, second stale CAS fails and must Review latest; no lost update |
-| A-009 | Define full event-template set | All required event types, preview safe variables, adjust branding; save Review→Confirm only if current version, no injection/script execution |
+| A-009 | Define full event-template set | All required event types, preview safe variables, adjust branding; Save draft Review→Confirm, then independently Review & publish→Confirm publication using current preview and immutable future-request revision; no injection/script execution |
 | A-010 | Send isolated admin test mail | Explicit send-to-current-admin preview, separate confirmation; transport success not actual receipt, no unapproved recipient |
 | A-011 | Review delivery failures | Notification Delivery Health filters, failed event, idempotent resend review/confirm and signed transport audit, no unintended external action |
 | A-012 | Issue and revoke scoped integration credential | Separate request:create, grant:consume, result:write and read-only scopes; one-time raw secret; later metadata/revoke and failed replay |
@@ -166,7 +166,7 @@ Every applicable scenario is recorded individually, even when several share the 
 | A-015 | Inspect system readiness and exceptions | Actually persisted API facts and recovery marker; missing/mocked SSL, backup, Control/Stellar, retention state shown as unknown/unavailable |
 | A-016 | Verify Control-reference System Management parity | HTTPS, users, password-policy, timezone, network, retention, backup/import, audit, health each real supported View/Manage or truthful unavailable; current P0-SM gap is FAIL/OPEN until delivered by respective owner |
 | A-017 | Close admin session and clean temporary records | Revoke only test-owned credentials/accounts as authorized; ensure no persistent extra admin or unsafe email sender/policy activation remains |
-| A-018 | First-time administrator configures Grant end to end | Starting from normal signed-in navigation and no internal runbook, complete the canonical setup order: Accounts → Approver groups → Integrations → Notification templates → Draft policy → Test → Activate; then verify the requester sees the published request type and cannot rewrite administrator-owned routing/template/verification controls |
+| A-018 | First-time administrator configures Grant end to end | Starting from normal signed-in navigation and no internal runbook, complete the canonical setup order: Accounts → Approver groups → Integrations → Notification templates (Save draft → current Preview → Review & publish → Confirm publication) → Draft policy → Test → Activate; an unpublished custom template must return actionable guidance without activation; then verify the requester sees the published request type and cannot rewrite administrator-owned routing/template/verification controls |
 
 ### 5.3 Email decision and independent PIN/OTP/MFA
 
@@ -341,7 +341,7 @@ Performance results include actual rates, p50/p95/p99, error counts, resource pr
 | V-002 | ProductShell desktop navigation, collapse/expand and mobile drawer | Home/My work/Configuration/Administration and Account & Security reachable with keyboard, focus and active-route clarity |
 | V-003 | Home → New Request → Approvals → Request Detail | Prominent next actions, numbered workflow, explicit review/final confirm, current server status and role-scoped queue |
 | V-004 | Policies/group/Notification/Integration workspace on mobile | Same scoped records and enabled actions as desktop; cards/tables do not invent data or eliminate controls |
-| V-005 | System Management reference vs actual Grant | Correct nine core task names, current support/read-only/unavailable truth, product-specific Mail & Notifications; missing real backend actions remain P0 Gap |
+| V-005 | System Management reference vs actual Grant | Correct thirteen RC50 core task names, current support/read-only/unavailable truth, product-specific Mail & Notifications; missing real backend actions remain P0 Gap |
 | V-006 | Approve/Deny/Hold on keyboard and screen reader | Selection does not POST before separate confirmation, readable exact action/reviewer seat and correct focus return |
 | V-007 | Error/loading/zero records and unsupported controls | No green 0 before GET, no stale success after error, no fake "Manage" or backend-less DNS/TLS/retention toggle |
 | V-008 | Themes/different zoom/touch targets | Foundation-supported interactions maintain contrast/readable density; Grant-specific issue vs shared upstream owner distinguished |
