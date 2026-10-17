@@ -1,0 +1,140 @@
+{
+  "source_commit": "cf3f9e28fc7ceb7e2f1df7e8c9a921d8bf7d28ed",
+  "cases": [
+    {
+      "event": "requested",
+      "mode": "EMAIL_PIN",
+      "sha256": "f23b575af848c84ba80f9e511fb20602201768593f776757f5e264cf076dffbe"
+    },
+    {
+      "event": "requested",
+      "mode": "EMAIL_PIN_PLUS_OTP",
+      "sha256": "2ceef2b5ac4c1f77e59b065786f284033c95f1d027c9f11ed5f78da17649af48"
+    },
+    {
+      "event": "requested",
+      "mode": "EMAIL_PIN_PLUS_MFA",
+      "sha256": "64eceac6f1ff9d3f40431ca091f1e00d90595910c24368db283bceb4c185cbac"
+    },
+    {
+      "event": "reminder",
+      "mode": "EMAIL_PIN",
+      "sha256": "f23b575af848c84ba80f9e511fb20602201768593f776757f5e264cf076dffbe"
+    },
+    {
+      "event": "reminder",
+      "mode": "EMAIL_PIN_PLUS_OTP",
+      "sha256": "2ceef2b5ac4c1f77e59b065786f284033c95f1d027c9f11ed5f78da17649af48"
+    },
+    {
+      "event": "reminder",
+      "mode": "EMAIL_PIN_PLUS_MFA",
+      "sha256": "64eceac6f1ff9d3f40431ca091f1e00d90595910c24368db283bceb4c185cbac"
+    },
+    {
+      "event": "approved",
+      "mode": "EMAIL_PIN",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "approved",
+      "mode": "EMAIL_PIN_PLUS_OTP",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "approved",
+      "mode": "EMAIL_PIN_PLUS_MFA",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "denied",
+      "mode": "EMAIL_PIN",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "denied",
+      "mode": "EMAIL_PIN_PLUS_OTP",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "denied",
+      "mode": "EMAIL_PIN_PLUS_MFA",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "expired",
+      "mode": "EMAIL_PIN",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "expired",
+      "mode": "EMAIL_PIN_PLUS_OTP",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "expired",
+      "mode": "EMAIL_PIN_PLUS_MFA",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "cancelled",
+      "mode": "EMAIL_PIN",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "cancelled",
+      "mode": "EMAIL_PIN_PLUS_OTP",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "cancelled",
+      "mode": "EMAIL_PIN_PLUS_MFA",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "execution_succeeded",
+      "mode": "EMAIL_PIN",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "execution_succeeded",
+      "mode": "EMAIL_PIN_PLUS_OTP",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "execution_succeeded",
+      "mode": "EMAIL_PIN_PLUS_MFA",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "execution_failed",
+      "mode": "EMAIL_PIN",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "execution_failed",
+      "mode": "EMAIL_PIN_PLUS_OTP",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "execution_failed",
+      "mode": "EMAIL_PIN_PLUS_MFA",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "execution_unknown",
+      "mode": "EMAIL_PIN",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "execution_unknown",
+      "mode": "EMAIL_PIN_PLUS_OTP",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    },
+    {
+      "event": "execution_unknown",
+      "mode": "EMAIL_PIN_PLUS_MFA",
+      "sha256": "296e08eaec4b0c31f3e0803edbdd103179966bb40fd9e9774d4185190fab3a3a"
+    }
+  ]
+}

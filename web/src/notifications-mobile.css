@@ -1,0 +1,104 @@
+/* Grant-owned narrow Notifications presentation, not a Foundation fork.
+ * Desktop tables and mobile cards use the identical saved role-scoped rows.
+ * A visually inactive list is display:none, removing duplicate controls
+ * from tab order and the accessibility tree. */
+.grant-notification-mobile-list { display: none; }
+
+@media (max-width: 600px) {
+  .grant-notification-desktop-list { display: none; }
+
+  .grant-notification-mobile-list {
+    display: grid;
+    gap: var(--dr-space-3);
+    list-style: none;
+    min-width: 0;
+    max-width: 100%;
+    margin: var(--dr-space-4) 0;
+    padding: 0;
+  }
+
+  .grant-notification-mobile-card {
+    display: grid;
+    gap: var(--dr-space-3);
+    min-width: 0;
+    padding: var(--dr-space-4);
+    border: 1px solid var(--dr-border-default);
+    border-radius: var(--dr-radius-card);
+    overflow-wrap: anywhere;
+  }
+
+  .grant-notification-mobile-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--dr-space-2);
+    min-width: 0;
+  }
+
+  .grant-notification-mobile-heading button {
+    min-width: 0;
+    max-width: 100%;
+    text-align: start;
+    overflow-wrap: anywhere;
+  }
+
+  .grant-notification-mobile-status {
+    color: var(--dr-text-secondary);
+    font-size: var(--dr-font-size-sm);
+    font-weight: var(--dr-font-weight-strong);
+  }
+
+  .grant-notification-mobile-facts {
+    display: grid;
+    gap: var(--dr-space-3);
+    min-width: 0;
+    margin: 0;
+  }
+
+  .grant-notification-mobile-facts > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .25rem;
+    min-width: 0;
+  }
+
+  .grant-notification-mobile-facts dt {
+    font-size: var(--dr-font-size-sm);
+    font-weight: var(--dr-font-weight-strong);
+    color: var(--dr-text-secondary);
+  }
+
+  .grant-notification-mobile-facts dd {
+    min-width: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .grant-notification-mobile-facts code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .grant-notification-mobile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    min-width: 0;
+    align-items: stretch;
+  }
+
+  .grant-notification-mobile-actions button {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .grant-notification-template-directory-card > .dr-card__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grant-notification-template-directory-card > .dr-card__header > .dr-card__actions,
+  .grant-notification-template-directory-card > .dr-card__header > .dr-card__actions > .dr-button {
+    width: 100%;
+  }
+}

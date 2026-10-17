@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "PRIVATE_UNPUBLISHED_CONTROL_FIRST_F31_CONSUMER_CANDIDATE",
+  "source_repository": "datarelay-labs/datarelay-product-foundation",
+  "source_head": "917df932e6a25255bd4b2a4385f79793deb6c614",
+  "control_source_commit": "fc89dadcb01a262ef7881a6bca94dd4989a8b496",
+  "outer_handoff_archive_sha256": "f74420022190fb536af138259529cb53a50bd78482a74c7779fd0109e5e078ea",
+  "legacy_rc50_retained_for_domain_compatibility": true,
+  "control_first_npm_archives": [
+    {
+      "name": "@datarelay-labs/control-clone",
+      "path": ".foundation/packs/datarelay-labs-control-clone-0.1.0-dev-917df932.tgz",
+      "sha256": "02cc2a46b729c94ed89002cc7c0268e9e8dd9bc042a2c13e9490315a9d4dad76"
+    },
+    {
+      "name": "@datarelay-labs/foundation",
+      "alias": "@datarelay-labs/foundation-f31",
+      "path": ".foundation/packs/datarelay-labs-foundation-0.1.0-dev-917df932.tgz",
+      "sha256": "cb6249bf316ec6c237af465344d8aec4bb974386db6875c742dc229dc3b81963"
+    }
+  ],
+  "security_python_wheel": {
+    "path": ".foundation/packs/datarelay_onprem_security-0.10.0.dev0-py3-none-any.whl",
+    "sha256": "cfff22d3d24efb9bb7d6f5701515ac4616cb82029c62245494ae84bd1df81969"
+  },
+  "control_web_reference": [
+    {
+      "file": "web-dist/assets/index-DGRZNQw9.js",
+      "sha256": "a9b2b7a7fa47470db7093666d3da63f03506c4e3de71e883187512faeb3f6b78"
+    },
+    {
+      "file": "web-dist/assets/index-KNwifMqR.css",
+      "sha256": "cf9bc3f501905c592b4daf17217867a99cee995b6f3a2da47d8fb6410d290b00"
+    },
+    {
+      "file": "web-dist/favicon.svg",
+      "sha256": "5e90dfa40d1400eb24ec8e02adf9016d8b43b9995b8953cd59472789904657aa"
+    },
+    {
+      "file": "web-dist/index.html",
+      "sha256": "87a669b2e6cc45a66373c590f5897b8d02cc34a05b9387111e4d5886ddeb7a64"
+    },
+    {
+      "file": "web-dist/logo/datarelay-logo.svg",
+      "sha256": "5e90dfa40d1400eb24ec8e02adf9016d8b43b9995b8953cd59472789904657aa"
+    }
+  ],
+  "qualification_caveat": "Pinned private candidate; no claim of same-identity embedded service without a verified Grant session boundary."
+}

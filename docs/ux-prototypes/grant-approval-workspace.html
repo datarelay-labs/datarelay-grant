@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="color-scheme" content="light"/>
+<title>DataRelay Grant — approval-first UX study (offline prototype)</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17273a;background:#eef3f7;font-size:14px}
+*{box-sizing:border-box}body{margin:0;min-width:280px}button,input{font:inherit}button{cursor:pointer}a{color:inherit}
+.skip{position:absolute;top:-100px;left:10px;padding:12px;background:#fff;z-index:20}.skip:focus{top:10px}
+.demo-banner{background:#2e3658;color:#fff;text-align:center;font-weight:550;letter-spacing:.02em;padding:11px 16px;font-size:12px}
+.app{min-height:calc(100vh - 38px);display:grid;grid-template-columns:234px minmax(0,1fr)}
+.sidebar{background:#102b41;color:#c9d9e5;padding:25px 14px;display:flex;flex-direction:column;gap:20px}
+.brand{padding:8px 14px;color:white;font-weight:750;font-size:21px;letter-spacing:-.03em}.brand small{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9ac9d5;font-weight:650;margin-top:4px}
+.side-caption{font-size:10px;font-weight:800;color:#8faab9;letter-spacing:.13em;padding:0 14px}
+.side-nav{display:grid;gap:5px}.side-nav button{width:100%;text-align:left;border:1px solid transparent;color:#c7d9e7;background:transparent;border-radius:10px;padding:11px 13px;display:flex;align-items:center;gap:11px}
+.side-nav button:hover,.side-nav button:focus-visible{background:#244359;color:white}.side-nav button[aria-current="page"]{background:#216675;color:white;border-color:#2a8791;font-weight:750}
+.nav-dot{width:9px;height:9px;flex:none;border-radius:3px;background:#537b90}.side-nav button[aria-current="page"] .nav-dot{background:#d0eee7}
+.sidebar-foot{font-size:12px;color:#97b6c8;padding:12px 14px;margin-top:auto;border-top:1px solid #365369}
+.viewport{min-width:0;background:#f5f8fa}.topbar{height:66px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 28px;background:#fff;border-bottom:1px solid #dce5ea}
+.topbar .caption{font-size:12px;color:#71839a}.topbar .account{font-size:12px;background:#eff6f8;border:1px solid #dee8eb;border-radius:999px;padding:9px 12px}
+.main{max-width:1220px;margin:0 auto;padding:28px 30px 60px;min-width:0}
+.screen[hidden]{display:none}.eyebrow{color:#1c7181;font-size:11px;letter-spacing:.14em;font-weight:800;text-transform:uppercase;margin:0 0 7px}
+h1{margin:0 0 8px;font-size:29px;letter-spacing:-.04em;color:#10273d}h2{font-size:17px;margin:0 0 6px;letter-spacing:-.025em}h3{font-size:14px;margin:0 0 7px}p{margin:0;color:#596c80;line-height:1.58}
+.pagehead{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:25px}.pagehead>div{max-width:740px}
+.actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid #bfd0da;border-radius:9px;background:#fff;padding:9px 14px;font-weight:700;color:#27435b;min-height:39px}
+.btn.primary{background:#176f7c;color:white;border-color:#176f7c}.btn.soft{background:#edf6f7;border-color:#c7e3e5;color:#075e68}.btn[disabled]{cursor:not-allowed;opacity:.5}
+.btn:focus-visible,.side-nav button:focus-visible{outline:3px solid #e2ab46;outline-offset:2px}
+.card{background:#fff;border:1px solid #e0e9ee;border-radius:13px;box-shadow:0 5px 15px rgba(9,40,61,.035);padding:19px;margin:0 0 15px;min-width:0}
+.cardheader{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.muted{color:#76899d;font-size:12px}.tag{font-size:11px;font-weight:740;border-radius:7px;padding:5px 8px;background:#edf3f5;color:#3a5a6a;display:inline-flex}
+.tag.wait{background:#fff3d5;color:#795100}.tag.good{background:#e5f6ed;color:#216642}.tag.bad{background:#ffeded;color:#a14949}
+.task-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 17px}
+.task-tabs button{border:1px solid #d0dee5;background:#fff;color:#3a586b;padding:10px 14px;font-weight:700;border-radius:9px}
+.task-tabs button[aria-pressed="true"]{background:#dff2f0;border-color:#88c9c3;color:#0b5d68}
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}.filters label{display:grid;gap:6px;color:#587088;font-size:11px;font-weight:700;flex:1;min-width:180px}
+.field{min-width:0;max-width:100%;padding:10px 11px;border:1px solid #d1dfe7;background:#fff;border-radius:9px;color:#3c5466}
+.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;text-align:left}th{color:#72869a;font-size:11px;font-weight:800;padding:11px 10px;border-bottom:1px solid #dce6ed}td{padding:14px 10px;vertical-align:middle;border-bottom:1px solid #edf1f4;font-size:13px}tr:last-child td{border-bottom:0}
+.t-title{font-weight:770;color:#193a4e;display:block}.t-sub{display:block;font-size:11px;color:#75899a;margin-top:5px}.th-action{width:112px}
+.demo-empty{background:#f6fafb;padding:18px;border-radius:9px;border:1px dashed #b9d1db}.demo-empty[hidden]{display:none}
+.two{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(240px,.7fr);gap:17px;align-items:start}.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.stack{display:grid;gap:11px}.listitem{border:1px solid #e0e9ef;padding:13px;border-radius:9px}.listitem strong{display:block;color:#204053;margin-bottom:4px}
+.mini-steps{display:flex;gap:12px;margin-bottom:17px;flex-wrap:wrap}.step{font-size:12px;color:#668094;border-bottom:2px solid #cadce0;padding:6px 4px}.step.active{font-weight:800;color:#156b75;border-color:#156b75}
+.divider{height:1px;background:#e3ebef;margin:16px 0}.label{font-size:12px;color:#536b7f;font-weight:700;display:block;margin:9px 0 6px}
+.alert{padding:11px 13px;border-radius:9px;background:#fff8e8;border:1px solid #f0ddad;color:#795f30;font-size:12px;line-height:1.55}
+.demo-only{font-size:10px;font-weight:800;color:#996a27;letter-spacing:.08em;text-transform:uppercase}
+.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;overflow-wrap:anywhere}
+.detail-list{display:grid;grid-template-columns:150px 1fr;gap:10px 15px;margin:12px 0}.detail-list dt{font-size:12px;color:#72869a}.detail-list dd{margin:0;font-weight:680}
+.policy-shell{display:grid;grid-template-columns:minmax(220px,315px) minmax(0,1fr);gap:15px}
+.policy-tab{border:1px solid #d7e3e9;border-radius:9px;padding:13px;width:100%;background:#fff;text-align:left;color:#31536a;margin:0 0 9px}
+.policy-tab.selected{border-color:#9fc8cb;background:#eef8f8}
+.policy-panel{background:#f7fafb;padding:17px;border-radius:9px;border:1px solid #dfe9ee}
+.admin-section{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.admin-section .card{margin:0}.admin-section button{margin-top:12px}
+.login-frame{max-width:380px;margin:0 auto}.login-frame h3{font-size:18px}.login-frame input{width:100%;margin-bottom:10px}
+.inline-note{background:#eaf4f8;border:1px solid #c8e0e8;color:#315c72;padding:12px;border-radius:8px;font-size:12px}
+@media(max-width:940px){.app{grid-template-columns:174px minmax(0,1fr)}.main{padding:22px 19px}.sidebar{padding:18px 9px}.brand{font-size:18px}.two{grid-template-columns:1fr}.admin-section{grid-template-columns:1fr}}
+@media(max-width:630px){.app{display:block}.sidebar{padding:7px 8px;gap:6px}.brand{padding:7px 11px;font-size:16px}.brand small{display:none}.side-caption,.sidebar-foot{display:none}.side-nav{display:flex;overflow-x:auto;gap:6px;padding-bottom:5px}.side-nav button{width:auto;white-space:nowrap;flex:none;padding:9px 12px;font-size:12px}.nav-dot{display:none}
+.topbar{height:54px;padding:0 13px}.topbar .caption{font-size:10px}.topbar .account{padding:7px 8px}.main{padding:21px 13px 48px}
+h1{font-size:23px}.pagehead{display:block}.pagehead .actions{margin-top:16px}.card{padding:14px}
+.policy-shell,.cols,.admin-section{grid-template-columns:1fr}.detail-list{grid-template-columns:105px 1fr}.table-wrap{margin:0 -5px}
+thead th:nth-child(3),thead th:nth-child(4),tbody td:nth-child(3),tbody td:nth-child(4){display:none}
+.filters label{min-width:140px}.demo-banner{font-size:10px;padding:8px}.task-tabs button{padding:9px 11px;font-size:12px}}
+@media(prefers-reduced-motion:no-preference){button{transition:background-color .12s,border-color .12s}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to current design panel</a>
+<div class="demo-banner">OFFLINE DESIGN PROTOTYPE — synthetic examples only · no backend, authentication, approval or external effect</div>
+<div class="app">
+  <aside class="sidebar" aria-label="Prototype application sidebar">
+    <div class="brand">DataRelay <span style="color:#8edbd0">Grant</span><small>Approval Control Platform</small></div>
+    <div class="side-caption">MY WORK · DESIGN V1</div>
+    <nav class="side-nav" aria-label="Prototype screen selection">
+      <button type="button" aria-current="page" data-goto="approvals"><span class="nav-dot"></span>My approvals</button>
+      <button type="button" data-goto="email"><span class="nav-dot"></span>Email decision</button>
+      <button type="button" data-goto="detail"><span class="nav-dot"></span>Request detail</button>
+      <button type="button" data-goto="policies"><span class="nav-dot"></span>Approval policies</button>
+      <button type="button" data-goto="administration"><span class="nav-dot"></span>Administration</button>
+    </nav>
+    <div class="sidebar-foot">Foundation shell concept<br/>No real persona permissions checked by this mockup.</div>
+  </aside>
+  <div class="viewport">
+    <div class="topbar">
+      <div class="caption"><strong>Human decisions first</strong> · execution separately reported</div>
+      <div class="account">Sample Approver · demo</div>
+    </div>
+    <main id="main" class="main" tabindex="-1">
+      <section class="screen" data-screen="approvals" aria-labelledby="approvals-heading">
+        <div class="pagehead"><div><p class="eyebrow">My work / task queue</p><h1 id="approvals-heading">My approvals</h1><p>Review exact actions, prioritize your assigned decisions, and keep executed outcomes separate.</p></div><div class="actions"><button type="button" class="btn primary" data-goto="detail">Open example request</button></div></div>
+        <div class="card">
+          <div class="cardheader"><h2>Requests that need your attention</h2><span class="tag">Demo dataset · not a live count</span></div>
+          <div class="task-tabs" role="group" aria-label="Approval task view examples">
+            <button type="button" aria-pressed="true" data-queue="needs">Needs my decision</button><button type="button" aria-pressed="false" data-queue="held">On hold</button><button type="button" aria-pressed="false" data-queue="delegated">Delegated to me</button><button type="button" aria-pressed="false" data-queue="recent">Recently decided</button>
+          </div>
+          <div class="filters">
+            <label>Search sample requests<input class="field" id="sample-search" type="search" placeholder="Title or external ID" autocomplete="off"/></label>
+            <label>Decision status<input class="field" value="Server-controlled in real Grant" disabled/></label>
+          </div>
+          <div class="table-wrap">
+          <table aria-label="Synthetic example approvals">
+          <thead><tr><th>Request and exact task</th><th>Decision</th><th>Due</th><th class="th-action">Open</th></tr></thead>
+          <tbody>
+            <tr data-bucket="needs" data-text="Restart staging worker APP-1024"><td><span class="t-title">Restart staging worker</span><span class="t-sub">APP-1024 · staging-worker-7</span></td><td><span class="tag wait">Awaiting</span></td><td>Tomorrow</td><td><button type="button" class="btn soft" data-goto="detail">Review details</button></td></tr>
+            <tr data-bucket="needs" data-text="Approve staging config APP-1025"><td><span class="t-title">Approve staging config</span><span class="t-sub">APP-1025 · config/read-only</span></td><td><span class="tag wait">Awaiting</span></td><td>Oct 15</td><td><button type="button" class="btn soft" data-goto="detail">Review details</button></td></tr>
+            <tr data-bucket="held" data-text="Database metadata export APP-1030"><td><span class="t-title">Database metadata export</span><span class="t-sub">APP-1030 · held for information</span></td><td><span class="tag">On hold</span></td><td>Oct 16</td><td><button type="button" class="btn soft" data-goto="detail">View hold</button></td></tr>
+            <tr data-bucket="delegated" data-text="Temporary operator account APP-1042"><td><span class="t-title">Temporary operator account</span><span class="t-sub">APP-1042 · delegated seat</span></td><td><span class="tag wait">Awaiting</span></td><td>Oct 18</td><td><button type="button" class="btn soft" data-goto="detail">Review details</button></td></tr>
+            <tr data-bucket="recent" data-text="Audit-only change APP-1016"><td><span class="t-title">Audit-only change</span><span class="t-sub">APP-1016 · human decision recorded</span></td><td><span class="tag good">Approved</span></td><td>Oct 9</td><td><button type="button" class="btn soft" data-goto="detail">View history</button></td></tr>
+          </tbody></table></div>
+          <p id="sample-empty" class="demo-empty" hidden>There are no matching sample requests. Real Grant displays only the current server-authorized page.</p>
+          <p class="muted" style="margin-top:15px">Real implementation keeps the existing server-scoped 50-row pagination. Known overdue classification defect remains a separate backend P0.</p>
+        </div>
+      </section>
+      <section class="screen" data-screen="email" aria-labelledby="email-heading" hidden>
+        <div class="pagehead"><div><p class="eyebrow">Email decision / public landing concept</p><h1 id="email-heading">Review approval request</h1><p>Approve, hold or deny only after inspecting the action and explicitly confirming.</p></div><span class="tag wait">Route not mounted in Grant</span></div>
+        <div class="card" style="max-width:535px;margin:0 auto">
+          <div class="mini-steps"><span class="step active">1 · Review</span><span class="step">2 · Verify</span><span class="step">3 · Confirm</span></div>
+          <h2>Approval for staging configuration</h2><p class="muted">An illustrative invitation, not a real token or email.</p>
+          <dl class="detail-list"><dt>Intended choice</dt><dd>Approve (example)</dd><dt>Requested action</dt><dd class="mono">config.apply / staging-only</dd><dt>Assigned mailbox</dt><dd>sample@example.invalid</dd><dt>Expires</dt><dd>Seven days maximum, per actual trusted policy</dd></dl>
+          <div class="divider"></div>
+          <label class="label" for="sample-pin">Four-digit email PIN (example field)</label><input id="sample-pin" class="field" inputmode="numeric" maxlength="4" placeholder="••••" style="width:140px" aria-describedby="demo-code-note"/>
+          <p id="demo-code-note" class="muted" style="margin:9px 0 17px">The PIN in the same email does not establish named-person identity or independent MFA.</p>
+          <div class="alert">In the real product, GET is read-only. PIN verification, policy-required OTP/fresh TOTP and final decision confirmation are separate server operations. None runs in this prototype.</div>
+          <div class="actions" style="margin-top:17px"><button class="btn primary" type="button" id="demo-next">Explore next design state</button><button type="button" class="btn" data-goto="approvals">Back to mock Inbox</button></div>
+          <p id="demo-stage" role="status" class="muted" style="margin-top:13px">Prototype state 1/3: view bounded request summary and PIN field.</p>
+        </div>
+      </section>
+      <section class="screen" data-screen="detail" aria-labelledby="detail-heading" hidden>
+        <div class="pagehead"><div><p class="eyebrow">My work / approvals / request detail</p><h1 id="detail-heading">Restart staging worker</h1><p>Exact business action and human reviewer decisions before delivery or reported execution.</p></div><div class="actions"><button class="btn" type="button" data-goto="approvals">Back to queue</button><button class="btn primary" type="button" data-goto="email">Explore approval design</button></div></div>
+        <div class="two">
+          <div class="stack">
+            <div class="card"><div class="cardheader"><h2>Action to review</h2><span class="tag wait">Awaiting decision</span></div><dl class="detail-list"><dt>Requester</dt><dd>Sample Requester</dd><dt>Integration</dt><dd>DataRelay Control (illustrative)</dd><dt>Action kind</dt><dd class="mono">service.restart</dd><dt>Exact target</dt><dd class="mono">staging-worker-7</dd><dt>Approval deadline</dt><dd>2026-10-12, UTC</dd></dl><div class="alert">Opening this detail does not approve the request or execute anything. A separate final confirmation is mandatory.</div></div>
+            <div class="card"><h2>Reviewer decisions</h2><div class="listitem"><strong>Approval seat 1 · Awaiting</strong><p>One seat contributes at most one current vote. Hold history is preserved in the audit timeline.</p></div></div>
+          </div>
+          <div class="stack">
+            <div class="card"><h2>Decision ≠ execution</h2><div class="listitem"><strong>Human decision</strong><span class="tag wait">Pending</span></div><div class="listitem"><strong>Reported external execution</strong><span class="tag">Not started</span></div><p class="muted" style="margin-top:10px">Even reported success requires independent product readback for external acceptance.</p></div>
+            <div class="card"><h2>Evidence and activity</h2><details><summary>Transport & notifications</summary><p style="padding:9px 0">Transport acceptance does not prove recipient inbox receipt.</p></details><details style="margin-top:10px"><summary>Audit event history</summary><p style="padding:9px 0">Historical events are separate from current seat votes.</p></details></div>
+          </div>
+        </div>
+      </section>
+      <section class="screen" data-screen="policies" aria-labelledby="policies-heading" hidden>
+        <div class="pagehead"><div><p class="eyebrow">Configuration / approval controls</p><h1 id="policies-heading">Approval policies</h1><p>Lifecycle first, editor second, testing and audit before activation.</p></div><button class="btn primary" type="button" disabled title="Design only">Create policy · prototype</button></div>
+        <div class="policy-shell">
+          <div class="card"><h2>Policies</h2><p class="muted" style="margin-bottom:14px">Existing Grant supports versioned Draft → Testing → Active → Disabled.</p>
+            <button type="button" class="policy-tab selected" data-demo-policy="Default approvals"><strong>Default approvals</strong><br/><span class="tag good">Active</span> <span class="muted">v3</span></button>
+            <button type="button" class="policy-tab" data-demo-policy="High-risk approval"><strong>High-risk approval</strong><br/><span class="tag wait">Testing</span> <span class="muted">v2</span></button>
+          </div>
+          <div class="card"><div class="cardheader"><h2 id="selected-policy">Default approvals</h2><span class="tag">Editor skeleton</span></div>
+            <div class="task-tabs" role="group" aria-label="Policy design sections"><button type="button" aria-pressed="true" data-policy-tab="General">General</button><button type="button" aria-pressed="false" data-policy-tab="Approval steps">Approval steps</button><button type="button" aria-pressed="false" data-policy-tab="Verification">Verification</button><button type="button" aria-pressed="false" data-policy-tab="Notifications">Notifications</button><button type="button" aria-pressed="false" data-policy-tab="History">History</button></div>
+            <div class="policy-panel"><h3 id="policy-pane-title">General</h3><p id="policy-pane-body">Preview the saved policy name, integration scope and current lifecycle before editing. No mutation is available in the prototype.</p></div>
+            <div class="divider"></div><div class="alert">A real two-admin save must reject stale versions instead of silently overwriting newer Deny/MFA/integration rules or notification templates.</div>
+            <div class="actions" style="margin-top:14px"><button class="btn" type="button" disabled>Save draft · disabled</button><button class="btn" type="button" disabled>Test · disabled</button><button class="btn primary" type="button" disabled>Activate · disabled</button></div>
+          </div>
+        </div>
+      </section>
+      <section class="screen" data-screen="administration" aria-labelledby="administration-heading" hidden>
+        <div class="pagehead"><div><p class="eyebrow">Administration / capability-first</p><h1 id="administration-heading">System management</h1><p>One Foundation-standard hub, true supported actions, product-specific mail extension.</p></div><span class="tag">Shared Foundation concept</span></div>
+        <div class="admin-section">
+          <div class="card"><h2>Accounts & permissions</h2><p>Users, active sessions and authorized task visibility. Reuse Foundation's administration components.</p><button class="btn" type="button" disabled>Manage users · demo disabled</button></div>
+          <div class="card"><h2>Health & audit</h2><p>Read-only system status, operator procedure and append-oriented audit evidence, not NOC dashboards.</p><button class="btn" type="button" disabled>View diagnostics · demo disabled</button></div>
+          <div class="card"><h2>Mail & notifications</h2><p>Test mail only for actual authorized administrator. SMTP credential editor is unavailable until an API exists.</p><button class="btn" type="button" disabled>Test delivery · demo disabled</button></div>
+          <div class="card"><h2>Deployment-owned settings</h2><p>TLS, service network, disaster recovery and retention are currently operator-owned, not false clickable settings.</p><span class="tag">View-only guidance</span></div>
+        </div>
+        <div class="card" style="margin-top:16px"><div class="cardheader"><h2>Centered sign-in layout reference</h2><span class="tag">Login design · not wired</span></div><div class="login-frame"><h3>Welcome to DataRelay Grant</h3><p class="muted" style="margin-bottom:13px">On 320px and 375px widths the form comes before help links. Existing Foundation owns implementation.</p><label class="label" for="example-username">Username</label><input class="field" id="example-username" disabled placeholder="Administrator-created account"/><label class="label" for="example-password">Password</label><input class="field" id="example-password" type="password" disabled placeholder="Not a live login"/><button class="btn primary" type="button" disabled style="width:100%">Sign in · design only</button></div></div>
+      </section>
+    </main>
+  </div>
+</div>
+<script>
+(() => {
+  'use strict';
+  const screens = Array.from(document.querySelectorAll('[data-screen]'));
+  const navButtons = Array.from(document.querySelectorAll('.side-nav [data-goto]'));
+  function showScreen(screenId) {
+    if (!screens.some((section) => section.dataset.screen === screenId)) return;
+    for (const section of screens) section.hidden = section.dataset.screen !== screenId;
+    for (const button of navButtons) {
+      if (button.dataset.goto === screenId) button.setAttribute('aria-current', 'page');
+      else button.removeAttribute('aria-current');
+    }
+    document.getElementById('main').focus();
+  }
+  const search = document.getElementById('sample-search');
+  let selectedQueue = 'needs';
+  function showQueue() {
+    const value = search.value.toLowerCase().trim();
+    let count = 0;
+    for (const row of document.querySelectorAll('tr[data-bucket]')) {
+      row.hidden = row.dataset.bucket !== selectedQueue ||
+        (value && !(row.dataset.text || '').toLowerCase().includes(value));
+      if (!row.hidden) count++;
+    }
+    document.getElementById('sample-empty').hidden = count !== 0;
+  }
+  document.addEventListener('click', (event) => {
+    const target = event.target.closest('button');
+    if (!target) return;
+    if (target.dataset.goto) showScreen(target.dataset.goto);
+    if (target.dataset.queue) {
+      selectedQueue = target.dataset.queue;
+      search.value = '';
+      for (const option of document.querySelectorAll('[data-queue]'))
+        option.setAttribute('aria-pressed', String(option === target));
+      showQueue();
+    }
+    if (target.dataset.demoPolicy) {
+      document.getElementById('selected-policy').textContent = target.dataset.demoPolicy;
+      for (const option of document.querySelectorAll('[data-demo-policy]'))
+        option.classList.toggle('selected', option === target);
+    }
+    if (target.dataset.policyTab) {
+      for (const option of document.querySelectorAll('[data-policy-tab]'))
+        option.setAttribute('aria-pressed', String(option === target));
+      document.getElementById('policy-pane-title').textContent = target.dataset.policyTab;
+      document.getElementById('policy-pane-body').textContent =
+        'DESIGN ONLY: ' + target.dataset.policyTab +
+        ' uses supported Grant source concepts. This mockup cannot edit or submit a policy.';
+    }
+  });
+  search.addEventListener('input', showQueue);
+  let demoStep = 1;
+  document.getElementById('demo-next').addEventListener('click', () => {
+    demoStep = demoStep >= 3 ? 1 : demoStep + 1;
+    document.getElementById('demo-stage').textContent =
+      'Prototype state ' + demoStep + '/3: ' +
+      (demoStep === 1 ? 'Review action and PIN entry.' :
+       demoStep === 2 ? 'Illustrate trusted-policy extra OTP or fresh Grant TOTP step; none was verified.' :
+       'Illustrate separate final human confirmation; no approval is recorded.');
+    const steps = document.querySelectorAll('.mini-steps .step');
+    steps.forEach((node, index) => node.classList.toggle('active', index === demoStep - 1));
+  });
+  showQueue();
+})();
+</script>
+</body></html>

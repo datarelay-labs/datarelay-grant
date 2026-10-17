@@ -1,0 +1,53 @@
+/* Existing role-scoped Operations exceptions in a one-task-per-card layout.
+ * Source category/count/query provenance and callbacks remain unchanged. */
+.grant-exceptions-mobile-list { display: none; }
+
+@media (max-width: 600px) {
+  .grant-exceptions-desktop-list { display: none; }
+
+  .grant-exceptions-mobile-list {
+    display: grid;
+    list-style: none;
+    gap: var(--dr-space-3);
+    padding: 0;
+    margin: var(--dr-space-4) 0;
+    min-width: 0;
+  }
+
+  .grant-exceptions-mobile-card {
+    display: grid;
+    gap: var(--dr-space-3);
+    min-width: 0;
+    padding: var(--dr-space-4);
+    border: 1px solid var(--dr-border-default);
+    border-radius: var(--dr-radius-card);
+    overflow-wrap: anywhere;
+  }
+
+  .grant-exceptions-mobile-heading {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--dr-space-2);
+    min-width: 0;
+  }
+
+  .grant-exceptions-mobile-heading strong { overflow-wrap: anywhere; }
+
+  .grant-exceptions-mobile-heading span {
+    color: var(--dr-text-secondary);
+    font-size: var(--dr-font-size-sm);
+    font-weight: var(--dr-font-weight-strong);
+  }
+
+  .grant-exceptions-mobile-card p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .grant-exceptions-mobile-card > button {
+    min-width: 0;
+    width: 100%;
+  }
+}

@@ -1,0 +1,1372 @@
+# DataRelay Grant Product Standard
+
+<!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 BEGIN -->
+## Mandatory competitor-UI acceptance reference — 2026-10-14
+
+The owner's accepted UI requirements are decomposed in [COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md](COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md), with per-task outcomes, dependencies, verification and PASS gates. Sections 10.10/10.11 and all earlier accepted product behavior remain normative; no accepted requirement may be dropped or reclassified optional without a new explicit owner decision. U0.03/U9.01 must reconcile every retained historical requirement before a no-omission claim.
+
+Grant must complete this exclusive UI scope before unrelated work. Foundation common UI remains Foundation-owned and is not modified here. Source, mounted interaction, development delivery and actual user/mail-client acceptance are distinct evidence levels; API-only or settings-form-only implementations do not satisfy the selected-block editor. Current source contributions are reused, not repeated. Original approval/security invariants and separate high-risk approvals remain unchanged.
+<!-- GRANT_COMPETITOR_UI_EXCLUSIVE_WBS_20261014 END -->
+
+
+Version: 1.0 draft
+Accepted product direction: 2026-10-07
+G10A email decision/verification lifecycle direction owner-accepted: 2026-10-08
+Repository: `datarelay-labs/datarelay-grant`
+
+## 1. Product definition
+
+DataRelay Grant is a reusable **human approval control layer between a requested
+action and execution**.
+
+It accepts an action request from an existing system, resolves the applicable
+approval policy, obtains explicit human authorization, binds that authorization to
+the exact action, exposes a bounded execution grant to the existing executor, and
+tracks the reported execution result.
+
+Grant is not a generic workflow engine. Existing DataRelay products, Stellar Cyber,
+and other integrated systems keep their own execution, permissions, durable
+operation ledger, and business logic.
+
+The product promise is:
+
+> Know exactly what was requested, who approved it, what was authorized, what was
+> actually attempted, and what result was reported.
+
+## 2. Product category and positioning
+
+Grant combines the strongest useful ideas from approval-workflow products, ITSM
+approval systems, and just-in-time access-control products without becoming any of
+those categories in full.
+
+Product positioning:
+
+- lighter than ServiceNow/Jira-style ITSM;
+- more execution-bound than general approval products such as ApproveThis;
+- more general-purpose than infrastructure-specific JIT products such as Teleport
+  or StrongDM;
+- intentionally narrower than Power Automate, Tines, Torq, n8n, or SOAR/workflow
+  automation platforms.
+
+Grant competes on **approval-to-execution integrity**, not on workflow-canvas breadth.
+
+## 3. Non-negotiable product principles
+
+1. **Human decisions are explicit.** Silence, email opens, ambiguous free text, time
+   expiry, and notification delivery never become approval.
+2. **Approval is not execution.** Approval, notification delivery, execution
+   commitment, and execution result are separate states and separate evidence.
+3. **Authorization binds to the exact action.** Material action changes require new
+   authorization.
+4. **Existing systems execute.** Grant does not introduce a generic Runner.
+5. **Policies are safe to administer.** Policy edits are drafted, previewed, tested,
+   and activated intentionally.
+6. **In-flight approvals are stable.** A request snapshots the applicable policy,
+   approver plan, timing, and notification content needed to preserve semantics.
+7. **External execution is not claimed exactly once.** Consumers use durable
+   execution IDs, idempotency, reconciliation, and UNKNOWN when outcome is ambiguous.
+8. **Notifications are not approval decisions.** Email delivery, opens, link GETs,
+   Slack/Teams messages and outgoing webhooks grant no execution permission.
+   A policy-authorized email decision is an explicit *scoped* human-intent
+   workflow: separate outcome link + four-digit in-message code + an
+   independent final confirmation POST, with recorded assurance level.
+9. **Sensitive context is minimized outside Grant.** External notifications
+   use bounded safe variables. Full approval detail is accessible on Grant
+   only after appropriate scoped email-PIN verification or authenticated
+   account/step-up, according to the customer policy.
+10. **Operational exceptions are first-class.** Overdue approvals, failed delivery,
+    unused approvals, UNKNOWN execution, and failed execution must be visible.
+
+## 3.1 Administrator configuration and requester consumption
+
+Grant separates reusable administrator configuration from ordinary user work.
+
+Administrators own:
+- local user/approver accounts and registered email identities;
+- approver groups and routing topology;
+- integrations and controlled action families;
+- notification template sets;
+- approval policies, verification requirements, deadlines and grant validity;
+- policy testing and explicit activation.
+
+Requesters consume an ACTIVE administrator-published request type. They provide only
+request-specific data allowed by that type. The requester MAY review the effective
+approval plan, but MUST NOT be given ordinary request-creation controls that rewrite
+the assigned approver/group, notification template, verification floor, deadline or
+execution-grant policy.
+
+The canonical requester flow is:
+
+Request type -> request details -> read-only assigned approval plan -> Review -> Confirm.
+
+The canonical administrator flow is:
+
+Accounts -> Approver groups -> Integrations -> Notification templates ->
+Draft approval policy -> Test -> Activate.
+
+An administrator may later define a narrowly scoped policy that permits requester
+choice from an allowlisted approver set, but that is explicit policy behavior and
+must not become an unrestricted default.
+
+## 4. Canonical object model
+
+### 4.1 ApprovalPolicy
+
+An ApprovalPolicy determines when approval is required and how authorization is
+obtained.
+
+Minimum fields:
+
+- stable policy ID and version;
+- name and description;
+- lifecycle state;
+- integration/source scope;
+- action type;
+- optional bounded matching conditions;
+- approval plan;
+- decision-reason requirements, including the versioned optional/required
+  denial-reason flag (default optional);
+- response deadline;
+- escalation/delegation behavior;
+- execution-grant validity;
+- notification template set;
+- created/changed/activated actor and timestamps.
+
+### 4.2 ApprovalRequest
+
+An ApprovalRequest is one immutable requested action plus its approval lifecycle.
+
+It snapshots the effective policy version, approval plan, action, safe notification
+content, deadline and execution-grant settings required to preserve in-flight
+behavior.
+
+### 4.3 ApprovalDecision
+
+A decision is one of the explicit supported outcomes and must be attributable
+at the level of assurance actually established by the selected policy.
+An authenticated account/SSO decision identifies a verified user. An email-link
+plus same-message PIN decision, by contrast, is attributed to the *assigned
+recipient's mailbox authorization*, not proof that the named person actually
+clicked it. Both require an explicit final POST and must record the method and
+strength honestly. Decisions never come from notification transport success.
+
+Required first-class outcomes:
+
+- APPROVED
+- HELD
+- DENIED
+
+Product 1.0 also supports a collaboration outcome:
+
+- CHANGES_REQUESTED / MORE_INFORMATION_REQUIRED
+
+A changes-requested flow must not silently reuse prior authorization. Material
+request changes create a new revision/request with explicit history.
+
+### 4.4 ExecutionGrant
+
+An ExecutionGrant is the bounded result of a valid approval.
+
+It is bound to:
+
+- request ID;
+- policy/version;
+- action fingerprint;
+- stable execution ID;
+- validity window;
+- consumer/integration identity.
+
+A grant is not proof that execution occurred.
+
+### 4.5 ExecutionResult
+
+Execution results are separately reported as:
+
+- RUNNING
+- REPORTED_SUCCEEDED
+- REPORTED_FAILED
+- UNKNOWN
+
+Reported success is not independent verification unless a separate verifier exists.
+
+### 4.6 NotificationTemplateSet
+
+A template set groups notification content by event instead of treating email bodies
+as arbitrary standalone documents.
+
+Product 1.0 event set:
+
+- Approval requested
+- Reminder
+- Approved
+- Denied
+- Expired
+- Cancelled
+- Execution succeeded
+- Execution failed / unknown
+
+Templates use system-owned layout and bounded editable content. Arbitrary executable
+mail scripts or unrestricted HTML are not part of the core product standard.
+
+## 5. Approval policy lifecycle
+
+Policies use an explicit lifecycle:
+
+`DRAFT -> TESTING -> ACTIVE -> DISABLED`
+
+A policy is never made effective merely by saving edits.
+
+### DRAFT
+
+- editable;
+- not matched for live requests;
+- may be previewed.
+
+### TESTING
+
+- evaluated with sample or isolated test requests;
+- notification content can be previewed;
+- test notifications may be sent only to the authenticated administrator or a
+  designated safe test recipient;
+- no production business action is authorized.
+
+### ACTIVE
+
+- eligible for live policy matching;
+- version is immutable for already-created requests;
+- edits create a new draft version rather than mutating active historical semantics.
+
+### DISABLED
+
+- no new requests match the policy;
+- historical requests and audit remain available.
+
+Policy clone is supported for safe reuse.
+
+## 6. Policy matching
+
+Product 1.0 supports a bounded condition model, not a generic expression language.
+
+Core selectors:
+
+- integration/source;
+- action type;
+- tenant/customer scope;
+- environment;
+- severity;
+- risk level.
+
+The default matching model is deterministic AND across configured selectors.
+
+No arbitrary scripting, loops, remote lookups, or user-authored code is allowed in
+policy matching.
+
+A policy-preview function must show which policy would match a sample request and why.
+
+### Administrator policy and notification template save concurrency
+
+An edit to an existing approval policy MUST include both
+`expected_version_id` and `expected_updated_at` from the exact
+administrator-visible `GET /api/v1/profiles` row. The server verifies both
+inside the same write transaction before changing the draft/latest version,
+email approval verification tier (including denial reason, OTP/fresh MFA),
+policy selectors or outbound notification selection. A stale submitted
+revision returns HTTP **409 `POLICY_STALE`** with no mutation or successful
+update audit; missing required preconditions return 422. Editing an active
+version creates a **new Draft version**, never changes historical request
+snapshots or silently activates it.
+
+An edit to an existing nine-event Notification Template Set MUST include
+`expected_updated_at` from the administrator's
+`GET /api/v1/notification-template-sets` result. The legacy
+`PUT /api/v1/email-templates/{id}` path must supply the same field from
+`GET /api/v1/email-templates`. Both paths enforce the authoritative row's
+revision in the same SQLite write transaction. Concurrent stale edits return
+HTTP **409 `EMAIL_TEMPLATE_STALE`**, without replacing any of the nine event
+messages, altering enabled state, or recording a successful update audit.
+Missing preconditions return 422. Revision timestamps advance monotonically
+even if two saves share the same clock tick. An administrator must **Refresh,
+review the new saved revision, then explicitly save again**; no automatic
+retry/replay or full-template overwrite from an old browser state is allowed.
+
+Existing create-only operations remain unaffected. Saving a policy or email
+template never issues a protected business execution, human decision, or
+unreviewed test email. This source concurrency contract does not substitute
+for independent full user/mailbox acceptance or production release.
+
+## 7. Approval plans
+
+Product 1.0 supports:
+
+- Single approver
+- Any one of a group
+- All approvers
+- N-of-M
+- Sequential approval steps
+
+Approvers may be:
+
+- individual Grant users;
+- administrator-managed groups.
+
+Editing a group requires the exact server `updated_at` loaded by that
+administrator. Group name and membership update in one serialized transaction;
+stale updates fail with HTTP 409 without changing membership, recording an
+update audit event, or altering any existing approval. The browser must not
+silently retry an edit based on an earlier group snapshot. A newly reviewed
+group revision is required to save again. Group creation is unaffected.
+This stricter pre-release PUT contract requires existing API clients to
+reload the group and send `expected_updated_at`.
+
+Self-approval remains prohibited unless a future explicit product requirement says
+otherwise for a narrowly defined use case.
+
+Each step records its own state, actors, timestamps and comments/reasons.
+
+## 8. Delegation, reassignment and escalation
+### Mobile delegation and integration credential worklists
+
+Grant may present its already authorized delegated-approver and integration
+credential **metadata** rows as task-first cards at <=600px to avoid wide
+table scanning. The same original server rows, current/history partition,
+role-based revoke eligibility, exact time window, scope and enabled status
+must be retained across desktop/mobile. Historical delegations and revoked
+credentials must not gain a mutation action. Credential cards may show
+opaque issued token identifiers and already visible scope names but must
+never display raw secrets or enable export/impersonation. Viewport changes
+cannot bypass the existing explicit revocation Review -> Confirm or
+server authorization/audit. Source-only responsive work is not acceptance
+of installed native integrations, identity or external execution.
+
+
+Real operations must not stop because one person is absent.
+
+Product 1.0 supports:
+
+- time-bounded delegation/substitute approver;
+- administrator reassignment with audit;
+- reminder schedule;
+- escalation after configured elapsed time;
+- escalation to another user or group.
+
+Delegation and reassignment never rewrite historical attribution.
+
+Escalation configuration is a request-scoped routing edit and must include the
+latest `expected_revision` from the reviewed request. The server checks it
+atomically, increments request revision on a successful schedule replacement,
+and returns 409 without replacing a target or writing an audit event when
+another administrator has already changed the request or its escalation
+configuration. Explicit confirmation may never bypass this freshness check.
+This pre-release API contract requires operators to refresh stale requests;
+outstanding human approvals remain explicit and may need new revision reads.
+
+## 9. Request collaboration
+
+Approval is a decision process, not only two buttons.
+
+Product 1.0 supports:
+
+- requester context and reason;
+- bounded comments;
+- approver questions;
+- request-more-information / request-changes;
+- linked resubmission/revision;
+- revision comparison for material fields;
+- immutable history across revisions.
+
+Comments never modify the authorized action.
+
+## 10. Notification standard
+
+### 10.1 Channels
+
+Email is required for 1.0.
+
+Slack/Teams are supported extension channels after the email and webhook contracts
+are stable; they must use the same notification-event model and never create an
+alternate approval authority.
+
+### 10.2 Safe variables
+
+Only explicitly approved variables may appear in external notifications.
+
+Core safe variables include:
+
+- request title;
+- request URL;
+- external request ID;
+- action type;
+- target when allowed by policy;
+- bounded reason when allowed by policy;
+- deadline;
+- decision state;
+- execution state.
+
+Secret values, credentials, raw tokens, private keys, arbitrary request parameters
+and unbounded source payloads are forbidden.
+
+### 10.3 Preview and test
+
+Administrators can:
+
+- preview each event template with sample data;
+- preview the complete rendered message;
+- send a test message to themselves/designated test destination;
+- see transport acceptance separately from actual inbox receipt.
+
+The administrator-only Delivery Health queue supports bounded event-type,
+outbox-state and exact request-ID filters, plus stable newest-first pagination
+with authoritative matching totals. History beyond the default response limit
+must remain discoverable instead of being silently truncated by the Web UI.
+Every page revalidates current administrator authority. A delivery row exposes
+only delivery/status metadata, never payloads, recipient destinations or
+decision credentials. A `DELIVERED` state records transport acceptance,
+**not verified inbox receipt**, and filtering/refreshing never triggers
+resending or protected execution. Resend remains an explicit separately
+authorized administrator action on eligible failed email notifications.
+
+### 10.4 Branding
+#### Notifications responsive administration presentation
+
+The saved nine-event template-set inventory and Delivery Health worklist
+must remain usable on narrow mobile displays. Grant may project one existing
+authorized row per card rather than requiring a horizontal desktop table,
+but the mobile and desktop versions must use the **identical** current
+administrator-scoped saved data, filter/page selection and one-shot
+resend-review guard. The mobile surface must never turn an email-transport
+receipt into mailbox verification or an approval or external execution
+grant. A FAILED delivery offers only the same existing Review resend entry
+point; no implicit or repeated POST is authorized by viewport changes.
+Any source implementation remains unqualified until the separately required
+browser/user/release checks are completed.
+
+
+System-level notification branding owns product name, sender display name, logo and
+basic visual identity. Policy-specific content can override text, not security-owned
+layout or authority controls.
+
+### 10.5 Email decision links (owner-accepted G10A; backend-only candidate)
+
+The requested/reminder email for each currently eligible assigned approver
+contains four separate actions: **Approve**, **Hold**, **Deny** and
+**View Details**. Every decision button has its *own* unguessable URL,
+bound server-side to the immutable requested action, approval step and
+assigned approval seat. This follows the multiple response choices described
+by US 12,056,667 B1 (Figures 13–16) without allowing mail-scanner
+GET/prefetch requests to record a decision.
+
+A decision-intent reference is bound to:
+
+`(request_id, approver_assignment_id, approval_step_id, selected_outcome,
+  action_fingerprint, assignment_epoch, issuance_generation)`
+
+A cryptographically random **at least 256-bit opaque token** identifies each
+intent. Tokens cannot be composed from user IDs, addresses or answers and
+must be collision-safe and unique for every request, approver, answer,
+step and issuance. Server records store a protected digest, binding,
+expiry, and current/redeemed/revoked status; raw URLs, token values and
+the four-digit code must not appear in audit exports or diagnostic logs.
+Reminders may reuse a valid generation; an authorized reissue rotates it
+and invalidates superseded links.
+
+**Opening the email link (GET/HEAD/preview/prefetch) does not commit a
+decision, start OTP delivery, expose request details, or execute anything.**
+It only opens a safe page with the intended answer preselected and a
+four-digit confirmation-code input. A normal mail-security scanner GET
+therefore cannot accidentally approve or deny.
+
+### 10.6 Customer-controlled decision verification (owner-accepted G10A)
+
+**Default for a newly configured customer/policy: `EMAIL_PIN`.**
+The user receives a separate Approve/Hold/Deny link and a **four-digit
+random confirmation number in the SAME approval email**, uses the chosen
+link, enters the code on the web page, sees the decision context, and
+explicitly chooses the final Confirm action. **No Grant username/password
+login is required by default.**
+
+An optional customer/approval-policy setting raises the verification
+requirement based on trusted action classification:
+
+| Verification policy | Required user actions | Assurance meaning |
+| --- | --- | --- |
+| `EMAIL_PIN` (**DEFAULT**) | Unique response URL + same-email four-digit code + separate Confirm POST; **no login** | Mailbox/link possession and explicit intent only; NOT verified identity / NOT MFA. |
+| `EMAIL_PIN_PLUS_OTP` (**OPTIONAL**) | Default flow plus independently requested short-lived OTP (e.g. six-digit, new message) | Additional proof of ongoing access to the chosen delivery channel. An OTP delivered to the **same email** remains single-factor; do not label it MFA. |
+| `EMAIL_PIN_PLUS_MFA` (**OPTIONAL**) | Default flow plus fresh policy-configured identity/MFA step-up (for example SSO + approved second factor) at decision time | Stronger, separately verified actor identification **only when the installed mechanism provides it**; if unavailable, fail closed. |
+
+A customer may apply these tiers by policy/integration/trusted action
+kind and approved asset/risk classification. Do not allow an untrusted
+requester's `risk_level`, `severity` or free-form fields to downgrade
+required verification. Defaults and security settings are versioned and
+snapshotted into the request; newly changed customer settings do not
+silently relax in-flight requests. Security administrator revocation
+and account/assignment disablement override stale issuance.
+
+The four-digit number is generated with a cryptographic RNG **separately
+for each request + eligible assignee + issuance generation**, and may
+be shared across the three distinct choice URLs sent in that one
+recipient's email. It is NOT appended to those URLs and is never
+accepted independently of its matching opaque link and exact action.
+Validate on the server with keyed nonreversible storage; provide tight
+per-assignment/token, per-recipient and global attempt/rate limits
+(proposed default: five failures, then revoke and require safe reissue)
+to protect a 10,000-value code space. Brute-force limits, lockout
+recovery and denial-of-service tests are release gates. Do not use a
+plain unkeyed hash of a four-digit PIN as an offline secrecy guarantee.
+
+For optional emailed OTP: issue only after a deliberate, verified
+request POST, never as a GET side effect; expire promptly (proposed
+five minutes), allow at most three failures per challenge, rate-limit
+reissuance, consume once and bind to the same action/seat/selected
+outcome. The extra email OTP is an optional friction and freshness
+measure; a compromised/shared mailbox defeats both email proofs.
+For genuine MFA, validate a fresh identity factor through a
+supported, securely implemented mechanism; an email code alone is
+never called an authenticator satisfying MFA.
+
+### 10.7 Approval assignments, mail fanout and state versions (G10A)
+
+Keep three independent state dimensions:
+
+- `action_fingerprint`: immutable requested business operation. Any
+  material change requires a new request and new authorization.
+- `approver_assignment_id`, `approval_step_id`, `assignment_epoch`:
+  stable approval seat and authority version, changed by reassignment,
+  revocation, authorized delegation or material step changes.
+- `state_revision`: mutable optimistic-concurrency value for votes and
+  operational updates. One approver voting must NOT invalidate links
+  for other currently eligible assignees whose assignment epoch
+  and action remain unchanged.
+
+Mode semantics are accepted as follows:
+
+- `SINGLE`: one pending seat; notify its assigned email address.
+- `ANY_ONE`, `ALL` and `N_OF_M`: deliver **independent** recipient
+  emails with their own decision links/code; do not CC one shared
+  URL. A provisional **Hold applies only to that approver seat**.
+  Other eligible users continue, and the threshold may be satisfied
+  despite another seat being on Hold. Under ALL, every required seat
+  still needs an explicit approval.
+- `SEQUENTIAL`: activate and notify ONLY the current step. If that
+  approver selects Hold, **the next step does NOT start**. Only a
+  valid approval of the current step advances and issues email links
+  to the next step. A denial terminates under current 1.0 rules.
+- `HELD`: a reversible decision for that seat within the original
+  deadline; it never authorizes execution. While delegation remains
+  valid, either the original assigned approver or an eligible delegate
+  may later Approve or Deny with their OWN independently issued
+  current intent; neither can add a second vote for the same seat.
+  Other seats stay unaffected.
+- `APPROVED` / `DENIED` final decisions consume their selected
+  intent and revoke ALL remaining unused choices for that SAME
+  approval seat, including the original recipient's and delegated
+  recipient's links. Other seats remain eligible only while the
+  quorum/stage is still open. No duplicate vote from original plus delegate.
+
+**Accepted non-exclusive delegation (owner decision):** throughout an
+active, non-revoked delegation window, the original assigned approver
+and the designated delegate **both remain eligible to decide for the
+same single approval seat**, using independently generated recipient-
+specific links and 4-digit email codes. This never creates a second
+seat or raises the approval quorum. The **first valid terminal
+decision** (Approve or Deny) wins for that seat, atomically and
+exactly once; concurrent or later conflicting decisions by the
+other actor fail with a safe already-decided result and no new
+outbound business effect. A provisional Hold may be superseded
+by either eligible party before the deadline. Delegation expiry
+or revocation invalidates only the delegate's remaining authority,
+not the original assigned approver's valid right to decide.
+Always revalidate delegation/window/approval-step/assignment epoch
+at final confirmation. Audit original seat, link recipient
+(original or delegate), method/assurance and independently verified
+person (if established) **separately**; receiving a forwarded
+email never proves the named recipient personally acted.
+
+Reassignment, delegation, escalation, account disablement and revocation
+recompute CURRENT eligible seat/actor, revoke unauthorized issued
+links, and independently notify new eligible recipients. Pre-G10A
+unsealed approval invitations queued before such changes must be
+revalidated against current eligible approvers/delegates and registered
+mailbox addresses at dispatch, including historical rows lacking
+recipient metadata; obsolete destinations must be superseded. An
+unbound G10A sealed decision email never qualifies as legacy mail.
+New delegate mail must not reveal or reuse the original person's
+response links or code. A historical policy snapshot never
+restores permission revoked by a later security event. Current 1.0 semantics **any denial is terminal**; if the
+customer wants configurable denial thresholds or global Hold veto,
+that is a separate explicit product design decision, not implicit
+in this accepted Hold model.
+
+**Accepted configurable Deny reason (owner decision):** each approval
+policy version defines `denial_reason_required: boolean` (default
+`false`, i.e. optional). Administrators may set it to `true` to
+require a bounded nonblank explanation whenever the final choice is
+Deny, including loginless EMAIL_PIN and delegated decisions.
+UI validation and server-side final-confirmation POST validation
+must enforce the effective snapshotted policy; a missing/blank
+required reason does not consume the intent or record a denial.
+When disabled, Deny must succeed without a reason; an optional
+provided reason remains in the protected audit event. Changes
+to the policy must not retroactively alter in-flight requests.
+Approve/Hold reason handling is separate and remains governed by
+their existing policy settings, if configured. This does not
+change the any-Deny-is-terminal rule.
+
+### 10.8 Protected decision execution, evidence and recovery (G10A)
+
+**Loginless scoped decision context:** the link's opaque reference
+identifies an *intent*, not a general authenticated Grant user. A
+four-digit PIN is submitted by a protected POST, with CSRF/Origin and
+rate-limit defenses, against that exact intent and assignee
+generation. Only after successful PIN validation may a very short-lived,
+one-use **decision-scoped** confirmation context show the minimum
+required immutable request details and enable the final
+`Confirm Approve` / `Confirm Hold` / `Confirm Deny` POST.
+Before PIN validation the page shows a generic request notice and
+preselected action, not internal asset names or requester details.
+The confirmation context authorizes no normal request:read,
+administrator or grant:consume capabilities and cannot select
+a different decision/target. A customer-required OTP or MFA gate
+is evaluated before final decision commit.
+
+**Decision preflight API contract:** opening the scoped link always remains
+anonymous and read-only (`landing_requires_login=false`). The
+`requires_login` flag describes the requirements to **complete the final
+decision**, not to open the link: it is true if the current trusted
+verification minimum is `EMAIL_PIN_PLUS_MFA`; same-mailbox extra OTP is
+represented separately by `requires_additional_email_otp` and is not login
+or MFA. Both the anonymous intent GET and the successful PIN verification
+response report these flags using the current effective policy/minimum. A
+later administrative tightening can change the reported requirement;
+the server still rechecks it atomically at final confirmation. GET/HEAD
+must neither expose private request details nor issue/consume challenges.
+
+**Atomicity:** one protected decision transaction rechecks the
+current assignment epoch, exact action, selected outcome, live
+request status, deadline, appropriate verification and policy
+threshold. It commits an append-only decision event, current seat
+vote, consumed intent and sibling revocation, plus any notification
+outbox effects atomically. Concurrent conflicting responses cannot
+both win; repeat POST/replayed link is harmless. Ordinary GET/HEAD
+must be side-effect-free even if the *existing request-detail GET*
+currently runs expiry maintenance; use separate maintenance/POST
+for lifecycle mutation.
+
+**Auditable identity limits:** always preserve (a) assigned
+recipient/approval seat and which independently issued original/
+delegate mailbox link was used, (b) actual verified account identity
+**only when** account/SSO/MFA step-up occurred, (c) otherwise
+`actor_assurance=EMAIL_LINK_PIN` with `verified_person_id=null`,
+(d) represented/delegated assignment when present, (e) specific
+action hash, link/issuance ID, decision outcome and time.
+For the default EMAIL_PIN option the audit statement must say
+"confirmed using access to the assigned recipient's email" rather
+than asserting that a named human identity was cryptographically
+verified. Users forwarding the email expose BOTH the link and PIN;
+they can act as the recipient unless the policy requires an
+independent identity step-up. Customer UI must explain the risk
+truthfully. Shared mailboxes cannot prove individual authorship.
+
+**Sensitive outbound mail:** four-digit codes intentionally appear
+in the delivered message, but must be sealed/encrypted in any
+pending SMTP outbox/persistence/backup or materialized securely
+at delivery time, never persisted as plaintext approval-message
+secrets. Send mobile-friendly HTML action buttons with equivalent
+plain-text links. Never put codes in URLs, tracking pixels, third-
+party referers, analytics or audit. Protect origin and
+referrer headers, link preview, email forwarding, SMTP retries
+and backup restore. Admin template previews/test emails must use
+non-authorizing masked data.
+
+**Expiry:** each customer/installation sets the default
+`decision_link_ttl` and may configure a tighter or longer
+per-policy TTL within bounded server-configured safety limits.
+The **out-of-box default maximum link lifespan is seven days**.
+Actual expiry is the *earlier* of request approval deadline and
+issued-at plus the configured TTL. TTL does NOT extend the
+approval request's business deadline. A standard reminder
+reuses still-valid issued links. If the encrypted original
+mail material is missing, it must fail closed and must not
+create a second active link/PIN issuance. If an existing issuance
+has expired or previously been revoked, a routine reminder must
+not create a replacement issuance; only an explicitly authorized
+administrator may reissue. A currently active recipient issuance
+whose registered email address changes is an existing exception:
+the old mailbox link is revoked and fresh protected mail is issued
+only to that recipient's new eligible registered address. A new
+eligible seat or recipient with no prior generation may still
+receive their first issuance. An explicit authorized
+reissue revokes a previous issuance generation and creates
+new links/code; a long-running request may safely reissue
+without silently extending the deadline. Reissue actions and
+why/when/for whom are audited.
+
+**Reminder accounting:** `reminder_count` records a scheduled reminder
+round **only if at least one email was actually queued**; multiple
+approvers in the same round do not consume additional counts. A
+scheduled attempt that queues no message (for example when an active
+issuance has lost its sealed mail source or all issuances are expired)
+must not be logged as `request.reminded` or consume the reminder
+budget. Record a bounded `request.reminder_skipped` audit event and
+advance the next check by the existing reminder interval to prevent
+a hot retry loop. Queued mail is not proof of SMTP transport acceptance
+or actual recipient inbox receipt.
+
+**Recovery and qualification:** encrypted queued mail, one-use
+decision sessions, issued links, revoked links, prior Holds,
+actual actor/evidence and request execution state must survive
+supported upgrade/restore without reauthorizing a superseded
+request, account or token. Real mailbox and browser E2E must
+test at least two distinct recipient accounts in **loginless
+EMAIL_PIN** mode plus protected MFA/OTP test modes, all group
+and sequential Hold rules, security-scanner GET, copied/
+forwarded email limitations, incorrect/expired PIN,
+rate-limit/reissue/expiry, concurrent POST, current
+quorum and separate DataRelay consume/result readback.
+Scripted fixtures remain supplemental to direct Full User E2E.
+
+### 10.9 Accepted policies and open choices (owner 2026-10-08)
+
+| Policy decision | Status / intended behavior |
+| --- | --- |
+| **Default verification** | **ACCEPTED:** `EMAIL_PIN`; distinct answer links, same-email four-digit code, no login, final explicit confirmation. Customer can optionally require a separate OTP or genuine MFA by verified trusted policy risk. |
+| **Parallel Hold** | **ACCEPTED:** Hold is local to the seat; other approvers continue, and ANY_ONE/N_OF_M threshold may complete. ALL waits for all approvals. |
+| **Sequential Hold** | **ACCEPTED:** Hold prevents activation/notification of subsequent steps; only current-step approval advances. |
+| **Link lifetime** | **ACCEPTED:** customer-configurable TTL (customer default and per-policy override), out-of-box maximum seven days, never beyond approval deadline; customer can select a different bounded TTL. |
+| **Identity evidence** | **ACCEPTED SECURITY REALITY:** email-link + same-message PIN proves neither a specific person nor independent MFA; audit preserves assigned recipient and verified actor separately and records EMAIL_LINK_PIN assurance for no-login decisions. |
+| **Deny and reason** | **ACCEPTED:** `denial_reason_required` is a policy-versioned Boolean, default false (optional). A policy may require a bounded nonblank Deny reason, enforced by server and UI on the final confirmation POST. Any Deny still terminates under current 1.0 semantics. |
+| **Delegation** | **ACCEPTED:** original assignee **OR** active authorized delegate may act on the same represented approval seat using separate choice links/codes; first valid terminal decision wins. An existing Hold may be resolved by either. Each seat contributes at most one vote, original stays eligible while delegation is valid, expiry/revocation removes delegate access. Audit the source mailbox link separately from independently verified identity, if any. |
+| **Verification risk defaults** | **CUSTOMER CONTROL:** customer admin may require OTP or fresh identity MFA based on trusted integration/action/asset policies. Requester-provided risk fields cannot downgrade the effective requirement. |
+| **Migration** | Existing in-flight requests retain the neutral authenticated Request Details experience unless a separately authorized compatible upgrade/migration establishes secure link issuance. No retroactive unsafe links. |
+| **1.1 scope** | Email-to-request, arbitrary reply-to-email approval, Outlook actionable cards and open external guest workflow are not silently added to 1.0. The bounded `EMAIL_PIN` no-login **decision-only** flow is a deliberate 1.0 exception, not generic guest account access. |
+
+**Decision closure (2026-10-09):** owner approved per-policy optional
+Deny reason and non-exclusive original-or-delegate approval, both
+with exactly-one-terminal-decision-per-seat semantics. No pending
+business default decision remains in §§10.5–10.9; implementation
+must still verify migration, rate limits, permissions, identity
+assurance and the complete user gates.
+
+**Implementation planning:** G10A-0, backend-only G10A-1/2, and the
+policy-version/extra-email-OTP portion of G10A-3 are implemented in an
+unreleased branch with isolated deterministic tests. Backend-only
+EMAIL_PIN_PLUS_MFA can verify an enrolled Grant account through its current
+authenticated session and a NEW one-use, rate-limited TOTP proof bound to
+that particular email intent and confirmation context. Missing TOTP,
+stale/revoked sessions, unsupported external IdPs and proof replays fail
+closed. This local-account verification is not legal proof of a person's
+identity and is not a verified customer SSO integration. No decision Web UI,
+live external mailbox receipt or direct Full User E2E has passed. Complete
+G10A-3..5 external and user gates remain pending.
+Cross-project Foundation still owns shared Auth UI; the
+no-login Grant decision screen is a Grant-domain scoped surface,
+not a fork of the shared user sign-in UI. The bounded design rationale
+and residual impersonation risk are captured in
+`docs/ADR_EMAIL_PIN_DECISION.md`.
+
+### 10.10 Planned approval-email visual editor (P0-ET, 2026-10-14)
+
+**Planned product target; not implemented by this specification change.**
+The email editor must permit nontechnical administrators to modify message
+wording and bounded visual styles (including button size/color/spacing and
+approved logo/layout) in one block-based Template Sets workflow. Preserve
+all nine notification events and existing administrator scope, CAS,
+Review→Confirm and immutable request/mail snapshot semantics.
+
+The editable design is a versioned, validated Grant JSON document. Only
+allowlisted content/variables/styles/assets are accepted. The server owns
+approval action IDs, generated URLs, current seat, PIN/verification-floor
+instructions, required context, uniqueness and readable canonical localized
+action names. Optional caption text must not replace the action name.
+Protected action blocks cannot be deleted, duplicated, hidden or rebound;
+no raw HTML/JS/CSS/MJML/JSX execution or arbitrary link/recipient editing.
+Bounded presentation changes are permitted; changing authorization semantics
+or security-owned content is not. View Details is a nondeciding navigation
+operation and must retain its separately authorized read-access contract.
+
+Preview, sample test and real delivery use one versioned structured renderer
+for subject, HTML and meaningful plain text. The default EMAIL_PIN workflow
+must not claim that account login is required, and emailed OTP alone is not
+MFA. Preview uses only fake request data, dummy PIN and non-actionable links,
+with zero issuance/outbox/decision side effects. Test mail remains a separate
+exact-saved-revision, current-admin-own-mailbox Review→Confirm operation;
+SMTP acceptance must not be called verified inbox receipt.
+
+A saved draft is not published. Publication shows affected policy use and
+creates an immutable template/layout/locale/asset/renderer revision for
+future requests. Existing request/queued mail/reminder/reissue design
+snapshots remain stable while current revocation and assurance checks stay
+authoritative. Rollback creates a new revision; migration cannot rewrite
+issued capabilities or auto-activate a policy. Approved asset validation,
+sandboxed preview and offline renderer dependency qualification are required.
+
+Foundation owns generic shared UI controls; Grant composes the approval-domain
+editor and owns its schema/backend/renderer. MJML is a preferred PoC candidate,
+React Email a comparison/fallback, not an installed or prequalified dependency.
+See `docs/EMAIL_TEMPLATE_EDITOR_RESEARCH_20261014.md` for competitor evidence,
+ET-0–ET-7 delivery phases and ET-T01–ET-T24 planned acceptance criteria.
+
+### 10.11 Accepted canvas-first refinement (2026-10-14)
+
+Owner accepted the follow-up UI proposal with "Proceed". Implement in the current
+Grant workstream, without another survey or Foundation common UI changes.
+
+- Goal/UX contract: one event selector, readable block outline, central rendered
+  email and a contextual inspector. Selecting a message/button selects editing,
+  never a URL or approval. Keyboard outline offers the same selection. Narrow
+  screens use one canvas and a collapsible inspector, not three squeezed columns.
+- Retain one structured draft, existing renderer/transport, role/CAS/Review->Confirm
+  and immutable snapshots. No marketing platform, arbitrary HTML/CSS/JS, live
+  credentials, SMTP activation, production/release, or Foundation package changes.
+- Rendering boundary: exact HTML remains available in the existing no-script,
+  opaque sandbox. Interactive canvas is an inert allowlisted React projection of
+  that same synthetic server HTML, with stable renderer-owned block markers.
+  Discard scripts/styles/active elements, resource URLs, arbitrary attributes and
+  navigation; never mount raw HTML. Canvas appearance is not mail-client proof.
+- Version/state: introduce a new immutable layout revision only for block markers
+  and optional per-event headings. Preserve all old layout bytes/output hashes;
+  existing designs opt into new canvas layout as an unsaved draft, never silently
+  publish. Subject/body/heading are event scoped; typography/action styling/footer
+  show set-wide scope. Unsupported controls are not shown.
+- Presets/style reset preserve all copy, locale and action bindings. Friendly safe
+  variables insert at the selected compatible field's cursor. Undo/redo tracks the
+  complete draft and is isolated per template. Restore copy confirms event/language.
+- Preview retains the last valid rendering during refresh, visibly stale and
+  unusable as current review evidence. Add synthetic long EN/KO/optional-field
+  scenarios, actionable block-linked errors and collapsed diagnostics.
+- Publish review shows before/after, changed fields/events and authoritative policy
+  impact. Existing/queued request snapshots remain stable; rollback adds a revision.
+- Acceptance: RED->GREEN for copy-preserving presets/reset/history, field insertion,
+  selection/no-navigation/HTML isolation, stale generation, event scope and old
+  renderer preservation; targeted synthetic browser keyboard/390px tests and native
+  CI. Actual authenticated user/client/two-mailbox acceptance is separate, unclaimed.
+
+## 11. User experience standard
+
+Grant follows the DataRelay Product Foundation for shared application identity, semantic
+tokens, authentication presentation, product shell, navigation behavior, account/session
+UX and common System Administration. Grant owns approval-domain pages and adapters; it
+must not fork or independently redesign shared Foundation surfaces.
+
+### 11.1 Home / action center
+
+Home answers **what needs a human to act now?** It is not a SOC/NOC dashboard and does
+not lead with charts.
+
+Priority content:
+
+- needs my decision;
+- overdue or held approval work;
+- notification/delivery failures needing operator attention;
+- approved-but-not-consumed or execution-unknown/failure exceptions;
+- recent requests and direct actions such as New request.
+
+### 11.2 Approval Inbox
+
+The same authenticated, role-filtered saved request worklist must be usable
+at narrow (320/375px) mobile widths without horizontal six-column scanning.
+A mobile card and desktop table must expose the **same authoritative server
+request**, current action kind/exact target, human decision and pending seat
+progress, deadline/escalation, notification-delivery status and separately
+*reported*, not independently verified, external execution state. Neither
+presentation may compute approval lateness from browser time or treat an
+unavailable approval plan as a fictitious 0/1 vote. The mobile row's Open
+request and Preview selection use the existing Request Detail and exact
+selected server-page keys; neither creates or confirms an approval. Any
+Approve/Hold/Deny/Cancel remains subject to the existing separate
+human Review -> Confirm and server-owned identity/MFA/replay policies.
+Changing a viewport never expands account/tenant/integration access.
+
+
+The primary approver view prioritizes work that needs action:
+
+- Needs my decision
+- Overdue
+- Held
+- Delegated to me
+- Recently decided
+
+The approver-specific overdue view is limited to the viewer's currently
+assigned approval seats, including a presently authorized substitute. It uses
+the same server-derived escalation/expired-undecided predicate as Operations;
+requests visible only because the viewer submitted them do not become
+approval tasks. The separate requester-visible historical overdue view stays
+available for follow-up, and the administrative Operations overdue total
+continues to cover all requests. Home's assigned-overdue count and its Inbox
+destination must agree, and a grant that expired **after APPROVED** is not an
+outstanding human approval.
+
+### 11.3 Requester view
+
+Requesters can see:
+
+- requested action;
+- current approval stage;
+- who/which group is waiting;
+- deadlines;
+- comments/questions;
+- notification state;
+- execution state/result;
+- revision history.
+
+### 11.4 Search and filters
+
+Product 1.0 supports filtering/search by:
+
+- request state;
+- policy;
+- requester;
+- approver/group;
+- integration;
+- action type;
+- date range;
+- delivery state;
+- execution state.
+
+### 11.5 DataRelay-family sign-in and application frame
+
+Grant uses Product Foundation Auth UI and Product Shell rather than a product-local
+parallel implementation.
+
+Sign-in follows the DataRelay-family composition:
+
+- the overall sign-in composition is centered in the viewport;
+- product identity/context is on the left and the bounded credential card is on the
+  right on desktop, collapsing to one column on narrow screens;
+- the credential card uses the common `Welcome to DataRelay` /
+  `Please sign in to continue.` framing;
+- username/password, password visibility, MFA/recovery, validation and account guidance
+  use the shared Foundation interaction contract;
+- DataRelay documentation, quick-start, release, website and support resources may be
+  exposed through the shared auth frame;
+- Grant-specific product identity and copy explain approval control without changing
+  authentication authority.
+
+The mature DataRelay Control sign-in/shell is a DataRelay-family reference for
+composition and density, not source authority to copy. Foundation remains the shared UI
+authority and Grant remains the authentication/session/state authority behind its typed
+adapter.
+
+The desktop Product Shell uses the Foundation responsive sidebar baseline (260px
+expanded / 57px collapsed), grouped task navigation, product identity at the top and the
+signed-in user/account actions at the bottom. Mobile navigation is off-canvas and must
+preserve focus/keyboard behavior.
+
+## 12. Application and administrator information architecture
+
+Canonical primary navigation:
+
+~~~text
+User workspace
+├── Home
+├── New request
+├── My approvals
+├── My requests
+└── Delegations
+
+Approval administration          # administrator only
+├── Workflow setup
+├── Approver groups
+├── Integrations
+├── Notification templates
+├── Approval policies
+└── All requests
+
+System administration            # administrator only
+├── Operations
+├── Audit explorer
+└── System management
+
+Signed-in user
+└── Account & Security
+~~~
+
+User workspace represents day-to-day requester/approver goals. Approval administration
+contains reusable configuration owned by administrators. System administration contains
+platform/operations controls. Account security, theme and sign-out remain with the
+signed-in user in the Foundation shell. New request is a permanent user-workspace task
+because selecting a published Request type is now the canonical start of requester work.
+
+Canonical Administration content remains task-oriented:
+
+~~~text
+Administration
+├── System health / information
+├── Accounts
+├── Audit history
+├── Mail delivery test
+└── Lifecycle / recovery guidance
+~~~
+
+The Administration landing surface uses Product Foundation capability declarations and
+common administration components. Unsupported backup/restore/TLS/upgrade mutations are
+not made interactive merely to fill a settings page.
+
+#### Local password policy
+
+Grant local-account password creation and password changes use one server-authoritative rule: **8 or more characters with at least one uppercase letter, one number, and one special character**. Client forms mirror the rule for early validation but never replace server enforcement. Existing stored credentials are not forcibly invalidated by a policy update; the rule applies when a password is created or changed.
+
+### Control-reference System Management parity (owner requirement, 2026-10-14)
+
+The accepted *target* is the first-party Control Administration screenshot's nine
+functioning task destinations: HTTPS, User Management, Password Management, Display
+timezone, Network, Retention, Backup & Import, Audit and System Health. Grant's
+additional Mail & Notifications tasks remain product-specific. Matching the
+Foundation task catalog alone **does not** satisfy this requirement: every
+supported View/Manage task must open a real Grant-authorized functional destination.
+
+Grant must reuse the Foundation family administration UI/typed contracts, while
+providing separately reviewed **Grant-owned** identity, deployment, persistence,
+audit and rollback adapters. Display timezone requires an authenticated user
+override/platform default contract with UTC-safe rendering. TLS/certificate,
+network/listener apply, platform password policy, retention scheduler/deletion,
+and backup/import/restore are separate security-, host- or data-sensitive
+capabilities, never enabled simply to copy Control badges. Each mutation requires
+role-enforced server validation, exact Review -> Confirm, concurrency safeguards,
+auditable durable receipts and appropriate recovery/rollback. Host security,
+network/listener changes, credential policy and destructive data operations need
+separate owner authorization for the actual target and effects.
+
+Foundation's shared `AdministrationHub` and the currently pinned Foundation review panels are
+presentation and/or pure library code; their presence does not prove product
+backend installation. Existing Grant self-service account password/MFA, admin
+accounts, audit, health and Draft-only configuration portability should be
+reused before designing new APIs. The requirement's current gap matrix,
+priority and measured consumer state are
+`docs/FOUNDATION_SYSTEM_MANAGEMENT_PARITY_20261014.md`.
+
+On a narrow viewport (up to 600px), Grant's product-owned Administration task
+view should show the selected task separately from the Foundation task catalog,
+with a clearly labeled return action and restored keyboard focus. The shared
+Foundation component remains responsible for task hierarchy, capability
+availability and its own component semantics. Grant may lay out already loaded
+administrator-scoped account and audit projections as task-first cards on
+mobile, without increasing data scope or adding an audit API.
+
+Creating a local account and disabling a saved account are two separate
+privileged actions, each requiring a review of the exact proposed account,
+role and purpose before a distinct Confirm POST. Account creation may never
+render an initial password in the review panel or save it in the review
+intent. Changing a draft invalidates its review. Disabling the current
+administrator's own account is not offered; the server's existing
+administrator-session/target checks remain authoritative. Any ambiguous
+account-creation or disable POST stays latched for reconciliation rather
+than being automatically retried. A client-side fresh account GET checks
+for stale reviewed details, but does **not** replace an atomic server-side
+precondition or prove external identity. Requiring explicit Confirmation
+does not confer new administration permissions or automatically approve
+or execute a human-gated business action.
+
+Configuration detail:
+At 320/375px the Grant-owned saved Approver groups directory may present
+its existing administrator-scoped groups as cards instead of a horizontal
+wide table. Both views must share the exact current search/filter results
+and member account-coverage projection: saved member IDs are **not** proof
+of current reviewer-seat eligibility; unavailable and disabled accounts
+stay visible as warnings rather than being treated as qualified members.
+Review group must reuse the original server-versioned group edit and explicit
+confirmation, with no new write path, and keyboard focus must be restored
+on list/detail navigation. Viewport choice must never change permissions.
+
+
+~~~text
+Approval policies
+├── Policies
+├── Draft / Test / Activate
+├── Preview & Test
+└── Version / Change History
+
+Notifications
+├── Template Sets
+├── Delivery Health
+└── Branding
+
+Integrations
+├── DataRelay
+├── Stellar Cyber
+└── Credentials / Health
+~~~
+
+Do not grow top-level navigation for every small setting and do not turn configuration
+pages into an NOC-style wall of permanently expanded panels.
+
+## 13. Policy administration standard
+
+The policy editor is organized as:
+
+1. **General** — name, description, lifecycle/version.
+2. **Applies To** — integration/action/tenant/environment/severity/risk.
+3. **Approval** — mode, steps, users/groups, reason requirement and decision
+   verification mode (G10A, when implemented).
+4. **Timing** — deadline, reminder, escalation, delegation behavior.
+5. **Execution Grant** — validity and action binding.
+6. **Notifications** — template set and event enablement.
+7. **Preview & Test** — policy resolution, approvers, rendered notifications and
+   isolated test request.
+8. **History** — versions, changes and activation events.
+
+Live policy activation and disabling an active policy require a separate,
+explicit administrator confirmation in the policy detail. The first action
+only stages a review with the exact policy identity, draft version and active
+version; it does not submit a lifecycle API mutation. Confirmation first
+refetches the current policy and refuses changed identity, version, state or
+active lineage before sending the existing authorized transition POST. Cancel
+and back are nonmutating, and current server-side lifecycle/RBAC checks remain
+the authority.
+Saved-versus-editor policy integrity is also required for lifecycle actions.
+An unsaved edit to any policy field, including group/quorum, notification
+template, action selector, timings, Deny-reason switch and verification
+mode/link TTL, must prevent Testing, Activate, Disable and Clone from acting
+on an older saved version without operator awareness. The interface shows
+an explicit unsaved-state warning with Save Draft and nonmutating Discard.
+Revert-to-saved values restores eligibility; the final action must refetch
+the same server version and live lineage, and missing versioned security
+fields fail closed. This client-side guard does not replace server RBAC,
+policy lifecycle, action binding, or transactional authorization.
+ Existing requests retain their original policy snapshots.
+
+## 14. Operational dashboard
+### Narrow-screen exception and connection tasks
+
+The product-owned Operations Exception Worklist and Integrations
+Registered connections directory may render read-only task cards on
+small mobile viewports while preserving their exact current
+administrator-scoped server rows and desktop tables. An unknown
+exception count must never become a false zero. An integration callback
+origin or transport-accepted diagnostic is not proof of trusted
+external business execution; disabled connections cannot initiate a
+diagnostic. The original server-authorized queue actions and separate
+explicit Review -> Confirm for any connection test stay binding,
+regardless of viewport. No new token, account, tenant, approval or
+executor authority is granted by this responsive presentation.
+
+
+Mobile operational summaries must preserve the same administrator-only
+backend observations, not derive new permissions or incident severity
+from viewport/UI transformations. Compact email decision counters must
+distinguish issuance/link/OTP activity from independent named-person
+verification or MFA; absent data stays unavailable. Integration status
+cards may expose the existing exact diagnostic navigation, but callback
+HTTP transport acceptance is never independent confirmation of a
+protected business action. Desktop tables and mobile cards are alternate
+presentations of one role-scoped saved summary, not separate data queries
+or new execution/diagnostic endpoints.
+
+
+Grant includes a small operational dashboard, not a BI product.
+
+Required operational indicators:
+
+- pending approvals;
+- overdue approvals;
+- held requests;
+- average and median elapsed approval time with final-decision sample count;
+- denied/expired/cancelled counts;
+- delivery failures;
+- approved but not consumed;
+- execution UNKNOWN;
+- execution failures;
+- integration health / last successful callback.
+
+Every request-state metric links to the underlying requests.
+
+The administrator Operations workspace also displays the existing protected
+email-decision lifecycle counters: active, locked, expired, revoked and consumed
+per-recipient link issuances; active, locked and verified separately requested
+email OTP challenges; and open requests with a fresh independent MFA policy.
+These are **aggregate observations**, not request/recipient identifiers or an
+action queue. They must never present PIN/link/OTP success as verification of a
+named human, nor same-mailbox OTP as independent MFA. The UI offers no
+reissue, unlock, decision, replay or other privileged mutation. Missing or
+invalid counters must display as unavailable, never silently as zero.
+Existing role-checked G7 request exception drill-down remains unchanged.
+
+## 15. Integration standard
+
+Integrations are scoped identities, not generic arbitrary connectors.
+
+Required properties:
+
+- explicit integration identity;
+- allowed source/tenant;
+- registered callback destinations;
+- least-privilege credentials;
+- separate producer and executor/reporting scopes where practical;
+- connection test;
+- last success/failure and health;
+- credential metadata and revocation;
+- idempotent external request identity;
+- correlated outcome events.
+
+DataRelay integration must enforce Grant immediately before the actual product-owned
+operation. Stellar integration must use an actual supported outgoing responder and
+actual receiving path; echo fixtures are never completion evidence.
+
+## 16. Audit and evidence standard
+
+Audit event lists must remain legible on narrow mobile viewports without
+changing the administrator's role-scoped saved query or bounded export.
+Grant may show each already-authorized event as a read-only compact card
+instead of the desktop table, with exact recorded time, action and actor
+and a separately disclosed sanitized metadata section. A request-chain
+inspection action must remain tied to the original explicit request ID;
+system-only events cannot be promoted to a request and no approval or
+independently verified execution may be inferred from an event view.
+Changing viewport must never fetch additional audit history or bypass
+the original authenticated filtering, backend RBAC and 1,000-row export
+bounds. Browser and actual-user qualification remain separate gates.
+
+
+The audit trail links:
+
+`request -> matched policy/version -> approval plan -> human decisions/comments ->
+notification delivery -> execution grant -> consumer commitment -> reported result`
+
+For G10A email decisions, audit evidence additionally distinguishes the original
+assigned email recipient from the **authenticated person who submitted the
+final decision**, any authorized delegation, the selected answer/link binding,
+request/step/revision, verification result and decision timestamp. Audit views
+must answer **who actually approved or denied which exact action, and when**
+without revealing raw action-link references or challenge secrets.
+
+Audit records are append-oriented product evidence. Administrative policy/template/
+group/delegation changes are also audited.
+
+Exports must distinguish current authoritative state from historical events.
+
+## 17. Security standard
+
+Product 1.0 requires:
+
+- explicit human-intent decisions with policy-appropriate assurance:
+  authenticated account decisions or tightly scoped no-login email-link
+  plus four-digit-PIN confirmation; audit must never mislabel the latter
+  as verified individual identity;
+- GET/HEAD/email-prefetch paths never mutate approval state or send challenges;
+- email-only verification codes are not independent MFA;
+- MFA capability;
+- scoped integration credentials;
+- CSRF/session protection;
+- no secret values in notifications/audit;
+- configured destinations only;
+- TLS outside explicit loopback development;
+- bounded payloads/rate limits;
+- current-authority checks on privileged mutations;
+- policy/action snapshot integrity;
+- conservative backup/restore reconciliation, including fail-closed operator `check` and
+  `backup` when the original database is absent or structurally invalid; health
+  inspection must not initialize/migrate live state and pre-upgrade backups must
+  preserve the original schema and data before an explicitly planned upgrade;
+- explicit credential revocation;
+- fail-closed behavior when Grant authority is unavailable.
+
+## 18. Configuration portability
+
+Administrators can export/import approval-policy and notification-template
+configuration using a versioned, validated format.
+
+Import never imports raw credentials, passwords, tokens, TOTP material or installation
+encryption keys.
+
+Conflict/preview is shown before applying imported configuration.
+
+### 18.1 Version-2 reviewed Draft import (owner-accepted 2026-10-09)
+
+Grant's legacy **schema-v1 metadata manifest remains read-only and non-importable**.
+A separate bounded `grant.configuration` version-2 export carries **complete,
+validated** approval-policy settings and all nine notification event
+subject/body templates. Only opaque source integration, approver and group IDs
+are included to support review. It excludes integration callback destinations,
+SMTP configuration, API tokens, passwords, recovery/TOTP material, installation
+keys and historical request/execution state. Message text is included and must
+be treated as administrator-sensitive export content; neither an automatic
+secret detector nor credential migration is implied.
+
+A destination administrator supplies explicit source-ID → **already existing
+and enabled** local integration/user/group mappings. Integration kind and
+tenant must match, and the effective local approver plan, group membership,
+quorum, referenced templates and policy settings must validate against
+ordinary Grant rules. Unknown, revoked, colliding, incomplete or stale
+references fail closed. Preview is a read-only calculation: it returns
+conflicts plus a source-and-destination-bound digest, **not** permission to
+mutate. An explicit second `IMPORT_DRAFTS_ONLY` confirmation and the
+unchanged reviewed digest are required at import time; all mappings,
+references and name conflicts are rechecked under a single write transaction.
+
+An import creates only **new** template sets and new approval policies,
+without overwriting any existing record, setting active defaults or
+modifying integrations/users/groups/credentials. Every imported policy is
+inserted at version 1 in `DRAFT` with `profiles.enabled=0`, regardless of
+the source lifecycle. No mail, webhook, decision, Grant consume or protected
+execution may be triggered by import. Only the **separate existing
+administrator-owned** Testing → Activate flow may subsequently enable a
+verified policy. A failed batch leaves no partial templates or policies.
+The operation emits bounded administrative audit evidence.
+
+## 19. Product 1.0 scope boundary
+
+Product 1.0 intentionally does **not** become:
+
+- a generic workflow canvas;
+- an arbitrary script runner;
+- a SOAR playbook engine;
+- an IAM provisioning platform;
+- a ticketing/case-management replacement;
+- a data-transformation engine;
+- a full enterprise notification platform;
+- a billing or multi-tenant SaaS control plane;
+- an AI system that infers or auto-grants human approval.
+
+Future AI assistance may explain, summarize or preview policy effects but must never
+silently replace required human authorization.
+
+## 20. Conformance rules
+
+A capability is product-conformant only when:
+
+- its authoritative state and transitions are explicit;
+- permission boundaries are enforced server-side;
+- UI does not simulate unavailable backend behavior;
+- existing-request semantics survive later policy/template changes;
+- failure and ambiguous external outcomes remain visible;
+- deterministic tests cover authorization and state transitions;
+- user-surface behavior is verified where user-facing;
+- external integration claims have actual external evidence.
+
+## 21. Competitive design references
+
+The product direction intentionally borrows proven interaction patterns, not
+vendor-specific implementation or branding.
+
+### 21.1 Work and information-architecture references
+
+- Microsoft Entra My Access — landing overview emphasizes pending requests/reviews and
+  separates request history, approvals and reviews by user task;
+- ServiceNow — approvals are handled as an explicit user work queue with request detail
+  as the decision context;
+- Jira Service Management — incoming work is organized as searchable/sortable queues
+  optimized for triage rather than dashboard watching;
+- Okta Identity Governance — end-user request/catalog work is separated from
+  administrator governance configuration;
+- Apono — access-flow administration emphasizes discoverable policy lists, filters,
+  duplicate/reuse and explicit active/inactive state;
+- Teleport — access requests are request-first, bounded and temporary, with web flows
+  organized around the resource/role being requested;
+- Opal — request/security configuration is attached to focused resource detail rather
+  than a permanently expanded global settings canvas;
+- ConductorOne — end-user Home/tasks/request work is separated from administrator
+  applications, policies, connectors, users and settings;
+- SailPoint — approval context and reminder/escalation behavior are treated as managed
+  approval configuration rather than monitoring widgets.
+
+### 21.2 Approval and notification behavior references
+
+- ApproveThis — workflow testing, publish lifecycle and routing preview;
+- ApprovalMax — approval matrix and operational approval notifications;
+- StrongDM — separation of access conditions from approval workflow;
+- Microsoft Power Automate — sequential/parallel/custom approval patterns.
+
+These references do not expand Grant into IAM provisioning, a generic workflow engine,
+ticketing, SOAR or a monitoring product. Grant remains governed by this Product
+Standard, its own server-enforced contracts and tested implementation. The detailed
+reference links and accepted layout implications are maintained in
+`docs/UX_INFORMATION_ARCHITECTURE.md`.

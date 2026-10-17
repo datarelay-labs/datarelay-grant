@@ -1,0 +1,91 @@
+"""Traceability structure is not permission to claim implemented or accepted UI."""
+import copy
+import json
+import runpy
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+CHECKER = runpy.run_path(str(ROOT / "tools/validate_competitor_ui_wbs.py"))
+LEDGER = json.loads((ROOT / "docs/COMPETITOR_UI_EVIDENCE_20261014.json").read_text())
+TEXT = (ROOT / "docs/COMPETITOR_UI_IMPLEMENTATION_WBS_20261014.md").read_text()
+CROSSWALK = json.loads((ROOT / LEDGER["original_crosswalk_path"]).read_text())
+WBS_IDS = {row["id"] for row in LEDGER["tasks"]}
+
+
+def test_current_inventory_and_negative_false_pass_cases():
+    result = CHECKER["validate"](TEXT, LEDGER)
+    assert result["registered_tasks"] == 68
+    assert result["product_completion"] == "OPEN"
+    assert CHECKER["self_test"](TEXT, LEDGER) == 5
+
+
+def test_all_original_exact_ids_and_wording_are_traceable_not_executed():
+    assert CHECKER["validate_crosswalk"](CROSSWALK, WBS_IDS) == {
+        "et_checks": 24, "original_user_scenarios": 121, "historical_gap_rows": 9,
+        "structured_findings": 12, "original_ui_audit_rows": 7, "historical_narrative_atoms": 32,
+        "s02_mandatory_groups": 16, "historical_traceability_denominator": 241,
+        "traceability": "PASS", "product_acceptance": False,
+    }
+    assert CROSSWALK["all_historical_narrative_requirements_reconciled"] is True
+    assert CROSSWALK["remaining_reconciliation"] == []
+
+
+@pytest.mark.parametrize("case", [
+    "dropped_et", "duplicate_user", "changed_wording", "unknown_wbs",
+    "changed_source_hash", "wrong_source_line", "fake_acceptance", "deferral_removed",
+    "audit_dropped", "audit_changed",
+])
+def test_crosswalk_rejects_omission_tampering_and_false_acceptance(case):
+    changed = copy.deepcopy(CROSSWALK)
+    if case == "dropped_et":
+        changed["et_checks"].pop()
+    elif case == "duplicate_user":
+        changed["original_user_scenarios"][1] = changed["original_user_scenarios"][0]
+    elif case == "changed_wording":
+        changed["et_checks"][0]["criterion_verbatim"] = "Synthetic preview is full acceptance"
+    elif case == "unknown_wbs":
+        changed["original_user_scenarios"][0]["wbs"] = ["U0.99"]
+    elif case == "changed_source_hash":
+        changed["sources"][0]["sha256"] = "0" * 64
+    elif case == "wrong_source_line":
+        changed["et_checks"][0]["line"] = 1
+    elif case == "fake_acceptance":
+        changed["product_acceptance"] = True
+    elif case == "audit_dropped":
+        changed["original_ui_audit_rows"].pop()
+    elif case == "audit_changed":
+        changed["original_ui_audit_rows"][0]["source_row_verbatim"] = "Reduced scope"
+    else:
+        changed["historical_structured_findings"][-1]["disposition"] = "MANDATORY"
+    with pytest.raises(ValueError):
+        CHECKER["validate_crosswalk"](changed, WBS_IDS)
+
+
+def test_mapped_requirement_does_not_satisfy_product_exit_gate():
+    with pytest.raises(ValueError, match="UI_COMPLETION_OPEN"):
+        CHECKER["validate"](TEXT, LEDGER, require_complete=True)
+
+
+def test_development_rollup_is_complete_and_separate_from_acceptance():
+    completion=LEDGER["development_completion"]
+    assert completion["status"]=="PASS"
+    assert completion["scope"]=="U0-U8"
+    assert completion["total_rows"]==64
+    assert completion["source_resolved"]==64
+    assert completion["development_deployment_resolved"]==64
+    assert any(row["status"]=="OPEN" for row in LEDGER["tasks"])
+
+
+def test_each_u0_u8_row_is_development_pass():
+    feature_rows=[row for row in LEDGER["tasks"] if not row["id"].startswith("U9.")]
+    assert len(feature_rows)==64
+    assert all(row["development_status"]=="PASS" for row in feature_rows)
+    assert LEDGER["development_completion"]["milestones"]=={f"U{i}":"PASS" for i in range(9)}
+
+
+def test_u9_is_explicitly_closure_not_feature_development():
+    closure=[row for row in LEDGER["tasks"] if row["id"].startswith("U9.")]
+    assert len(closure)==4
+    assert all(row["development_status"]=="NOT_APPLICABLE_CLOSURE_GATE" for row in closure)

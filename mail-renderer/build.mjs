@@ -1,0 +1,77 @@
+/** Build trusted shells only. User content never enters MJML or Node. */
+import mjml from 'mjml';
+import {writeFileSync, readFileSync, existsSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import assert from 'node:assert/strict';
+
+export const options = {validationLevel: 'strict', ignoreIncludes: true,
+  useMjmlConfigOptions: false, minify: false, beautify: false, fonts: {}};
+const trustedLogo = '<mj-image css-class="grant-mail-block-brand" src="@@GRANT_LOGO_SRC@@" alt="@@GRANT_BRAND@@" width="137px" align="center" padding="0 0 12px"/>';
+export async function compile(source) {
+  assert(!/<mj-include|<mj-image|<mj-font|<mj-style|<mj-raw/i.test(source.replace(trustedLogo,'')));
+  const result = await mjml(source, options);
+  assert.equal(result.errors.length, 0);
+  assert(Buffer.byteLength(result.html) <= 32768);
+  assert(!/<script|<form|@import|<link\b/i.test(result.html));
+  return result.html;
+}
+export function source(decisions, revision=1, logo=false, optionalCount=0) {
+  const mark = id => revision >= 3 ? ' css-class="grant-mail-block-'+id+'"' : '';
+  const actions = decisions ? ['APPROVE','HOLD','DENY','DETAILS'] : ['DETAILS'];
+  const bodyColor=revision>=5?'#111828':'#111827',mutedColor=revision>=5?'#334156':'#334155';
+  const status=revision>=5?`<mj-text css-class="grant-mail-event-status" font-family="Arial, sans-serif" font-size="14px" color="${mutedColor}" font-weight="700">@@GRANT_EVENT_LABEL@@</mj-text>\n`:'';
+  const optional=revision>=7?Array.from({length:optionalCount},(_,index)=>`<mj-text css-class="grant-mail-block-content_slot_${index+1}" font-family="Arial, sans-serif" font-size="16px" line-height="1.6" color="${bodyColor}">@@GRANT_OPTIONAL_${index+1}@@</mj-text>`).join('\n'):'';
+
+  return `<mjml><mj-head><mj-title>@@GRANT_SUBJECT@@</mj-title>${revision>=4?'<mj-preview>@@GRANT_PREHEADER@@</mj-preview>':''}</mj-head>
+<mj-body width="600px" background-color="${revision>=5?'#fefdfc':'#f3f4f6'}"><mj-section background-color="${revision>=5?'#fcfdfe':'#ffffff'}" padding="23px"><mj-column>
+${logo&&revision>=6?trustedLogo+'\n':''}<mj-text${mark("brand")} font-family="Arial, sans-serif" font-size="15px" color="${mutedColor}">@@GRANT_BRAND@@</mj-text>
+${status}<mj-text${mark("heading")} font-family="Arial, sans-serif" font-size="24px" color="${bodyColor}" font-weight="700">@@GRANT_TITLE@@</mj-text>
+<mj-text${mark("message")}${revision>=2?' align="right"':''} font-family="Arial, sans-serif" font-size="19px" line-height="1.6" color="${bodyColor}">@@GRANT_BODY@@</mj-text>
+${optional}${optional?'\n':''}<mj-text${mark("request_context")} font-family="Arial, sans-serif" font-size="16px" line-height="1.6" color="${bodyColor}">@@GRANT_CONTEXT@@</mj-text>
+${decisions&&revision<5 ? `<mj-text${mark('verification')} font-family="Arial, sans-serif" font-size="16px" line-height="1.6" color="${bodyColor}">@@GRANT_GUIDANCE@@</mj-text>` : ''}
+${actions.map((a,i)=>`<mj-button${mark("actions")}${revision>=2?' width="100%"':''} font-family="Arial, sans-serif" font-size="17px" font-weight="700" line-height="24px" inner-padding="13px 29px" padding="9px 0" border-radius="7px" background-color="${['#166534','#854d0e','#991b1b','#334155'][decisions?i:3]}" color="#ffffff" href="@@GRANT_${a}_URL@@" target="_blank">@@GRANT_${a}_LABEL@@</mj-button>`).join('')}
+${decisions ? `${revision>=5?`<mj-text${mark('verification')} font-family="Arial, sans-serif" font-size="16px" line-height="1.6" color="${bodyColor}">@@GRANT_GUIDANCE@@</mj-text>`:''}<mj-text${mark('verification')} font-family="Arial, sans-serif" font-size="18px" line-height="1.6" color="${bodyColor}">@@GRANT_PIN@@</mj-text>` : ''}
+<mj-text${mark("footer")} font-family="Arial, sans-serif" font-size="14px" line-height="1.6" color="${mutedColor}">@@GRANT_FOOTER@@</mj-text>
+</mj-column></mj-section></mj-body></mjml>`;
+}
+function slots(html, revision=1) {
+  const pairs = {'font-size:19px':'font-size:@@GRANT_FONT_SIZE@@px',
+    'font-size:17px':'font-size:@@GRANT_BUTTON_FONT@@px',
+    'padding:13px 29px':'padding:@@GRANT_BUTTON_Y@@px @@GRANT_BUTTON_X@@px',
+    'padding:9px 0':'padding:@@GRANT_GAP@@px 0',
+    'border-radius:7px':'border-radius:@@GRANT_RADIUS@@px',
+    '#166534':'@@GRANT_APPROVE_COLOR@@', '#854d0e':'@@GRANT_HOLD_COLOR@@',
+    '#991b1b':'@@GRANT_DENY_COLOR@@'};
+  for (const [value, slot] of Object.entries(pairs)) html=html.replaceAll(value,slot);
+  if(revision>=2) html=html.replaceAll('text-align:right','text-align:@@GRANT_ALIGN@@')
+    .replaceAll('display:inline-block;background:','display:block;background:')
+    .replaceAll('mso-padding-alt:13px 29px','mso-padding-alt:@@GRANT_BUTTON_Y@@px @@GRANT_BUTTON_X@@px');
+  if(revision>=6)html=html.replaceAll('137px','@@GRANT_LOGO_WIDTH@@px').replaceAll('width="137"','width="@@GRANT_LOGO_WIDTH@@"');
+  if(revision>=7)for(let index=1;index<=3;index++)html=html.replaceAll('grant-mail-block-content_slot_'+index,'grant-mail-block-@@GRANT_OPTIONAL_'+index+'_ID@@');
+  if(revision>=5)for(const [value,slot] of Object.entries({'#fefdfc':'@@GRANT_PAGE_BG@@','#fcfdfe':'@@GRANT_CONTENT_BG@@','#111828':'@@GRANT_TEXT_COLOR@@','#334156':'@@GRANT_BRAND_COLOR@@'}))html=html.replaceAll(value,slot);
+  if(revision>=4){
+    const metadata=/(<div\b[^>]*)(>\s*@@GRANT_PREHEADER@@\s*<\/div>)/g;
+    assert.equal(Array.from(html.matchAll(metadata)).length,1);
+    html=html.replace(metadata,'$1 class="grant-mail-preheader"$2');
+  }
+  return html.replace(/<html\b/, '<html lang="@@GRANT_LOCALE@@"');
+}
+for (const revision of [1,2,3,4,5,6,7]) {
+  const layouts = {decision:slots(await compile(source(true,revision)),revision),
+    notice:slots(await compile(source(false,revision)),revision)};
+  if(revision>=6){layouts.decision_logo=slots(await compile(source(true,revision,true)),revision);
+    layouts.notice_logo=slots(await compile(source(false,revision,true)),revision);}
+  if(revision>=7)for(let count=1;count<=3;count++){
+    layouts['decision_optional_'+count]=slots(await compile(source(true,revision,false,count)),revision);
+    layouts['notice_optional_'+count]=slots(await compile(source(false,revision,false,count)),revision);
+    layouts['decision_optional_'+count+'_logo']=slots(await compile(source(true,revision,true,count)),revision);
+    layouts['notice_optional_'+count+'_logo']=slots(await compile(source(false,revision,true,count)),revision);
+  }
+  const artifact = {contract_version:1, renderer:'mjml@5.4.1', layout_revision:revision, layouts};
+  const output = JSON.stringify(artifact,null,2)+'\n';
+  const path = new URL('../grant/email_layout_v'+revision+'.json', import.meta.url);
+  if (process.argv.includes('--check') || revision<=6&&existsSync(path)) assert.equal(readFileSync(path,'utf8'), output);
+  else writeFileSync(path, output);
+  console.log(JSON.stringify({artifact:'grant/email_layout_v'+revision+'.json',bytes:Buffer.byteLength(output),
+    sha256:createHash('sha256').update(output).digest('hex')}));
+}

@@ -1,0 +1,21 @@
+name: Grant release qualification
+
+# Manual qualification only: no tags, deployment, or publication permissions.
+on:
+  workflow_dispatch:
+    inputs:
+      expected_sha:
+        description: Exact reviewed candidate commit (40 lowercase hexadecimal characters)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  release-contract:
+    uses: datarelay-labs/engineering-system/.github/workflows/release-contract.yml@1e12573f5d24f93d5498dea3580f2a87bcb518d6
+    with:
+      expected_sha: ${{ inputs.expected_sha }}
+      phase: qualify
+      profile_path: .engineering/release.yaml

@@ -1,0 +1,15 @@
+{
+  "external_id": "stable-operation-id-not-a-new-random-id-on-retry",
+  "profile_id": "configured-profile-uuid",
+  "title": "Approve the existing product operation",
+  "action": {
+    "kind": "configured.action.kind",
+    "target": "exact-existing-target",
+    "parameters": {}
+  },
+  "source": {
+    "product": "datarelay",
+    "operation_id": "existing-operation-id"
+  },
+  "reason": "Explain purpose and impact"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@datarelay-labs/grant-email-compiler",
+  "version": "1.0.0-dev",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node --max-old-space-size=256 build.mjs",
+    "compare": "node --max-old-space-size=256 compare.mjs"
+  },
+  "devDependencies": {
+    "mjml": "5.4.1",
+    "@react-email/render": "2.1.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-email": "6.11.1"
+  }
+}
