@@ -53,10 +53,26 @@ jobs:
           path: .dev/foundation-source
           token: ${{ secrets.FOUNDATION_READ_TOKEN }}
           persist-credentials: false
-      - name: Prepare exact product and SDK dependencies
+      - name: Resolve the private F31 source HEAD
+        id: f31
+        run: python3 -c 'import json; print("sha=" + json.load(open("web/foundation-f31.lock.json"))["source_head"])' >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: datarelay-labs/datarelay-product-foundation
+          ref: ${{ steps.f31.outputs.sha }}
+          path: .dev/foundation-f31-source
+          token: ${{ secrets.FOUNDATION_READ_TOKEN }}
+          persist-credentials: false
+      - name: Prepare exact product, private F31 source and SDK dependencies
         env:
           GRANT_FOUNDATION_SOURCE: ${{ github.workspace }}/.dev/foundation-source
-        run: bash scripts/checks.sh setup
+        run: |
+          bash scripts/checks.sh setup-api
+          bash scripts/checks.sh setup-node
+          export PATH="$GITHUB_WORKSPACE/.dev/node-runtime/node_modules/.bin:$PATH"
+          npm --prefix .dev/foundation-f31-source ci --no-audit --no-fund
+          python3 tools/prepare_foundation_f31.py --source "$GITHUB_WORKSPACE/.dev/foundation-f31-source"
+          bash scripts/checks.sh setup-web
       - name: Reproduce pinned approval-email shells
         run: bash scripts/checks.sh renderer
       - name: Foundation adapters, types and production web build

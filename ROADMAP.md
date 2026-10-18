@@ -1,5 +1,16 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-19 — Private Product Foundation a8b633 Grant consumer adoption
+
+Owner-directed GRANT-PF-01 isolated candidate work pins the exact private F31
+source and package digests without publishing Foundation binaries in public
+Grant Git. The Web dependency/lock has been updated in a separate development
+branch while RC50 Administration and native Grant security Wheel remain intact.
+GRANT-PF-02..06 host/identity/admin integration and independent product E2E are
+not complete. The original localhost LAB, G12 and deployed preview are preserved.
+
+Canonical design, validation and rollback: `docs/FOUNDATION_A8B633_CONSUMER_ADOPTION_20261019.md`.
+
 
 ## 2026-10-18 — Owner-directed remaining implementation; test-only block does not stop development
 
