@@ -110,6 +110,7 @@ export function resolveGrantAdministrationSelection(
   if (!Object.hasOwn(GRANT_TASKS, selected.id)) return null;
   const contract = GRANT_TASKS[selected.id];
   if (!contract || contract.access !== selected.access || !selected.target) return null;
+  if (contract.access === 'manage' && selected.availability !== 'supported') return null;
   if (selected.target.kind === 'path') {
     return contract.destination.kind === 'route' && selected.target.path === contract.target
       ? contract.destination : null;

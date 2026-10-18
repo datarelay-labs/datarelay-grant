@@ -55,6 +55,10 @@ describe('PF-02 real Grant administration adapter, not a Control authority clone
       'admin',
     )).toBeNull();
     expect(resolveGrantAdministrationSelection(
+      task('core.users', { kind: 'action', actionId: 'grant.accounts' }, 'read_only', 'manage'),
+      'admin',
+    )).toBeNull();
+    expect(resolveGrantAdministrationSelection(
       task('core.users', { kind: 'action', actionId: 'grant.accounts' }, 'supported', 'none'),
       'admin',
     )).toBeNull();
