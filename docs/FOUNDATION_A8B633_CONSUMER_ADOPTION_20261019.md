@@ -69,6 +69,34 @@ Grant cannot mount them truthfully with existing product-native principal and
 capability endpoints. Do not clone or modify shared Foundation UI in Grant.
 Document and reconcile this before a full PF-02 product UI migration.
 
+## PF-04 product-native read-only management evidence (source stage)
+
+The existing administrator-only Grant HTTP endpoint
+`GET /api/v1/admin/operational-readiness` projects current stored Grant state
+with `allows_execution=false`. It reports no independently verified host SSH
+allowlist, Web management CIDR enforcement, encrypted backup ledger, restore
+drill, configured retention/deletion policy or authorized host mutation.
+Missing/malformed recovery pause is `null`, never assumed healthy.
+
+The original Grant `/system` screens now place verified
+`NativeIngressReadback` under Network and `NativeLifecycleReadback` under
+Backup & Import. The readback uses the same strict
+`validOperationalSecurityReadiness` schema as System Health; unexpected backend
+facts and failed/missing admin reads show an explicit warning instead of a
+false-positive security or recovery status. Network still distinguishes the
+stored service origin from independently tested HTTPS/SSH/ingress; lifecycle
+keeps private CLI operator guidance separate from a verified restore drill.
+Neither view adds a restore, delete, rotation, retention, firewall or host
+policy operation.
+
+Validation: unit tests for valid/missing/tampered backend projections and
+read-only button absence; isolated *authenticated* admin Playwright session
+matches the backend GET projection on both screens and asserts zero privileged
+effect buttons. Existing Python readiness tests independently guard admin
+authority, active state, secret redaction and no read-side Outbox/audit writes.
+This is a product-level read-only source qualification, **not** an installed
+native host audit, policy installation, recovery drill or PF-05 full user E2E.
+
 ## Workstream and strict acceptance
 
 | WBS | Current engineering status | Missing closure |
@@ -76,7 +104,7 @@ Document and reconcile this before a full PF-02 product UI migration.
 | **PF-01** private package provenance, reproducible preparation and pinned Web consumer | Exact source and package content verified; isolated npm/Wheel import and candidate Web build/tests PASS | Exact pushed-head CI, product baseline/rollback and separate final distribution approval |
 | **PF-02** Control desktop shell/Admin adaptation | Grant-owned task ID/target/role/availability fail-closed router integrated into existing RC50 Administration; private Control exports available, original UI retained | Shared original Control hub/shell configurable router+capability adapter, full mounted visual/host readback; no fake native permissions |
 | **PF-03** native user/MFA/ACL/Roles/Sessions | Original Grant backend and native Wheel retained without scope change | Authorized Grant-native backend adapters with independent identity and permission tests |
-| **PF-04** native host/backup task truth | Unsupported operations still unavailable; no host change | Bind only actual approved Grant host/SQLite/backup capabilities |
+| **PF-04** native host/backup task truth | Source stage: verified persisted admin-only Grant recovery/ingress/retention readbacks on Network/Lifecycle with fail-closed absent evidence; unsupported mutations remain disabled | Native host/backup/restore/retention/SSH/TLS actual authority, isolated execution, recovery drill and owner acceptance NOT qualified |
 | **PF-05** installed persona and approval E2E | Earlier no-login real email/PIN/Confirm UI tested separately, not eligible as native-auth evidence | Mounted exact PF candidate Admin→Requester→Approver, true sessions/RBAC and mail decision/replay checks |
 | **PF-06** product release qualification | NOT STARTED | Exact-head Git/CI/evidence, backup/rollback, owner approval for merge/release/production |
 

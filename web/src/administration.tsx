@@ -54,7 +54,7 @@ import {
 import { resolveGrantAdministrationSelection, type GrantAdminDetail } from './grant_control_administration_contract';
 import { Form, Select, useTask } from './common';
 import type { User } from './types';
-import { OperationalSecurityReadinessReadout, type OperationalSecurityReadiness } from './operational_security_readiness';
+import { NativeIngressReadback, NativeLifecycleReadback, OperationalSecurityReadinessReadout, type OperationalSecurityReadiness } from './operational_security_readiness';
 import { formatDisplayIso } from './display_timezone';
 import { AdminDisplayTimezoneSettings, PersonalDisplayTimezoneSettings } from './display_timezone_settings';
 import './administration-detail.css';
@@ -611,14 +611,17 @@ export function Administration({ user }: { user: User }) {
       ) : null}
 
       {section === 'network' ? (
-        <Card title="Configured network surface">
-          <p>This view reports the configured Grant service origin only.
-            Published listeners, proxy routing and reconnect-safe changes remain operator-owned.</p>
-          <dl className="grant-facts">
-            <dt>Service origin</dt><dd>{info?.facts.find((fact) => fact.id === 'origin')?.value ?? 'Unavailable'}</dd>
-            <dt>Configuration owner</dt><dd>Deployment operator</dd>
-          </dl>
-        </Card>
+        <div className="grant-stack">
+          <Card title="Configured network surface">
+            <p>This view reports the configured Grant service origin only.
+              Published listeners, proxy routing and reconnect-safe changes remain operator-owned.</p>
+            <dl className="grant-facts">
+              <dt>Service origin</dt><dd>{info?.facts.find((fact) => fact.id === 'origin')?.value ?? 'Unavailable'}</dd>
+              <dt>Configuration owner</dt><dd>Deployment operator</dd>
+            </dl>
+          </Card>
+          <NativeIngressReadback status={operationalSecurity} />
+        </div>
       ) : null}
 
       {section === 'timezone' ? <AdminDisplayTimezoneSettings /> : null}
@@ -662,6 +665,7 @@ export function Administration({ user }: { user: User }) {
               upgrades still require documented operator procedures. Foundation
               renders common administration patterns, not execution authority.</p>
           </Card>
+          <NativeLifecycleReadback status={operationalSecurity} />
           <GrantConfigurationPortabilityTask />
         </div>
       ) : null}
