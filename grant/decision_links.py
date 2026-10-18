@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import re
 import secrets
 import sqlite3
 import time
@@ -48,6 +49,20 @@ def _code_digest(settings: Settings, issuance_id: str, pin: str) -> str:
     return _digest(settings, "pin", issuance_id + ":" + pin)
 
 
+def _stored_pin_digest(settings: Settings, issuance_id: str, pin: str) -> str:
+    """Legacy 4-digit HMACs remain exactly 64 hex; 6-digit HMACs are version-marked."""
+    result = _code_digest(settings, issuance_id, pin)
+    return "6:" + result if len(pin) == 6 else result
+
+
+def _pin_digits_from_digest(value: str) -> int:
+    if isinstance(value, str) and re.fullmatch(r"[0-9a-f]{64}", value):
+        return 4
+    if isinstance(value, str) and re.fullmatch(r"6:[0-9a-f]{64}", value):
+        return 6
+    raise GrantError("DECISION_LINK_UNAVAILABLE", 404)
+
+
 def _message(
     settings: Settings, request: sqlite3.Row, event: str,
     pin: str, tokens: dict[str, str], *, verification_mode: str | None = None,
@@ -81,7 +96,7 @@ def queue_choice_mail(
     for recipient in eligible_recipients(conn, request, now):
         if recipient_filter and recipient["recipient_id"] != recipient_filter:
             continue
-        # A locked 4-digit issuance MUST NOT be silently renewed by reminders.
+        # A locked issuance MUST NOT be silently renewed by reminders.
         # Only a separately authenticated administrator can safely reissue.
         locked = conn.execute(
             """SELECT id FROM decision_issuances
@@ -171,7 +186,8 @@ def queue_choice_mail(
                 (recipient["assignment_id"], recipient["recipient_id"]),
             ).fetchone()[0]
             issuance_id = uid()
-            pin = f"{secrets.randbelow(10000):04d}"
+            digits = settings.decision_pin_digits
+            pin = f"{secrets.randbelow(10 ** digits):0{digits}d}"
             expires = min(request["deadline"], now + request["decision_link_ttl_seconds"])
             if expires <= now:
                 continue
@@ -184,7 +200,7 @@ def queue_choice_mail(
                 (issuance_id, request["id"], recipient["assignment_id"],
                  recipient["recipient_id"], email_digest, recipient["delegation_id"],
                  prior_generation + 1, recipient["assignment_epoch"],
-                 _code_digest(settings, issuance_id, pin), now, expires),
+                 _stored_pin_digest(settings, issuance_id, pin), now, expires),
             )
             tokens: dict[str, str] = {}
             for outcome in OUTCOMES:
@@ -360,7 +376,7 @@ class DecisionLinks:
             return {
                 "outcome": state["outcome"],
                 "verification_mode": effective_mode,
-                "pin_digits": 4,
+                "pin_digits": _pin_digits_from_digest(state["pin_digest"]),
                 "pin_required": True,
                 **_verification_steps(effective_mode),
                 "confirmation_required": True,
@@ -381,7 +397,7 @@ class DecisionLinks:
             )):
                 error = GrantError("PIN_RATE_LIMITED", 429)
             elif not hmac.compare_digest(
-                state["pin_digest"], _code_digest(self.settings, state["issuance_id"], pin)
+                state["pin_digest"], _stored_pin_digest(self.settings, state["issuance_id"], pin)
             ):
                 new_attempts = state["failed_attempts"] + 1
                 conn.execute(

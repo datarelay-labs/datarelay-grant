@@ -30,6 +30,11 @@ export function isSixDigitCode(value: string): boolean {
   return value.length === 6 && /^[0-9]{6}$/.test(value);
 }
 
+/** Respect exact server-reported PIN length; never weaken the separate OTP/MFA tier. */
+export function isPinForDigits(value: string, digits: 4 | 6): boolean {
+  return digits === 4 ? isFourDigitPin(value) : isSixDigitCode(value);
+}
+
 /**
  * No client-provided field may downgrade the effective server security tier.
  * Treat impossible or incomplete responses as invalid, not PIN-only.

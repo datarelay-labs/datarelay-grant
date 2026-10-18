@@ -161,3 +161,27 @@ independent approver links survive another seat's normal state update;
 audit identity assurance honest; backup/restore and recipient outbox
 protected; exact-head scripted tests and **two independent direct
 human/browser full user E2E journeys** before closing G10A.
+
+## 2026-10-18 additive PIN length option (STD-03)
+
+Owner retains the original **four-digit email PIN** for explicitly low-assurance
+approval and does not require login/MFA by default. A new *operator-owned*
+optional `decision_pin_digits=6` installation setting may strengthen **new**
+issuances; default remains 4. No requester-controlled risk label selects a
+shorter PIN or an easier decision-verification mode. A six-digit PIN remains
+same-mailbox possession and is not independent MFA.
+
+To preserve issued links without a broad v15 database migration, the existing
+HMAC digest string stays exactly 64 hex digits for historical/future four-digit
+issuances; new six-digit issuances carry a strict internal `6:` prefix followed
+by the same 256-bit keyed HMAC. This discloses only code length, never the
+secret, and is not returned from the public API. One-use/token binding, five
+failures lockout, rate limits and 300-second confirmation remain unchanged.
+GET reports issuance-specific length even after a config change, so a
+pre-existing link is never silently reinterpreted. Reminders reuse the exact
+sealed issuance. The public page must validate that specific length; no
+automatic login/MFA escalation is inferred from PIN digit count.
+
+No deployed configuration is changed by implementing this source capability.
+Switching a running installation setting requires ordinary authorized operator
+change control and preserving existing outbound delivery/mail material.

@@ -11,7 +11,7 @@ Low-assurance email-link plus four-digit PIN remains supported by design; do not
 | Area | Reference | Source evidence | Finding / next acceptance gate |
 | --- | --- | --- | --- |
 | Explicit human decision, workflow ordering and delegation | OMG BPMN 2.0.2 / DMN / CMMN concepts; NIST SP 800-53 AC-5 | `grant/decision_links.py` `_active`, `confirm`; `grant/verification_policy.py` | Existing safeguards; independently test parallel quorum, delegation races, step transitions and denial; no OMG interchange conformance claimed. |
-| PIN and step-up | NIST SP 800-63B-4; OWASP ASVS / Transaction Authorization | `grant/decision_links.py` `MAX_PIN_FAILURES=5`, scoped token, expiration, rate limits; `grant/verification_policy.py` | 4-digit explicitly low assurance; verify scanner-safe GET, PIN entropy/lockout, independent MFA and real-persona flow. |
+| PIN and step-up | NIST SP 800-63B-4; OWASP ASVS / Transaction Authorization | `grant/decision_links.py` `MAX_PIN_FAILURES=5`, scoped token, expiration, rate limits; `grant/verification_policy.py` | SOURCE IMPLEMENTED STD-03 operator-selectable 4/6 digits, legacy defaults/issued digest unchanged and server-trusted issuance length. Both remain low assurance, fresh independent MFA policy separate. Live persona/received-mail gate NOT PASS. |
 | Execution binding | OWASP Transaction Authorization; NIST AC-3 | `grant/consumer_guard.py`, `grant/core.py`, action hash, consume/report | Source binding present; verify cross-process replay, revision races and external readback separately. |
 | Legacy + structured event delivery | CloudEvents 1.0.2 | `grant/core.py` `create_integration`; `grant/transport.py` `webhook_wire_payload` | IMPLEMENTED opt-in structured envelope with frozen encrypted event source and signed transmitted bytes; existing legacy receivers and queued events preserve original default. Tests remain supporting, not external acceptance. |
 | Webhook signing | RFC 9421 / RFC 9530 | `grant/transport.py`: HMAC over timestamp + dot + body, `X-Grant-Signature` | Custom HMAC, NOT RFC 9421. Test signed delivery/retry and determine versioned opt-in standard signature separately. |
@@ -32,6 +32,7 @@ Low-assurance email-link plus four-digit PIN remains supported by design; do not
 - `tests/test_integration_diagnostics.py`: 11 PASS, previous run.
 - `tests/test_mock_stellar_flow.py`: 4 PASS, most recent run (exit 0, 2026-10-18).
 - `tests/test_g10a_fresh_mfa.py`: 6 PASS (exit 0, 2026-10-18).
+- STD-03 `tests/test_std03_pin_digits.py`: 3/3 PASS; mounted Web adapter/portal 4/6 PIN cases 40 PASS (focused). Wider email regression pending at writing.
 - `tests/test_consumer_guard.py` + `tests/test_multi_approval.py` + `tests/test_g10a_email_decisions.py`: 102 PASS (exit 0, 2026-10-18); covers existing authorization binding and multi-approval/email decisions, NOT live user acceptance.
 - `tests/test_audit_evidence.py` + `tests/test_g10a_audit_evidence.py`: 17 PASS (exit 0, 2026-10-18); existing audit/provenance/redaction tests, NOT a certification or complete retention/privacy assessment.
 - STD-04 opt-in CloudEvents and RFC 9457 **source implemented** on a candidate; `tests/test_std04_wire_contract.py` 7/7 PASS (isolated loopback, registration API, HMAC, failed callback/retry, connection diagnostic, problem response).

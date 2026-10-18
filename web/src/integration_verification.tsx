@@ -113,7 +113,7 @@ export function IntegrationMinimumEditor({
         value={selectedMode}
         onChange={(value) => onMode(value as IntegrationVerificationMinimum)}
       >
-        <option value="EMAIL_PIN">Email link + four-digit PIN</option>
+        <option value="EMAIL_PIN">Email link + installation PIN (4 or 6 digits)</option>
         <option value="EMAIL_PIN_PLUS_OTP">Email PIN + same-mailbox OTP (NOT MFA)</option>
         <option value="EMAIL_PIN_PLUS_MFA">Email PIN + fresh signed-in Grant TOTP</option>
       </Select>

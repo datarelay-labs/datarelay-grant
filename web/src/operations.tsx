@@ -127,7 +127,7 @@ export function DecisionEmailSecurityPanel({ summary }: {
     </> : <Alert tone="warning" title="Counters unavailable">
       This server did not provide email-decision security counters. No zero or healthy state is assumed.
     </Alert>}
-    <p>A link and four-digit code in one email demonstrates mailbox access;
+    <p>A link and email PIN in one email demonstrates mailbox access;
        it does not verify the named recipient. A same-mailbox OTP is not independent MFA.
        These counters do not confirm receipt or execution and cannot authorize actions.</p>
   </Card>;

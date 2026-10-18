@@ -3,7 +3,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { EmailDecisionPortal } from '../../src/email_decision_portal';
 import {
-  canConfirmEmailDecision, decisionReason, isFourDigitPin, isSixDigitCode,
+  canConfirmEmailDecision, decisionReason, isFourDigitPin, isPinForDigits, isSixDigitCode,
   stageForProof, initialStageForProof, stageAfterStepUp,
   type EmailDecisionProof,
 } from '../../src/email_decision_flow';
@@ -24,6 +24,16 @@ describe('G10A loginless capability confirmation safety', () => {
     }
     for (const value of ['123', '12345', ' 1234', '1234 ', '1234\n', '１２３４', '12a4']) {
       expect(isFourDigitPin(value)).toBe(false);
+    }
+  });
+
+  it('validates exactly the configured four or six digits with no cross-length fallback', () => {
+    expect(isPinForDigits('0000', 4)).toBe(true);
+    expect(isPinForDigits('012345', 6)).toBe(true);
+    expect(isPinForDigits('0000', 6)).toBe(false);
+    expect(isPinForDigits('012345', 4)).toBe(false);
+    for (const invalid of ['12345', '123456 ', '１２３４５６', '12345x']) {
+      expect(isPinForDigits(invalid, 6)).toBe(false);
     }
   });
 

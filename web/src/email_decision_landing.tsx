@@ -66,6 +66,7 @@ export function PublicEmailDecisionLanding({ token }: { token: string }) {
           <EmailDecisionPortal
             key={token}
             choice={loaded.choice}
+            pinDigits={loaded.pinDigits}
             adapter={loaded.adapter}
           />
         ) : (

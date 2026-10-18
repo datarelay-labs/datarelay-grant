@@ -6,13 +6,13 @@ import {
 } from '../../src/email_decision_portal';
 import type {EmailDecisionChoice} from '../../src/email_decision_flow';
 
-function initial(choice:EmailDecisionChoice){
+function initial(choice:EmailDecisionChoice,pinDigits:4|6=4){
  const never=vi.fn(async()=>{throw Error('NEVER_AUTO_SEND');});
  const adapter:EmailDecisionAdapter={
   verifyPin:never,requestOtp:never,verifyOtp:never,
   verifyFreshMfa:never,confirm:never,
  };
- const html=renderToStaticMarkup(createElement(EmailDecisionPortal,{choice,adapter}));
+ const html=renderToStaticMarkup(createElement(EmailDecisionPortal,{choice,adapter,pinDigits}));
  return {html,never};
 }
 
@@ -36,6 +36,15 @@ describe('P0-2B mounted portal human intent is inert before explicit PIN',()=>{
   expect(html).toContain('pattern="[0-9]{4}"');
   expect(html).toContain('maxLength="4"');
   expect(html).toContain('disabled=""');
+ });
+ it('renders optional six-digit PIN as a masked, inert form while retaining four-digit default',()=>{
+  const {html,never}=initial('APPROVE',6);
+  expect(html).toContain('Six-digit code from the email');
+  expect(html).toContain('pattern="[0-9]{6}"');
+  expect(html).toContain('maxLength="6"');
+  expect(html).toContain('type="password"');
+  expect(html).toContain('disabled=""');
+  expect(never).not.toHaveBeenCalled();
  });
  it('does not expose request summary, named person, OTP or fresh MFA before PIN',()=>{
   const {html}=initial('DENY');

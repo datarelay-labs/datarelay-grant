@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent } from 'react';
 import {
-  canConfirmEmailDecision, decisionReason, isFourDigitPin, isSixDigitCode,
+  canConfirmEmailDecision, decisionReason, isPinForDigits, isSixDigitCode,
   initialStageForProof, stageAfterStepUp,
   type EmailDecisionChoice, type EmailDecisionProof, type EmailDecisionStage,
 } from './email_decision_flow';
@@ -26,6 +26,7 @@ export interface EmailDecisionPortalProps {
   /** The selected outcome from a previously parsed, server-bound link. */
   choice: EmailDecisionChoice;
   adapter: EmailDecisionAdapter;
+  pinDigits?: 4 | 6;
 }
 
 const outcomes: Record<EmailDecisionChoice, string> = {
@@ -36,7 +37,7 @@ const outcomes: Record<EmailDecisionChoice, string> = {
 
 type Phase = 'pin' | EmailDecisionStage | 'done';
 
-export function EmailDecisionPortal({ choice, adapter }: EmailDecisionPortalProps) {
+export function EmailDecisionPortal({ choice, adapter, pinDigits = 4 }: EmailDecisionPortalProps) {
   const [phase, setPhase] = useState<Phase>('pin');
   const [proof, setProof] = useState<EmailDecisionProof | null>(null);
   const [pin, setPin] = useState('');
@@ -82,8 +83,9 @@ export function EmailDecisionPortal({ choice, adapter }: EmailDecisionPortalProp
 
   function onPin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!isFourDigitPin(pin)) {
-      setError('Enter the exact four-digit PIN from your email.');
+    if (!isPinForDigits(pin, pinDigits)) {
+      setError('Enter the exact ' + (pinDigits === 6 ? 'six' : 'four')
+        + '-digit PIN from your email.');
       return;
     }
     void run(async () => {
@@ -154,21 +156,23 @@ export function EmailDecisionPortal({ choice, adapter }: EmailDecisionPortalProp
 
       {phase === 'pin' ? (
         <form onSubmit={onPin}>
-          <label htmlFor="grant-email-pin">Four-digit code from the email</label>
+          <label htmlFor="grant-email-pin">
+            {pinDigits === 6 ? 'Six' : 'Four'}-digit code from the email
+          </label>
           <input
             id="grant-email-pin"
             type="password"
             inputMode="numeric"
             autoComplete="one-time-code"
-            pattern="[0-9]{4}"
-            maxLength={4}
+            pattern={pinDigits === 6 ? '[0-9]{6}' : '[0-9]{4}'}
+            maxLength={pinDigits}
             value={pin}
             disabled={busy}
             onChange={(event) => setPin(event.target.value)}
             required
           />
           <p>The link and this code establish mailbox access, not personal identity.</p>
-          <button type="submit" disabled={busy || !isFourDigitPin(pin)}>
+          <button type="submit" disabled={busy || !isPinForDigits(pin, pinDigits)}>
             {busy ? 'Verifying…' : 'Verify code'}
           </button>
         </form>

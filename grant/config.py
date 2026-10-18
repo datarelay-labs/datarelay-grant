@@ -30,6 +30,7 @@ class Settings:
     max_delivery_attempts: int = 5
     decision_link_ttl_seconds: int = 604800  # seven days; bounded by request deadline
     decision_verification_default: str = "EMAIL_PIN"
+    decision_pin_digits: int = 4  # Per-installation issuance policy; historical codes remain valid.
     web_root: Path = Path(__file__).resolve().parents[1] / "web/dist"
 
     def __post_init__(self) -> None:
@@ -65,6 +66,8 @@ class Settings:
 
         if self.decision_verification_default not in MODES:
             raise ValueError("Invalid decision_verification_default")
+        if type(self.decision_pin_digits) is not int or self.decision_pin_digits not in (4, 6):
+            raise ValueError("decision_pin_digits must be 4 or 6")
         if not 300 <= self.decision_link_ttl_seconds <= 2592000:
             raise ValueError("decision_link_ttl_seconds outside supported bounds")
         if not 1 <= self.max_delivery_attempts <= 20:

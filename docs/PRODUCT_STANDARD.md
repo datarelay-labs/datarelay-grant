@@ -1228,6 +1228,24 @@ actual receiving path; echo fixtures are never completion evidence.
   This capability does not imply certified BPMN/DMN/CMMN interchange,
   RFC 9421 conformance or external system execution success.
 
+### 15.2 Low-assurance email PIN length (STD-03)
+
+The original four-digit same-message email PIN remains the default and is
+intentionally **low assurance**: possession of an email link and a PIN from
+that same mailbox is neither verified person identity nor independent MFA.
+An installation operator may set `decision_pin_digits=6` to increase entropy
+for **new issuance only**. No requester input selects PIN length, and neither
+choice weakens the policy-required TOTP/fresh MFA level.
+
+The server retains exactly the historical 64-hex HMAC digest format for all
+four-digit issuances. Six-digit issuances use an internal length-versioned
+HMAC digest and the same secret-key derivation; public GET shows **only the
+issued length**. Changing configuration after issuance does not reinterpret,
+revoke or silently upgrade a previously issued PIN. Existing locked issuance,
+rate limits, expiry, immutable decision binding and explicit final Confirm
+remain unchanged. The GUI accepts only the server-specified 4/6 ASCII digits,
+with no guessed fallback; previews remain inert and synthetic.
+
 ## 16. Audit and evidence standard
 
 Audit event lists must remain legible on narrow mobile viewports without

@@ -18,9 +18,9 @@ function flags(mode: Mode) {
     requires_additional_email_otp: mode === 'EMAIL_PIN_PLUS_OTP',
   };
 }
-function preview(mode: Mode = 'EMAIL_PIN', outcome: BackendOutcome = 'APPROVED') {
+function preview(mode: Mode = 'EMAIL_PIN', outcome: BackendOutcome = 'APPROVED', digits: 4 | 6 = 4) {
   return {
-    ...flags(mode), outcome, pin_digits: 4, pin_required: true,
+    ...flags(mode), outcome, pin_digits: digits, pin_required: true,
     confirmation_required: true, details_visible: false,
     assurance: 'EMAIL_LINK_PIN', execution_allowed: false,
   };
@@ -125,6 +125,21 @@ describe('G10A-5 original backend API adapter (unmounted)', () => {
     expect(calls[0]?.options.cache).toBe('no-store');
     expect(calls[0]?.options.redirect).toBe('error');
     expect(calls[0]?.options.body).toBeUndefined();
+  });
+
+  it('accepts an explicitly reported six-digit PIN without accepting a four-digit downgrade',async()=>{
+    const calls=transport(
+      {body:preview('EMAIL_PIN','APPROVED',6)},
+      {body:pinVerified()},
+    );
+    const loaded=await loadEmailDecisionIntent(token);
+    expect(loaded.pinDigits).toBe(6);
+    await expect(loaded.adapter.verifyPin('0123')).rejects.toThrow(ApiError);
+    expect(calls).toHaveLength(1);
+    const proof=await loaded.adapter.verifyPin('012345');
+    expect(stageForProof(proof,loaded.choice)).toBe('ready');
+    expect(body(calls,1)).toEqual({pin:'012345'});
+    expect(calls).toHaveLength(2);
   });
 
   it('maps backend APPROVED to real PIN proof and records one explicit confirmation', async () => {

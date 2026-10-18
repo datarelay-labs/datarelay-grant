@@ -14,7 +14,7 @@ and F31 product source are preserved; do not repeat them.
 | --- | --- | --- |
 | STD-01 standards-to-code crosswalk | SOURCE inventory in `docs/STANDARDS_ALIGNMENT_GAP_LEDGER.md`; partial | Close explicit PASS/GAP/N/A with source/test provenance |
 | STD-02 human-authorization, execution, quorum, delegation | Previously implemented; focused Python regressions PASS | Further gaps only if current evidence shows missing behavior |
-| STD-03 low-assurance email PIN + high-assurance step-up | 4-digit + bounded attempts and independent fresh MFA implemented | 6-digit optional tier (not mandated by owner) / corresponding compat qualification |
+| STD-03 low-assurance email PIN + high-assurance step-up | 4-digit default + **optional 6-digit source implemented**, bounded attempts and independent fresh MFA | Affected/full regression, immutable candidate CI, real persona/mail only |
 | STD-04 CloudEvents 1.0 / RFC 9457 opt-in | **SOURCE IMPLEMENTED** on new candidate: encrypted per-registration format, immutable event source, HMAC over wire body, explicit Accept negotiation, admin Web Review→Confirm | Exact-HEAD CI and isolated recipient contract; real external consumer E2E distinct |
 | STD-05 audit/evidence/privacy mapping | Existing audit chains/export/redaction present; 17/17 regressions PASS | Standards-control crosswalk and outstanding genuine gaps |
 | STD-06 accessibility / enterprise identity | Grant UI qualification partial; Foundation owns common login / shell | Grant-only WCAG remediation where evidenced; SCIM optional and not baseline |

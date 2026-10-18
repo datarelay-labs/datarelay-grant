@@ -145,7 +145,7 @@ export function DecisionSecurityFields({
           })}
         >
           <option value="INHERIT">Inherit installation default</option>
-          <option value="EMAIL_PIN">Email link + four-digit PIN</option>
+          <option value="EMAIL_PIN">Email link + installation PIN (4 or 6 digits)</option>
           <option value="EMAIL_PIN_PLUS_OTP">Email PIN + separate same-mailbox OTP</option>
           <option value="EMAIL_PIN_PLUS_MFA">Email PIN + fresh signed-in Grant TOTP</option>
         </Select>
@@ -170,7 +170,7 @@ export function DecisionSecurityFields({
         settings and other active policies for the same action.
       </p>
       <p>
-        A four-digit PIN and an additional OTP sent to the SAME mailbox do
+        An email PIN and an additional OTP sent to the SAME mailbox do
         not independently verify the named person and are NOT MFA.
         Fresh MFA requires an enabled, signed-in Grant account with newly
         verified TOTP. A separate user-facing decision screen and real

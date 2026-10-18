@@ -9,7 +9,7 @@
  */
 import { ApiError, api, setCsrf } from './api';
 import {
-  canConfirmEmailDecision, initialStageForProof, isFourDigitPin, isSixDigitCode,
+  canConfirmEmailDecision, initialStageForProof, isPinForDigits, isSixDigitCode,
   stageAfterStepUp,
   type EmailDecisionChoice, type EmailDecisionMode, type EmailDecisionProof,
 } from './email_decision_flow';
@@ -21,6 +21,7 @@ type ServerOutcome = 'APPROVED' | 'HELD' | 'DENIED';
 export interface LoadedEmailDecisionIntent {
   choice: EmailDecisionChoice;
   verificationMode: EmailDecisionMode;
+  pinDigits: 4 | 6;
   adapter: EmailDecisionAdapter;
 }
 
@@ -94,14 +95,18 @@ export function validateDecisionIntentToken(token: string): string {
   return token;
 }
 
-function readPreview(raw: unknown): { choice: EmailDecisionChoice; mode: EmailDecisionMode } {
+function readPreview(raw: unknown): {
+  choice: EmailDecisionChoice; mode: EmailDecisionMode; pinDigits: 4 | 6;
+} {
   const value = object(raw);
   noExecution(value);
-  if (value.pin_required !== true || value.pin_digits !== 4 ||
+  if (value.pin_required !== true ||
+      (value.pin_digits !== 4 && value.pin_digits !== 6) ||
       value.confirmation_required !== true || value.details_visible !== false ||
       value.assurance !== 'EMAIL_LINK_PIN' ||
       'request' in value || 'confirmation_token' in value) return invalid();
-  return { choice: choice(value.outcome), mode: modeAndRequirements(value) };
+  return { choice: choice(value.outcome), mode: modeAndRequirements(value),
+    pinDigits: value.pin_digits as 4 | 6 };
 }
 
 function readPinVerification(
@@ -160,7 +165,9 @@ export async function loadEmailDecisionIntent(token: string): Promise<LoadedEmai
 
   const adapter: EmailDecisionAdapter = {
     async verifyPin(pin) {
-      if (!isFourDigitPin(pin) || active) throw new ApiError(0, 'INVALID_DECISION_PIN_STATE');
+      if (!isPinForDigits(pin, preflight.pinDigits) || active) {
+        throw new ApiError(0, 'INVALID_DECISION_PIN_STATE');
+      }
       const parsed = readPinVerification(
         await api<unknown>(path + '/verify', 'POST', { pin }),
         preflight.choice, preflight.mode,
@@ -274,5 +281,6 @@ export async function loadEmailDecisionIntent(token: string): Promise<LoadedEmai
       return { recorded: true, outcome: preflight.choice };
     },
   };
-  return { choice: preflight.choice, verificationMode: preflight.mode, adapter };
+  return { choice: preflight.choice, verificationMode: preflight.mode,
+    pinDigits: preflight.pinDigits, adapter };
 }

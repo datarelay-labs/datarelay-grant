@@ -108,8 +108,9 @@ def compose_email(
     segments = [body, values["CONTEXT"]]
     if eligible:
         assert security is not None
-        if security.mode not in MODES or not re.fullmatch(r"[0-9]{4}", security.pin):
+        if security.mode not in MODES or not re.fullmatch(r"(?:[0-9]{4}|[0-9]{6})", security.pin):
             raise ValueError("Invalid email verification context")
+        pin_digits = len(security.pin)
         if set(security.links) != set(OUTCOMES) or security.sample != sample:
             raise ValueError("Email requires exactly three server-bound actions")
         origin = urlsplit(details)
@@ -127,10 +128,13 @@ def compose_email(
             values[slot + "_URL"] = link
             values[slot + "_LABEL"] = LABELS[outcome]
         values["GUIDANCE"] = (
-            "Choose a decision. Opening a link never records a vote. " + GUIDANCE[security.mode]
+            "Choose a decision. Opening a link never records a vote. "
+            + GUIDANCE[security.mode].replace(
+                "four-digit", "six-digit" if pin_digits == 6 else "four-digit"
+            )
             + " The confirmation page enforces the current policy if requirements become stronger."
         )
-        values["PIN"] = "Four-digit confirmation PIN: " + security.pin
+        values["PIN"] = ("Six" if pin_digits == 6 else "Four") + "-digit confirmation PIN: " + security.pin
         values["FOOTER"] = (
             "The PIN in this same email does not prove personal identity or MFA. Do not forward this message. "
             + values["FOOTER"]
@@ -150,9 +154,10 @@ def compose_email(
         values["FOOTER"] = "상세 보기는 기존 계정의 조회 권한을 요구하며 결정을 기록하지 않습니다. 미리보기는 실행을 승인하지 않습니다."
         if eligible:
             values["APPROVE_LABEL"], values["HOLD_LABEL"], values["DENY_LABEL"] = "승인", "보류", "거부"
-            values["GUIDANCE"] = ("링크를 여는 것만으로 결정이 기록되지 않습니다. " + KO_GUIDANCE[security.mode]
+            values["GUIDANCE"] = ("링크를 여는 것만으로 결정이 기록되지 않습니다. "
+                + KO_GUIDANCE[security.mode].replace("4자리", str(pin_digits) + "자리")
                 + " 확인 화면은 현재 정책이 더 강해진 경우에도 최신 인증 요구사항을 적용합니다.")
-            values["PIN"] = "4자리 확인 PIN: " + security.pin
+            values["PIN"] = str(pin_digits) + "자리 확인 PIN: " + security.pin
             values["FOOTER"] = "같은 메일에 포함된 PIN은 개인 신원이나 MFA를 증명하지 않습니다. 이 메일을 전달하지 마세요. " + values["FOOTER"]
         if design["footer"]:
             values["FOOTER"] += "\n" + TOKEN.sub(lambda match: context[match[1]], design["footer"])
