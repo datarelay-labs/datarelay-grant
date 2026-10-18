@@ -20,11 +20,14 @@ case "${1:-all}" in
     fi
     uv sync --frozen
     ;;
-  setup-web)
+  setup-node)
     if [[ "$(node --version 2>/dev/null || true)" != 'v24.21.0' ]]; then
       npm install --prefix .dev/node-runtime --no-audit --no-fund --package-lock=false 'node@24.21.0'
     fi
     test "$(node --version)" = 'v24.21.0'
+    ;;
+  setup-web)
+    bash scripts/checks.sh setup-node
     if [[ -n "${GRANT_FOUNDATION_SOURCE:-}" ]]; then
       python3 tools/prepare_foundation.py --source "$GRANT_FOUNDATION_SOURCE"
     else
@@ -38,8 +41,8 @@ case "${1:-all}" in
     npm --prefix mail-renderer ci --ignore-scripts --no-audit --no-fund
     node --max-old-space-size=256 mail-renderer/build.mjs --check
     ;;
-  web) npm --prefix web test; npm --prefix web run check ;;
-  static) python3 tools/verify_foundation_f31.py; uv run --frozen ruff check grant tests tools/prepare_foundation.py tools/verify_foundation_f31.py tools/build_candidate.py tools/verify_candidate.py; git diff --check ;;
+  web) python3 tools/verify_foundation_f31.py; npm --prefix web test; npm --prefix web run check ;;
+  static) python3 tools/verify_foundation_f31.py --metadata-only; uv run --frozen ruff check grant tests tools/prepare_foundation.py tools/prepare_foundation_f31.py tools/prime_foundation_f31_npm_peers.py tools/verify_foundation_f31.py tools/build_candidate.py tools/verify_candidate.py; git diff --check ;;
   browser)
     # A pre-existing user-local runtime can be selected on minimal Linux hosts.
     if [[ -n "${GRANT_BROWSER_LIBRARY_PATH:-}" ]]; then

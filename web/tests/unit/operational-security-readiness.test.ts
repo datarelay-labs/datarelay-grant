@@ -2,6 +2,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import {
+  NativeIngressReadback, NativeLifecycleReadback,
   OperationalSecurityReadinessReadout, validOperationalSecurityReadiness,
   type OperationalSecurityReadiness,
 } from '../../src/operational_security_readiness';
@@ -65,4 +66,57 @@ describe('Grant read-only M5 Foundation operational evidence', () => {
     expect(html).toContain('Unavailable');
     expect(html).not.toContain('Recovered successfully');
   });
+  it('PF-04 lifecycle displays persisted recovery pause and absent backup proof without exposing mutation', () => {
+    for (const [paused, expected] of [
+      [true, 'Active'], [false, 'Not active'], [null, 'Unavailable'],
+    ] as const) {
+      const html=renderToStaticMarkup(createElement(NativeLifecycleReadback,{
+        status:{ ...source, backup_recovery:{...source.backup_recovery,recovery_paused:paused} },
+      }));
+      expect(html).toContain('Persisted recovery and retention evidence');
+      expect(html).toContain('Registered backup evidence');
+      expect(html).toContain('Independently verified restore drill');
+      expect(html).toContain('Not verified');
+      expect(html).toContain('Record deletion by Grant');
+      expect(html).toContain('Disabled');
+      expect(html).toContain('Recovery pause');
+      expect(html).toContain(expected);
+      expect(html).not.toContain('<button');
+      expect(html).not.toContain('Confirm restore');
+      expect(html).not.toContain('Apply retention');
+    }
+  });
+
+  it('PF-04 network does not mistake the service URL for proven host policy', () => {
+    const html=renderToStaticMarkup(createElement(NativeIngressReadback,{status:source}));
+    expect(html).toContain('Management ingress evidence');
+    expect(html).toContain('Web management CIDR allowlist');
+    expect(html).toContain('Not configured');
+    expect(html).toContain('Host SSH enforcement');
+    expect(html).toContain('Not verified');
+    expect(html).toContain('Management access changes by Grant');
+    expect(html).toContain('Not authorized');
+    expect(html).not.toContain('<button');
+    expect(html).not.toContain('Apply SSH');
+    expect(html).not.toContain('Confirmed secure');
+  });
+
+  it('PF-04 missing or corrupt backend evidence fails closed on network and lifecycle', () => {
+    for (const data of [
+      null,
+      {...source,allows_execution:true},
+      {...source,backup_recovery:{...source.backup_recovery,restore_authorized:true}},
+      {...source,management_ingress:{...source.management_ingress,host_ssh_enforcement:'verified'}},
+    ]) {
+      const status=data as OperationalSecurityReadiness | null;
+      const lifecycle=renderToStaticMarkup(createElement(NativeLifecycleReadback,{status}));
+      const network=renderToStaticMarkup(createElement(NativeIngressReadback,{status}));
+      expect(lifecycle).toContain('Lifecycle evidence unavailable');
+      expect(network).toContain('Management ingress evidence unavailable');
+      expect(lifecycle).not.toContain('Persisted recovery and retention evidence');
+      expect(network).not.toContain('Host SSH enforcement</dt>');
+      expect(lifecycle+network).not.toContain('<button');
+    }
+  });
+
 });

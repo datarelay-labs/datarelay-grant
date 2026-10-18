@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_private_control_first_handoff_pinned_to_exact_foundation_head():
     result = subprocess.run(
-        [sys.executable, str(ROOT / "tools/verify_foundation_f31.py")],
+        [sys.executable, str(ROOT / "tools/verify_foundation_f31.py"), "--metadata-only"],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -21,14 +21,16 @@ def test_private_control_first_handoff_pinned_to_exact_foundation_head():
         timeout=20,
     )
     assert result.returncode == 0, result.stderr
-    assert "FOUNDATION_F31_SOURCE_AND_ARTIFACT_LOCK=PASS" in result.stdout
+    assert "FOUNDATION_A8B633_METADATA_AND_GRANT_LEGACY_RUNTIME=PASS" in result.stdout
+    assert "private artifacts NOT CHECKED" in result.stdout
 
 
 def test_legacy_grant_ui_not_swapped_for_incompatible_empty_wrapper():
     original = json.loads((ROOT / "web/foundation.lock.json").read_text())
     native = json.loads((ROOT / "web/foundation-f31.lock.json").read_text())
     assert original["source_head"] == "746e0a78f8dba782c00eba675099f24f647f1f09"
-    assert native["source_head"] == "917df932e6a25255bd4b2a4385f79793deb6c614"
+    assert native["source_head"] == "a8b633d9275a484e16b13ea05299f398f792a69b"
+    assert native["security_python_wheel"]["grant_runtime_adopted"] is False
     assert native["legacy_rc50_retained_for_domain_compatibility"] is True
     web = json.loads((ROOT / "web/package.json").read_text())
     deps = web["dependencies"]

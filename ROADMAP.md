@@ -1,5 +1,20 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-19 — Private Product Foundation a8b633 Grant consumer adoption
+
+Owner-directed GRANT-PF-01 isolated candidate work pins the exact private F31
+source and package digests without publishing Foundation binaries in public
+Grant Git. The Web dependency/lock has been updated in a separate development
+branch while RC50 Administration and native Grant security Wheel remain intact.
+GRANT-PF-02..06 host/identity/admin integration and independent product E2E are
+not complete. The original localhost LAB, G12 and deployed preview are preserved.
+
+Canonical design, validation and rollback: `docs/FOUNDATION_A8B633_CONSUMER_ADOPTION_20261019.md`.
+
+PF-02 source stage 1 adds exact Grant-owned Administration task target/role/capability routing over the existing RC50 task surface with fail-closed unsupported Control-native actions. Full Control-source AdminHub/AppShell migration remains open until upstream exposes a configurable consumer router/authority port; no security/host actions added.
+
+PF-04 read-only source stage adds strict operational-readiness evidence in Network and Backup & Import without exposing host mutations: recovery pause unknown remains Unavailable, management ACL/SSH enforcement is not claimed from the stored service URL, backup restore drill and retention deletion remain not verified/not configured. Scoped isolated-browser and negative readiness tests are separate from native host/full-user E2E; PF-04 host-effect acceptance still OPEN.
+
 
 ## 2026-10-18 — Owner-directed remaining implementation; test-only block does not stop development
 

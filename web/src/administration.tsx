@@ -51,14 +51,15 @@ import {
   grantRc50AdministrationDiscovery,
   grantRc50SessionDiscovery,
 } from './foundation_rc50';
+import { resolveGrantAdministrationSelection, type GrantAdminDetail } from './grant_control_administration_contract';
 import { Form, Select, useTask } from './common';
 import type { User } from './types';
-import { OperationalSecurityReadinessReadout, type OperationalSecurityReadiness } from './operational_security_readiness';
+import { NativeIngressReadback, NativeLifecycleReadback, OperationalSecurityReadinessReadout, type OperationalSecurityReadiness } from './operational_security_readiness';
 import { formatDisplayIso } from './display_timezone';
 import { AdminDisplayTimezoneSettings, PersonalDisplayTimezoneSettings } from './display_timezone_settings';
 import './administration-detail.css';
 
-type AdminSection = 'https' | 'health' | 'accounts' | 'audit' | 'mail' | 'network' | 'timezone' | 'lifecycle' | null;
+type AdminSection = GrantAdminDetail | null;
 
 export function readAdministrationInitialView(search: string): AdminSection {
   const params = new URLSearchParams(search);
@@ -214,22 +215,17 @@ export function Administration({ user }: { user: User }) {
   }, [section, directLanding]);
 
   function openTask(selected: AdministrationHubTask) {
-    if (selected.target?.kind === 'path') {
-      window.location.assign(selected.target.path);
+    const target = resolveGrantAdministrationSelection(selected, user.role);
+    if (!target) {
+      task.setNotice('This administration task is not available to the current Grant account.');
       return;
     }
-    const next: Record<string, AdminSection> = {
-      'core.health': 'health',
-      'core.users': 'accounts',
-      'core.audit': 'audit',
-      'grant.smtp.test': 'mail',
-      'core.backup-import': 'lifecycle',
-      'core.https': 'https',
-      'core.network': 'network',
-      'core.timezone': 'timezone',
-    };
-    const destination=next[selected.id]??null;
-    sectionRef.current=destination;
+    if (target.kind === 'route') {
+      window.location.assign(target.path);
+      return;
+    }
+    const destination = target.detail;
+    sectionRef.current = destination;
     setDirectLanding(false);
     setReviewedMail(null);
     setReviewedAccount(null);
@@ -615,14 +611,17 @@ export function Administration({ user }: { user: User }) {
       ) : null}
 
       {section === 'network' ? (
-        <Card title="Configured network surface">
-          <p>This view reports the configured Grant service origin only.
-            Published listeners, proxy routing and reconnect-safe changes remain operator-owned.</p>
-          <dl className="grant-facts">
-            <dt>Service origin</dt><dd>{info?.facts.find((fact) => fact.id === 'origin')?.value ?? 'Unavailable'}</dd>
-            <dt>Configuration owner</dt><dd>Deployment operator</dd>
-          </dl>
-        </Card>
+        <div className="grant-stack">
+          <Card title="Configured network surface">
+            <p>This view reports the configured Grant service origin only.
+              Published listeners, proxy routing and reconnect-safe changes remain operator-owned.</p>
+            <dl className="grant-facts">
+              <dt>Service origin</dt><dd>{info?.facts.find((fact) => fact.id === 'origin')?.value ?? 'Unavailable'}</dd>
+              <dt>Configuration owner</dt><dd>Deployment operator</dd>
+            </dl>
+          </Card>
+          <NativeIngressReadback status={operationalSecurity} />
+        </div>
       ) : null}
 
       {section === 'timezone' ? <AdminDisplayTimezoneSettings /> : null}
@@ -666,6 +665,7 @@ export function Administration({ user }: { user: User }) {
               upgrades still require documented operator procedures. Foundation
               renders common administration patterns, not execution authority.</p>
           </Card>
+          <NativeLifecycleReadback status={operationalSecurity} />
           <GrantConfigurationPortabilityTask />
         </div>
       ) : null}

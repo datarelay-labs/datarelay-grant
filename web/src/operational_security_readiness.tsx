@@ -99,3 +99,59 @@ export function OperationalSecurityReadinessReadout({ status }: {
     <DataRetentionPolicyReviewPanel reviewAvailability="unavailable" />
   </div>;
 }
+
+
+/** PF-04: this is an authoritative Grant-only GET projection, not a host
+ * backup, retention, shell, firewall or credential policy editor.
+ * Never turn missing/malformed private host readbacks into positive status.
+ */
+export function NativeLifecycleReadback({ status }: {
+  status: OperationalSecurityReadiness | null;
+}) {
+  if (!validOperationalSecurityReadiness(status)) {
+    return <Alert tone="warning" title="Lifecycle evidence unavailable">
+      The current Grant backup and retention readiness could not be verified.
+      No backup, restore drill, cleanup schedule or recovery state is assumed.
+    </Alert>;
+  }
+  return <Card title="Persisted recovery and retention evidence"
+    description="Read-only Grant state; this is not an installed host backup or restore service.">
+    <dl className="grant-facts">
+      <dt>Registered backup evidence</dt><dd>Unavailable</dd>
+      <dt>Independently verified restore drill</dt><dd>Not verified</dd>
+      <dt>Recovery pause</dt><dd>{status.backup_recovery.recovery_paused === null
+        ? 'Unavailable'
+        : status.backup_recovery.recovery_paused ? 'Active' : 'Not active'}</dd>
+      <dt>Approval/audit retention policy</dt><dd>Not configured</dd>
+      <dt>Record deletion by Grant</dt><dd>Disabled</dd>
+    </dl>
+    <p>There is no authorized Web restore, database import, retention deletion or
+      host recovery action. Existing private operator backup procedures do not
+      establish a verified production restore drill.</p>
+  </Card>;
+}
+
+/** PF-04: match backend's explicit absence of CIDR/SSH host enforcement.
+ * The configured Grant origin is not a scan of ingress, TLS or firewall.
+ */
+export function NativeIngressReadback({ status }: {
+  status: OperationalSecurityReadiness | null;
+}) {
+  if (!validOperationalSecurityReadiness(status)) {
+    return <Alert tone="warning" title="Management ingress evidence unavailable">
+      Grant could not verify its stored management ingress evidence.
+      No SSH, Web ACL, listener or trusted host access policy is assumed.
+    </Alert>;
+  }
+  return <Card title="Management ingress evidence"
+    description="Read-only stored Grant facts, not a host firewall or reverse-proxy inspection.">
+    <dl className="grant-facts">
+      <dt>Web management CIDR allowlist</dt><dd>Not configured</dd>
+      <dt>Host SSH enforcement</dt><dd>Not verified</dd>
+      <dt>Management access changes by Grant</dt><dd>Not authorized</dd>
+    </dl>
+    <p>Only the configured service origin is known to Grant. Public listeners,
+      certificate verification, SSH rules and policy apply must be inspected
+      separately by the authorized deployment operator.</p>
+  </Card>;
+}
