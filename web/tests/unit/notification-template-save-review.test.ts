@@ -3,6 +3,8 @@ import {renderToStaticMarkup} from 'react-dom/server';
 import {describe,expect,it} from 'vitest';
 import type {NotificationEvent,NotificationTemplateSet} from '../../src/types';
 import type {TemplateDraft} from '../../src/notification_preview';
+import {createEmailDesign} from '../../src/email_design';
+import {emailPalettes} from '../../src/email_palette';
 import {
   prepareTemplateSaveReview,isCurrentTemplateSaveReview,
   NotificationTemplateSaveConfirmation,createTemplateSaveGuard,
@@ -125,6 +127,23 @@ describe('P0 notification template-set exact source Review→Confirm',()=>{
       {...receipt,templates:{...receipt.templates,denied:{subject:'wrong',body:'wrong'}}},
     ])expect(()=>verifyTemplateSaveReceipt(review(),bad))
       .toThrow('TEMPLATE_SAVE_RECEIPT_MISMATCH');
+  });
+  it('accepts exact server-normalized design defaults on a new saved template receipt',()=>{
+    const draftWithDesign:TemplateDraft={
+      ...draft,name:'Isolated E2E saved mail',design:createEmailDesign(),
+    };
+    const intent=prepareTemplateSaveReview('create',null,draftWithDesign);
+    const normalized:NotificationTemplateSet={
+      ...saved,...draftWithDesign,id:'new-isolated',enabled:true,
+      design:{...draftWithDesign.design!,event_headings:{},event_preheaders:{},
+        palette:{...emailPalettes.light}},
+    };
+    // Pydantic populates optional event headings and the default palette
+    // even if the authoring UI omitted them. These do not alter the draft.
+    expect(verifyTemplateSaveReceipt(intent,normalized)).toEqual(normalized);
+    expect(()=>verifyTemplateSaveReceipt(intent,{
+      ...normalized,design:{...normalized.design!,event_headings:{requested:'Changed heading'}},
+    })).toThrow('TEMPLATE_SAVE_RECEIPT_MISMATCH');
   });
   it('ambiguous PUT stays blocked until successful explicit same-set history refresh',async()=>{
     const gate=createTemplateSaveGuard(),intent=review();

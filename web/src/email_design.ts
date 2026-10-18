@@ -34,7 +34,7 @@ export function designSignature(value:EmailDesign|null|undefined):string|null {
   if(value==null)return null;
   const stable=(v:unknown):unknown=>Array.isArray(v)?v.map(stable):
     v!==null&&typeof v==='object'?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b)).map(([k,x])=>[k,stable(x)])):v;
-  return JSON.stringify(stable({...value,palette:value.palette??emailPalettes.light,event_preheaders:value.event_preheaders??{},optional_content:value.optional_content??{},rich_text:value.rich_text??false,paragraph_alignment:value.paragraph_alignment??'left',button_suffixes:{approve:'',hold:'',deny:'',details:'',...value.button_suffixes}}));
+  return JSON.stringify(stable({...value,palette:value.palette??emailPalettes.light,event_headings:value.event_headings??{},event_preheaders:value.event_preheaders??{},optional_content:value.optional_content??{},rich_text:value.rich_text??false,paragraph_alignment:value.paragraph_alignment??'left',button_suffixes:{approve:'',hold:'',deny:'',details:'',...value.button_suffixes}}));
 }
 
 export function formatEmailText(value:string,start:number,end:number,mark:'bold'|'italic'|'list'|'insert',insert=''){
