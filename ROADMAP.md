@@ -12,12 +12,12 @@ and F31 product source are preserved; do not repeat them.
 
 | WBS | Implementation state | Remaining closure |
 | --- | --- | --- |
-| STD-01 standards-to-code crosswalk | SOURCE inventory in `docs/STANDARDS_ALIGNMENT_GAP_LEDGER.md`; partial | Close explicit PASS/GAP/N/A with source/test provenance |
-| STD-02 human-authorization, execution, quorum, delegation | Previously implemented; focused Python regressions PASS | Further gaps only if current evidence shows missing behavior |
+| STD-01 standards-to-code crosswalk | **SOURCE-CONTROL MAPPING COMPLETE**: explicit implemented / out-of-scope / operator-gated rows in Gap Ledger | No entire-standard certification implied |
+| STD-02 human-authorization, execution, quorum, delegation | **EXISTING SOURCE VERIFIED**: actor authority, 4 quorum modes, sequential/hold/denial, concurrent consume/replay | Real user/integration acceptance remains separate; no generic BPMN/DMN interpreter |
 | STD-03 low-assurance email PIN + high-assurance step-up | 4-digit default + **optional 6-digit source implemented**, bounded attempts and independent fresh MFA | Affected/full regression, immutable candidate CI, real persona/mail only |
 | STD-04 CloudEvents 1.0 / RFC 9457 opt-in | **SOURCE IMPLEMENTED** on new candidate: encrypted per-registration format, immutable event source, HMAC over wire body, explicit Accept negotiation, admin Web Review→Confirm | Exact-HEAD CI and isolated recipient contract; real external consumer E2E distinct |
-| STD-05 audit/evidence/privacy mapping | Existing audit chains/export/redaction present; 17/17 regressions PASS | Standards-control crosswalk and outstanding genuine gaps |
-| STD-06 accessibility / enterprise identity | Grant UI qualification partial; Foundation owns common login / shell | Grant-only WCAG remediation where evidenced; SCIM optional and not baseline |
+| STD-05 audit/evidence/privacy mapping | **SOURCE GAP FIXED**: represented approver typed admin audit evidence now preserved; 18 targeted audit tests PASS | No certified legal signature, cryptographic WORM, organizational ISO/privacy/retention claims |
+| STD-06 accessibility / enterprise identity | **GRANT-SOURCE FOCUS GAP FIXED**: email decision Review/Confirm step keyboard focus targeting, affected browser verification; Foundation common login/shell untouched | Foundation 320×568 login issue upstream; SCIM optional separate feature, not Grant 1.0 mandatory |
 | SM-3/4 real platform HTTPS/network/retention/restore | **OWNER-GATED**, not a safe Grant source-only requirement | Separate production/privilege/data authority and upstream Foundation readiness |
 | Foundation shared shell/ACL/Roles/Sessions | Dependency owned by Product Foundation | Consume only a qualified matching package after published handoff; do not fork shared UI |
 | Full User E2E and external Control/Stellar | Product test/owner-gated | Remain NOT PASS; do not substitute fixtures or falsely infer production |

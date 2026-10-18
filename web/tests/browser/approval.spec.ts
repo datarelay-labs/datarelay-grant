@@ -1755,6 +1755,7 @@ test('P0-2B issued email link opens no-login PIN, explicit Confirm, then rejects
   await page.getByRole('button',{name:'Verify code'}).click();
   await expect(page.getByLabel('Verified request summary')).toContainText(title);
   await expect(page.getByLabel('Verified request summary')).toContainText(target);
+  await expect(page.getByRole('heading',{name:'Review request',exact:true})).toBeFocused();
   await expect(page.getByRole('button',{name:'Confirm Approve'})).toBeVisible();
   expect((await serverRow()).state).toBe('AWAITING');
   expect((await serverRow()).execution_state).toBe('NOT_STARTED');
@@ -1763,6 +1764,7 @@ test('P0-2B issued email link opens no-login PIN, explicit Confirm, then rejects
 
   await page.getByRole('button',{name:'Confirm Approve'}).click();
   await expect(page.getByText('Your decision was recorded.',{exact:false})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Decision recorded',exact:true})).toBeFocused();
   await expect.poll(async()=> (await serverRow()).state).toBe('APPROVED');
   expect((await serverRow()).execution_state).toBe('NOT_STARTED');
   expect(mutating.filter(url=>url.endsWith('/confirm'))).toHaveLength(1);
@@ -1820,6 +1822,7 @@ test('P0-2B issued Deny link requires same-mailbox OTP and explicit reason/Confi
   await expect(page.getByRole('button',{name:'Request one-time code'})).toHaveCount(0);
   await page.getByLabel('Four-digit code from the email').fill(pin!);
   await page.getByRole('button',{name:'Verify code'}).click();
+  await expect(page.getByRole('heading',{name:'Review request',exact:true})).toBeFocused();
   await expect(page.getByRole('button',{name:'Request one-time code'})).toBeVisible();
   await expect(page.getByRole('button',{name:'Confirm Deny'})).toHaveCount(0);
   expect((await row()).state).toBe('AWAITING');
@@ -1842,6 +1845,7 @@ test('P0-2B issued Deny link requires same-mailbox OTP and explicit reason/Confi
   await page.getByLabel('Reason for denial (required)').fill('Authorized reviewer declined the isolated test');
   await expect(page.getByRole('button',{name:'Confirm Deny'})).toBeEnabled();
   await page.getByRole('button',{name:'Confirm Deny'}).click();
+  await expect(page.getByRole('heading',{name:'Decision recorded',exact:true})).toBeFocused();
   await expect(page.getByText('Your decision was recorded.',{exact:false})).toBeVisible();
   await expect.poll(async()=> (await row()).state).toBe('DENIED');
   expect((await row()).execution_state).toBe('NOT_STARTED');

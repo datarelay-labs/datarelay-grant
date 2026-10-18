@@ -43,7 +43,7 @@ SAFE_IDENTIFIER = re.compile(r"^[a-zA-Z0-9_-]{1,100}$")
 SAFE_IDS = {
     "event_id", "token_id", "integration_id", "profile_id", "request_id",
     "group_id", "execution_id", "delegation_id", "action_hash",
-    "recipient_id", "mailbox_recipient_id", "verified_person_id",
+    "recipient_id", "mailbox_recipient_id", "verified_person_id", "represented_approver",
     "approval_assignment_id", "approval_step_id", "issuance_id", "challenge_id",
 }
 

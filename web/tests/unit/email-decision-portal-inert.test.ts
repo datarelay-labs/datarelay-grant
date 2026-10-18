@@ -24,6 +24,7 @@ describe('P0-2B mounted portal human intent is inert before explicit PIN',()=>{
   expect(html).toContain(label+' request');
   expect(html).toContain('Four-digit code from the email');
   expect(html).toContain('Verify code');
+  expect(html).not.toContain('tabindex="0"');
   expect(html).not.toContain('Confirm '+label);
   expect(html).not.toContain('Your decision was recorded');
   expect(never).not.toHaveBeenCalled();

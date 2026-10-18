@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
   canConfirmEmailDecision, decisionReason, isPinForDigits, isSixDigitCode,
   initialStageForProof, stageAfterStepUp,
@@ -47,6 +47,13 @@ export function EmailDecisionPortal({ choice, adapter, pinDigits = 4 }: EmailDec
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const pending = useRef(false);
+  const phaseHeading = useRef<HTMLHeadingElement>(null);
+
+  // The prior focused submit/button disappears as the approval phase changes.
+  // Place keyboard and screen-reader focus on the new heading, never on Confirm.
+  useEffect(() => {
+    if (phase !== 'pin') phaseHeading.current?.focus();
+  }, [phase]);
 
   async function run(action: () => Promise<void>) {
     if (pending.current) return;
@@ -180,7 +187,7 @@ export function EmailDecisionPortal({ choice, adapter, pinDigits = 4 }: EmailDec
 
       {proof && (phase === 'otp' || phase === 'mfa' || phase === 'ready') ? (
         <div aria-label="Verified request summary">
-          <h2>Review request</h2>
+          <h2 ref={phaseHeading} tabIndex={-1}>Review request</h2>
           <dl>
             <dt>Subject</dt>
             <dd>{proof.summary.subject}</dd>
@@ -276,16 +283,22 @@ export function EmailDecisionPortal({ choice, adapter, pinDigits = 4 }: EmailDec
       ) : null}
 
       {phase === 'invalid' ? (
-        <p role="alert">
-          This link or verification context is no longer usable.
-          Request a new approval email from an authorized administrator.
-        </p>
+        <div>
+          <h2 ref={phaseHeading} tabIndex={-1}>Decision link unavailable</h2>
+          <p role="alert">
+            This link or verification context is no longer usable.
+            Request a new approval email from an authorized administrator.
+          </p>
+        </div>
       ) : null}
       {phase === 'done' ? (
-        <p role="status">
-          Your decision was recorded. This is not a confirmation that the
-          protected action has executed.
-        </p>
+        <div>
+          <h2 ref={phaseHeading} tabIndex={-1}>Decision recorded</h2>
+          <p role="status">
+            Your decision was recorded. This is not a confirmation that the
+            protected action has executed.
+          </p>
+        </div>
       ) : null}
     </section>
   );
