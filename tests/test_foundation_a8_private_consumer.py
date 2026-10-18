@@ -14,6 +14,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from tools import prepare_foundation_f31 as prepare
+from tools import prime_foundation_f31_npm_peers as prime
 from tools import verify_foundation_f31 as verifier
 
 
@@ -82,3 +83,35 @@ def test_destination_cannot_escape_ignored_private_foundation_cache(tmp_path: Pa
     with pytest.raises(ValueError, match="escaped ignored Foundation cache"):
         prepare.install_exact_bytes(tmp_path / "leak.tgz", b"no-private-content")
     assert not (tmp_path / "leak.tgz").exists()
+
+
+def test_f31_public_npm_peer_closure_is_exact_and_transitive() -> None:
+    root = {"dependencies": {"clsx": "2.1.1"}}
+    packages = {
+        "node_modules/clsx": {"version": "2.1.1"},
+        "node_modules/react": {"version": "19.3.0"},
+        "node_modules/react-dom": {
+            "version": "19.3.0", "dependencies": {"scheduler": "0.28.0"},
+        },
+        "node_modules/scheduler": {"version": "0.28.0"},
+    }
+    assert prime.peer_dependency_closure(root, packages) == [
+        "clsx@2.1.1", "react-dom@19.3.0", "react@19.3.0", "scheduler@0.28.0",
+    ]
+
+
+def test_f31_public_npm_peer_closure_rejects_private_and_missing_lock() -> None:
+    with pytest.raises(ValueError, match="not a public npm peer"):
+        prime.peer_dependency_closure(
+            {"dependencies": {"@datarelay-labs/internal": "0.1.0"}}, {}
+        )
+    with pytest.raises(TypeError, match="Missing exact npm source lock"):
+        prime.peer_dependency_closure({"dependencies": {"clsx": "2.1.1"}}, {})
+
+
+def test_f31_public_npm_peer_closure_rejects_nonspecific_versions() -> None:
+    with pytest.raises(ValueError, match="Non-exact public npm version"):
+        prime.peer_dependency_closure(
+            {"dependencies": {"clsx": "2.1.1"}},
+            {"node_modules/clsx": {"version": "^2.1.1"}},
+        )

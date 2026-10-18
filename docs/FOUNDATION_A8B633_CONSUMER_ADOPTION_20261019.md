@@ -39,7 +39,7 @@ npm --prefix web run check
 uv run --frozen pytest -q tests/test_foundation_a8_private_consumer.py
 ```
 
-In CI, the already-approved Foundation Contents:read credential checks out the immutable private source without persisting credentials. The source-only stager produces ignored artifacts; `tools/prepare_foundation_f31.py --source` verifies them. API-static checks public lock metadata and the **existing** Grant Python runtime; foundation-web separately checks all new private artifact bytes and the Grant Web build. A missing token or mismatched source fails closed instead of reverting silently to 917df932. Private archives are neither Git-committed nor publicly uploaded by the workflow.
+In CI, the already-approved Foundation Contents:read credential checks out the immutable private source without persisting credentials. `tools/prime_foundation_f31_npm_peers.py` derives exactly ten public npm runtime dependencies from the pinned private lock and checks each exact version online, then offline, to prime the resolver cache; the upstream smoke still uses strict peer checks and `--offline` without bypass flags. The source-only stager produces ignored artifacts; `tools/prepare_foundation_f31.py --source` verifies them. API-static checks public lock metadata and the **existing** Grant Python runtime; foundation-web separately checks all new private artifact bytes and the Grant Web build. A missing token or mismatched source fails closed instead of reverting silently to 917df932. Private archives are neither Git-committed nor publicly uploaded by the workflow.
 
 ## Workstream and strict acceptance
 

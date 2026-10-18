@@ -42,7 +42,7 @@ case "${1:-all}" in
     node --max-old-space-size=256 mail-renderer/build.mjs --check
     ;;
   web) python3 tools/verify_foundation_f31.py; npm --prefix web test; npm --prefix web run check ;;
-  static) python3 tools/verify_foundation_f31.py --metadata-only; uv run --frozen ruff check grant tests tools/prepare_foundation.py tools/prepare_foundation_f31.py tools/verify_foundation_f31.py tools/build_candidate.py tools/verify_candidate.py; git diff --check ;;
+  static) python3 tools/verify_foundation_f31.py --metadata-only; uv run --frozen ruff check grant tests tools/prepare_foundation.py tools/prepare_foundation_f31.py tools/prime_foundation_f31_npm_peers.py tools/verify_foundation_f31.py tools/build_candidate.py tools/verify_candidate.py; git diff --check ;;
   browser)
     # A pre-existing user-local runtime can be selected on minimal Linux hosts.
     if [[ -n "${GRANT_BROWSER_LIBRARY_PATH:-}" ]]; then
