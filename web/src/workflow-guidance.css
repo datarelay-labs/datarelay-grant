@@ -1,0 +1,103 @@
+/* Grant domain onboarding only: Foundation owns the global navigation / theme. */
+.grant-guided-start, .grant-new-request, .grant-request-journey,
+.grant-intake-journey { min-width: 0; }
+.grant-guided-start {
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid color-mix(in srgb, #5493ff 48%, var(--dr-border-default));
+  background: linear-gradient(128deg,
+    color-mix(in srgb, #3b82f6 11%, var(--dr-surface-raised)) 0%,
+    var(--dr-surface-raised) 64%);
+  border-radius: var(--dr-radius-card);
+}
+.grant-guided-heading { display: flex; gap: 1rem; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.grant-guided-heading h3 { font-size: clamp(1.25rem, 2vw, 1.6rem); margin: .2rem 0 0; letter-spacing: -.025em; }
+.grant-guided-eyebrow { margin: 0; color: var(--dr-text-secondary); font-size: .78rem; text-transform: uppercase; letter-spacing: .12em; font-weight: 750; }
+.grant-guided-admin-link { color: inherit; border: 1px solid var(--dr-border-default); background: var(--dr-surface-input); border-radius: .6rem; padding: .65rem .85rem; font: inherit; font-size: .82rem; cursor: pointer; text-align: left; }
+.grant-guided-cards { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .85rem; }
+.grant-guided-card { display: flex; flex-direction: column; align-items: stretch; gap: .65rem; min-width: 0; padding: 1.15rem; color: inherit; text-align: left; font: inherit; background: var(--dr-surface-raised); border: 1px solid var(--dr-border-default); border-radius: .8rem; cursor: pointer; transition: transform .14s, border-color .14s, box-shadow .14s; }
+.grant-guided-card:nth-child(1) { --grant-step-color: #3b82f6; }
+.grant-guided-card:nth-child(2) { --grant-step-color: #0fba96; }
+.grant-guided-card:nth-child(3) { --grant-step-color: #9b7cf2; }
+.grant-guided-card:hover { transform: translateY(-2px); border-color: var(--grant-step-color); box-shadow: 0 4px 17px #0002; }
+.grant-guided-card:focus-visible,.grant-guided-admin-link:focus-visible,
+.grant-intake-advanced > summary:focus-visible { outline: 3px solid #78adff; outline-offset: 3px; }
+.grant-guided-card-top { display: flex; align-items: center; justify-content: space-between; }
+.grant-guided-step { display: inline-grid; place-items: center; width: 2.55rem; height: 2.55rem; border-radius: .7rem; background: color-mix(in srgb,var(--grant-step-color) 20%,var(--dr-surface-raised)); color: var(--dr-text-primary); font-weight: 850; font-variant-numeric: tabular-nums; }
+.grant-guided-symbol { font-size: 1.8rem; line-height: 1; color: var(--grant-step-color); font-weight: 800; }
+.grant-guided-card > strong { font-size: 1.05rem; line-height: 1.25; }
+.grant-guided-description { font-size: .88rem; line-height: 1.45; color: var(--dr-text-secondary); min-height: 2.5em; }
+.grant-guided-action { color: var(--dr-text-primary); font-weight: 750; padding-top: .4rem; margin-top: auto; border-top: 1px solid var(--dr-border-divider); display: flex; justify-content: space-between; }
+.grant-guided-card > small { color: var(--dr-text-muted); font-size: .73rem; line-height: 1.35; }
+.grant-intake-journey ol,.grant-request-journey ol { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .65rem; padding: 0; margin: 0; list-style: none; }
+.grant-intake-journey li { display:flex; gap: .65rem; align-items:center; min-width:0; border:1px solid var(--dr-border-default); background: var(--dr-surface-raised); border-radius:.7rem; padding:.9rem; }
+.grant-intake-step-number { flex: 0 0 auto; width:2.2rem; height:2.2rem; display:grid; place-items:center; font-size:.85rem; border-radius:50%; background:var(--dr-surface-input); color:var(--dr-text-muted); font-weight:800; }
+.grant-intake-journey li.is-current { border-color: #4589fa; background:color-mix(in srgb,#3b82f6 10%,var(--dr-surface-raised)); }
+.grant-intake-journey li.is-current .grant-intake-step-number { background:#3879df; color:white; }
+.grant-intake-journey li.is-complete .grant-intake-step-number { background:#087e63; color:white; }
+.grant-intake-journey strong,.grant-intake-journey small { display:block; min-width:0; }
+.grant-intake-journey strong { font-size:.85rem; }
+.grant-intake-journey small { color:var(--dr-text-muted); font-size:.75rem; line-height:1.45; }
+.grant-intake-section { border:1px solid var(--dr-border-default); border-radius:.75rem; padding:clamp(.85rem,2vw,1.2rem); display:grid; gap:.9rem; background:var(--dr-surface-raised); min-width:0; }
+.grant-intake-section h3 { margin:0; font-size:1.08rem; }
+.grant-intake-section > p { margin:0; color:var(--dr-text-muted); }
+.grant-intake-field-guide { margin:0; color:var(--dr-text-secondary); font-size:.83rem; line-height:1.5; }
+.grant-intake-advanced { margin-top:.25rem; border:1px solid var(--dr-border-default); border-radius:.6rem; background:var(--dr-surface-input); }
+.grant-intake-advanced > summary { cursor:pointer; font-weight:720; padding:.9rem 1rem; }
+.grant-intake-advanced > div { border-top:1px solid var(--dr-border-divider); padding:1rem; display:grid; gap:1rem; }
+.grant-intake-review-note { padding:.7rem 1rem; border-left:3px solid #498bfd; background:color-mix(in srgb,#3b82f6 10%,var(--dr-surface-raised)); border-radius:.35rem; }
+.grant-request-stage { display:flex; flex-direction:column; gap:.6rem; padding:1rem; border:1px solid var(--dr-border-default); border-radius:.7rem; background:var(--dr-surface-raised); min-width:0; }
+.grant-request-stage.is-good { border-top:3px solid #16a47d; }
+.grant-request-stage.is-pending { border-top:3px solid #6385b9; }
+.grant-request-stage.is-blocked { border-top:3px solid #d98a45; }
+.grant-request-stage.is-reported { border-top:3px solid #8e7bee; }
+.grant-request-stage-top { display:flex; gap:.5rem; align-items:center; font-size:.84rem; }
+.grant-request-stage-num { border-radius:.4rem; background:var(--dr-surface-input); padding:.35rem .45rem; font-weight:800; font-variant-numeric:tabular-nums; }
+.grant-request-stage-state { font-weight:850; overflow-wrap:anywhere; font-size:.96rem; }
+.grant-request-stage small { color:var(--dr-text-muted); line-height:1.4; font-size:.76rem; }
+.grant-detail-status-disclosure { border-top:1px solid var(--dr-border-divider); margin-top:1rem; padding-top:1rem; }
+.grant-detail-status-disclosure > summary { cursor:pointer; font-weight:700; padding:.4rem 0; }
+.grant-detail-status-disclosure > div { display:grid; gap:1rem; padding-top:1rem; }
+.grant-detail-next { margin:.75rem 0; display:flex; gap:.75rem; align-items:center; padding:.75rem 1rem; background:color-mix(in srgb,#3b82f6 10%,var(--dr-surface-raised)); border:1px solid var(--dr-border-default); border-radius:.65rem; }
+.grant-detail-next a { text-decoration:underline; font-weight:750; color:inherit; }
+@media(max-width:900px) { .grant-guided-cards {grid-template-columns:repeat(2,minmax(0,1fr));} }
+@media(max-width:680px) {
+ .grant-guided-heading {align-items:flex-start;flex-direction:column;}
+ .grant-guided-cards,.grant-intake-journey ol,.grant-request-journey ol {grid-template-columns:minmax(0,1fr);}
+ .grant-guided-description {min-height:0;}
+ .grant-request-stage {gap:.45rem;}
+ .grant-intake-journey li {padding:.75rem;}
+}
+@media(prefers-reduced-motion:reduce){.grant-guided-card {transition:none;}.grant-guided-card:hover {transform:none;}}
+
+/* Source-backed administrator journey; never declares a connection verified. */
+.grant-admin-setup {
+  border: 1px solid color-mix(in srgb, #5793e8 42%, var(--dr-border-default));
+  border-radius: var(--dr-radius-card);
+  background: linear-gradient(122deg,
+    color-mix(in srgb, #3b82f6 10%, var(--dr-surface-raised)),
+    var(--dr-surface-raised) 72%);
+  padding: clamp(1rem, 2vw, 1.45rem);
+  min-width: 0;
+}
+.grant-admin-setup-title h3 { margin: .3rem 0; font-size: clamp(1.1rem, 1.8vw, 1.45rem); }
+.grant-admin-setup-title p { margin: .3rem 0 1rem; color: var(--dr-text-secondary); font-size: .9rem; }
+.grant-admin-setup-steps { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: .6rem; list-style: none; margin: 0; padding: 0; }
+.grant-admin-setup-steps--requester { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.grant-admin-setup-steps > li { display: flex; align-items: flex-start; gap: .6rem; min-width: 0; padding: .9rem; border: 1px solid var(--dr-border-default); border-radius: .7rem; background: var(--dr-surface-raised); }
+.grant-admin-setup-num { display: grid; flex: 0 0 2rem; height: 2rem; place-items: center; font-size: .83rem; font-weight: 800; font-variant-numeric: tabular-nums; border-radius: .5rem; background: color-mix(in srgb, #3b82f6 18%, var(--dr-surface-input)); }
+.grant-admin-setup-step { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; gap: .55rem; }
+.grant-admin-setup-step > strong { font-size: .86rem; line-height: 1.35; }
+.grant-admin-setup-step > small { color: var(--dr-text-muted); font-size: .76rem; line-height: 1.45; overflow-wrap: anywhere; }
+.grant-admin-setup-step > a,.grant-admin-setup-step > button { font: inherit; font-weight: 750; font-size: .8rem; text-decoration: none; color: inherit; background: transparent; border: 0; padding: .3rem 0; cursor: pointer; text-align: left; }
+.grant-admin-setup-step > a:hover,.grant-admin-setup-step > button:hover { text-decoration: underline; }
+.grant-admin-setup-step > a:focus-visible,.grant-admin-setup-step > button:focus-visible { outline: 3px solid #78adff; outline-offset: 3px; }
+.grant-admin-setup-note { font-size: .8rem; line-height: 1.5; color: var(--dr-text-muted); margin: .9rem 0 0; }
+@media(max-width:1100px) { .grant-admin-setup-steps { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) { .grant-admin-setup-steps { grid-template-columns: minmax(0,1fr); } }
+
+/* Do not imply the initial administrator policy editor can start before
+   prerequisite policy/integration/approver reads are complete. */
+.grant-admin-setup-step > button:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}

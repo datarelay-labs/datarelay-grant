@@ -1,0 +1,519 @@
+"""Small request, profile and integration HTTP surface."""
+
+from typing import Literal
+
+from fastapi import Query, Request, Response
+from fastapi.responses import FileResponse
+
+from .email_assets import LogoUpload
+from .email_publication import (
+    PublicationCommit,
+    PublicationReview,
+    commit_publication,
+    publication_history,
+    review_publication,
+)
+from .integration_diagnostics import configuration_manifest, diagnostics
+from .models import (
+    ApproverGroup,
+    ApproverGroupUpdate,
+    Cancel,
+    Consume,
+    Decision,
+    DecisionReissue,
+    Delegation,
+    EmailTemplate,
+    EmailTemplateUpdate,
+    Escalation,
+    Intake,
+    Integration,
+    IntegrationVerificationPolicy,
+    IntentConfirmation,
+    IntentMfaVerification,
+    IntentOtpRequest,
+    IntentOtpVerification,
+    IntentPin,
+    NotificationBrandingUpdate,
+    NotificationDraftPreview,
+    NotificationEvent,
+    NotificationPreview,
+    NotificationTemplateSet,
+    NotificationTemplateSetUpdate,
+    NotificationTestSend,
+    PolicySample,
+    Profile,
+    ProfileUpdate,
+    Reassign,
+    RequestComment,
+    Result,
+    Token,
+)
+
+
+def register_domain(app, actor, human, reader):
+    core, auth, worker = app.state.core, app.state.auth, app.state.worker
+
+    # Scoped mailbox capabilities are deliberately separate from actor/session
+    # auth, account APIs, and the external grant consume/result boundary.
+    def require_decision_origin(request: Request) -> None:
+        if request.headers.get("origin") != app.state.settings.origin:
+            from .errors import GrantError
+            raise GrantError("DECISION_ORIGIN_REQUIRED", 403)
+
+    @app.get("/api/v1/decision-intents/{token}")
+    def preview_decision_link(token: str, request: Request):
+        # Preserve the *identical issued capability URL* for older emails
+        # and JSON clients. Actual browser navigations send text/html first;
+        # they receive ONLY the inert compiled client shell, with no token
+        # lookup, decision state, PIN check, OTP send or side effect.
+        # The client explicitly performs the existing JSON preflight using
+        # Accept: application/json, and server POSTs remain the sole authority.
+        if request.headers.get("accept", "").lower().startswith("text/html"):
+            from .errors import GrantError
+            index = core.settings.web_root.resolve() / "index.html"
+            if not index.is_file():
+                raise GrantError("FRONTEND_NOT_BUILT", 503)
+            return FileResponse(
+                index, media_type="text/html",
+                headers={"Vary": "Accept"},
+            )
+        from .decision_links import DecisionLinks
+        return DecisionLinks(core.db, core.settings).preview(token)
+
+    @app.head("/api/v1/decision-intents/{token}")
+    def head_decision_link(token: str):
+        from .decision_links import DecisionLinks
+        DecisionLinks(core.db, core.settings).preview(token)
+        return Response(status_code=204)
+
+    @app.post("/api/v1/decision-intents/{token}/verify")
+    def verify_decision_pin(token: str, body: IntentPin, request: Request):
+        from .decision_links import DecisionLinks
+        require_decision_origin(request)
+        return DecisionLinks(core.db, core.settings).verify(
+            token, body.pin, request.client.host if request.client else "unknown",
+        )
+
+    @app.post("/api/v1/decision-intents/{token}/confirm")
+    def confirm_decision_pin(token: str, body: IntentConfirmation, request: Request):
+        from .decision_links import DecisionLinks
+
+        require_decision_origin(request)
+        # The effective customer verification policy is resolved atomically
+        # inside confirm(), not from caller-controlled headers or cookies.
+        # An expired/unrelated Grant session must never block loginless PIN/OTP.
+        # Only mandatory MFA invokes current-session auth with CSRF enforcement.
+        resolve_actor = (
+            (lambda: human(request))
+            if request.cookies.get("grant_session") and request.headers.get("x-csrf-token")
+            else None
+        )
+        return DecisionLinks(core.db, core.settings).confirm(
+            token, body.confirmation_token, body.reason, resolve_actor=resolve_actor,
+        )
+
+    @app.post("/api/v1/decision-intents/{token}/otp/request", status_code=202)
+    def issue_decision_otp(token: str, body: IntentOtpRequest, request: Request):
+        from .decision_otp import DecisionOtp
+
+        require_decision_origin(request)
+        return DecisionOtp(core.db, core.settings).request(
+            token, body.confirmation_token,
+            request.client.host if request.client else "unknown",
+        )
+
+    @app.post("/api/v1/decision-intents/{token}/otp/verify")
+    def verify_decision_otp(token: str, body: IntentOtpVerification, request: Request):
+        from .decision_otp import DecisionOtp
+
+        require_decision_origin(request)
+        return DecisionOtp(core.db, core.settings).verify(
+            token, body.confirmation_token, body.otp,
+            request.client.host if request.client else "unknown",
+        )
+
+    @app.post("/api/v1/decision-intents/{token}/mfa/verify")
+    def verify_decision_fresh_mfa(
+        token: str, body: IntentMfaVerification, request: Request,
+    ):
+        from .decision_mfa import DecisionMfa
+
+        require_decision_origin(request)
+        return DecisionMfa(core.db, core.settings).verify(
+            human(request), token, body.confirmation_token, body.code,
+        )
+
+    @app.post("/api/v1/admin/requests/{ident}/decision-links/reissue")
+    def admin_reissue_decision_links(ident: str, body: DecisionReissue, request: Request):
+        return core.reissue_decision_mail(human(request), ident, body)
+
+    @app.get("/api/v1/delegations")
+    def delegations(request: Request):
+        return core.delegations(human(request))
+
+    @app.post("/api/v1/delegations", status_code=201)
+    def add_delegation(body: Delegation, request: Request):
+        return core.create_delegation(human(request), body)
+
+    @app.post("/api/v1/delegations/{ident}/revoke")
+    def revoke_delegation(ident: str, request: Request):
+        return core.revoke_delegation(human(request), ident)
+
+    @app.get("/api/v1/approvers/directory")
+    def approver_directory(request: Request):
+        return core.approver_directory(human(request))
+
+    @app.get("/api/v1/requests")
+    def requests(
+        request: Request,
+        limit: int = Query(100, ge=1, le=100),
+        offset: int = Query(0, ge=0),
+        view: Literal[
+            "all", "needs", "overdue", "approval_overdue", "held", "delegated", "recent", "requester", "escalated",
+            "ops_pending", "ops_overdue", "ops_approved_unused",
+            "ops_execution_unknown", "ops_execution_failed",
+            "ops_email_failed", "ops_webhook_failed", "ops_delivery_failed",
+            "ops_decided",
+        ] = "all",
+        search: str = Query("", max_length=100),
+        state: str | None = Query(None, max_length=24),
+        collaboration_state: str | None = Query(None, max_length=32),
+        policy_id: str | None = Query(None, max_length=100),
+        requester_id: str | None = Query(None, max_length=100),
+        approver_id: str | None = Query(None, max_length=100),
+        group_id: str | None = Query(None, max_length=100),
+        integration_id: str | None = Query(None, max_length=100),
+        action_kind: str | None = Query(None, max_length=100),
+        created_after: float | None = Query(None, ge=0),
+        created_before: float | None = Query(None, ge=0),
+        delivery_state: str | None = Query(None, max_length=32),
+        execution_state: str | None = Query(None, max_length=32),
+    ):
+        return core.list_requests(
+            reader(request),
+            limit,
+            offset,
+            view=view,
+            search=search,
+            state=state,
+            collaboration_state=collaboration_state,
+            policy_id=policy_id,
+            requester_id=requester_id,
+            approver_id=approver_id,
+            group_id=group_id,
+            integration_id=integration_id,
+            action_kind=action_kind,
+            created_after=created_after,
+            created_before=created_before,
+            delivery_state=delivery_state,
+            execution_state=execution_state,
+        )
+
+    @app.post("/api/v1/requests", status_code=202)
+    def create_request(body: Intake, request: Request):
+        return core.create_request(actor(request), body)
+
+    @app.get("/api/v1/requests/{ident}")
+    def get_request(ident: str, request: Request):
+        return core.get(reader(request), ident, required_scope="request:read")
+
+    @app.get("/api/v1/requests/{ident}/comparison")
+    def request_comparison(ident: str, request: Request):
+        return core.compare_replacement(reader(request), ident)
+
+    @app.post("/api/v1/requests/{ident}/comments", status_code=201)
+    def comment(ident: str, body: RequestComment, request: Request):
+        return core.add_request_comment(human(request), ident, body)
+
+    @app.post("/api/v1/requests/{ident}/decision")
+    def decision(ident: str, body: Decision, request: Request):
+        return core.decide(human(request), ident, body)
+
+    @app.post("/api/v1/requests/{ident}/escalation")
+    def escalation(ident: str, body: Escalation, request: Request):
+        return core.configure_escalation(actor(request), ident, body)
+
+    @app.post("/api/v1/requests/{ident}/reassign")
+    def reassign(ident: str, body: Reassign, request: Request):
+        return core.reassign_request(actor(request), ident, body)
+
+    @app.post("/api/v1/requests/{ident}/cancel")
+    def cancel(ident: str, body: Cancel, request: Request):
+        return core.cancel(actor(request), ident, body)
+
+    @app.post("/api/v1/requests/{ident}/consume")
+    def consume(ident: str, body: Consume, request: Request):
+        return core.consume(actor(request), ident, body)
+
+    @app.post("/api/v1/requests/{ident}/result")
+    def result(ident: str, body: Result, request: Request):
+        return core.report(actor(request), ident, body)
+
+    @app.get("/api/v1/approver-groups")
+    def approver_groups(request: Request):
+        return core.approver_groups(actor(request))
+
+    @app.post("/api/v1/approver-groups", status_code=201)
+    def add_approver_group(body: ApproverGroup, request: Request):
+        return core.create_approver_group(actor(request), body)
+
+    @app.put("/api/v1/approver-groups/{ident}")
+    def update_approver_group(ident: str, body: ApproverGroupUpdate, request: Request):
+        return core.update_approver_group(actor(request), ident, body)
+
+    @app.get("/api/v1/profiles")
+    def profiles(request: Request):
+        return core.profiles(reader(request))
+
+    @app.post("/api/v1/profiles", status_code=201)
+    def add_profile(body: Profile, request: Request):
+        return core.create_profile(actor(request), body)
+
+    @app.post("/api/v1/profiles/preview")
+    def preview_profile(body: PolicySample, request: Request):
+        return core.preview_policy(actor(request), body)
+
+    @app.put("/api/v1/profiles/{ident}")
+    def update_profile(ident: str, body: ProfileUpdate, request: Request):
+        return core.update_profile(actor(request), ident, body)
+
+    @app.post("/api/v1/profiles/{ident}/test")
+    def test_profile(ident: str, request: Request):
+        return core.transition_profile(actor(request), ident, "TESTING")
+
+    @app.post("/api/v1/profiles/{ident}/activate")
+    def activate_profile(ident: str, request: Request):
+        return core.transition_profile(actor(request), ident, "ACTIVE")
+
+    @app.post("/api/v1/profiles/{ident}/disable")
+    def disable_profile(ident: str, request: Request):
+        return core.transition_profile(actor(request), ident, "DISABLED")
+
+    @app.post("/api/v1/profiles/{ident}/clone", status_code=201)
+    def clone_profile(ident: str, request: Request):
+        return core.clone_profile(actor(request), ident)
+
+    @app.get("/api/v1/profiles/{ident}/history")
+    def profile_history(ident: str, request: Request):
+        return core.profile_history(actor(request), ident)
+
+    @app.post("/api/v1/profiles/{ident}/test-request")
+    def test_profile_request(ident: str, body: PolicySample, request: Request):
+        return core.test_profile_request(actor(request), ident, body)
+
+    @app.get("/api/v1/email-templates")
+    def email_templates(request: Request):
+        return core.email_templates(actor(request))
+
+    @app.post("/api/v1/email-templates", status_code=201)
+    def add_email_template(body: EmailTemplate, request: Request):
+        return core.create_email_template(actor(request), body)
+
+    @app.put("/api/v1/email-templates/{ident}")
+    def update_email_template(ident: str, body: EmailTemplateUpdate, request: Request):
+        return core.update_email_template(actor(request), ident, body)
+
+    @app.post("/api/v1/notification-template-sets/{ident}/publication-review")
+    def notification_publication_review(ident: str, body: PublicationReview, request: Request):
+        return review_publication(core, actor(request), ident, body)
+
+    @app.post("/api/v1/notification-template-sets/{ident}/publish")
+    def notification_publication_commit(ident: str, body: PublicationCommit, request: Request):
+        return commit_publication(core, actor(request), ident, body)
+
+    @app.get("/api/v1/notification-template-sets/{ident}/versions/{revision}/preview")
+    def notification_version_preview(ident: str, revision: int, request: Request, event: str = "requested"):
+        from .email_publication import preview_publication_version
+
+        return preview_publication_version(core, actor(request), ident, revision, event)
+
+    @app.get("/api/v1/notification-template-sets/{ident}/versions")
+    def notification_publication_history(ident: str, request: Request):
+        return publication_history(core, actor(request), ident)
+
+    @app.get("/api/v1/notification-template-defaults")
+    def notification_template_defaults(request: Request, locale: Literal["en", "ko"] = "en"):
+        from .auth import require_current_authority
+        from .email_localization import event_defaults
+
+        principal = actor(request)
+        principal.require_admin()
+        with core.db.transaction(write=False) as conn:
+            require_current_authority(conn, principal)
+        return {"locale": locale, "templates": event_defaults(locale), "saved": False}
+
+    @app.post("/api/v1/notification-template-drafts/preview")
+    def preview_notification_draft(body: NotificationDraftPreview, request: Request):
+        return core.preview_notification_draft(actor(request), body)
+
+    @app.post("/api/v1/notification-assets", status_code=201)
+    def notification_logo_upload(body: LogoUpload, request: Request):
+        from .email_assets import upload_logo
+
+        return upload_logo(core, actor(request), body.data_base64)
+
+    @app.get("/api/v1/notification-assets/{ident}")
+    def notification_logo_read(ident: str, request: Request):
+        from .email_assets import read_logo
+
+        return read_logo(core, actor(request), ident)
+
+    @app.get("/api/v1/notification-template-sets/{ident}/usage")
+    def notification_template_usage(
+        ident: str, request: Request,
+        limit: int = Query(default=20, ge=1, le=50),
+        offset: int = Query(default=0, ge=0, le=100000),
+    ):
+        from .email_inventory import template_usage
+
+        return template_usage(core, actor(request), ident, limit, offset)
+
+    @app.get("/api/v1/notification-template-sets")
+    def notification_template_sets(request: Request):
+        return core.notification_template_sets(actor(request))
+
+    @app.post("/api/v1/notification-template-sets", status_code=201)
+    def add_notification_template_set(body: NotificationTemplateSet, request: Request):
+        return core.create_notification_template_set(actor(request), body)
+
+    @app.put("/api/v1/notification-template-sets/{ident}")
+    def update_notification_template_set(
+        ident: str, body: NotificationTemplateSetUpdate, request: Request
+    ):
+        return core.update_notification_template_set(actor(request), ident, body)
+
+    @app.post("/api/v1/notification-template-sets/{ident}/preview")
+    def preview_notification(ident: str, body: NotificationPreview, request: Request):
+        return core.preview_notification(actor(request), ident, body)
+
+    @app.post("/api/v1/notification-template-sets/{ident}/test-send")
+    def test_notification(ident: str, body: NotificationTestSend, request: Request):
+        return core.test_notification(actor(request), ident, body)
+
+    @app.get("/api/v1/notification-template-sets/{ident}/test-send-attempts/{attempt_id}")
+    def notification_test_send_attempt(ident: str, attempt_id: str, request: Request):
+        from .email_test_review import test_send_attempt_status
+
+        return test_send_attempt_status(core, actor(request), ident, attempt_id)
+
+    @app.get("/api/v1/notification-variables")
+    def notification_variables(request: Request):
+        return core.notification_variables(actor(request))
+
+    @app.get("/api/v1/notification-deliveries")
+    def notification_deliveries(
+        request: Request,
+        state: Literal["PENDING", "SENDING", "FAILED", "DELIVERED", "SUPERSEDED"] | None = None,
+        event_type: NotificationEvent | None = None,
+        request_id: str | None = Query(default=None, min_length=1, max_length=100),
+        limit: int = Query(default=200, ge=1, le=200),
+        offset: int = Query(default=0, ge=0, le=100000),
+    ):
+        return core.notification_deliveries(
+            actor(request), state=state, event_type=event_type,
+            request_id=request_id, limit=limit, offset=offset,
+        )
+
+    @app.get("/api/v1/notification-branding")
+    def notification_branding(request: Request):
+        return core.notification_branding(actor(request))
+
+    @app.put("/api/v1/notification-branding")
+    def update_notification_branding(body: NotificationBrandingUpdate, request: Request):
+        return core.update_notification_branding(actor(request), body)
+
+    @app.get("/api/v1/integrations")
+    def integrations(request: Request):
+        return core.integrations(actor(request))
+
+    @app.get("/api/v1/integrations/configuration-export")
+    def integration_manifest(request: Request):
+        return configuration_manifest(app.state.db, actor(request))
+
+    @app.get("/api/v1/integrations/{ident}/diagnostics")
+    def integration_diagnostics(ident: str, request: Request):
+        return diagnostics(app.state.db, actor(request), ident)
+
+    @app.post("/api/v1/integrations", status_code=201)
+    def add_integration(body: Integration, request: Request):
+        return core.create_integration(actor(request), body)
+
+    @app.put("/api/v1/integrations/{ident}/decision-verification")
+    def update_integration_decision_verification(
+        ident: str, body: IntegrationVerificationPolicy, request: Request,
+    ):
+        return core.update_integration_verification_policy(actor(request), ident, body)
+
+    @app.post("/api/v1/integrations/tokens", status_code=201)
+    def add_token(body: Token, request: Request):
+        return auth.issue_token(actor(request), body.integration_id, body.scopes)
+
+    @app.get("/api/v1/integrations/{ident}/tokens")
+    def list_tokens(ident: str, request: Request):
+        return auth.list_tokens(actor(request), ident)
+
+    @app.post("/api/v1/integrations/tokens/{ident}/revoke")
+    def revoke_token(ident: str, request: Request):
+        return auth.revoke_token(actor(request), ident)
+
+    @app.post("/api/v1/deliveries/{ident}/resend")
+    def resend(ident: str, request: Request):
+        return worker.resend(actor(request), ident)
+
+    @app.post("/api/v1/integrations/{ident}/test")
+    def test_connection(ident: str, request: Request):
+        import time
+
+        from .auth import require_current_authority
+        from .db import audit, json_text, uid
+        from .errors import GrantError
+        from .transport import require_transport_unpaused, send_webhook
+
+        principal = actor(request)
+        principal.require_admin()
+        auth.rate("connection-test:" + principal.id, 5, 60)
+        with app.state.db.transaction(write=False) as conn:
+            # Reject revoked sessions before even attempting an external
+            # diagnostic. Callback acceptance is not action authorization.
+            require_current_authority(conn, principal)
+            require_transport_unpaused(conn)
+            row = conn.execute(
+                "SELECT destination FROM integrations WHERE id=? AND enabled=1", (ident,)
+            ).fetchone()
+        if not row:
+            raise GrantError("INTEGRATION_NOT_FOUND", 404)
+        event_id = uid()
+        payload = json_text(
+            {
+                "schema_version": 1,
+                "event_type": "grant.connection.test",
+                "event_id": event_id,
+                "at": time.time(),
+                "execution_allowed": False,
+            }
+        )
+        with app.state.db.transaction(write=False) as conn:
+            require_current_authority(conn, principal)
+            require_transport_unpaused(conn)
+        try:
+            send_webhook(app.state.settings, app.state.settings.unseal(row[0]), payload, event_id)
+        except Exception as exc:
+            # Failure is still an operator-visible diagnostic, never proof of
+            # execution. Store a bounded event without URL or exception text.
+            with app.state.db.transaction() as conn:
+                require_current_authority(conn, principal)
+                audit(
+                    conn, None, principal.id, "integration.test_failed",
+                    {"integration_id": ident, "event_id": event_id},
+                )
+            raise GrantError("CONNECTION_TEST_FAILED", 502) from exc
+        with app.state.db.transaction() as conn:
+            require_current_authority(conn, principal)
+            audit(
+                conn,
+                None,
+                principal.id,
+                "integration.test_accepted",
+                {"integration_id": ident, "event_id": event_id},
+            )
+        return {"transport_accepted": True, "execution_allowed": False, "event_id": event_id}

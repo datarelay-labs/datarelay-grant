@@ -1,0 +1,126 @@
+# Grant 1.0 — pre-live integration simulation (no human E2E)
+
+**Status:** Source-implemented technical integration harness for the existing
+Grant Draft PR #100. Never deploy these mock systems as product adapters.
+
+## Scope and data isolation
+
+All test processes bind exclusively to ephemeral `127.0.0.1` ports and use
+independent temporary SQLite files. They do not use the Grant developer preview
+DB, real Control hosts, live Stellar receivers, production action paths, SMTP
+credentials or customer identities. A local source fixture specifies exact
+expected mock operations: `tests/fixtures/mock-integration-scenarios.json`.
+No external token, endpoint URL, SMTP email or customer data is committed.
+
+| Simulated system | Actual transport and local state | Guarded checks |
+| --- | --- | --- |
+| Grant isolated ASGI | Real Grant HTTP `127.0.0.1:<ephemeral>`, its own disposable approval DB and test-only producer/executor credentials | Host origin stays exact, scopes separated, approval required before consume, report/duplicate semantics |
+| Mock DataRelay Control | **Second product-owned SQLite** reservation, effect and checkpoint tables | Atomic first-effect CAS, 12 concurrent attempts leave exactly one *simulated* effect, restart preserves bound route/destination, crash-after-apply-before-report reconciles from product ledger without a second effect, UNKNOWN denies blind replay, independent ledger readback |
+| Mock Stellar receiver | **Third product-owned SQLite**, real loopback POST, HMAC timestamp verification | Wrong secret or payload, wrong tenant, stale and same-revision conflicting event, duplicate event ID, 12 concurrent duplicate callbacks, restart with exact persisted tenant/credential fingerprint, HTTP 503 before/after durable acceptance and stable-ID retry, exact tenant/case/alert/request/revision readback, forbidden first-party feedback ingress |
+| Foundation RC41 offline Python Wheel | Independently SHA-verified private original-source Wheel imported in a separate temporary Python process | Missing real restore drill blocks advisory restore, unavailable SMTP authorization blocks test-send; no Grant/backend installation, scheduler or storage mutation |
+
+**Separation of proof:** HTTP 202/200 acknowledges only a mock receiver. A local
+Control `simulated_effects` record is not an actual replay or external business
+result. The existing `validate_control_replay_readback` and
+`correlate_stellar_receiver_observation` correctly retain
+`independently_verified=false` even when all test values match. No mock is
+promoted to a Full User E2E, independent customer acceptance or 1.0 release.
+
+## Reproduce on an authorized developer checkout
+
+Use the repository's already provisioned isolated `uv` environment. Run only
+these native pytest suites; no additional tests require a real DP, XDR or
+external email account:
+
+```sh
+uv run --frozen pytest -q \
+  tests/test_mock_product_systems.py \
+  tests/test_mock_control_flow.py \
+  tests/test_mock_stellar_flow.py
+```
+
+The optionally available **private, unpublished** original RC41 Wheel may be
+verified and imported separately, without installing it in Grant. Set the
+variable to an already locally present, owner-reviewed private bundle with
+original source `46ddb60cad8eae7b1718588cd19421e61b5300e7`:
+
+```sh
+GRANT_TEST_RC41_BUNDLE='<approved-local-original-RC41-bundle.tar.gz>' \
+  uv run --frozen pytest -q tests/test_mock_foundation_wheel.py
+```
+
+The opt-in Wheel test fails closed if the complete bundle SHA256 is not
+`628dd4d6fd8ccb1d39dd6cc33982a3411fedcca405aa193b3654505fcaaefb48`
+or the enclosed original Wheel SHA256 is not
+`cad95d8ba2d707690ccdfc8ca097e9e746d8ace0f27d70c1c4c638bc663399b8`.
+If the private bundle is not mounted, this optional check **SKIPS**; it is
+never reported as an installation PASS. Nothing is published or transferred.
+
+## Executed source checkpoint
+
+On dev-atlas, all nine modules below (Control/Stellar/RC41 new suites plus
+preexisting delivery, consumer guard, client response, feedback and Foundation
+outbox regressions) produced **175 passed, 1 deprecation warning** with the
+privately reviewed RC41 bundle explicitly supplied. **21 new simulator
+cases** include the optional verified Wheel subprocess and six additional
+crash, lost acknowledgement, signed event freshness, receiver restart and
+concurrent deduplication regressions. The mock receiver persists its locally
+trusted tenant and test credential fingerprint and refuses restart with an
+unexpected identity; actual credential material is not persisted. A receiver
+may durably store a signed event yet emit an HTTP 503, so at-least-once Grant
+worker retry must reuse its event ID and create no second receiver record.
+The local Control product fixture similarly survives a crash after simulated
+effect creation but before reporting back to Grant; Grant's intermediate
+execution status is COMMITTED and any replay is reconciliation-only.
+Changed-source Ruff, JSON fixture syntax and G12 dirty-diff SHA preservation
+were checked. The API/static GitHub candidate run is separate from this
+local source evidence. CI skips the optional Wheel test without an explicitly
+provided, independently reviewed private bundle; local private Wheel PASS
+does not grant GitHub the missing Contents:read token.
+
+## Important safeguards and next live gates
+
+1. **Control:** The simulation validates the Grant API and disposable product
+   ledger but cannot insert the guard into Control's real replay boundary.
+   The Control owning project must explicitly approve and implement its
+   actual durable lock, native operation effect and independent destination
+   readback before any claim of real exactly-once execution.
+2. **Stellar:** The simulation validates signed first-party Grant callbacks,
+   isolated normalization and feedback exclusion. It does not establish the
+   deployed Stellar version's XDR Connect receiver schema or access rights.
+   Real receiver readback requires owner-approved tenant/case/alert targets and
+   the actual installation's supported ingestion contract.
+3. **Foundation:** Optional security/retention/audit/backup interfaces require
+   Grant-owned persisted policy, actor/MFA, actual backup evidence, legal hold,
+   scheduler, retention, readback and rollback adapters. The mock Wheel import
+   cannot grant any of these authorities.
+4. **User E2E / CI / Release:** Two independent humans and mailboxes, real
+   HTTPS/SMTP, live product effects and published release are explicitly **NOT
+   tested here**. Grant `foundation-web` GitHub Actions still requires the
+   owner-provisioned `FOUNDATION_READ_TOKEN` to read private Foundation source.
+   Do not fabricate credentials, relax controls, deploy or merge as a workaround.
+
+All mock SQLite databases, ephemeral listener sockets, test-only credentials
+and Wheel scratch import files are released after the tests. No production
+objects are created, deleted or modified.
+
+## Grant saved-configuration readiness (2026-10-13)
+
+The existing admin-only integration diagnostics endpoint now returns an
+additive `external_readiness` projection derived exclusively from actual
+stored active approval policies and enabled producer/executor token scopes.
+It does not contain secret material or destinations and never calls Control
+or Stellar. Mixed credentials are not treated as separated least-privilege
+roles. The independently required native Control execution guard, actual
+Control destination readback, and deployed Stellar receiver verification
+remain **not verified**, regardless of the configured grant policy or bearer
+credentials. `live_effect_authorized` is always false in this read-only
+planning projection. Actual execution authority remains server-side in the
+consumer and must be established independently with an approved installation.
+
+The administrator-only Integration Diagnostics Web workspace also renders the
+backend-provided `external_readiness` facts. It displays a missing projection
+as **Readiness unavailable** and cannot create requests, send notifications,
+confirm external execution, apply a Control replay, or authenticate a Stellar
+receiver. UI bindings are informational only; actual authorization always
+requires authenticated server-side enforcement by the consuming product.

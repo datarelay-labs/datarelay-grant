@@ -1,0 +1,83 @@
+/* B5 operations mobile information architecture. These cards display only
+ * already authorized aggregate observations and read-only health records. */
+.grant-operations-mobile-list { display: none; }
+
+@media (max-width: 600px) {
+  .grant-operations-desktop-table { display: none; }
+
+  .grant-operations-mobile-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--dr-space-3);
+    min-width: 0;
+    max-width: 100%;
+    list-style: none;
+    margin: var(--dr-space-4) 0;
+    padding: 0;
+  }
+
+  .grant-operations-mobile-card {
+    display: grid;
+    gap: var(--dr-space-2);
+    min-width: 0;
+    padding: var(--dr-space-4);
+    border: 1px solid var(--dr-border-default);
+    border-radius: var(--dr-radius-card);
+    overflow-wrap: anywhere;
+  }
+
+  .grant-operations-mobile-card p { margin: 0; }
+
+  .grant-operations-mobile-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--dr-space-2);
+    min-width: 0;
+  }
+
+  .grant-operations-mobile-heading button {
+    max-width: 100%;
+    min-width: 0;
+    text-align: start;
+    overflow-wrap: anywhere;
+  }
+
+  .grant-operations-mobile-heading span,
+  .grant-operations-mobile-kind {
+    font-size: var(--dr-font-size-sm);
+    color: var(--dr-text-secondary);
+  }
+
+  .grant-operations-mobile-count {
+    font-weight: var(--dr-font-weight-strong);
+    overflow-wrap: anywhere;
+  }
+
+  .grant-operations-mobile-facts {
+    display: grid;
+    gap: var(--dr-space-2);
+    margin: 0;
+    min-width: 0;
+  }
+
+  .grant-operations-mobile-facts > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .25rem;
+    min-width: 0;
+  }
+
+  .grant-operations-mobile-facts dt {
+    font-size: var(--dr-font-size-sm);
+    color: var(--dr-text-secondary);
+    font-weight: var(--dr-font-weight-strong);
+  }
+
+  .grant-operations-mobile-facts dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}

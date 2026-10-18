@@ -1,0 +1,88 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+import { Administration } from '../../src/administration';
+import type { User } from '../../src/types';
+
+const administrator: User = {
+  id: 'test-admin',
+  username: 'admin',
+  email: 'admin@example.invalid',
+  role: 'admin',
+  mfa_enabled: true,
+};
+
+describe('Grant administration consumes the public Foundation shared Hub', () => {
+  it('renders the Control-family four core groups and the product-owned mail extension', () => {
+    const html = renderToStaticMarkup(createElement(Administration, { user: administrator }));
+    for (const group of [
+      'access-security', 'platform-network', 'lifecycle-recovery', 'operations-audit', 'grant.mail-transport',
+    ]) {
+      expect(html).toContain('data-group-id="' + group + '"');
+    }
+    expect(html).toContain('foundation-administration-hub');
+    expect(html).toContain('Mail &amp; Notifications');
+    expect(html).toContain('User Management');
+    expect(html).toContain('Backup &amp; Import');
+    expect(html).toContain('System Health');
+    // RC50 owns the complete thirteen-task Control-reference vocabulary.
+    // Unsupported Grant effects remain visible as truthful unavailable tasks.
+    for (const task of [
+      'HTTPS', 'User Management', 'Password Management',
+      'Management Access (ACL)', 'Multi-Factor Authentication',
+      'Roles & Permissions', 'Sessions',
+      'Display timezone', 'Network', 'Retention', 'Backup & Import',
+      'Audit', 'System Health',
+    ]) {
+      expect(html).toContain(task.replace('&', '&amp;'));
+    }
+    expect(html).not.toContain('dr-admin-hub__header');
+    expect(html).toContain('aria-label="Manage User Management"');
+    expect(html).toContain('aria-label="View HTTPS"');
+    expect(html).toContain('aria-label="View Password Management"');
+    expect(html).toContain('aria-label="View Network"');
+    expect(html).toContain('aria-label="Manage Display timezone"');
+    expect(html).toContain('aria-label="View System Health"');
+    expect(html).toContain('aria-label="Manage Mail delivery test"');
+    expect(html).not.toContain('aria-label="Manage HTTPS"');
+    expect(html).not.toContain('aria-label="Manage Password Management"');
+    expect(html).not.toContain('aria-label="Manage Network"');
+    expect(html).toContain('Management Access (ACL)');
+    expect(html).toContain('Multi-Factor Authentication');
+    expect(html).toContain('Roles &amp; Permissions');
+    expect(html).toContain('Sessions');
+    expect(html).not.toContain('aria-label="Manage Management Access (ACL)"');
+    expect(html).not.toContain('aria-label="Manage Multi-Factor Authentication"');
+    expect(html).not.toContain('aria-label="Manage Roles & Permissions"');
+    expect(html).not.toContain('aria-label="Manage Sessions"');
+  });
+
+  it('does not advertise unsupported SMTP configuration as an enabled action', () => {
+    const html = renderToStaticMarkup(createElement(Administration, { user: administrator }));
+    expect(html).toContain('SMTP server configuration');
+    expect(html).not.toContain('aria-label="Manage SMTP server configuration"');
+    expect(html).toContain('no accepted editable Web API');
+  });
+
+  it('offers real Grant account-security and safe configuration-preview shortcuts without a Foundation fork', () => {
+    const html = renderToStaticMarkup(createElement(Administration, { user: administrator }));
+    expect(html).toContain('class="grant-admin-shortcuts"');
+    expect(html).toContain('My account &amp; MFA');
+    expect(html).toContain('Configuration preview');
+    expect(html).toContain('foundation-administration-hub');
+    // These are personal and read-only Grant routes, not imaginary platform controls.
+    expect(html).not.toContain('aria-label="Manage SMTP server configuration"');
+  });
+
+  it('keeps non-administrators from mutating supported administrative tasks', () => {
+    const member: User = { ...administrator, id: 'member', username: 'member', role: 'member' };
+    const html = renderToStaticMarkup(createElement(Administration, { user: member }));
+    expect(html).toContain('foundation-administration-hub');
+    expect(html).not.toContain('aria-label="Manage User Management"');
+    expect(html).not.toContain('aria-label="Manage Mail delivery test"');
+    expect(html).not.toContain('aria-label="View User Management"');
+    expect(html).not.toContain('aria-label="View Mail delivery test"');
+    expect(html).toContain('My account &amp; MFA');
+    expect(html).not.toContain('Configuration preview');
+  });
+});

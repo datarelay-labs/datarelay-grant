@@ -1,0 +1,113 @@
+/* Grant's existing current, server-role-scoped request Inbox: one saved
+ * row appears as a task card on a narrow viewport. The desktop 6-column
+ * table remains untouched, and only one variant enters the focus tree. */
+.grant-inbox-mobile-list { display: none; }
+
+@media (max-width: 600px) {
+  .grant-inbox-desktop-list { display: none; }
+
+  .grant-inbox-mobile-list {
+    display: grid;
+    gap: var(--dr-space-3);
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    list-style: none;
+  }
+
+  .grant-inbox-mobile-card {
+    display: grid;
+    gap: var(--dr-space-3);
+    padding: var(--dr-space-4);
+    min-width: 0;
+    border: 1px solid var(--dr-border-default);
+    border-radius: var(--dr-radius-card);
+    background: var(--dr-surface-card);
+    overflow-wrap: anywhere;
+  }
+
+  .grant-inbox-mobile-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--dr-space-2);
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .grant-inbox-mobile-heading button {
+    min-width: 0;
+    max-width: 100%;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .grant-inbox-mobile-card > small,
+  .grant-inbox-mobile-card small {
+    color: var(--dr-text-secondary);
+    overflow-wrap: anywhere;
+  }
+
+  .grant-inbox-mobile-state {
+    margin: 0;
+    color: var(--dr-text-secondary);
+    font-size: var(--dr-font-size-sm);
+  }
+
+  .grant-inbox-mobile-facts {
+    display: grid;
+    gap: var(--dr-space-3);
+    margin: 0;
+    min-width: 0;
+  }
+
+  .grant-inbox-mobile-facts > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--dr-space-1);
+    min-width: 0;
+  }
+
+  .grant-inbox-mobile-facts dt {
+    color: var(--dr-text-secondary);
+    font-size: var(--dr-font-size-sm);
+    font-weight: var(--dr-font-weight-strong);
+  }
+
+  .grant-inbox-mobile-facts dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .grant-inbox-mobile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .grant-inbox-mobile-actions button {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+
+@media (max-width: 600px) {
+  .grant-request-list-card > .dr-card__header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--dr-space-3);
+  }
+
+  .grant-request-list-card > .dr-card__header > .dr-card__heading,
+  .grant-request-list-card > .dr-card__header > .dr-card__actions {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .grant-request-list-card > .dr-card__header > .dr-card__actions .grant-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}

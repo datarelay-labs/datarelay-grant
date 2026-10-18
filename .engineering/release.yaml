@@ -1,18 +1,18 @@
 version: 1
 exact_head_required: true
-artifact_hash_required: false
+artifact_hash_required: true
 provenance_required: false
 sbom_required: false
-setup_command: ''
-preflight_required: false
-preflight_command: ''
-qualification_command: ''
-artifact_hash_command: ''
+setup_command: 'bash scripts/checks.sh setup'
+preflight_required: true
+preflight_command: 'bash scripts/checks.sh static'
+qualification_command: 'bash scripts/checks.sh all'
+artifact_hash_command: 'python3 tools/build_candidate.py'
 provenance_command: ''
 sbom_command: ''
-operational_e2e_required: false
-operational_e2e_command: ''
-full_e2e_passes: 0
+operational_e2e_required: true
+operational_e2e_command: 'bash scripts/checks.sh browser'
+full_e2e_passes: 2
 public_smoke_required: false
 public_smoke_command: ''
 blockers:
@@ -20,3 +20,29 @@ blockers:
   p1: true
   user_blocking_p2: true
 execution_context: github-hosted
+human_equivalent_user_tests_required: true
+human_equivalent_user_tests:
+  contract_version: 2
+  executor: EXECUTION_PROFILE
+  direct_persona_execution_required: true
+  canonical_contract_read_before_execution_required: true
+  complete_rerun_after_remediation_required: true
+  wrapper_user_substitution_forbidden: true
+  contract_review_attestation_version: 1
+  actual_user_surface_required: true
+  primary_user_surface: browser
+  actual_browser_process_required: true
+  same_candidate_required: true
+  finding_accumulation_before_remediation: true
+  same_head_quality_closure_required: true
+  candidate_freeze_after_quality_closure: true
+  ci_contract_validation_only: true
+  evidence_validator: tools/user_acceptance_contract.py
+  surface_reconciliation:
+    mandatory: true
+    contract: docs/SURFACE_RECONCILIATION.md
+    minimum_passes: 1
+  full_user_e2e:
+    mandatory: true
+    contract: docs/FULL_USER_E2E.md
+    minimum_passes: 2

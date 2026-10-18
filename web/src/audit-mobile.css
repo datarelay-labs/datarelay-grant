@@ -1,0 +1,82 @@
+/* B5 audit source: task-first narrow event list, same role-scoped data.
+ * No server query or privilege is performed by a viewport change.
+ * display:none removes inactive duplicate controls from the tab order. */
+.grant-audit-mobile-list { display: none; }
+
+@media (max-width: 600px) {
+  .grant-audit-desktop-list { display: none; }
+
+  .grant-audit-mobile-list {
+    display: grid;
+    list-style: none;
+    gap: var(--dr-space-3);
+    min-width: 0;
+    max-width: 100%;
+    padding: 0;
+    margin: var(--dr-space-4) 0;
+  }
+
+  .grant-audit-mobile-card {
+    display: grid;
+    gap: var(--dr-space-3);
+    min-width: 0;
+    padding: var(--dr-space-4);
+    border: 1px solid var(--dr-border-default);
+    border-radius: var(--dr-radius-card);
+    overflow-wrap: anywhere;
+  }
+
+  .grant-audit-mobile-heading {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--dr-space-2);
+    min-width: 0;
+  }
+
+  .grant-audit-mobile-heading small {
+    font-size: var(--dr-font-size-sm);
+    color: var(--dr-text-secondary);
+  }
+
+  .grant-audit-mobile-facts {
+    display: grid;
+    gap: var(--dr-space-2);
+    min-width: 0;
+    margin: 0;
+  }
+
+  .grant-audit-mobile-facts > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .25rem;
+  }
+
+  .grant-audit-mobile-facts dt {
+    color: var(--dr-text-secondary);
+    font-size: var(--dr-font-size-sm);
+    font-weight: var(--dr-font-weight-strong);
+  }
+
+  .grant-audit-mobile-facts dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  .grant-audit-mobile-card button {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .grant-audit-mobile-metadata {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .grant-audit-mobile-metadata pre {
+    max-width: 100%;
+    overflow: auto;
+  }
+}

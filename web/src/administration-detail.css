@@ -1,0 +1,199 @@
+/* Grant task navigation only; the Foundation AdministrationHub owns grouping. */
+.grant-admin-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dr-space-2);
+}
+
+.grant-admin-selected-detail {
+  display: grid;
+  min-width: 0;
+  gap: var(--dr-space-4);
+  scroll-margin-block-start: var(--dr-space-5);
+}
+
+.grant-admin-selected-detail:focus-visible {
+  outline: 2px solid var(--dr-border-default);
+  outline-offset: 2px;
+  border-radius: var(--dr-radius-card);
+}
+
+/* Grant-owned selected Administration task. The shared Foundation Hub retains
+ * its own group/list/card responsive design and identity/capability decisions. */
+.grant-admin-task-navigation {
+  min-width: 0;
+  outline-offset: 2px;
+  scroll-margin-block-start: var(--dr-space-4);
+}
+
+.grant-admin-task-navigation:focus-visible {
+  outline: 2px solid var(--dr-border-default);
+  border-radius: var(--dr-radius-card);
+}
+
+.grant-admin-selected-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dr-space-3);
+  min-width: 0;
+  border-bottom: 1px solid var(--dr-border-divider);
+  padding-block: var(--dr-space-3);
+}
+
+.grant-admin-selected-heading h2 {
+  font-size: var(--dr-font-size-lg);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.grant-admin-selected-eyebrow {
+  color: var(--dr-text-secondary);
+  font-size: var(--dr-font-size-xs);
+  font-weight: var(--dr-font-weight-strong);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  margin: 0 0 var(--dr-space-1);
+}
+
+.grant-admin-selected-detail .grant-stack,
+.grant-admin-selected-detail .grant-form,
+.grant-admin-selected-detail .dr-admin__account,
+.grant-admin-selected-detail .dr-admin__audit-table-wrap {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.grant-admin-selected-detail .dr-admin__audit-table-wrap {
+  overflow-x: auto;
+}
+
+.grant-admin-selected-detail .dr-admin__account-title,
+.grant-admin-selected-detail .dr-admin__account p {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .grant-admin-shortcuts {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .grant-admin-shortcuts > button {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .grant-admin-selected-heading {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grant-admin-selected-heading > button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .grant-admin-selected-detail .dr-admin__account {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--dr-space-3);
+  }
+
+  .grant-admin-selected-detail .dr-admin__account-actions {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .grant-admin-selected-detail .dr-admin__account-actions button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .grant-admin-selected-detail .grant-form input,
+  .grant-admin-selected-detail .grant-form select,
+  .grant-admin-selected-detail .grant-form textarea {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .grant-admin-selected-detail .grant-actions > button {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}
+
+/* At narrow widths, the operator sees one task at a time instead of
+ * re-scanning every Foundation group before each selected task. */
+.grant-admin-desktop-audit { min-width: 0; max-width: 100%; overflow-x: auto; }
+.grant-admin-mobile-audit { display: none; }
+
+@media (max-width: 600px) {
+  .grant-admin-workspace--detail > .grant-admin-task-navigation { display: none; }
+  .grant-admin-mobile-audit { display: block; min-width: 0; }
+  .grant-admin-desktop-audit { display: none; }
+  .grant-admin-mobile-audit ul {
+    display: grid;
+    gap: var(--dr-space-3);
+    min-width: 0;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  .grant-admin-mobile-audit-card {
+    display: grid;
+    gap: var(--dr-space-2);
+    min-width: 0;
+    padding: var(--dr-space-3);
+    border: 1px solid var(--dr-border-default);
+    border-radius: var(--dr-radius-card);
+    overflow-wrap: anywhere;
+  }
+  .grant-admin-mobile-audit-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--dr-space-2);
+  }
+  .grant-admin-mobile-audit-facts {
+    display: grid;
+    gap: var(--dr-space-2);
+    margin: 0;
+    min-width: 0;
+  }
+  .grant-admin-mobile-audit-facts > div {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+  }
+  .grant-admin-mobile-audit-facts dt {
+    font-size: var(--dr-font-size-sm);
+    color: var(--dr-text-secondary);
+  }
+  .grant-admin-mobile-audit-facts dd {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.grant-admin-account-review {
+  min-width: 0;
+  max-width: 100%;
+  scroll-margin-block-start: var(--dr-space-4);
+  outline-offset: 2px;
+}
+.grant-admin-account-review:focus-visible {
+  outline: 2px solid var(--dr-border-default);
+  border-radius: var(--dr-radius-card);
+}

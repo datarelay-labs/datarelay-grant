@@ -1,0 +1,496 @@
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Button, Card, TextField, type AccountProjection } from '@datarelay-labs/foundation';
+import { api, errorText } from './api';
+import {
+  createInboxReadScope, readCurrentInbox, currentInboxProjection,
+  InboxActionTarget, InboxApprovalProgress,
+} from './request_inbox_task_worklist';
+import { Select, State, useTask } from './common';
+import { InboxDeadlineTruth } from './request_inbox_deadline_truth';
+import './request-inbox-mobile.css';
+import {
+  currentSelectedInboxRequest,InboxSelectedRequestPreview,
+  type InboxPreviewSelection,
+} from './request_inbox_selected_preview';
+import type { ApproverGroup, Integration, Profile, RequestRow, User } from './types';
+
+type Navigate = (path: string) => void;
+export type InboxMode = 'all' | 'approvals' | 'requester';
+
+/** Guidance must match the current user task, not steer reviewers to create. */
+export function emptyWorklistGuidance(mode: InboxMode): string {
+  if (mode === 'approvals') {
+    return 'No approvals match this work view and current filters. Try another approval view or clear filters.';
+  }
+  if (mode === 'requester') {
+    return 'No submitted requests match these filters. Clear filters or start a new request.';
+  }
+  return 'No matching requests. Try clearing filters or creating a new request.';
+}
+
+export type Filters = {
+  view: string;
+  search: string;
+  state: string;
+  collaboration_state: string;
+  policy_id: string;
+  requester_id: string;
+  approver_id: string;
+  group_id: string;
+  integration_id: string;
+  action_kind: string;
+  created_after: string;
+  created_before: string;
+  delivery_state: string;
+  execution_state: string;
+};
+const initialFilters = (mode: InboxMode): Filters => ({
+  view: mode === 'approvals' ? 'needs' : mode === 'requester' ? 'requester' : 'all',
+  search: '', state: '', collaboration_state: '', policy_id: '', requester_id: '',
+  approver_id: '', group_id: '', integration_id: '', action_kind: '',
+  created_after: '', created_before: '', delivery_state: '', execution_state: '',
+});
+// Task-first shortcuts use role-scoped server queues, including assigned-only
+// overdue work. Switching clears stale filters without granting a decision,
+// expanding tenant visibility or computing overdue with the browser clock.
+export type ApprovalQuickView = 'needs' | 'approval_overdue' | 'held' | 'delegated' | 'recent';
+
+const approvalQuickViews: readonly { value: ApprovalQuickView; label: string }[] = [
+  { value: 'needs', label: 'Needs my decision' },
+  { value: 'approval_overdue', label: 'Overdue approvals' },
+  { value: 'held', label: 'On hold' },
+  { value: 'delegated', label: 'Delegated to me' },
+  { value: 'recent', label: 'Recently decided' },
+];
+
+export function approvalQuickViewFilters(view: ApprovalQuickView): Filters {
+  if (!approvalQuickViews.some((item) => item.value === view)) {
+    throw new Error('INVALID_APPROVAL_TASK_VIEW');
+  }
+  return { ...initialFilters('approvals'), view };
+}
+
+/** The next shortcut is navigation only, using the already loaded, role-scoped
+ * approval worklist. It does not decide, approve or bypass server checks.
+ */
+export function nextReviewableAssignedRow(
+  rows: readonly RequestRow[], viewerId: string,
+): RequestRow | null {
+  return rows.find((row) =>
+    row.viewer_assigned === true && row.viewer_can_decide === true &&
+    row.requester_id !== viewerId &&
+    (row.state === 'AWAITING' || row.state === 'HELD') &&
+    row.collaboration_state === 'OPEN',
+  ) ?? null;
+}
+
+const advancedFields = [
+  'policy_id', 'action_kind', 'created_after', 'created_before',
+  'delivery_state', 'execution_state', 'requester_id',
+  'approver_id', 'group_id', 'integration_id',
+] as const satisfies readonly (keyof Filters)[];
+
+export function countAdvancedFilters(filters: Filters): number {
+  return advancedFields.filter((key) => filters[key].trim().length > 0).length;
+}
+
+const viewOptions: { value: string; label: string }[] = [
+  { value: 'all', label: 'All visible requests' },
+  { value: 'needs', label: 'Needs my decision' },
+  { value: 'held', label: 'Held approvals' },
+  { value: 'overdue', label: 'Overdue or expired' },
+  { value: 'approval_overdue', label: 'My overdue approvals' },
+  { value: 'delegated', label: 'Delegated to me' },
+  { value: 'recent', label: 'Recently decided' },
+  { value: 'requester', label: 'My submitted requests' },
+  { value: 'escalated', label: 'Escalated requests' },
+  { value: 'ops_pending', label: 'All pending approvals' },
+  { value: 'ops_overdue', label: 'All overdue approvals' },
+  { value: 'ops_approved_unused', label: 'Approved but unused' },
+  { value: 'ops_execution_unknown', label: 'Execution unknown' },
+  { value: 'ops_execution_failed', label: 'Execution failed' },
+  { value: 'ops_email_failed', label: 'Email delivery failed' },
+  { value: 'ops_webhook_failed', label: 'Callback delivery failed' },
+  { value: 'ops_delivery_failed', label: 'Any delivery failed' },
+  { value: 'ops_decided', label: 'All human-decided requests' },
+];
+function encodeParameter(value: string | number): string {
+  // api.ts accepts a conservative path alphabet. Percent-encode reserved
+  // punctuation as well as whitespace, rather than allowing '+' from URLSearchParams.
+  return encodeURIComponent(String(value)).replace(/[!'()*~]/g, (character) =>
+    '%' + character.charCodeAt(0).toString(16).toUpperCase());
+}
+/** Server request timestamps are UTC seconds. An HTML date has no timezone. */
+function utcCalendarStart(value: string): number {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error('INVALID_REQUEST_DATE');
+  }
+  const at = Date.parse(value + 'T00:00:00.000Z');
+  if (!Number.isFinite(at) || at < 0 ||
+      new Date(at).toISOString().slice(0, 10) !== value) {
+    throw new Error('INVALID_REQUEST_DATE');
+  }
+  return at / 1000;
+}
+
+export function queryFor(filters: Filters, offset: number): string {
+  if (!Number.isSafeInteger(offset) || offset < 0 || offset > 100000) {
+    throw new Error('INVALID_REQUEST_PAGE');
+  }
+  const from = filters.created_after ? utcCalendarStart(filters.created_after) : null;
+  // GET /requests uses created_at <= created_before. The final microsecond
+  // of the selected UTC date belongs to that date; midnight of the next one
+  // does not. Do not lose approvals recorded during the final second.
+  const through = filters.created_before
+    ? utcCalendarStart(filters.created_before) + 86400 - 0.000001 : null;
+  if (from !== null && through !== null && from > through) {
+    throw new Error('INVALID_REQUEST_DATE_RANGE');
+  }
+  const params: Record<string, string | number> = { limit: 50, offset };
+  for (const [key, value] of Object.entries(filters)) {
+    if (!value || key === 'created_after' || key === 'created_before') continue;
+    params[key] = value;
+  }
+  if (from !== null) params.created_after = from;
+  if (through !== null) params.created_before = through;
+  return '/requests?' + Object.entries(params)
+    .map(([key, value]) => key + '=' + encodeParameter(value)).join('&');
+}
+
+export function RequestList({
+  user, mode, navigate, preset,
+}: { user: User; mode: InboxMode; navigate: Navigate; preset?: Partial<Filters> }) {
+  const initial = (): Filters => {
+    const defaults = { ...initialFilters(mode), ...preset };
+    // The legacy deep-link and presets refer to general overdue history.
+    // The Approvals workspace must ask for ONLY currently assigned seats.
+    if (mode === 'approvals' && defaults.view === 'overdue') {
+      defaults.view = 'approval_overdue';
+    }
+    // The App router already resolves pathname independently of search params.
+    // Only this allowlisted deep link may override the approval queue's default.
+    if (
+      mode === 'approvals' && typeof window !== 'undefined' &&
+      window.location.pathname === '/approvals' &&
+      new URLSearchParams(window.location.search).get('view') === 'overdue'
+    ) {
+      defaults.view = 'approval_overdue';
+    }
+    return defaults;
+  };
+  const [draft, setDraft] = useState<Filters>(initial);
+  const [applied, setApplied] = useState<Filters>(initial);
+  const [advancedOpen, setAdvancedOpen] = useState(
+    () => countAdvancedFilters(initial()) > 0,
+  );
+  const [offset, setOffset] = useState(0);
+  const [selectedPreview,setSelectedPreview]=useState<InboxPreviewSelection|null>(null);
+  const previewRef=useRef<HTMLDivElement>(null);
+  const [savedRows, setSavedRows] =
+    useState<{key:string;rows:RequestRow[]}|null>(null);
+  const [listBusy,setListBusy]=useState(false);
+  const [listError,setListError]=useState('');
+  const readScope=useRef(createInboxReadScope());
+  // Query identity is computed during render. An old filter/page projection
+  // is hidden BEFORE the effect can request the new role-scoped worklist.
+  const currentQuery=(()=>{
+    try{return queryFor(applied,offset);}catch{return '';}
+  })();
+  const rows=currentInboxProjection(savedRows,currentQuery);
+  const currentLoaded=Boolean(currentQuery&&savedRows?.key===currentQuery);
+  const nextAssigned = mode === 'approvals' && currentLoaded
+    ? nextReviewableAssignedRow(rows, user.id) : null;
+  // Snapshot always comes from the *currently loaded* role-scoped queue.
+  // A changed search/page hides a stale selection during render BEFORE
+  // the next async GET can start; no extra privileged read occurs.
+  const preview=currentSelectedInboxRequest(selectedPreview,rows,currentQuery,
+    listBusy||!currentLoaded);
+  useEffect(()=>{
+    if(preview)previewRef.current?.focus({preventScroll:true});
+  },[preview?.id]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [accounts, setAccounts] = useState<AccountProjection[]>([]);
+  const [groups, setGroups] = useState<ApproverGroup[]>([]);
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
+  const task = useTask();
+  const admin = user.role === 'admin';
+
+  function edit(field: keyof Filters, value: string) {
+    setDraft((current) => ({ ...current, [field]: value }));
+  }
+  async function load(query=currentQuery) {
+    // Unlike useTask.busy, this guard must permit a new selection GET
+    // while an older view remains pending, then discard its result/error.
+    readScope.current.select(query);
+    setListError('');
+    if(!query){setListBusy(false);setSavedRows(null);return;}
+    setListBusy(true);
+    try{
+      const accepted=await readCurrentInbox(readScope.current,query,
+        ()=>api<RequestRow[]>(query),
+        fresh=>setSavedRows({key:query,rows:fresh}));
+      if(accepted)setListBusy(false);
+    }catch(error){
+      if(readScope.current.isSelected(query)){
+        setListBusy(false);
+        setListError(errorText(error));
+      }
+    }
+  }
+
+  useEffect(() => {void load(currentQuery);}, [currentQuery]);
+  useEffect(() => {
+    void (async () => {
+      // Identity lookups are optional UI labels. They never broaden the role scope
+      // of the authoritative GET /requests filter.
+      try { setProfiles(await api<Profile[]>('/profiles')); } catch { /* optional labels */ }
+      if (admin) {
+        try {
+          const [people, approverGroups, connections] = await Promise.all([
+            api<AccountProjection[]>('/admin/users'),
+            api<ApproverGroup[]>('/approver-groups'),
+            api<Integration[]>('/integrations'),
+          ]);
+          setAccounts(people);
+          setGroups(approverGroups);
+          setIntegrations(connections);
+        } catch { /* missing administration capability leaves selectors hidden */ }
+      }
+    })();
+  }, [admin]);
+
+  function apply() {
+    try {
+      queryFor(draft, 0);
+    } catch {
+      task.setNotice('Enter a valid UTC date range. The start date must not follow the end date.');
+      return;
+    }
+    setOffset(0);
+    setApplied({ ...draft });
+  }
+  function reset() {
+    if (mode === 'approvals' && typeof window !== 'undefined' &&
+      window.location.pathname === '/approvals' &&
+        new URLSearchParams(window.location.search).get('view') === 'overdue') {
+      window.history.replaceState(window.history.state, '', '/approvals');
+    }
+    const defaults = initial();
+    setDraft(defaults);
+    setOffset(0);
+    setApplied(defaults);
+    setAdvancedOpen(countAdvancedFilters(defaults) > 0);
+  }
+  function selectApprovalQuickView(view: ApprovalQuickView) {
+    // If the user entered via /approvals?view=overdue, remove the stale
+    // deep-link query before replacing the selected work view.
+    if (typeof window !== 'undefined' && window.location.pathname === '/approvals' &&
+        new URLSearchParams(window.location.search).get('view') === 'overdue') {
+      window.history.replaceState(window.history.state, '', '/approvals');
+    }
+    const next = approvalQuickViewFilters(view);
+    setDraft(next);
+    setApplied(next);
+    setOffset(0);
+    setAdvancedOpen(false);
+  }
+
+  const viewChoices = mode === 'requester'
+    ? viewOptions.filter((item) => item.value === 'requester')
+    : mode === 'approvals'
+      ? viewOptions.filter((item) => ['needs', 'held', 'approval_overdue', 'delegated', 'recent'].includes(item.value))
+      : viewOptions.filter((item) => item.value !== 'approval_overdue' &&
+          (admin || !item.value.startsWith('ops_')));
+  const heading = mode === 'approvals'
+    ? 'Your approval queue'
+    : mode === 'requester' ? 'My submitted requests' : 'Approval requests';
+
+  return <div className="grant-stack">
+    {task.feedback}
+    {listError&&<Alert tone="critical" title="Unable to refresh current worklist">
+      {listError}
+    </Alert>}
+    <Card className="grant-request-list-card"
+      title={heading} description="Search and filters apply to all role-visible records on the server, before pagination. Decisions, notifications and execution remain separate."
+      actions={<div className="grant-actions">
+        {nextAssigned && <Button onClick={() => navigate('/requests/' + nextAssigned.id)}>
+          Review next assigned request
+        </Button>}
+        {mode === 'approvals'
+          ? <Button variant="secondary" onClick={() => navigate('/requests/new')}>New request</Button>
+          : <Button onClick={() => navigate('/requests/new')}>New request</Button>}
+        <Button variant="secondary" disabled={listBusy} onClick={() => void load(currentQuery)}>Refresh</Button>
+      </div>}>
+      {mode === 'approvals' && <>
+        <nav className="grant-actions" aria-label="Approval task views">
+          {approvalQuickViews.map((option) =>
+            <Button
+              key={option.value}
+              variant={applied.view === option.value ? 'primary' : 'secondary'}
+              aria-pressed={applied.view === option.value}
+              disabled={task.busy}
+              onClick={() => selectApprovalQuickView(option.value)}
+            >{option.label}</Button>,
+          )}
+        </nav>
+        <p>Choose a work queue, open an assigned request, and review the exact action before deciding. A decision requires a separate confirmation; opening a request never approves it.</p>
+      </>}
+      <div className="grant-grid">
+        <TextField label="Search requests" value={draft.search} maxLength={100} onChange={(e) => edit('search', e.target.value)} />
+        <Select label="Work view" value={draft.view} onChange={(value) => edit('view', value)}>
+          {viewChoices.map((entry) => <option value={entry.value} key={entry.value}>{entry.label}</option>)}
+        </Select>
+        <Select label="Decision status" value={draft.state} onChange={(value) => edit('state', value)} required={false}>
+          <option value="">Any status</option>
+          {['AWAITING', 'HELD', 'APPROVED', 'DENIED', 'EXPIRED', 'CANCELLED'].map((entry) =>
+            <option key={entry} value={entry}>{entry.replaceAll('_', ' ')}</option>)}
+        </Select>
+        <Select label="Information status" value={draft.collaboration_state} onChange={(value) => edit('collaboration_state', value)} required={false}>
+          <option value="">Any information status</option>
+          <option value="OPEN">Ready for decisions</option>
+          <option value="INFO_REQUESTED">Waiting for information</option>
+          <option value="CHANGES_REQUESTED">Changes required</option>
+        </Select>
+      </div>
+      <details open={advancedOpen} onToggle={(event) => setAdvancedOpen(event.currentTarget.open)}>
+        <summary>Advanced filters{countAdvancedFilters(draft) > 0
+          ? ' · ' + countAdvancedFilters(draft) + ' set' : ''}</summary>
+        <div className="grant-grid">
+            <Select label="Approval policy" value={draft.policy_id} onChange={(value) => edit('policy_id', value)} required={false}>
+              <option value="">Any policy</option>
+              {profiles.map((entry) => <option value={entry.id} key={entry.id}>{entry.name}</option>)}
+            </Select>
+            <TextField label="Action type" value={draft.action_kind} maxLength={100} onChange={(e) => edit('action_kind', e.target.value)} />
+            <TextField label="Created from" type="date" value={draft.created_after} onChange={(e) => edit('created_after', e.target.value)} />
+            <TextField label="Created through" type="date" value={draft.created_before} onChange={(e) => edit('created_before', e.target.value)} />
+            <p>Created dates use UTC calendar days, including the whole selected end date.</p>
+            <Select label="Callback delivery" value={draft.delivery_state} onChange={(value) => edit('delivery_state', value)} required={false}>
+              <option value="">Any delivery status</option>
+              {['NOT_SCHEDULED', 'PENDING', 'DELIVERED', 'FAILED'].map((value) =>
+                <option value={value} key={value}>{value.replaceAll('_', ' ')}</option>)}
+            </Select>
+            <Select label="Execution status" value={draft.execution_state} onChange={(value) => edit('execution_state', value)} required={false}>
+              <option value="">Any execution status</option>
+              {['NOT_STARTED', 'COMMITTED', 'RUNNING', 'UNKNOWN', 'REPORTED_SUCCEEDED', 'REPORTED_FAILED'].map((value) =>
+                <option value={value} key={value}>{value.replaceAll('_', ' ')}</option>)}
+            </Select>
+            {admin && <>
+              <Select label="Requester" value={draft.requester_id} onChange={(value) => edit('requester_id', value)} required={false}>
+                <option value="">Any requester</option>
+                {accounts.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
+              </Select>
+              <Select label="Approver" value={draft.approver_id} onChange={(value) => edit('approver_id', value)} required={false}>
+                <option value="">Any approver</option>
+                {accounts.map((person) => <option key={person.id} value={person.id}>{person.displayName}</option>)}
+              </Select>
+              <Select label="Approver group" value={draft.group_id} onChange={(value) => edit('group_id', value)} required={false}>
+                <option value="">Any group</option>
+                {groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
+              </Select>
+              <Select label="Integration" value={draft.integration_id} onChange={(value) => edit('integration_id', value)} required={false}>
+                <option value="">Any integration</option>
+                {integrations.map((integration) => <option key={integration.id} value={integration.id}>{integration.name}</option>)}
+              </Select>
+            </>}
+        </div>
+      </details>
+      <div className="grant-actions">
+        <Button disabled={task.busy} onClick={apply}>Apply filters</Button>
+        <Button variant="secondary" disabled={task.busy} onClick={reset}>Clear filters</Button>
+      </div>
+      <div className={'grant-inbox-master-detail'+(preview?' has-preview':'')}>
+      <div className="grant-table-scroll grant-inbox-desktop-list"><table className="grant-table">
+        <thead><tr>
+          <th>Request</th><th>Decision</th><th>Approval progress</th>
+          <th>Callback delivery</th><th>Execution</th><th>Deadline</th>
+        </tr></thead>
+        <tbody>{rows.map((row) => <tr key={row.id}>
+          <td><Button variant="ghost" onClick={() => navigate('/requests/' + row.id)}>{row.title}</Button>
+            <small>{row.external_id}{row.viewer_delegated_for ? ' · Delegated to you' : ''}</small>
+            <InboxActionTarget row={row}/>
+            <Button variant="secondary"
+              aria-pressed={preview?.id===row.id}
+              disabled={listBusy}
+              onClick={()=>setSelectedPreview({query:currentQuery,requestId:row.id})}>
+              Preview request
+            </Button>
+          </td>
+          <td><State value={row.state} />{row.collaboration_state !== 'OPEN' &&
+            <small>{row.collaboration_state.replaceAll('_', ' ')}</small>}</td>
+          <td><InboxApprovalProgress row={row}/></td>
+          <td><State value={row.delivery_state} /></td>
+          <td><State value={row.execution_state} /></td>
+          <td><InboxDeadlineTruth row={row}/></td>
+        </tr>)}</tbody>
+      </table></div>
+      {/* The existing exact role-filtered current server page is also a
+          compact task list on mobile. It never derives overdue/approval
+          authority from local time, credentials or another unscoped GET. */}
+      <ul className="grant-inbox-mobile-list"
+        aria-label="Current request worklist mobile list">
+        {rows.map((row) => (
+          <li className="grant-inbox-mobile-card" key={row.id}>
+            <div className="grant-inbox-mobile-heading">
+              <Button variant="ghost"
+                onClick={() => navigate('/requests/' + row.id)}>
+                {row.title}
+              </Button>
+              <State value={row.state} />
+            </div>
+            <small>{row.external_id}
+              {row.viewer_delegated_for ? ' · Delegated to you' : ''}
+            </small>
+            <InboxActionTarget row={row} />
+            {row.collaboration_state !== 'OPEN' && (
+              <p className="grant-inbox-mobile-state">
+                Information: {row.collaboration_state.replaceAll('_', ' ')}
+              </p>
+            )}
+            <dl className="grant-inbox-mobile-facts">
+              <div><dt>Approval progress</dt>
+                <dd><InboxApprovalProgress row={row} /></dd>
+              </div>
+              <div><dt>Decision deadline</dt>
+                <dd><InboxDeadlineTruth row={row} /></dd>
+              </div>
+              <div><dt>Callback delivery</dt>
+                <dd><State value={row.delivery_state} /></dd>
+              </div>
+              <div><dt>Reported execution</dt>
+                <dd><State value={row.execution_state} /></dd>
+              </div>
+            </dl>
+            <div className="grant-inbox-mobile-actions">
+              <Button variant="secondary"
+                aria-pressed={preview?.id === row.id}
+                disabled={listBusy}
+                onClick={() => setSelectedPreview({
+                  query: currentQuery,
+                  requestId: row.id,
+                })}>
+                Preview request
+              </Button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      {preview&&<div ref={previewRef} tabIndex={-1} className="grant-inbox-focus">
+        <InboxSelectedRequestPreview row={preview}
+          onOpen={()=>navigate('/requests/'+encodeURIComponent(preview.id))}
+          onClose={()=>{
+            setSelectedPreview(null);
+          }}/>
+      </div>}
+      </div>
+      {!rows.length&&!listError&&
+        (listBusy||!currentLoaded
+          ? <p role="status">Loading this exact role-visible worklist…</p>
+          : <p>{emptyWorklistGuidance(mode)}</p>)}
+      <div className="grant-actions">
+        <Button variant="secondary" disabled={!offset || listBusy} onClick={() => setOffset(Math.max(0, offset - 50))}>Previous page</Button>
+        <span>Page {Math.floor(offset / 50) + 1} · {rows.length} loaded</span>
+        <Button variant="secondary" disabled={rows.length < 50 || listBusy} onClick={() => setOffset(offset + 50)}>Next page</Button>
+      </div>
+    </Card>
+  </div>;
+}

@@ -1,0 +1,218 @@
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+import { approvalQuickViewFilters, countAdvancedFilters, emptyWorklistGuidance, nextReviewableAssignedRow, queryFor, RequestList } from '../../src/request_inbox';
+import type { Filters } from '../../src/request_inbox';
+import type { RequestRow, User } from '../../src/types';
+
+const viewer: User = {
+  id: 'test-user', username: 'test-user', email: 'test@example.invalid',
+  role: 'member', mfa_enabled: false,
+};
+
+function emptyFilters(): Filters {
+  return {
+    view: 'needs', search: '', state: '', collaboration_state: '',
+    policy_id: '', action_kind: '', created_after: '', created_before: '',
+    delivery_state: '', execution_state: '', requester_id: '',
+    approver_id: '', group_id: '', integration_id: '',
+  };
+}
+
+function display(role: 'admin' | 'member', preset?: Partial<Filters>): string {
+  return renderToStaticMarkup(createElement(RequestList, {
+    user: { ...viewer, role },
+    mode: 'all',
+    navigate: () => undefined,
+    ...(preset ? { preset } : {}),
+  }));
+}
+
+describe('Grant request queue progressive disclosure', () => {
+  it('keeps the four high-frequency filters immediately visible', () => {
+    const html = display('member');
+    const beforeAdvanced = html.slice(0, html.indexOf('<details'));
+    expect(beforeAdvanced).toContain('Search requests');
+    expect(beforeAdvanced).toContain('Work view');
+    expect(beforeAdvanced).toContain('Decision status');
+    expect(beforeAdvanced).toContain('Information status');
+    expect(beforeAdvanced).not.toContain('Approval policy');
+    expect(beforeAdvanced).not.toContain('Created through');
+    expect(html).toContain('<details');
+    expect(html).toContain('Advanced filters');
+    expect(html).toContain('Approval policy');
+    expect(html).toContain('Execution status');
+    expect(html).toContain('Apply filters');
+    expect(html).toContain('Clear filters');
+    expect(html).toContain('<table');
+    expect(html).not.toContain('<details open=""');
+  });
+
+  it('never renders administrator selectors for members', () => {
+    const member = display('member');
+    const admin = display('admin');
+    expect(member).not.toContain('>Any requester</option>');
+    expect(member).not.toContain('>Any approver</option>');
+    expect(member).not.toContain('>Any group</option>');
+    expect(member).not.toContain('>Any integration</option>');
+    expect(admin).toContain('>Any requester</option>');
+    expect(admin).toContain('>Any approver</option>');
+    expect(admin).toContain('>Any group</option>');
+    expect(admin).toContain('>Any integration</option>');
+  });
+
+  it('opens advanced controls by default when an admin operation preset has an active field', () => {
+    const html = display('admin', { integration_id: 'demo-integration', execution_state: 'FAILED' });
+    expect(html).toContain('<details open=""');
+    expect(html).toContain('Advanced filters · 2 set');
+    expect(html).toContain('Apply filters');
+    expect(html).toContain('Clear filters');
+  });
+
+  it('counts applied and draft advanced filters without counting primary selections', () => {
+    const none = emptyFilters();
+    expect(countAdvancedFilters(none)).toBe(0);
+    expect(countAdvancedFilters({
+      ...none, view: 'overdue', search: 'incident',
+      state: 'HELD', collaboration_state: 'INFO_REQUESTED',
+    })).toBe(0);
+    expect(countAdvancedFilters({
+      ...none,
+      created_after: '2026-10-01', policy_id: 'profile',
+      integration_id: 'connector', action_kind: 'incident.restart',
+    })).toBe(4);
+  });
+});
+
+
+describe('Grant approval overdue deep-link compatibility', () => {
+  it('normalizes a legacy general overdue preset to an assigned-only approval view', () => {
+    const html = renderToStaticMarkup(createElement(RequestList, {
+      user: viewer, mode: 'approvals', navigate: () => undefined,
+      preset: { view: 'overdue' },
+    }));
+    expect(html).toMatch(/<option(?=[^>]*value="approval_overdue")(?=[^>]*selected="")[^>]*>/);
+    expect(html).not.toContain('<option value="overdue"');
+    const query = new URL(queryFor({
+      ...emptyFilters(), view: 'approval_overdue',
+    }, 0), 'http://testserver');
+    expect(query.searchParams.get('view')).toBe('approval_overdue');
+  });
+});
+
+
+describe('Grant server-scoped request date filters use UTC calendar days', () => {
+  it('preserves UTC day boundaries even for a reviewer in Asia/Seoul', () => {
+    const previous = process.env.TZ;
+    process.env.TZ = 'Asia/Seoul';
+    try {
+      const result = new URL(queryFor({
+        ...emptyFilters(), created_after: '2026-10-01', created_before: '2026-10-01',
+      }, 0), 'http://testserver');
+      const params = result.searchParams;
+      expect(Number(params.get('created_after'))).toBe(Date.UTC(2026, 9, 1) / 1000);
+      expect(Number(params.get('created_before'))).toBe(
+        Date.UTC(2026, 9, 2) / 1000 - 0.000001,
+      );
+      expect(params.get('limit')).toBe('50');
+    } finally {
+      if (previous === undefined) delete process.env.TZ;
+      else process.env.TZ = previous;
+    }
+  });
+
+  it('does not silently drop invalid calendar days or inverted dates', () => {
+    expect(() => queryFor({
+      ...emptyFilters(), created_after: '2026-02-30',
+    }, 0)).toThrow('INVALID_REQUEST_DATE');
+    expect(() => queryFor({
+      ...emptyFilters(), created_after: '2026-10-03', created_before: '2026-10-01',
+    }, 0)).toThrow('INVALID_REQUEST_DATE_RANGE');
+    expect(() => queryFor(emptyFilters(), -50)).toThrow('INVALID_REQUEST_PAGE');
+  });
+});
+
+
+describe('Grant approval task-first quick views', () => {
+  it('renders five purpose-labeled queue shortcuts only for approvers', () => {
+    const memberApproval = renderToStaticMarkup(createElement(RequestList, {
+      user: viewer, mode: 'approvals', navigate: () => undefined,
+    }));
+    expect(memberApproval).toContain('aria-label="Approval task views"');
+    for (const label of ['Needs my decision', 'Overdue approvals', 'On hold', 'Delegated to me', 'Recently decided']) {
+      expect(memberApproval).toContain(label);
+    }
+    expect(memberApproval).toContain('aria-pressed="true"');
+    expect(memberApproval).toContain('value="approval_overdue"');
+    expect(memberApproval).not.toContain('<option value="overdue"');
+    expect(display('member')).not.toContain('aria-label="Approval task views"');
+  });
+
+  it('clears hidden restrictive filters and keeps server-scoped view in every shortcut', () => {
+    const allowed = ['needs', 'approval_overdue', 'held', 'delegated', 'recent'] as const;
+    for (const view of allowed) {
+      const filters = approvalQuickViewFilters(view);
+      expect(filters.view).toBe(view);
+      expect(countAdvancedFilters(filters)).toBe(0);
+      expect(filters.search).toBe('');
+      expect(filters.state).toBe('');
+      expect(filters.collaboration_state).toBe('');
+      const url = new URL(queryFor(filters, 0), 'http://testserver');
+      expect(url.searchParams.get('view')).toBe(view);
+      expect(url.searchParams.get('limit')).toBe('50');
+      expect(url.searchParams.get('offset')).toBe('0');
+    }
+  });
+});
+
+
+describe('Approval Inbox next-step navigation', () => {
+  const assigned = {
+    id: 'aaaa0000-0000-4000-8000-000000000003',
+    requester_id: 'requester',
+    viewer_assigned: true,
+    viewer_can_decide: true,
+    state: 'AWAITING',
+    collaboration_state: 'OPEN',
+  } as RequestRow;
+
+  it('selects only an existing, current role-scoped assigned action, without granting a vote', () => {
+    const unrelated = { ...assigned, id: 'unrelated', viewer_assigned: false };
+    const self = { ...assigned, id: 'self', requester_id: viewer.id };
+    const closed = { ...assigned, id: 'closed', state: 'APPROVED' };
+    const awaitingInfo = { ...assigned, id: 'info', collaboration_state: 'INFO_REQUESTED' as const };
+    const unavailable = { ...assigned, id: 'unknown', viewer_can_decide: undefined };
+    expect(nextReviewableAssignedRow(
+      [unrelated, self, closed, awaitingInfo, unavailable, assigned], viewer.id,
+    )?.id).toBe(assigned.id);
+    expect(nextReviewableAssignedRow([unrelated, self, closed, awaitingInfo, unavailable], viewer.id))
+      .toBeNull();
+    expect(nextReviewableAssignedRow(
+      [{ ...assigned, state: 'HELD' }], viewer.id,
+    )?.id).toBe(assigned.id);
+  });
+
+  it('keeps request creation available without making it the only primary approval task', () => {
+    const approval = renderToStaticMarkup(createElement(RequestList, {
+      user: viewer, mode: 'approvals', navigate: () => undefined,
+    }));
+    expect(approval).toContain('New request');
+    expect(approval).toContain('A decision requires a separate confirmation');
+    // No server-loaded row at first render: never fabricate an assigned next action.
+    expect(approval).not.toContain('Review next assigned request');
+    expect(display('member')).toContain('New request');
+    expect(display('member')).not.toContain('A decision requires a separate confirmation');
+  });
+});
+
+describe('Novice empty approval queue guidance', () => {
+  it('does not tell a reviewer to create a new request when no assigned work matches', () => {
+    expect(emptyWorklistGuidance('approvals')).toContain('No approvals match');
+    expect(emptyWorklistGuidance('approvals')).toContain('another approval view');
+    expect(emptyWorklistGuidance('approvals')).not.toContain('creating a new request');
+  });
+  it('keeps request creation help for a requester and neutral filters for a general list', () => {
+    expect(emptyWorklistGuidance('requester')).toContain('start a new request');
+    expect(emptyWorklistGuidance('all')).toContain('clearing filters');
+  });
+});
