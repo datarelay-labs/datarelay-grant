@@ -11,6 +11,8 @@ not complete. The original localhost LAB, G12 and deployed preview are preserved
 
 Canonical design, validation and rollback: `docs/FOUNDATION_A8B633_CONSUMER_ADOPTION_20261019.md`.
 
+PF-02 source stage 1 adds exact Grant-owned Administration task target/role/capability routing over the existing RC50 task surface with fail-closed unsupported Control-native actions. Full Control-source AdminHub/AppShell migration remains open until upstream exposes a configurable consumer router/authority port; no security/host actions added.
+
 
 ## 2026-10-18 — Owner-directed remaining implementation; test-only block does not stop development
 

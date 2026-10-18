@@ -41,12 +41,40 @@ uv run --frozen pytest -q tests/test_foundation_a8_private_consumer.py
 
 In CI, the already-approved Foundation Contents:read credential checks out the immutable private source without persisting credentials. `tools/prime_foundation_f31_npm_peers.py` derives exactly ten public npm runtime dependencies from the pinned private lock and checks each exact version online, then offline, to prime the resolver cache; the upstream smoke still uses strict peer checks and `--offline` without bypass flags. The source-only stager produces ignored artifacts; `tools/prepare_foundation_f31.py --source` verifies them. API-static checks public lock metadata and the **existing** Grant Python runtime; foundation-web separately checks all new private artifact bytes and the Grant Web build. A missing token or mismatched source fails closed instead of reverting silently to 917df932. Private archives are neither Git-committed nor publicly uploaded by the workflow.
 
+## PF-02 bounded Grant Administration routing (source implementation)
+
+The first PF-02 Grant-owned source step is implemented in
+`web/src/grant_control_administration_contract.ts` and wired to the existing
+shared RC50 `AdministrationHub` on the genuine `/system` screen.
+Only a task with an exact recognized product ID, matching native action/path,
+current administrator role, matching task access and non-unavailable capability
+can open a real Grant detail/route. Unknown task IDs, Control-only host actions,
+unavailable administrator ACL/Roles/Sessions/Retention or configured SMTP tasks,
+changed target paths, wrong role and malformed access fail closed with no API
+mutation. Grant-specific navigation/focus state and password route are retained.
+
+The immutable Control F31 catalog-to-Grant crosswalk deliberately treats
+administrator-wide MFA/ACL/Roles/Sessions, native backup and retention as
+UNSUPPORTED rather than silently substituting weaker personal or guidance
+screens. Source integration is **not** a claimed migration of the original
+hardcoded Control AdministrationHubPage, nor a new security permission.
+Affected unit/UI regression and one real isolated browser Admin shortcut
+acceptance validate unchanged actual route navigation; full installed-product
+and account-auth acceptance are PF-05 and remain open.
+
+The remaining Foundation-owned dependency is a configurable task/router and
+identity/capability port for the original Control AdministrationHubPage and
+AppShellLayout. Both presently hardcode Control routes and governance tokens;
+Grant cannot mount them truthfully with existing product-native principal and
+capability endpoints. Do not clone or modify shared Foundation UI in Grant.
+Document and reconcile this before a full PF-02 product UI migration.
+
 ## Workstream and strict acceptance
 
 | WBS | Current engineering status | Missing closure |
 | --- | --- | --- |
 | **PF-01** private package provenance, reproducible preparation and pinned Web consumer | Exact source and package content verified; isolated npm/Wheel import and candidate Web build/tests PASS | Exact pushed-head CI, product baseline/rollback and separate final distribution approval |
-| **PF-02** Control desktop shell/Admin adaptation | New private component exports available; existing Grant RC50 Admin retained | Bind actual Grant Administration functions, roles, navigation and visual/host readbacks |
+| **PF-02** Control desktop shell/Admin adaptation | Grant-owned task ID/target/role/availability fail-closed router integrated into existing RC50 Administration; private Control exports available, original UI retained | Shared original Control hub/shell configurable router+capability adapter, full mounted visual/host readback; no fake native permissions |
 | **PF-03** native user/MFA/ACL/Roles/Sessions | Original Grant backend and native Wheel retained without scope change | Authorized Grant-native backend adapters with independent identity and permission tests |
 | **PF-04** native host/backup task truth | Unsupported operations still unavailable; no host change | Bind only actual approved Grant host/SQLite/backup capabilities |
 | **PF-05** installed persona and approval E2E | Earlier no-login real email/PIN/Confirm UI tested separately, not eligible as native-auth evidence | Mounted exact PF candidate Admin→Requester→Approver, true sessions/RBAC and mail decision/replay checks |

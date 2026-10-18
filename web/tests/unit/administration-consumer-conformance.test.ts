@@ -1,11 +1,10 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { AdministrationHubComposition } from '@datarelay-labs/foundation';
 import { verifyAdministrationConsumer } from '@datarelay-labs/testkit';
 import { Administration } from '../../src/administration';
+import { registeredGrantAdministrationTaskIds } from '../../src/grant_control_administration_contract';
 import { productConfig } from '../../src/foundation.config';
 import type { User } from '../../src/types';
 
@@ -39,17 +38,12 @@ const member: User = {
 };
 
 function productRegisteredActions(): string[] {
-  // In this source-bound preflight, derive callback IDs from the actual
-  // local Administration dispatch map, not from a fabricated passing fixture.
-  // Runtime capability enforcement remains Grant-owned and must be tested
-  // separately with real users in the eventual authorized browser gate.
-  const file = fileURLToPath(new URL('../../src/administration.tsx', import.meta.url));
-  const source = readFileSync(file, 'utf8');
-  const match = /const next: Record<string, AdminSection> = \{([\s\S]*?)\n\s*\};/.exec(source);
-  if (!match) throw new Error('Grant Administration action dispatch map is missing');
-  const actions = [...match[1].matchAll(/'([^']+)':\s*'/g)].map((value) => value[1]);
+  // The real implementation derives its known paths/operations from the same
+  // product-owned binding table as Administration.openTask, not a stale
+  // source-regex match of an old inline dispatcher.
+  const actions = registeredGrantAdministrationTaskIds();
   if (!actions.length || new Set(actions).size !== actions.length) {
-    throw new Error('Grant Administration action dispatch map is invalid');
+    throw new Error('Grant Administration task binding inventory is invalid');
   }
   return actions;
 }
