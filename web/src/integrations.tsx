@@ -66,12 +66,13 @@ export function Integrations() {
  const [testNeedsRefresh,setTestNeedsRefresh]=useState(false);
  const testGate=useRef(createIntegrationTestGuard());
  const [decisionMinimum,setDecisionMinimum]=useState('');
+ const [eventFormat,setEventFormat]=useState('LEGACY');
  const [reviewedCreation,setReviewedCreation]=useState<IntegrationCreationReview|null>(null);
  const [creationNeedsRefresh,setCreationNeedsRefresh]=useState(false);
  const creationGate=useRef(createIntegrationCreationGuard());
  const draft:IntegrationRegistrationDraft={
    name,kind,tenant:kind==='stellar'?tenant:'',callbackUrl:url,
-   headers,hmacSecret:hmac,decisionMinimum,
+   headers,hmacSecret:hmac,decisionMinimum,eventFormat,
  };
  const task=useTask();
  const load=async()=>setRows(await api<Integration[]>('/integrations'));
@@ -253,7 +254,7 @@ export function Integrations() {
      );
      if (!result) return;
      setName('');setUrl('');setTenant('');setHeaders('{}');setHmac('');
-     setDecisionMinimum('');
+     setDecisionMinimum('');setEventFormat('LEGACY');
      try { await load(); } catch {}
      task.setNotice('Registration acknowledged by the server. Receiver connectivity and decision authorization are separate; refresh saved connections before another registration.');
    } finally {
@@ -334,6 +335,14 @@ export function Integrations() {
         <option value="EMAIL_PIN_PLUS_OTP">Email PIN + same-mailbox OTP (not MFA)</option>
         <option value="EMAIL_PIN_PLUS_MFA">Email PIN + fresh independent Grant TOTP</option>
       </Select>
+      <Select label="Outbound callback format" value={eventFormat}
+        onChange={(value)=>{setEventFormat(value);setReviewedCreation(null);}}>
+        <option value="LEGACY">Legacy Grant JSON (existing receivers)</option>
+        <option value="CLOUDEVENTS">CloudEvents 1.0 structured JSON (receiver opt-in)</option>
+      </Select>
+      <p>Choose CloudEvents only for a receiver that explicitly supports the
+        new envelope. Existing integrations and queued messages remain in
+        their original format. This does not change execution authorization.</p>
       <TextField label="Registered callback URL" type="url" required
         maxLength={2048} value={url}
         onChange={(e)=>{setUrl(e.target.value);setReviewedCreation(null);}}

@@ -17,6 +17,7 @@ const draft: IntegrationRegistrationDraft = {
   headers: '{"Authorization":"Bearer SECRET-DO-NOT-DISPLAY"}',
   hmacSecret: 'SAMPLE-HMAC-DO-NOT-DISPLAY',
   decisionMinimum: 'EMAIL_PIN_PLUS_MFA',
+  eventFormat: 'LEGACY',
 };
 const markup=(x=draft)=>renderToStaticMarkup(createElement(
   IntegrationCreationConfirmation,{
@@ -31,6 +32,8 @@ describe('P0 review-first integration registration, security floor and secret-fr
         .toThrow('INTEGRATION_CREATION_REVIEW_INVALID');
     }
     expect(markup()).toContain('EMAIL_PIN_PLUS_MFA');
+    expect(markup()).toContain('Legacy Grant JSON');
+    expect(markup({...draft,eventFormat:'CLOUDEVENTS'})).toContain('CloudEvents 1.0');
   });
   it('snapshots exact callback destination, header map and HMAC without rendering secrets',()=>{
     const review=prepareIntegrationCreationReview(draft);
@@ -60,12 +63,19 @@ describe('P0 review-first integration registration, security floor and secret-fr
     expect(()=>prepareIntegrationCreationReview({...draft,kind:'stellar',tenant:''}))
       .toThrow('INTEGRATION_CREATION_REVIEW_INVALID');
   });
+  it('rejects unrecognized callback format without posting',()=>{
+    for(const format of ['', 'CUSTOM', 'CLOUDEVENTS2']){
+      expect(()=>prepareIntegrationCreationReview({...draft,eventFormat:format}))
+        .toThrow('INTEGRATION_CREATION_REVIEW_INVALID');
+    }
+  });
   it('invalidates frozen confirmation if callback, header, secret, mode, tenant or name changes',()=>{
     const review=prepareIntegrationCreationReview(draft);
     expect(isCurrentIntegrationCreationReview(review,draft)).toBe(true);
     const fields:{[k:string]: string}={
       name:'Other',callbackUrl:'https://different.example.invalid/receive',
-      headers:'{}',hmacSecret:'new-secret',decisionMinimum:'EMAIL_PIN',tenant:'tenant-a',
+      headers:'{}',hmacSecret:'new-secret',decisionMinimum:'EMAIL_PIN',
+      eventFormat:'CLOUDEVENTS',tenant:'tenant-a',
     };
     for(const [key,value] of Object.entries(fields)){
       expect(isCurrentIntegrationCreationReview(review,
@@ -89,7 +99,7 @@ describe('P0 review-first integration registration, security floor and secret-fr
           .toBe('EMAIL_PIN_PLUS_MFA');
         await pending;
         return {id:'registered-id',name:draft.name,kind:draft.kind,
-          decision_verification_minimum:'EMAIL_PIN_PLUS_MFA'};
+          decision_verification_minimum:'EMAIL_PIN_PLUS_MFA',event_format:'LEGACY'};
       });
     const first=send(),second=send();
     expect(writes).toBe(1);
@@ -107,20 +117,21 @@ describe('P0 review-first integration registration, security floor and secret-fr
     expect(guard.blocked()).toBe(true);
     expect(await submitReviewedIntegrationCreation(intent,guard,
       async()=>{writes++;return {id:'bad',name:draft.name,kind:draft.kind,
-        decision_verification_minimum:'EMAIL_PIN_PLUS_MFA'};})).toBeNull();
+        decision_verification_minimum:'EMAIL_PIN_PLUS_MFA',event_format:'LEGACY'};})).toBeNull();
     expect(writes).toBe(1);
     expect(guard.readSucceeded()).toBe(true);
   });
   it('verifies exact returned name/kind/floor, but never invents callback acceptance',()=>{
     const intent=prepareIntegrationCreationReview(draft);
-    const receipt:Pick<Integration,'id'|'name'|'kind'|'decision_verification_minimum'>={
+    const receipt:Pick<Integration,'id'|'name'|'kind'|'decision_verification_minimum'|'event_format'>={
       id:'registered-id',name:draft.name,kind:draft.kind,
-      decision_verification_minimum:'EMAIL_PIN_PLUS_MFA',
+      decision_verification_minimum:'EMAIL_PIN_PLUS_MFA',event_format:'LEGACY',
     };
     expect(verifyIntegrationCreationReceipt(intent,receipt)).toBe(receipt);
     for(const invalid of [{...receipt,kind:'stellar' as const},
       {...receipt,name:'Other'}, {...receipt,id:''},
-      {...receipt,decision_verification_minimum:'EMAIL_PIN' as const}]){
+      {...receipt,decision_verification_minimum:'EMAIL_PIN' as const},
+      {...receipt,event_format:'CLOUDEVENTS' as const}]){
       expect(()=>verifyIntegrationCreationReceipt(intent,invalid))
         .toThrow('INTEGRATION_CREATION_RECEIPT_MISMATCH');
     }

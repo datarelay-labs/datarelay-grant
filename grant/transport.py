@@ -8,6 +8,7 @@ import json
 import smtplib
 import ssl
 import time
+from datetime import UTC, datetime
 from email.message import EmailMessage
 from email.utils import formataddr
 from urllib.parse import urlsplit
@@ -63,13 +64,57 @@ def validate_destination(url: str, settings: Settings, *, resolve: bool = False)
         raise GrantError("INVALID_DESTINATION", 422) from exc
 
 
+def webhook_wire_payload(
+    settings: Settings, destination: dict, payload: str, event_id: str,
+) -> tuple[bytes, str]:
+    """Produce stable bytes before signing. Legacy payloads remain byte-identical."""
+    fmt = destination.get("event_format", "LEGACY")
+    if fmt == "LEGACY":
+        return payload.encode(), "application/json"
+    if fmt != "CLOUDEVENTS":
+        raise GrantError("UNSUPPORTED_WEBHOOK_FORMAT", 422)
+
+    try:
+        original = json.loads(payload)
+        if not isinstance(original, dict) or original.get("event_id") != event_id:
+            raise GrantError("WEBHOOK_EVENT_ID_MISMATCH", 422)
+        event_type = original["event_type"]
+        event_source = destination["event_source"]
+        occurred_at = original.get("occurred_at", original.get("at"))
+        if (not isinstance(event_type, str) or not event_type
+                or not isinstance(event_source, str) or not event_source
+                or isinstance(occurred_at, bool)):
+            raise ValueError("invalid event metadata")
+        event_time = datetime.fromtimestamp(
+            float(occurred_at), UTC,
+        ).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        envelope = {
+            "specversion": "1.0",
+            "id": event_id,
+            "source": event_source,
+            "type": event_type,
+            "time": event_time,
+            "datacontenttype": "application/json",
+            "data": original,
+        }
+        wire = json.dumps(
+            envelope, ensure_ascii=False, sort_keys=True,
+            separators=(",", ":"), allow_nan=False,
+        ).encode("utf-8")
+    except GrantError:
+        raise
+    except (ValueError, TypeError, KeyError, OverflowError) as exc:
+        raise GrantError("INVALID_WEBHOOK_PAYLOAD", 422) from exc
+    return wire, "application/cloudevents+json"
+
+
 def send_webhook(settings: Settings, destination: dict, payload: str, event_id: str) -> None:
     validate_destination(destination["url"], settings)
-    data = payload.encode()
+    data, media_type = webhook_wire_payload(settings, destination, payload, event_id)
     timestamp = str(int(time.time()))
     headers = {
         **destination.get("headers", {}),
-        "Content-Type": "application/json",
+        "Content-Type": media_type,
         "X-Grant-Event-Id": event_id,
         "X-Grant-Timestamp": timestamp,
         "User-Agent": "DataRelay-Grant/0.1",

@@ -133,6 +133,9 @@ class Core:
                 "url": body.callback_url,
                 "headers": body.callback_headers,
                 "hmac_secret": body.hmac_secret,
+                "event_format": body.event_format,
+                "integration_id": ident,
+                "event_source": self.settings.origin + "/api/v1/integrations/" + ident,
             }
         )
         with self.db.transaction() as conn:
@@ -149,9 +152,11 @@ class Core:
             audit(conn, None, actor.id, "integration.created", {
                 "integration_id": ident,
                 "decision_verification_minimum": body.decision_verification_minimum,
+                "event_format": body.event_format,
             })
         return {"id": ident, "name": body.name, "kind": body.kind,
-                "decision_verification_minimum": body.decision_verification_minimum}
+                "decision_verification_minimum": body.decision_verification_minimum,
+                "event_format": body.event_format}
 
     def update_integration_verification_policy(
         self, actor: Principal, ident: str, body: IntegrationVerificationPolicy,
@@ -195,6 +200,9 @@ class Core:
                 "enabled": bool(r["enabled"]),
                 "decision_verification_minimum": r["decision_verification_minimum"],
                 "callback_origin": self._origin(r["destination"]),
+                "event_format": self.settings.unseal(r["destination"]).get(
+                    "event_format", "LEGACY"
+                ),
             }
             for r in rows
         ]

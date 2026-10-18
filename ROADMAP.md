@@ -1,5 +1,31 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+
+## 2026-10-18 — Owner-directed remaining implementation; test-only block does not stop development
+
+The owner explicitly authorized continuing remaining **source** tasks even while
+real Full User E2E is blocked. This new instruction takes precedence over the
+older packet's exclusive FULL_USER_E2E scheduling gate; it does NOT authorize
+production, callback/SMTP live sending, credential changes, destructive retention,
+Foundation edits, PR merge or release. Existing U0–U8 64/64 development PASS
+and F31 product source are preserved; do not repeat them.
+
+| WBS | Implementation state | Remaining closure |
+| --- | --- | --- |
+| STD-01 standards-to-code crosswalk | SOURCE inventory in `docs/STANDARDS_ALIGNMENT_GAP_LEDGER.md`; partial | Close explicit PASS/GAP/N/A with source/test provenance |
+| STD-02 human-authorization, execution, quorum, delegation | Previously implemented; focused Python regressions PASS | Further gaps only if current evidence shows missing behavior |
+| STD-03 low-assurance email PIN + high-assurance step-up | 4-digit + bounded attempts and independent fresh MFA implemented | 6-digit optional tier (not mandated by owner) / corresponding compat qualification |
+| STD-04 CloudEvents 1.0 / RFC 9457 opt-in | **SOURCE IMPLEMENTED** on new candidate: encrypted per-registration format, immutable event source, HMAC over wire body, explicit Accept negotiation, admin Web Review→Confirm | Exact-HEAD CI and isolated recipient contract; real external consumer E2E distinct |
+| STD-05 audit/evidence/privacy mapping | Existing audit chains/export/redaction present; 17/17 regressions PASS | Standards-control crosswalk and outstanding genuine gaps |
+| STD-06 accessibility / enterprise identity | Grant UI qualification partial; Foundation owns common login / shell | Grant-only WCAG remediation where evidenced; SCIM optional and not baseline |
+| SM-3/4 real platform HTTPS/network/retention/restore | **OWNER-GATED**, not a safe Grant source-only requirement | Separate production/privilege/data authority and upstream Foundation readiness |
+| Foundation shared shell/ACL/Roles/Sessions | Dependency owned by Product Foundation | Consume only a qualified matching package after published handoff; do not fork shared UI |
+| Full User E2E and external Control/Stellar | Product test/owner-gated | Remain NOT PASS; do not substitute fixtures or falsely infer production |
+
+Current implementation contract: `docs/PRODUCT_STANDARD.md` §15.1, `docs/STANDARDS_ALIGNMENT_GAP_LEDGER.md`.
+All older frozen roadmap entries are historical where they conflict with this owner-directed work order.
+
+
 ## 2026-10-15 — Grant acceptance contracts corrected for product purpose
 
 The current canonical test contracts supersede older E2E wording where they conflict:

@@ -60,6 +60,8 @@ export function IntegrationConnectionDirectory({
                 <strong>{row.name}</strong>
                 <small>{row.kind === 'datarelay' ? 'DataRelay' : 'Stellar Cyber'}
                   {row.tenant ? ' · Tenant ' + row.tenant : ''}</small>
+                <small> · Callback: {row.event_format === 'CLOUDEVENTS'
+                  ? 'CloudEvents 1.0' : 'Legacy JSON'}</small>
                 <details><summary>Technical integration reference</summary>
                   <code>{row.id}</code></details>
               </td>
@@ -98,6 +100,10 @@ export function IntegrationConnectionDirectory({
               </div>
               <div><dt>Minimum human verification</dt>
                 <dd>{row.decision_verification_minimum ?? 'Unavailable'}</dd>
+              </div>
+              <div><dt>Callback format</dt>
+                <dd>{row.event_format === 'CLOUDEVENTS'
+                  ? 'CloudEvents 1.0' : 'Legacy JSON'}</dd>
               </div>
             </dl>
             <details>

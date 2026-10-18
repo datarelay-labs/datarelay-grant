@@ -21,6 +21,7 @@ export type RequestRow = {
 export type Integration = {
  id: string; name: string; kind: 'datarelay' | 'stellar'; tenant: string;
  enabled: boolean; callback_origin: string;
+ event_format?: 'LEGACY' | 'CLOUDEVENTS';
  decision_verification_minimum?: 'EMAIL_PIN' | 'EMAIL_PIN_PLUS_OTP' | 'EMAIL_PIN_PLUS_MFA';
 };
 export type EmailTemplate = { id: string; name: string; subject_template: string; body_template: string; reminder_subject_template: string; reminder_body_template: string; enabled: boolean };

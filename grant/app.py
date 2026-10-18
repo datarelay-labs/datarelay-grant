@@ -6,6 +6,7 @@ import json
 import logging
 import threading
 from contextlib import asynccontextmanager
+from http import HTTPStatus
 from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request
@@ -28,6 +29,43 @@ def unique_object(pairs):
             raise ValueError("duplicate JSON key")
         out[key] = value
     return out
+
+
+def _wants_problem_details(accept: str) -> bool:
+    """Require explicit opt-in; wildcards and q=0 preserve legacy errors."""
+    for option in accept[:2048].split(","):
+        media, *parameters = option.strip().lower().split(";")
+        if media.strip() != "application/problem+json":
+            continue
+        weight = 1.0
+        for param in parameters:
+            key, _, value = param.strip().partition("=")
+            if key == "q":
+                try:
+                    weight = float(value)
+                except ValueError:
+                    weight = 0.0
+        if 0 < weight <= 1:
+            return True
+    return False
+
+
+def _error_response(request: Request, status: int, error: dict) -> JSONResponse:
+    if not _wants_problem_details(request.headers.get("accept", "")):
+        return JSONResponse({"error": error}, status_code=status)
+    try:
+        title = HTTPStatus(status).phrase
+    except ValueError:
+        title = "Request Failed"
+    return JSONResponse(
+        {
+            "type": "about:blank", "title": title, "status": status,
+            **error,
+        },
+        status_code=status,
+        media_type="application/problem+json",
+        headers={"Vary": "Accept"},
+    )
 
 
 def create_app(settings: Settings) -> FastAPI:
@@ -75,21 +113,19 @@ def create_app(settings: Settings) -> FastAPI:
             429: "unavailable",
             503: "unavailable",
         }.get(exc.status, "failed")
-        return JSONResponse(
-            {"error": {"code": exc.code, "category": category}}, status_code=exc.status
+        return _error_response(
+            request, exc.status, {"code": exc.code, "category": category}
         )
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request: Request, exc: RequestValidationError):
-        return JSONResponse(
+        return _error_response(
+            request, 422,
             {
-                "error": {
-                    "code": "INVALID_INPUT",
-                    "category": "validation",
-                    "fields": [".".join(map(str, e["loc"])) for e in exc.errors()],
-                }
+                "code": "INVALID_INPUT",
+                "category": "validation",
+                "fields": [".".join(map(str, e["loc"])) for e in exc.errors()],
             },
-            status_code=422,
         )
 
     @app.middleware("http")

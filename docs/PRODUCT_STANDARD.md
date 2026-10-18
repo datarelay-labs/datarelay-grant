@@ -1201,6 +1201,33 @@ DataRelay integration must enforce Grant immediately before the actual product-o
 operation. Stellar integration must use an actual supported outgoing responder and
 actual receiving path; echo fixtures are never completion evidence.
 
+### 15.1 Outbound event transport formats and error representations (STD-04)
+
+- Existing registered integrations use `LEGACY` transport. The original
+  `schema_version: 1` webhook bytes, `X-Grant-Event-Id`,
+  `X-Grant-Timestamp` and `X-Grant-Signature` HMAC remain unchanged.
+  Existing integrations and sealed queued deliveries are **not** migrated.
+- An administrator creating a new integration may explicitly choose
+  `event_format=CLOUDEVENTS` after reviewing the receiver's advertised
+  capability and exact registration. Grant emits CloudEvents 1.0 **structured**
+  JSON (`application/cloudevents+json`), with original Grant event in
+  `data`, consistent `id`, `type`, `source`, UTC `time` and
+  `datacontenttype`. Unsupported formats fail closed.
+- For either format, the webhook HMAC is computed over the **actual sent
+  body bytes** and existing delivery headers; a 2xx means only transport
+  acceptance, never execution, receipt proof or approved external effect.
+  RFC 9421 signature negotiation is **not** claimed.
+- Public API defaults to the original `application/json` error body
+  (`error.code/category/fields`). Only an explicit
+  `Accept: application/problem+json` with nonzero quality changes the
+  representation to RFC 9457 `type=about:blank`, `title`, `status`,
+  bounded `code/category/fields`. The status code, authorization checks
+  and no-secret guarantees do not change.
+- Opt-in is authorized only by existing admin creation, not by requester
+  context, callback-supplied headers or a bypass of Grant consume/report.
+  This capability does not imply certified BPMN/DMN/CMMN interchange,
+  RFC 9421 conformance or external system execution success.
+
 ## 16. Audit and evidence standard
 
 Audit event lists must remain legible on narrow mobile viewports without

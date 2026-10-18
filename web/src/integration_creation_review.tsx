@@ -14,6 +14,7 @@ export type IntegrationRegistrationDraft = {
   headers: string;
   hmacSecret: string;
   decisionMinimum: string;
+  eventFormat: string;
 };
 
 export type IntegrationCreationPayload = {
@@ -24,6 +25,7 @@ export type IntegrationCreationPayload = {
   callback_headers: Record<string, string>;
   hmac_secret: string;
   decision_verification_minimum: VerificationFloor;
+  event_format: 'LEGACY' | 'CLOUDEVENTS';
 };
 
 export type IntegrationCreationReview = Readonly<{
@@ -44,6 +46,9 @@ export function prepareIntegrationCreationReview(
   const name = draft.name.trim();
   const kind = draft.kind;
   const minimum = draft.decisionMinimum as VerificationFloor;
+  if (!['LEGACY', 'CLOUDEVENTS'].includes(draft.eventFormat)) {
+    throw new Error('INTEGRATION_CREATION_REVIEW_INVALID');
+  }
   if (!name || name.length > 100 || !['datarelay', 'stellar'].includes(kind)
       || (kind === 'stellar' && !draft.tenant.trim())
       || draft.tenant.length > 200 || draft.hmacSecret.length > 256
@@ -76,6 +81,7 @@ export function prepareIntegrationCreationReview(
       callback_headers: { ...validatedHeaders },
       hmac_secret: draft.hmacSecret,
       decision_verification_minimum: minimum,
+      event_format: draft.eventFormat as 'LEGACY' | 'CLOUDEVENTS',
     },
     receiverOrigin: receiver.origin,
     headerCount: Object.keys(validatedHeaders).length,
@@ -122,7 +128,8 @@ export function createIntegrationCreationGuard() {
 }
 
 export type IntegrationCreationReceipt =
-  Pick<Integration, 'id' | 'name' | 'kind' | 'decision_verification_minimum'>;
+  Pick<Integration, 'id' | 'name' | 'kind' | 'decision_verification_minimum'> &
+  { event_format: 'LEGACY' | 'CLOUDEVENTS' };
 
 export function verifyIntegrationCreationReceipt<T extends IntegrationCreationReceipt>(
   reviewed: IntegrationCreationReview, receipt:T,
@@ -130,7 +137,8 @@ export function verifyIntegrationCreationReceipt<T extends IntegrationCreationRe
   if (!receipt?.id || receipt.name !== reviewed.payload.name
       || receipt.kind !== reviewed.payload.kind
       || receipt.decision_verification_minimum
-        !== reviewed.payload.decision_verification_minimum) {
+        !== reviewed.payload.decision_verification_minimum
+      || receipt.event_format !== reviewed.payload.event_format) {
     throw new Error('INTEGRATION_CREATION_RECEIPT_MISMATCH');
   }
   return receipt;
@@ -177,6 +185,9 @@ export function IntegrationCreationConfirmation({
       <dt>Tenant scope</dt><dd>{payload.tenant||'None'}</dd>
       <dt>Decision verification minimum</dt>
       <dd>{payload.decision_verification_minimum}</dd>
+      <dt>Outbound callback format</dt>
+      <dd>{payload.event_format === 'CLOUDEVENTS'
+        ? 'CloudEvents 1.0 (structured JSON)' : 'Legacy Grant JSON'}</dd>
       <dt>Callback headers</dt>
       <dd>{reviewed.headerCount} configured header{reviewed.headerCount===1?'':'s'}</dd>
       <dt>Signing</dt>

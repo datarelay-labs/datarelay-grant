@@ -144,6 +144,7 @@ class Integration(Input):
     callback_url: str = Field(min_length=1, max_length=2048)
     callback_headers: dict[str, str] = Field(default_factory=dict)
     hmac_secret: str = Field(default="", max_length=256)
+    event_format: Literal["LEGACY", "CLOUDEVENTS"] = "LEGACY"
     decision_verification_minimum: Literal[
         "EMAIL_PIN", "EMAIL_PIN_PLUS_OTP", "EMAIL_PIN_PLUS_MFA"
     ] = "EMAIL_PIN"
