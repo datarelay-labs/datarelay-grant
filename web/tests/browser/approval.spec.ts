@@ -135,7 +135,7 @@ test('Foundation member account action reaches personal security, not Administra
 
 test('Foundation administration and mobile approval page are real adapters',async({browser})=>{
  const context=await browser.newContext({viewport:{width:390,height:844}});const page=await context.newPage();await login(page,'admin');
- await page.goto('/system');await expect(page.getByText('System Health',{exact:true})).toBeVisible();await expect(page.getByText('User Management',{exact:true})).toBeVisible();for(const label of ['Management Access (ACL)','Multi-Factor Authentication','Roles & Permissions','Sessions']) await expect(page.getByText(label,{exact:true})).toBeVisible();await page.getByRole('button',{name:'View System Health',exact:true}).click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
+ await page.goto('/system');await expect(page.getByText('System Health',{exact:true})).toBeVisible();await expect(page.getByText('User Management',{exact:true})).toBeVisible();for(const label of ['Management Access (ACL)','Multi-Factor Authentication','Roles & Permissions','Sessions']) await expect(page.getByText(label,{exact:true})).toBeVisible();await page.getByTestId('core.health').getByRole('button', { name: 'View', exact: true }).click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
  await page.goto('/integrations');await expect(page.getByRole('list',{name:'Registered connections mobile list'}).getByText('Isolated DataRelay fixture',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Review connection test',exact:true}).click();
  await expect(page.getByRole('button',{name:'Confirm connection test',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Confirm connection test',exact:true}).click();
@@ -156,23 +156,23 @@ test('Grant Foundation Administration shortcuts and selected task focus work on 
   await page.goto('/system');
   await expect(page.getByRole('button',{name:'My account & MFA',exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:'Configuration preview',exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:'View HTTPS',exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:'View Password Management',exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:'View Network',exact:true})).toBeVisible();
-  await page.getByRole('button',{name:'View HTTPS',exact:true}).click();
+  await expect(page.getByTestId('core.https').getByRole('button', { name: 'View', exact: true })).toBeVisible();
+  await expect(page.getByTestId('core.password').getByRole('button', { name: 'View', exact: true })).toBeVisible();
+  await expect(page.getByTestId('core.network').getByRole('button', { name: 'View', exact: true })).toBeVisible();
+  await page.getByTestId('core.https').getByRole('button', { name: 'View', exact: true }).click();
   await expect(page.getByTestId('grant-admin-selected-detail')).toBeFocused();
   await expect(page.getByText('Configured HTTPS surface',{exact:true})).toBeVisible();
   await expect(page.getByText('Deployment operator',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Back to administration tasks',exact:true}).click();
-  await page.getByRole('button',{name:'View Network',exact:true}).click();
+  await page.getByTestId('core.network').getByRole('button', { name: 'View', exact: true }).click();
   await expect(page.getByTestId('grant-admin-selected-detail')).toBeFocused();
   await expect(page.getByText('Configured network surface',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Back to administration tasks',exact:true}).click();
-  await page.getByRole('button',{name:'View Password Management',exact:true}).click();
+  await page.getByTestId('core.password').getByRole('button', { name: 'View', exact: true }).click();
   await expect(page).toHaveURL(/\/security$/);
   await expect(page.getByText('Change password',{exact:true})).toBeVisible();
   await page.goto('/system');
-  await page.getByRole('button',{name:'View System Health',exact:true}).click();
+  await page.getByTestId('core.health').getByRole('button', { name: 'View', exact: true }).click();
   await expect(page.getByTestId('grant-admin-selected-detail')).toBeFocused();
   await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'My account & MFA',exact:true}).click();
@@ -189,7 +189,7 @@ test('SM-2 display timezone default and personal override require review and per
  try{
   await login(page,'admin');
   await page.goto('/system');
-  await page.getByRole('button',{name:'Manage Display timezone',exact:true}).click();
+  await page.getByTestId('core.timezone').getByRole('button', { name: 'Manage', exact: true }).click();
   await expect(page.getByText('Platform display timezone',{exact:true})).toBeVisible();
   await expect(page.getByText('UTC',{exact:true}).first()).toBeVisible();
   await page.getByLabel('Default IANA timezone',{exact:true}).fill('Asia/Seoul');
@@ -215,7 +215,7 @@ test('SM-2 display timezone default and personal override require review and per
   await page.getByRole('button',{name:'Confirm timezone change',exact:true}).click();
   await expect(page.getByText('Use platform default',{exact:true})).toBeVisible();
   await page.goto('/system');
-  await page.getByRole('button',{name:'Manage Display timezone',exact:true}).click();
+  await page.getByTestId('core.timezone').getByRole('button', { name: 'Manage', exact: true }).click();
   await page.getByLabel('Default IANA timezone',{exact:true}).fill('UTC');
   await page.getByRole('button',{name:'Review default timezone',exact:true}).click();
   await page.getByRole('button',{name:'Confirm default timezone',exact:true}).click();
@@ -332,7 +332,7 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  });
  const page=await context.newPage();
  await login(page,'admin');await page.goto('/system');
- await page.getByRole('button',{name:'Manage User Management',exact:true}).click();
+ await page.getByTestId('core.users').getByRole('button', { name: 'Manage', exact: true }).click();
  await page.getByLabel('New username',{exact:true}).fill('browser-member');
  await page.getByLabel('New user email',{exact:true}).fill('browser-member@example.invalid');
  await page.getByLabel('Initial password',{exact:true}).fill(f.password);
@@ -1442,7 +1442,7 @@ test('B3 Administration mail-test requires exact Review then one Confirm',async(
  try{
   await login(page,'admin');
   await page.goto('/system');
-  await page.getByRole('button',{name:'Manage Mail delivery test',exact:true}).click();
+  await page.getByTestId('grant.smtp.test').getByRole('button', { name: 'Manage', exact: true }).click();
   await expect(page.getByText('Mail delivery test',{exact:true}).first()).toBeVisible();
   const before=await(await context.request.get(f.receiver)).json();
   const previous=before.mail.length;

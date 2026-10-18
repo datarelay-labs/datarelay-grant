@@ -1,22 +1,20 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
-import type { AdministrationHubComposition } from '@datarelay-labs/foundation';
-import { verifyAdministrationConsumer } from '@datarelay-labs/testkit';
+import type { ControlConsumerAdministration, ControlConsumerAdministrationHubProps } from '@datarelay-labs/control-clone';
 import { Administration } from '../../src/administration';
 import { registeredGrantAdministrationTaskIds } from '../../src/grant_control_administration_contract';
-import { productConfig } from '../../src/foundation.config';
 import type { User } from '../../src/types';
 
-// Capture the REAL product-created Foundation Hub props in an inert server
-// render. Do not patch Grant's previously platform-blocked app/styles files,
-// issue real HTTP requests, or treat this as a Browser/User E2E gate.
+/** Capture actual product-created shared Control Hub props, not a passing
+ * fixture. Rendering is inert and performs no SMTP, credentials or host POST.
+ */
 const observed = vi.hoisted(() => ({ hub: null as unknown }));
-vi.mock('@datarelay-labs/foundation', async (importOriginal) => {
-  const source = await importOriginal<typeof import('@datarelay-labs/foundation')>();
+vi.mock('@datarelay-labs/control-clone', async (importOriginal) => {
+  const source = await importOriginal<typeof import('@datarelay-labs/control-clone')>();
   return {
     ...source,
-    AdministrationHub: (props: unknown) => {
+    ControlConsumerAdministrationHubPage: (props: unknown) => {
       observed.hub = props;
       return null;
     },
@@ -30,95 +28,87 @@ const admin: User = {
   role: 'admin',
   mfa_enabled: false,
 };
-const member: User = {
-  ...admin,
-  id: 'synthetic-member',
-  username: 'member',
-  role: 'member',
-};
+const member: User = { ...admin, id: 'synthetic-member', username: 'member', role: 'member' };
 
-function productRegisteredActions(): string[] {
-  // The real implementation derives its known paths/operations from the same
-  // product-owned binding table as Administration.openTask, not a stale
-  // source-regex match of an old inline dispatcher.
-  const actions = registeredGrantAdministrationTaskIds();
-  if (!actions.length || new Set(actions).size !== actions.length) {
-    throw new Error('Grant Administration task binding inventory is invalid');
-  }
-  return actions;
-}
-
-function realComposition(user: User): AdministrationHubComposition {
+function realProjection(user: User): ControlConsumerAdministrationHubProps {
   observed.hub = null;
   renderToStaticMarkup(createElement(Administration, { user }));
-  if (!observed.hub) throw new Error('Actual Grant AdministrationHub did not render');
-  const { productId, tasks, extensionGroups } = observed.hub as AdministrationHubComposition;
-  return { productId, tasks, extensionGroups };
+  if (!observed.hub) throw Error('Actual Control Administration consumer UI did not render');
+  return observed.hub as ControlConsumerAdministrationHubProps;
 }
 
-function structuralReport(user: User, dispatchTaskIds = productRegisteredActions()) {
-  const config = productConfig(user);
-  const composition = realComposition(user);
-  const targets = [
-    ...composition.tasks,
-    ...(composition.extensionGroups ?? []).flatMap((group) => group.tasks),
-  ];
-  // The actual Grant callback switch keys by task ID, whereas the shared
-  // adapter target has its own product-owned action ID. Require BOTH to exist.
-  const registeredActionIds = targets.flatMap((task) =>
-    dispatchTaskIds.includes(task.id) && task.target?.kind === 'action'
-      ? [task.target.actionId] : [],
-  );
-  return verifyAdministrationConsumer({
-    composition,
-    registeredPaths: [
-      ...config.navigation.flatMap(
-        (item) => 'path' in item && typeof item.path === 'string' ? [item.path] : [],
-      ),
-      // Account & security is a real shell route reached from the user menu and
-      // System Management Password Management task, not a primary nav record.
-      '/security',
-    ],
-    registeredActionIds,
-    requiredCoreTaskIds: user.role === 'admin'
-      ? ['core.users', 'core.audit', 'core.health'] : [],
-  });
+function allTasks(value: ControlConsumerAdministration) {
+  return value.groups.flatMap(group => group.tasks);
 }
 
-describe('B2 Grant exact B1 Foundation consumer conformance', () => {
-  it('verifies the actual admin four-group composition and source-owned actions', () => {
-    expect(structuralReport(admin)).toEqual({ ok: true, findings: [] });
+describe('Grant actual Control-source Administration consumer conformance', () => {
+  it('passes the real four Control group IDs plus Grant SMTP extension with complete native task inventory', () => {
+    const { consumer, onOpen, showUnavailable } = realProjection(admin);
+    expect(consumer.actor).toEqual({
+      label: 'Grant administrator · admin',
+      canRead: true,
+      canManage: true,
+    });
+    expect(consumer.groups.map(g => g.id)).toEqual([
+      'access-security', 'platform-network', 'grant-mail-transport',
+      'lifecycle-recovery', 'operations-audit',
+    ]);
+    expect(showUnavailable).toBe(true);
+    expect(typeof onOpen).toBe('function');
+    const tasks = allTasks(consumer);
+    expect(new Set(tasks.map(t => t.id)).size).toBe(tasks.length);
+    const supported = tasks.filter(t => t.availability !== 'unavailable' && t.target?.kind === 'action');
+    const registered = registeredGrantAdministrationTaskIds();
+    expect(supported.map(t => t.id).sort()).toEqual([...registered].sort());
+    expect(tasks.find(t => t.id === 'core.users')).toMatchObject({
+      access: 'manage', availability: 'supported',
+      target: { kind: 'action', actionId: 'grant.accounts' },
+    });
+    expect(tasks.find(t => t.id === 'core.password')).toMatchObject({
+      access: 'view',
+      target: { kind: 'route', path: '/security' },
+    });
   });
 
-  it('keeps the member Administration task projection consistent with real unavailable capabilities', () => {
-    const result = structuralReport(member);
-    expect(result).toEqual({ ok: true, findings: [] });
-    const composition = realComposition(member);
-    const scopedTasks = [
-      ...composition.tasks,
-      ...(composition.extensionGroups ?? []).flatMap((group) => group.tasks),
-    ];
-    for (const id of ['core.users', 'grant.smtp.test']) {
-      const task = scopedTasks.find((item) => item.id === id);
-      expect(task).toBeDefined();
+  it('does not report unbound Control-native effects as working Grant operations', () => {
+    const tasks = allTasks(realProjection(admin).consumer);
+    for (const id of ['core.acl','core.mfa','core.rbac','core.sessions','core.retention','grant.smtp.configure']) {
+      const task = tasks.find(t => t.id === id);
       expect(task?.availability).toBe('unavailable');
-      expect(task?.access).toBe('view');
+      expect(task?.target).toBeUndefined();
     }
-    expect(structuralReport(admin)).toEqual({ ok: true, findings: [] });
+    const network = tasks.find(t => t.id === 'core.network');
+    expect(network).toMatchObject({
+      availability: 'read_only', access: 'view',
+      target: { kind: 'action', actionId: 'grant.deployment.network' },
+    });
   });
 
-  it('fails closed when the real audit callback is absent from the observed inventory', () => {
-    const withoutAudit = productRegisteredActions().filter((id) => id !== 'core.audit');
-    const result = structuralReport(admin, withoutAudit);
-    expect(result.ok).toBe(false);
-    expect(result.findings.map((x) => x.id)).toContain('ADMIN_TARGET_UNREGISTERED');
+  it('does not expose Manage to a nonadmin despite any UI component convenience', () => {
+    const { consumer } = realProjection(member);
+    expect(consumer.actor).toMatchObject({
+      canRead: false, canManage: false,
+    });
+    for (const task of allTasks(consumer)) {
+      if (task.access === 'manage') {
+        expect(task.availability).toBe('unavailable');
+      }
+    }
+    expect(realProjection(admin).consumer.actor.canManage).toBe(true);
   });
 
-  it('documents the exact real product callback inventory without declaring an E2E PASS', () => {
-    expect(productRegisteredActions().sort()).toEqual([
-      'core.users', 'core.audit', 'core.health',
-      'core.backup-import', 'core.https', 'core.network', 'core.timezone',
-      'grant.smtp.test',
-    ].sort());
+  it('contains no Control hardcoded native route or fake privileged writable target', () => {
+    const tasks = allTasks(realProjection(admin).consumer);
+    for (const task of tasks) {
+      if (task.target?.kind === 'route') {
+        expect(task.target.path).not.toContain('/settings');
+        expect(task.target.path).not.toContain('/operations/backup');
+        expect(task.target.path).toBe('/security');
+      } else if (task.target?.kind === 'action') {
+        expect(task.target.actionId).toMatch(/^grant\./);
+      }
+    }
+    expect(tasks.find(t => t.id === 'core.backup-import')?.access).toBe('view');
+    expect(tasks.find(t => t.id === 'core.backup-import')?.availability).toBe('read_only');
   });
 });

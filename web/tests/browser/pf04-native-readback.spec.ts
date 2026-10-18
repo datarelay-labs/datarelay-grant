@@ -44,7 +44,7 @@ test('PF-04 administrator sees true ingress and recovery absence without any hos
     });
 
     await page.goto('/system');
-    await page.getByRole('button', { name: 'View Network', exact: true }).click();
+    await page.getByTestId('core.network').getByRole('button', { name: 'View', exact: true }).click();
     const detail = page.getByTestId('grant-admin-selected-detail');
     await expect(detail.getByText('Management ingress evidence', { exact: true })).toBeVisible();
     await expect(detail.getByText('Host SSH enforcement', { exact: true })).toBeVisible();
@@ -54,7 +54,7 @@ test('PF-04 administrator sees true ingress and recovery absence without any hos
     await expect(detail.getByText('Configured network surface', { exact: true })).toBeVisible();
 
     await page.getByRole('button', { name: 'Back to administration tasks', exact: true }).click();
-    await page.getByRole('button', { name: 'View Backup & Import', exact: true }).click();
+    await page.getByTestId('core.backup-import').getByRole('button', { name: 'View', exact: true }).click();
     await expect(detail.getByText('Persisted recovery and retention evidence', { exact: true })).toBeVisible();
     await expect(detail.getByText('Independently verified restore drill', { exact: true })).toBeVisible();
     await expect(detail.getByText('Record deletion by Grant', { exact: true })).toBeVisible();

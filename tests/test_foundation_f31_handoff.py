@@ -21,7 +21,7 @@ def test_private_control_first_handoff_pinned_to_exact_foundation_head():
         timeout=20,
     )
     assert result.returncode == 0, result.stderr
-    assert "FOUNDATION_A8B633_METADATA_AND_GRANT_LEGACY_RUNTIME=PASS" in result.stdout
+    assert "FOUNDATION_PF106_METADATA_AND_GRANT_LEGACY_RUNTIME=PASS" in result.stdout
     assert "private artifacts NOT CHECKED" in result.stdout
 
 
@@ -29,7 +29,7 @@ def test_legacy_grant_ui_not_swapped_for_incompatible_empty_wrapper():
     original = json.loads((ROOT / "web/foundation.lock.json").read_text())
     native = json.loads((ROOT / "web/foundation-f31.lock.json").read_text())
     assert original["source_head"] == "746e0a78f8dba782c00eba675099f24f647f1f09"
-    assert native["source_head"] == "a8b633d9275a484e16b13ea05299f398f792a69b"
+    assert native["source_head"] == "b02ea10e45abc51913b534ce1adef086c6d124b4"
     assert native["security_python_wheel"]["grant_runtime_adopted"] is False
     assert native["legacy_rc50_retained_for_domain_compatibility"] is True
     web = json.loads((ROOT / "web/package.json").read_text())

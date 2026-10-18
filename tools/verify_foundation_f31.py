@@ -17,9 +17,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "web/foundation-f31.lock.json"
-SOURCE_HEAD = "a8b633d9275a484e16b13ea05299f398f792a69b"
+SOURCE_HEAD = "b02ea10e45abc51913b534ce1adef086c6d124b4"
 CONTROL_COMMIT = "fc89dadcb01a262ef7881a6bca94dd4989a8b496"
-ORIGINAL_BUNDLE_SHA256 = "c25503369eb7858b11ab4bd3c3373ced9483fd17182c44915b1ed5a19a3f3e36"
+ORIGINAL_BUNDLE_SHA256 = "28edfbd6358810be4ab9468872c5b52185e858e031e00c5d333096069e2fd119"
 ORIGINAL_GRANT_WHEEL_SHA256 = "cfff22d3d24efb9bb7d6f5701515ac4616cb82029c62245494ae84bd1df81969"
 ALLOWED_PACKAGES = frozenset((
     "@datarelay-labs/control-clone",
@@ -76,7 +76,7 @@ def verify_metadata(lock: dict) -> None:
     npm = json.loads((ROOT / "web/package-lock.json").read_text())
     for artifact in lock["control_first_npm_archives"]:
         path = artifact["path"]
-        if not path.startswith(".foundation/packs/") or not path.endswith("-a8b633d9.tgz"):
+        if not path.startswith(".foundation/packs/") or not path.endswith("-b02ea10.tgz"):
             raise ValueError("Private package path must be exact and ignored")
         alias = artifact.get("alias", artifact["name"])
         expected_ref = "file:../" + path
@@ -146,10 +146,10 @@ def verify(*, metadata_only: bool = False) -> None:
     lock = load_lock()
     verify_metadata(lock)
     if metadata_only:
-        print("FOUNDATION_A8B633_METADATA_AND_GRANT_LEGACY_RUNTIME=PASS (private artifacts NOT CHECKED)")
+        print("FOUNDATION_PF106_METADATA_AND_GRANT_LEGACY_RUNTIME=PASS (private artifacts NOT CHECKED)")
     else:
         verify_artifacts(lock)
-        print("FOUNDATION_A8B633_PRIVATE_ARTIFACTS_AND_GRANT_RUNTIME_BOUNDARY=PASS")
+        print("FOUNDATION_PF106_PRIVATE_ARTIFACTS_AND_GRANT_RUNTIME_BOUNDARY=PASS")
 
 
 if __name__ == "__main__":

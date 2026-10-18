@@ -31,7 +31,7 @@ def prepare_artifacts(bundle: Path, *, repacked_from_exact_source: bool = False)
     if not repacked_from_exact_source and archive_digest != ORIGINAL_BUNDLE_SHA256:
         raise ValueError("Private handoff outer SHA256 mismatch")
     expected_files = {
-        a["path"].split("/")[-1].replace("-a8b633d9.tgz", ".tgz"): a
+        a["path"].split("/")[-1].replace("-b02ea10.tgz", ".tgz"): a
         for a in lock["control_first_npm_archives"]
     }
     wheel = lock["security_python_wheel"]
@@ -85,8 +85,8 @@ def prepare_artifacts(bundle: Path, *, repacked_from_exact_source: bool = False)
                 raise ValueError("Compiled reference SHA mismatch")
             install_exact_bytes(ROOT / lock["control_web_reference_root"] / filename, raw)
 
-    print("FOUNDATION_A8B633_PRIVATE_SOURCE_MATERIALIZED=PASS source=" + SOURCE_HEAD)
-    print("FOUNDATION_A8B633_WHEEL_CONTENT_CANONICAL=PASS (Grant runtime unchanged)")
+    print("FOUNDATION_PF106_PRIVATE_SOURCE_MATERIALIZED=PASS source=" + SOURCE_HEAD)
+    print("FOUNDATION_PF106_WHEEL_CONTENT_CANONICAL=PASS (Grant runtime unchanged)")
 
 
 def install_exact_bytes(target: Path, raw: bytes, *, wheel: bool = False,

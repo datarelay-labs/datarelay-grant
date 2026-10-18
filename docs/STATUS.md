@@ -1,3 +1,11 @@
+**2026-10-19 PF-02 Control-source UI adoption stage:** isolated Grant candidate
+consumes the actual shared Foundation #106 original-Control Administration
+task/card/header module with product-owned task/actor/target projections,
+inert uninstalled functions and unchanged native Grant authorization
+boundaries. It does not adopt the Control dataflow shell, privileged
+MFA/RBAC/ACL/host effects, or grant release acceptance.
+See `docs/FOUNDATION_PF106_CONTROL_ADMIN_CONSUMER_20261019.md`.
+
 **2026-10-19 PF-04 native read-only source stage:** The actual administrator-only Grant operational-readiness projection now appears in the existing System Management Network and Backup & Import details. Strict backend schema validation fails closed for missing/malformed evidence, without exposing privileged firewall, SSL, retention, restore or host security effects. Isolated authenticated browser and negative unit tests verify read-only truth. Native host/restore proof and installed multi-user Full User E2E remain NOT qualified.
 
 **2026-10-19 PF-02 bounded administration task routing:** Original Control F31 AdministrationHubPage/AppShellLayout hardcode Control navigation/role/native host semantics, so direct Grant mounting is not qualified. Grant now uses a small verified product-owned fail-closed task ID/target/access/role adapter with existing shared RC50 hub; new MFA/ACL/Roles/Sessions/host effects remain unavailable. This is not full Control 1:1 shell adoption.

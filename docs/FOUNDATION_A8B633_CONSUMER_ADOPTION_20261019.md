@@ -1,5 +1,12 @@
 # Grant PF-01 — Private Foundation a8b633 consumer adoption
 
+**Subsequent PF-106 candidate:** A newer *separate*, unmerged Grant worktree
+uses exact private Foundation `b02ea10e45abc51913b534ce1adef086c6d124b4`
+to mount the opt-in original-Control Administration catalog presentation
+with native Grant tasks, without changing Grant's RC50 details/auth services.
+See `docs/FOUNDATION_PF106_CONTROL_ADMIN_CONSUMER_20261019.md`; historical
+PF-01 `a8b633` source and checksum evidence below remain immutable.
+
 **Status (2026-10-19):** Isolated Web consumer candidate installed and qualified; source integration on an isolated development branch, **NOT merged or deployed**. PF-02 through PF-06 (real Grant-native administration, identity, installed-product E2E) remain independent acceptance gates.
 
 ## Design and trust boundary

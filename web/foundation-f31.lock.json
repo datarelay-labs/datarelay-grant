@@ -2,26 +2,26 @@
   "schema_version": 1,
   "kind": "PRIVATE_UNPUBLISHED_CONTROL_SOURCE_HANDOFF",
   "source_repository": "datarelay-labs/datarelay-product-foundation",
-  "source_head": "a8b633d9275a484e16b13ea05299f398f792a69b",
+  "source_head": "b02ea10e45abc51913b534ce1adef086c6d124b4",
   "control_source_commit": "fc89dadcb01a262ef7881a6bca94dd4989a8b496",
-  "outer_handoff_archive_sha256": "c25503369eb7858b11ab4bd3c3373ced9483fd17182c44915b1ed5a19a3f3e36",
+  "outer_handoff_archive_sha256": "28edfbd6358810be4ab9468872c5b52185e858e031e00c5d333096069e2fd119",
   "legacy_rc50_retained_for_domain_compatibility": true,
   "control_first_npm_archives": [
     {
       "name": "@datarelay-labs/control-clone",
-      "path": ".foundation/packs/datarelay-labs-control-clone-0.1.0-dev-a8b633d9.tgz",
-      "sha256": "7af971ab02986bffaa350b8a2747c6a97fdce7a963ed82dcef4b6f9886b66abe"
+      "path": ".foundation/packs/datarelay-labs-control-clone-0.1.0-dev-b02ea10.tgz",
+      "sha256": "9efca980190b4fc66b3e7e28ddf0a5ee98b03981699f3b29a55beea98bdb43cd"
     },
     {
       "name": "@datarelay-labs/foundation",
-      "path": ".foundation/packs/datarelay-labs-foundation-0.1.0-dev-a8b633d9.tgz",
+      "path": ".foundation/packs/datarelay-labs-foundation-0.1.0-dev-b02ea10.tgz",
       "sha256": "cb6249bf316ec6c237af465344d8aec4bb974386db6875c742dc229dc3b81963",
       "alias": "@datarelay-labs/foundation-f31"
     }
   ],
   "security_python_wheel": {
-    "path": ".foundation/private-native-a8b633d9/datarelay_onprem_security-0.10.0.dev0-py3-none-any.whl",
-    "sha256": "cf78eff6ab35edbdd8aba1a9203611b6bfe21442e8c58a97b78ba2766cf5a537",
+    "path": ".foundation/private-native-b02ea10/datarelay_onprem_security-0.10.0.dev0-py3-none-any.whl",
+    "sha256": "9ff7b2e45ff2c40af622bc24ea47fd53307a8355e71fa0bd660174c992e80013",
     "content_sha256": "c56a6e0adf476b2bc2799bd088a7e2edf4c1990ba1893fe27fa853c109f68e3f",
     "grant_runtime_adopted": false,
     "grant_runtime_wheel_sha256": "cfff22d3d24efb9bb7d6f5701515ac4616cb82029c62245494ae84bd1df81969"
@@ -48,7 +48,7 @@
       "sha256": "5e90dfa40d1400eb24ec8e02adf9016d8b43b9995b8953cd59472789904657aa"
     }
   ],
-  "qualification_caveat": "Grant uses unchanged legacy RC50 administration and existing native security Wheel; source-only latest Control login and presentation candidate until separately qualified Grant identity/RBAC/host effects. Never bundle private bytes into public repo.",
-  "control_web_reference_root": ".foundation/control-f31-reference-a8b633d9",
+  "qualification_caveat": "New private PF106 consumer AdminHub is opt-in only. Grant must use native task allowlist and server permissions; original Control Shell and Grant native identity runtime preserved. Not release qualified.",
+  "control_web_reference_root": ".foundation/control-f31-reference-b02ea10",
   "wheel_repack_hash_rule": "exact_original_archive_or_content_sha256_for_source_repack"
 }
