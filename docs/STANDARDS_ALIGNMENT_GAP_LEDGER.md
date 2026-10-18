@@ -31,6 +31,9 @@ Low-assurance email-link plus four-digit PIN remains supported by design; do not
 - `tests/test_client_response_contract.py`: 54 PASS, previous run.
 - `tests/test_integration_diagnostics.py`: 11 PASS, previous run.
 - `tests/test_mock_stellar_flow.py`: 4 PASS, most recent run (exit 0, 2026-10-18).
+- `tests/test_g10a_fresh_mfa.py`: 6 PASS (exit 0, 2026-10-18).
+- `tests/test_consumer_guard.py` + `tests/test_multi_approval.py` + `tests/test_g10a_email_decisions.py`: 102 PASS (exit 0, 2026-10-18); covers existing authorization binding and multi-approval/email decisions, NOT live user acceptance.
+- `tests/test_audit_evidence.py` + `tests/test_g10a_audit_evidence.py`: 17 PASS (exit 0, 2026-10-18); existing audit/provenance/redaction tests, NOT a certification or complete retention/privacy assessment.
 - No CloudEvents or RFC 9457 implementation/qualification claimed.
 - G12 intentional dirty test and untracked `e2e-reports/` remain untouched.
 
