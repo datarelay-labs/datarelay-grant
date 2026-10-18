@@ -71,6 +71,13 @@ jobs:
           bash scripts/checks.sh setup-node
           export PATH="$GITHUB_WORKSPACE/.dev/node-runtime/node_modules/.bin:$PATH"
           npm --prefix .dev/foundation-f31-source ci --no-audit --no-fund
+          # The upstream stager uses a fresh --offline smoke directory. npm ci
+          # provides the exact React tarballs but does not necessarily cache
+          # package version metadata needed to prove their peer compatibility.
+          # Prime that public metadata; retain strict peer checking and offline
+          # npm installation in the immutable Foundation stager.
+          test "$(npm view react@19.3.0 version)" = '19.3.0'
+          test "$(npm view react-dom@19.3.0 version)" = '19.3.0'
           python3 tools/prepare_foundation_f31.py --source "$GITHUB_WORKSPACE/.dev/foundation-f31-source"
           bash scripts/checks.sh setup-web
       - name: Reproduce pinned approval-email shells
