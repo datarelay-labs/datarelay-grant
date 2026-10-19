@@ -40,7 +40,7 @@ describe('administrator configuration is separated from requester work', () => {
     for (const phrase of [
       'Configure once, reuse on every request',
       'Create approver accounts', 'Create approver groups', 'Register integrations',
-      'Create notification templates', 'Create approval policies', 'Test and activate',
+      'Create notification templates', 'Create a Draft policy', 'Test and activate',
       'Create the first request', 'Open New request',
       'What requesters see', 'Choose request type', 'Enter request details',
       'Review and submit', 'read-only to the requester',

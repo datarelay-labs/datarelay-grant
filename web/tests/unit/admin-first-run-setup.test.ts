@@ -58,6 +58,7 @@ describe('First-run Grant administrator guided setup without new permission',()=
   expect(html).toContain('Checking saved setup');
   expect(html).not.toContain('0 registered records');
   expect(html).not.toContain('0 active policies');
+  expect(html).not.toContain('Checking saved setup · Checking saved setup');
  });
  it('is mounted inside the actual Approval Policies list, preserving original save lifecycle',()=>{
   const html=renderToStaticMarkup(createElement(Profiles));
