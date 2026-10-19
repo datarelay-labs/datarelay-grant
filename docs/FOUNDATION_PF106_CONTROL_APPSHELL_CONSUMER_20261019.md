@@ -164,6 +164,19 @@ keeping one worker per shard, retains every original auth/rate-limit check and
 starts a new private 127.0.0.1-only disposable SQLite fixture for each shard. Evidence,
 including per-shard JSON and fixture, stays in ignored `.e2e/browser-shards/`.
 No auth policy, login control, role, SMTP provider or rate-limit code is relaxed.
+The runner also excludes the genuine F31 MFA enrollment and recovery scenario
+from the six shared-disposable-DB shards, then executes it as one additional
+independent, ordinarily authenticated Chromium test in its **own** disposable
+database. This prevents its persistent administrator TOTP enrollment from
+changing the authentication prerequisites of unrelated PF-04 read-only
+verification. The initial six-shard run confirmed **57/58** and PF-04 failed
+at MFA challenge (no host/Grant product readback failure); PF-04 on a separate
+fresh installation passed **1/1** at the same product HEAD. All distinct 58
+scenarios thus have individual passing evidence, but the original combined
+run was RED and is not mislabeled GREEN. The revised runner requires an exact
+one-test MFA evidence receipt and fails closed if absent. Existing MFA and
+rate-limit server protections remain active.
+
 Per-shard and exact-pushed-HEAD outcomes must be reported from actual execution
 rather than inferred from this source contract.
 
