@@ -60,6 +60,15 @@ describe('Guided Grant workflow for a first-time user',()=>{
   expect(html).not.toContain('Execution verified');
   expect(html).not.toContain('Execute</button>');
  });
+ it('blocks replacement edits until original request and policy data finish loading',()=>{
+  const replacement=renderToStaticMarkup(createElement(NewRequest,{
+    navigate:vi.fn(),predecessorId:'cancelled-request-id',
+  }));
+  expect(replacement).toContain('Loading original request before editing replacement details');
+  expect(replacement).toMatch(/<fieldset[^>]*disabled/);
+  const fresh=renderToStaticMarkup(createElement(NewRequest,{navigate:vi.fn()}));
+  expect(fresh).toMatch(/<fieldset[^>]*disabled/);
+ });
  it('keeps advanced JSON and auto-generated identifiers available but closed by default',()=>{
   const html=renderToStaticMarkup(createElement(NewRequest,{navigate:vi.fn()}));
   expect(html).toContain('Advanced integration details');

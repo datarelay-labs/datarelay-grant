@@ -187,12 +187,15 @@ export function NewRequest({ navigate, predecessorId, isAdmin = false }: { navig
   description="Choose a request type, enter the target, and review the administrator-assigned approval plan before submitting.">
   <RequestIntakeSteps policySelected={Boolean(selected)} detailsEntered={Boolean(title.trim() && target.trim())} />
   {task.feedback}
+  {predecessorId && !currentContext && !reviewError &&
+    <p role="status">Loading original request before editing replacement details…</p>}
   {createOutcomeUnknown && (
     <RequestCreationReconciliationNotice openMyRequests={() => navigate('/my-requests')} />
   )}
   {predecessor && <p>Replacement for cancelled request <code>{predecessor.id}</code>.
     A new explicit approval is required.</p>}
-  <Form busy={task.busy || createOutcomeUnknown} onSubmit={reviewRequest} label="Review request">
+  <Form busy={task.busy || createOutcomeUnknown} disabled={!currentContext}
+    onSubmit={reviewRequest} label="Review request">
    <section className="grant-intake-section" aria-label="Choose active request type" id="grant-policy-choice">
     <h3>Step 1 · Choose a request type</h3>
     <p>Pick what you need to request. Grant applies the approvers, notification template, verification and deadline configured by an administrator.</p>
@@ -239,7 +242,7 @@ export function NewRequest({ navigate, predecessorId, isAdmin = false }: { navig
    </section>
   </Form>
   {reviewError && <Alert tone="warning" title="Review required">{reviewError}</Alert>}
-  <RequestCreationConfirmation reviewed={createOutcomeUnknown ? null : reviewed} draft={draft} busy={task.busy || createOutcomeUnknown}
+  <RequestCreationConfirmation reviewed={createOutcomeUnknown ? null : reviewed} draft={draft} busy={task.busy || createOutcomeUnknown || !currentContext}
     onConfirm={()=>void task.run(submit)} onBack={()=>setReviewed(null)} />
  </Card></div>;
 }
