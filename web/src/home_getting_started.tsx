@@ -28,7 +28,7 @@ export function HomeGettingStarted({
     {
       number: '02',symbol: '✓',title: 'Review assigned work',
       description: view.decisions.length
-        ? `${workCount(view.decisions.length,'approval')} need your decision.`
+        ? `${workCount(view.decisions.length,'approval')} ${view.decisions.length === 1 ? 'needs' : 'need'} your decision.`
         : 'Open your inbox to review work assigned to you.',
       action: 'Open my approvals',destination: '/approvals',
       detail: 'You will review the exact action before deciding.',
@@ -42,6 +42,11 @@ export function HomeGettingStarted({
       detail: 'Human decisions and external results are shown separately.',
     },
   ];
+  // Prioritize actionable assigned work for members. Administrators still
+  // start from reusable configuration; empty member inboxes start at intake.
+  const orderedChoices = user.role !== 'admin' && view.decisions.length
+    ? [choices[1]!, choices[0]!, choices[2]!]
+    : choices;
   return <section className="grant-guided-start" aria-labelledby="grant-start-title">
     <div className="grant-guided-heading">
       <div>
@@ -55,11 +60,11 @@ export function HomeGettingStarted({
         </button>}
     </div>
     <div className="grant-guided-cards">
-      {choices.map((choice) =>
-        <button type="button" key={choice.number} className="grant-guided-card"
+      {orderedChoices.map((choice, index) =>
+        <button type="button" key={choice.destination} className="grant-guided-card"
           onClick={() => navigate(choice.destination)}>
           <span className="grant-guided-card-top">
-            <span className="grant-guided-step" aria-hidden="true">{choice.number}</span>
+            <span className="grant-guided-step" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
             <span className="grant-guided-symbol" aria-hidden="true">{choice.symbol}</span>
           </span>
           <strong>{choice.title}</strong>

@@ -45,6 +45,9 @@ export function HomeWorkspaceContent({
           {admin ? <>
             <Button onClick={() => navigate('/admin/setup')}>Workflow setup</Button>
             <Button variant="secondary" onClick={() => navigate('/requests/new')}>New request</Button>
+          </> : view.decisions.length ? <>
+            <Button onClick={() => navigate('/approvals')}>My approvals</Button>
+            <Button variant="secondary" onClick={() => navigate('/requests/new')}>New request</Button>
           </> : <Button onClick={() => navigate('/requests/new')}>New request</Button>}
           <Button variant="secondary" disabled={busy} onClick={refresh}>Refresh</Button>
         </div>

@@ -38,6 +38,25 @@ describe('Guided Grant workflow for a first-time user',()=>{
   expect(memberHtml).toContain('Create approval request');
   expect(memberHtml).not.toContain('Configure approval workflow');
  });
+ it('prioritizes an actual waiting approver task without changing empty-inbox or admin starts',()=>{
+  const assigned={...view,decisions:[row]};
+  const memberWithWork=renderToStaticMarkup(createElement(HomeGettingStarted,{
+    user,view:assigned,navigate:vi.fn(),
+  }));
+  expect(memberWithWork.indexOf('Review assigned work'))
+    .toBeLessThan(memberWithWork.indexOf('Create approval request'));
+  expect(memberWithWork).toContain('1 approval needs your decision');
+  const adminWithWork=renderToStaticMarkup(createElement(HomeGettingStarted,{
+    user:{...user,role:'admin'},view:assigned,navigate:vi.fn(),
+  }));
+  expect(adminWithWork.indexOf('Configure approval workflow'))
+    .toBeLessThan(adminWithWork.indexOf('Review assigned work'));
+  const emptyMember=renderToStaticMarkup(createElement(HomeGettingStarted,{
+    user,view,navigate:vi.fn(),
+  }));
+  expect(emptyMember.indexOf('Create approval request'))
+    .toBeLessThan(emptyMember.indexOf('Review assigned work'));
+ });
  it('does not claim exact approval totals when Home loaded only a bounded subset',()=>{
   const html=renderToStaticMarkup(createElement(HomeGettingStarted,{
     user,view:{...view,decisions:[row],submitted:[row]},summaryComplete:false,navigate:vi.fn(),
