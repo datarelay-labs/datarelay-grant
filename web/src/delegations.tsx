@@ -22,6 +22,23 @@ function localDateTime(hoursFromNow: number): string {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
+/** A verified server receipt is not an ambiguous POST. Retain the explicit
+ * refresh lock without misleading operators about an already confirmed write. */
+export function delegationReconciliationCopy(confirmed: boolean, uncertain: boolean): {
+  title: string; message: string;
+} {
+  if (confirmed) return {
+    title: 'Refresh after confirmed delegation change',
+    message: 'The server confirmed this delegation change. Refresh delegations and review current saved records before scheduling or revoking another delegation. No automatic retry occurs.',
+  };
+  return {
+    title: 'Reconcile delegation change',
+    message: uncertain
+      ? 'A delegation creation or revocation POST may have committed. Inspect current role-scoped records before scheduling or revoking again. The client will not retry an uncertain write.'
+      : 'A delegation change was submitted. Inspect current role-scoped records before scheduling or revoking again. The client will not retry an uncertain write.',
+  };
+}
+
 export function Delegations({ user }: { user: User }) {
   const task = useTask();
   const [directory, setDirectory] = useState<DirectoryMember[]>([]);
@@ -31,6 +48,7 @@ export function Delegations({ user }: { user: User }) {
   const [ends, setEnds] = useState(() => localDateTime(8));
   const [pending, setPending] = useState<DelegationReview | null>(null);
   const [mustReconcile, setMustReconcile] = useState(false);
+  const [confirmedChange, setConfirmedChange] = useState(false);
   const delegationGuard = useRef(createDelegationAttemptGuard());
 
   async function load() {
@@ -112,6 +130,7 @@ export function Delegations({ user }: { user: User }) {
       );
       if (!result) return;
       verifyDelegationChangeReceipt(reviewed,result);
+      setConfirmedChange(true);
     } catch(error){
       // A failed pre-POST read can be reviewed again. A possible
       // delegation creation/revocation stays latched until explicit Refresh.
@@ -132,20 +151,18 @@ export function Delegations({ user }: { user: User }) {
       throw new Error('DELEGATION_CHANGE_STILL_IN_FLIGHT');
     }
     setMustReconcile(false);
+    setConfirmedChange(false);
     setPending(null);
     task.setNotice('Current delegation records refreshed. Review any new change separately.');
   }
 
   const now = Date.now() / 1000;
+  const reconciliation = delegationReconciliationCopy(confirmedChange,mustReconcile);
   return <div className="grant-stack">
     {task.feedback}
     {delegationGuard.current.blocked() && (
-      <Alert tone="warning" title="Reconcile delegation change">
-        {mustReconcile
-          ? 'A delegation creation or revocation POST may have committed.'
-          : 'A delegation change was submitted.'}
-        {' '}Inspect current role-scoped records before scheduling or revoking again.
-        The client will not retry an uncertain write.
+      <Alert tone="warning" title={reconciliation.title}>
+        {reconciliation.message}
         <Button variant="secondary" disabled={task.busy}
           onClick={() => void task.run(refreshAfterChange)}>
           Refresh delegations

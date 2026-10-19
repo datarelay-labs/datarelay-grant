@@ -9,6 +9,7 @@ import {
   type DelegationRow, type DirectoryMember,
 } from '../../src/delegation_review';
 import type { User } from '../../src/types';
+import { delegationReconciliationCopy } from '../../src/delegations';
 
 const alice: User = { id:'alice',username:'alice',email:'a@example.invalid',
   role:'member',mfa_enabled:false };
@@ -30,6 +31,19 @@ function html(review:ReturnType<typeof create>,valid=true) {
 }
 
 describe('P0 delegated-approval task-first exact human Review → Confirm',()=>{
+  it('distinguishes a verified saved delegation from a possibly committed write',()=>{
+    const confirmed=delegationReconciliationCopy(true,true);
+    expect(confirmed.title).toContain('confirmed');
+    expect(confirmed.message).toContain('server confirmed');
+    expect(confirmed.message).toContain('Refresh');
+    expect(confirmed.message).not.toContain('may have committed');
+    const uncertain=delegationReconciliationCopy(false,true);
+    expect(uncertain.message).toContain('may have committed');
+    expect(uncertain.title).toContain('Reconcile');
+    const onlySubmitted=delegationReconciliationCopy(false,false);
+    expect(onlySubmitted.message).toContain('submitted');
+    expect(onlySubmitted.message).not.toContain('server confirmed');
+  });
   it('freezes exact actor, recipient, start and end without sending an approval',()=>{
     const intent=create();
     expect(intent).toEqual({
