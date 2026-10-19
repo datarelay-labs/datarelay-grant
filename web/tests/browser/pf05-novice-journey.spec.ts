@@ -413,3 +413,46 @@ test('PF05 Foundation dark and light themes retain legible Grant-owned task head
     await context.close();
   }
 });
+
+test('PF05 keyboard approver receives review focus without recording the decision on first click', async ({ browser }) => {
+  test.setTimeout(120_000);
+  const requesterContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const approverContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const requester = await requesterContext.newPage();
+  const approver = await approverContext.newPage();
+  try {
+    await login(requester, 'requester');
+    await requester.getByRole('button').filter({ hasText: 'Create approval request' }).click();
+    await requester.getByLabel('Request type', { exact: true }).selectOption(fixture().profile_id);
+    await requester.getByLabel('Request title', { exact: true }).fill('Keyboard review focus audit');
+    await requester.getByLabel('Target', { exact: true }).fill('no-execution-keyboard-target');
+    await requester.getByLabel('Reason', { exact: true }).fill('Keyboard-only reviewer needs explicit focus after review choice');
+    await requester.getByRole('button', { name: 'Review request', exact: true }).click();
+    await requester.getByRole('button', { name: 'Confirm create request', exact: true }).click();
+    await expect(requester.getByText('Exact action requiring approval', { exact: true })).toBeVisible();
+    const requestUrl = requester.url();
+    expect(new URL(requestUrl).pathname).toMatch(/^\/requests\/[a-f0-9-]{36}$/);
+    await login(approver, 'approver');
+    await approver.goto(requestUrl);
+    const decision = approver.getByRole('button', { name: 'Approve', exact: true });
+    await expect(decision).toBeVisible();
+    let decisionPosts = 0;
+    approver.on('request', req => {
+      if (req.method() === 'POST' && /\/requests\/[^/]+\/decision$/.test(req.url())) {
+        decisionPosts++;
+      }
+    });
+    await decision.focus();
+    await decision.press('Enter');
+    await expect(approver.getByRole('button', { name: 'Confirm approved', exact: true })).toBeVisible();
+    expect(decisionPosts, 'First decision choice must not POST').toBe(0);
+    await expect(approver.getByRole('region', { name: 'Review exact human decision' })).toBeFocused();
+    await approver.getByRole('button', { name: 'Go back', exact: true }).click();
+    await expect(approver.getByRole('button', { name: 'Confirm approved', exact: true })).toHaveCount(0);
+    await expect(decision, 'Canceling review should return keyboard focus to the choice that opened it')
+      .toBeFocused();
+    expect(decisionPosts, 'Canceling review must not POST').toBe(0);
+  } finally {
+    await Promise.all([requesterContext.close(), approverContext.close()]);
+  }
+});

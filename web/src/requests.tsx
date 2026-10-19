@@ -252,6 +252,7 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  const [loadError, setLoadError] = useState('');
  const [reason, setReason] = useState('');
  const [reviewed, setReviewed] = useState<RequestDecisionReview | null>(null);
+ const decisionReviewTrigger = useRef<HTMLElement | null>(null);
  const decisionGuard = useRef(createDecisionAttemptGuard());
  const [decisionMustRefresh, setDecisionMustRefresh] = useState(false);
  const [pendingResend, setPendingResend] = useState<RequestDeliveryResendIntent | null>(null);
@@ -290,6 +291,8 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
  }, [id]);
  function chooseForReview(choice: RequestDecisionChoice) {
   if (!row || decisionGuard.current.blocked()) return;
+  decisionReviewTrigger.current =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null;
   setReviewed(prepareRequestDecisionReview(
     row, user, choice, reason, Date.now() / 1000,
   ));
@@ -418,7 +421,11 @@ export function RequestDetail({ id, user, navigate }: { id: string; user: User; 
   </div>
   <RequestDecisionConfirmation row={row} user={user} reviewed={reviewed}
     reason={reason} nowSeconds={Date.now() / 1000} busy={task.busy}
-    onConfirm={()=>void task.run(decide)} onBack={()=>setReviewed(null)} />
+    onConfirm={()=>void task.run(decide)} onBack={() => {
+      setReviewed(null);
+      decisionReviewTrigger.current?.focus({ preventScroll: true });
+      decisionReviewTrigger.current = null;
+    }} />
  </Card></section>}
  {row.predecessor_id && <RevisionComparison requestId={row.id} />}
  <RequestCollaboration row={row} user={user} onRecorded={(updated) => {
