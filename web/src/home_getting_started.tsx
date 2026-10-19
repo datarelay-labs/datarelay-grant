@@ -14,7 +14,12 @@ export function HomeGettingStarted({
   const workCount = (count: number, singular: string) =>
     `${summaryComplete ? '' : 'At least '}${count} ${singular}${count === 1 ? '' : 's'}`;
   const choices = [
-    {
+    user.role === 'admin' ? {
+      number: '01',symbol: '⚙',title: 'Configure approval workflow',
+      description: 'Create approver accounts and groups, register integrations, publish notification templates, then test and activate an approval policy.',
+      action: 'Open workflow setup',destination: '/admin/setup',
+      detail: 'Administrator setup comes before requesters can use active request types.',
+    } : {
       number: '01',symbol: '+',title: 'Create approval request',
       description: 'Choose a request type, enter the target, and use the administrator-assigned approval plan.',
       action: 'Start a request',destination: '/requests/new',

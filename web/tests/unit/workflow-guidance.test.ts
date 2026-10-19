@@ -22,6 +22,22 @@ describe('Guided Grant workflow for a first-time user',()=>{
   expect(html).not.toContain('Approve now');
   expect(navigate).not.toHaveBeenCalled();
  });
+ it('makes administrator setup the first prominent action, while members still start with requests',()=>{
+  const adminHtml=renderToStaticMarkup(createElement(HomeGettingStarted,{
+    user:{...user,role:'admin'},view,navigate:vi.fn(),
+  }));
+  expect(adminHtml).toContain('Configure approval workflow');
+  expect(adminHtml).toContain('Open workflow setup');
+  expect(adminHtml).toContain('Create approver accounts and groups');
+  expect(adminHtml.indexOf('Configure approval workflow'))
+    .toBeLessThan(adminHtml.indexOf('Review assigned work'));
+  expect(adminHtml).not.toContain('Create approval request');
+  const memberHtml=renderToStaticMarkup(createElement(HomeGettingStarted,{
+    user,view,navigate:vi.fn(),
+  }));
+  expect(memberHtml).toContain('Create approval request');
+  expect(memberHtml).not.toContain('Configure approval workflow');
+ });
  it('does not claim exact approval totals when Home loaded only a bounded subset',()=>{
   const html=renderToStaticMarkup(createElement(HomeGettingStarted,{
     user,view:{...view,decisions:[row],submitted:[row]},summaryComplete:false,navigate:vi.fn(),

@@ -59,6 +59,18 @@ describe('Grant task-oriented Home composition', () => {
     expect(html).toContain('New request');
   });
 
+  it('prioritizes administrator configuration in Home actions while retaining an explicit request shortcut', () => {
+    const admin = markup({...member,id:'admin',role:'admin'},[]);
+    const intro = admin.slice(admin.indexOf('class="grant-home-intro"'),
+      admin.indexOf('class="grant-guided-start"'));
+    expect(intro).toContain('Workflow setup');
+    expect(intro).toContain('New request');
+    expect(intro.indexOf('Workflow setup')).toBeLessThan(intro.indexOf('New request'));
+    const memberIntro = markup(member,[]);
+    expect(memberIntro).toContain('New request');
+    expect(memberIntro).not.toContain('Configure approval workflow');
+  });
+
   it('exposes exact operation and target in the approval queue without entering details', () => {
     const html = markup(member, [
       row('approve-prod', {
