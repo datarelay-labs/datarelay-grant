@@ -1,5 +1,45 @@
 # Grant PF106: Control-source AppShell consumer port (2026-10-19)
 
+## Latest source correction: consumer search parity
+
+The initial package `68aba7c4afba34b66822022cb418e35872077c4c`
+recorded below is historical. An isolated Grant browser regression showed
+two missing RC50 discovery controls, not a new authorization or API requirement.
+
+The updated private Foundation [Draft PR #107](https://github.com/datarelay-labs/datarelay-product-foundation/pull/107)
+uses exact **`acbdc50b34d2e2e819823ed1a9c7016572ab901f`**.
+The opt-in `ControlConsumerAppShellLayout.quickNavigation` adds role-filtered
+search, keyboard Ctrl/Command+K and Escape. The opt-in
+`ControlConsumerAdministrationHubPage.searchable` adds an authorized
+"Find administration tasks" filter. The native Control application,
+backend/session code and immutable original 104-module source remain untouched.
+
+| Private handoff identity | Exact SHA256 |
+| --- | --- |
+| Unpublished offline source archive | `849bf53bbbfc410c1d75c69e1b81a4bb1e8158f38c6be9dbd89ca587b5056b3c` |
+| Control-clone npm package | `6b19121bac3caff798e76aafd2ccffa8bf306529d5e26aec346e966b3847f3bc` |
+| Native original Grant identity Wheel (unchanged) | `cfff22d3d24efb9bb7d6f5701515ac4616cb82029c62245494ae84bd1df81969` |
+
+**Exact-source evidence:** Foundation Control-clone 37/37 PASS, original Control
+Chromium→API→SQLite 6/6 PASS, Control presentation source parity and private
+handoff PASS. Grant pinned offline npm, Vite/TypeScript build,
+Web 768/768 PASS, and Python handoff/negative checks 12/12 PASS.
+The fresh isolated U8.05 Administration search browser case PASS.
+The B1 mobile scenario returned 404 while creating its fixture request
+*before* testing the search/mobile UI. Its disposition remains OPEN rather
+than incorrectly reporting a mobile UI PASS. The first full unsharded
+browser run exhausted the disposable fixture's native login rate limit;
+its cascading failures are not proof of a product login defect. Native rate
+limits were not weakened. A separate manual API-diagnostic command was
+platform safety-denied and was not bypassed. Independent full installed
+user acceptance remains open.
+
+This addendum supersedes the source/package hashes and test counts in the
+historical stage-one record below. No private archives or credentials are
+included in the public Git repository.
+
+## Initial AppShell stage (historical)
+
 ## Implementation and authority
 
 The source-only, unmerged Grant PR #102 now opts into the **new private Foundation
@@ -89,3 +129,38 @@ privileged host mutation occurred here.
    E2E plus product owner visual acceptance, with separate legitimate
    sessions and transport authority; do not use synthetic fixture evidence.
 4. PF06 merge/release/production only after explicit owner approval.
+
+## PF106 search and browser-fixture reconciliation (follow-up)
+
+**Current opt-in Foundation candidate:** private Draft PR #107 exact source
+`acbdc50b34d2e2e819823ed1a9c7016572ab901f`; handoff archive SHA256
+`849bf53bbbfc410c1d75c69e1b81a4bb1e8158f38c6be9dbd89ca587b5056b3c`.
+The Grant-owned product-native AppShell now explicitly opts into
+`quickNavigation` and the Control-origin Administration consumer hub opts into
+`searchable`. These reuse Foundation-owned presentation and search only
+authorized Grant projections; neither dispatches a missing Control native task.
+The exact package/archive hashes are in `web/foundation-f31.lock.json`.
+
+**Verified affected source:** Foundation 37/37 original/consumer Control-clone
+unit tests, unchanged original Control Chromium/UI→API→SQLite 6/6, exact Control
+104-module provenance and shared TypeScript/build PASS. Grant private package
+digest verification, isolated offline install, existing Grant Wheel preservation,
+Web 768/768, TS/build and pin Python 12/12 PASS. Grant's actual isolated
+Chromium U8.05 Administration search and B1 Inbox keyboard/search 320/375
+both PASS on one disposable server with a *unique fixture file*. This remains
+synthetic source E2E, not the separate real-human/mailbox acceptance.
+
+**Browser rate-limit contract:** The original browser suite runs many valid
+admin logins sequentially against one temporary database, exceeding the
+unchanged native 15-logins-per-user/300-second guard. The entire 57-test suite
+must be evaluated using `python3 tools/run_browser_e2e_shards.py --shards 6`,
+which retains each shard's original auth behavior but starts a new private
+127.0.0.1-only, fresh disposable SQLite fixture for each shard. Evidence,
+including per-shard JSON and fixture, stays in ignored `.e2e/browser-shards/`.
+No auth policy, login control, role, SMTP provider or rate-limit code is relaxed.
+Per-shard and exact-pushed-HEAD outcomes must be reported from actual execution
+rather than inferred from this source contract.
+
+This candidate remains unmerged, unpublished and uninstalled on the public
+preview. No release, production change, real SMTP send or external Control/
+Stellar effect is authorized by a browser fixture passing.

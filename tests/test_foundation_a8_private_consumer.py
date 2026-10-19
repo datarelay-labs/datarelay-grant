@@ -21,7 +21,7 @@ from tools import verify_foundation_f31 as verifier
 def test_current_public_lock_pins_new_source_and_preserves_grant_identity() -> None:
     lock = verifier.load_lock()
     verifier.verify_metadata(lock)
-    assert lock["source_head"] == "68aba7c4afba34b66822022cb418e35872077c4c"
+    assert lock["source_head"] == "acbdc50b34d2e2e819823ed1a9c7016572ab901f"
     assert lock["legacy_rc50_retained_for_domain_compatibility"] is True
     assert lock["security_python_wheel"]["grant_runtime_adopted"] is False
 

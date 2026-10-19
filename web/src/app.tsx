@@ -231,6 +231,7 @@ function AuthenticatedGrantApp() {
       pathname={path}
       pageTitle={title}
       onNavigate={navigate}
+      quickNavigation
       settingsPath="/security"
       onSignOut={() => {
         void task.run(async () => {

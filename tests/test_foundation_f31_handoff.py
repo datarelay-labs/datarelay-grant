@@ -29,7 +29,7 @@ def test_legacy_grant_ui_not_swapped_for_incompatible_empty_wrapper():
     original = json.loads((ROOT / "web/foundation.lock.json").read_text())
     native = json.loads((ROOT / "web/foundation-f31.lock.json").read_text())
     assert original["source_head"] == "746e0a78f8dba782c00eba675099f24f647f1f09"
-    assert native["source_head"] == "68aba7c4afba34b66822022cb418e35872077c4c"
+    assert native["source_head"] == "acbdc50b34d2e2e819823ed1a9c7016572ab901f"
     assert native["security_python_wheel"]["grant_runtime_adopted"] is False
     assert native["legacy_rc50_retained_for_domain_compatibility"] is True
     web = json.loads((ROOT / "web/package.json").read_text())

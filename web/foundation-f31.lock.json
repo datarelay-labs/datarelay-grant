@@ -2,38 +2,38 @@
   "schema_version": 1,
   "kind": "PRIVATE_UNPUBLISHED_CONTROL_SOURCE_HANDOFF",
   "source_repository": "datarelay-labs/datarelay-product-foundation",
-  "source_head": "68aba7c4afba34b66822022cb418e35872077c4c",
+  "source_head": "acbdc50b34d2e2e819823ed1a9c7016572ab901f",
   "control_source_commit": "fc89dadcb01a262ef7881a6bca94dd4989a8b496",
-  "outer_handoff_archive_sha256": "2af634e67992d0c69be7adfe444ab9a614db66c80947a6cf33bfb50005b9e7c2",
+  "outer_handoff_archive_sha256": "849bf53bbbfc410c1d75c69e1b81a4bb1e8158f38c6be9dbd89ca587b5056b3c",
   "legacy_rc50_retained_for_domain_compatibility": true,
   "control_first_npm_archives": [
     {
       "name": "@datarelay-labs/control-clone",
-      "path": ".foundation/packs/datarelay-labs-control-clone-0.1.0-dev-68aba7c.tgz",
-      "sha256": "9ac7b407b7bd2bfb7e493c086a22caa2e82fe2bc6978751f66dc2cb4d40340b6"
+      "path": ".foundation/packs/datarelay-labs-control-clone-0.1.0-dev-acbdc50.tgz",
+      "sha256": "6b19121bac3caff798e76aafd2ccffa8bf306529d5e26aec346e966b3847f3bc"
     },
     {
       "name": "@datarelay-labs/foundation",
-      "path": ".foundation/packs/datarelay-labs-foundation-0.1.0-dev-68aba7c.tgz",
+      "path": ".foundation/packs/datarelay-labs-foundation-0.1.0-dev-acbdc50.tgz",
       "sha256": "cb6249bf316ec6c237af465344d8aec4bb974386db6875c742dc229dc3b81963",
       "alias": "@datarelay-labs/foundation-f31"
     }
   ],
   "security_python_wheel": {
-    "path": ".foundation/private-native-68aba7c/datarelay_onprem_security-0.10.0.dev0-py3-none-any.whl",
-    "sha256": "c013445b95a421586ec7d27a788358c5375df7966d3ac678fb9bcdde0b4c2eab",
+    "path": ".foundation/private-native-acbdc50/datarelay_onprem_security-0.10.0.dev0-py3-none-any.whl",
+    "sha256": "29b4d2b6db1f1fd52a1b3c81ac0dd7a75d1ff835a46f3f0824e8ee7a7ed99489",
     "content_sha256": "c56a6e0adf476b2bc2799bd088a7e2edf4c1990ba1893fe27fa853c109f68e3f",
     "grant_runtime_adopted": false,
     "grant_runtime_wheel_sha256": "cfff22d3d24efb9bb7d6f5701515ac4616cb82029c62245494ae84bd1df81969"
   },
   "control_web_reference": [
     {
-      "file": "web-dist/assets/index-Bz4lpVay.js",
-      "sha256": "62bd6f0167c442fd029d3e0c3ddd10470273612ad22ef5c944b266b135b06447"
+      "file": "web-dist/assets/index-BU7K2SSM.css",
+      "sha256": "aa2709750b4f665f97b3cd41b0c1e5f3c7d874e2995200549b093509e35e9e56"
     },
     {
-      "file": "web-dist/assets/index-CuU5MNC8.css",
-      "sha256": "eb1d64c52b78bab7315b14f6a05b47cd9b48fd4b064068b02a27ea10e4a5599e"
+      "file": "web-dist/assets/index-Vzh1EX72.js",
+      "sha256": "62bd6f0167c442fd029d3e0c3ddd10470273612ad22ef5c944b266b135b06447"
     },
     {
       "file": "web-dist/favicon.svg",
@@ -41,14 +41,14 @@
     },
     {
       "file": "web-dist/index.html",
-      "sha256": "417ce27a0b318024323ee2c66db4ef0a212e5e50cf0dda4f7be3061ddb454f3f"
+      "sha256": "85677038c4cdbe1e4077d55c3f39615a22bf7744f95b50dfac47c9cd6da8a2e5"
     },
     {
       "file": "web-dist/logo/datarelay-logo.svg",
       "sha256": "5e90dfa40d1400eb24ec8e02adf9016d8b43b9995b8953cd59472789904657aa"
     }
   ],
-  "qualification_caveat": "Private PF106 optional Administration/AppShell consumer ports require Grant-native task/session/permission adapters. Original Control native shell and Grant Wheel remain unchanged; no installed real-user or release acceptance.",
-  "control_web_reference_root": ".foundation/control-f31-reference-68aba7c",
+  "qualification_caveat": "Private PF106 Control Administration and AppShell search/navigation consumer ports require native product actor and route authorization. No native Control session or host effects or installed real-user acceptance are implied.",
+  "control_web_reference_root": ".foundation/control-f31-reference-acbdc50",
   "wheel_repack_hash_rule": "exact_original_archive_or_content_sha256_for_source_repack"
 }

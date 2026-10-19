@@ -421,6 +421,7 @@ export function Administration({ user }: { user: User }) {
           </div>
           <ControlConsumerAdministrationHubPage
             consumer={controlConsumer}
+            searchable
             showUnavailable
             onOpen={openConsumerTask}
           />
