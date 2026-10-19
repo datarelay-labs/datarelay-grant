@@ -2,11 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Button,
   Card,
-  DataRelayIcon,
   MfaChallengeForm,
-  ProductShell,
   ThemeRoot,
 } from '@datarelay-labs/foundation';
+import { ControlConsumerAppShellLayout } from '@datarelay-labs/control-clone';
 import { Administration, Security } from './administration';
 import { AdminWorkflowSetup } from './admin_workflow_setup';
 import { GrantAuthFrame } from './grant_auth_frame';
@@ -18,7 +17,7 @@ import { ApiError, setCsrf } from './api';
 import { useTask } from './common';
 import { authAdapter, productConfig, readSession } from './foundation.config';
 import { readDisplayTimezone, setDisplayTimezone } from './display_timezone';
-import { grantRc50NavigationDiscovery } from './foundation_rc50';
+import { grantControlShellConfiguration } from './grant_control_shell_composition';
 import { Home } from './home';
 import { Integrations } from './integrations';
 import { Notifications } from './notifications';
@@ -227,57 +226,27 @@ function AuthenticatedGrantApp() {
   }
 
   return (
-    <ThemeRoot theme={theme} className="dr-control-reference">
-      <ProductShell
-        {...grantRc50NavigationDiscovery}
-        className="dr-control-shell"
-        product={config.product}
-        navigation={config.navigation}
-        capabilities={config.capabilities}
-        currentPath={path}
-        onNavigate={navigate}
-        pageTitle={title}
-        pageSubtitle="Human approval is explicit. Delivery and execution remain separate."
-        principal={{ displayName: user.username, detail: user.email }}
-        headerActions={
-          <button
-            type="button"
-            className="dr-control-shell__header-icon"
-            aria-label="Toggle color theme"
-            title={theme === 'light' ? 'Use dark theme' : 'Use light theme'}
-            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-          >
-            <DataRelayIcon name={theme === 'dark' ? 'sun' : 'moon'} width={16} height={16} />
-          </button>
-        }
-        accountActions={[
-          {
-            id: 'security',
-            label: 'Account & security',
-            icon: 'user',
-            onSelect: () => navigate('/security'),
-          },
-          {
-            id: 'signout',
-            label: 'Sign out',
-            icon: 'logOut',
-            tone: 'danger',
-            disabled: task.busy,
-            onSelect: () =>
-              void task.run(async () => {
-                try {
-                  await authAdapter.signOut();
-                } catch (error) {
-                  if (!(error instanceof ApiError && error.status === 401)) throw error;
-                }
-                signedOut();
-              }),
-          },
-        ]}
-      >
+    <ControlConsumerAppShellLayout
+      configuration={grantControlShellConfiguration(user)}
+      pathname={path}
+      pageTitle={title}
+      onNavigate={navigate}
+      settingsPath="/security"
+      onSignOut={() => {
+        void task.run(async () => {
+          try {
+            await authAdapter.signOut();
+          } catch (error) {
+            if (!(error instanceof ApiError && error.status === 401)) throw error;
+          }
+          signedOut();
+        });
+      }}
+    >
+      <div id="dr-main-content" className="min-w-0">
         {task.feedback}
         {page}
-      </ProductShell>
-    </ThemeRoot>
+      </div>
+    </ControlConsumerAppShellLayout>
   );
 }

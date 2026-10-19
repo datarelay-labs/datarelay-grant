@@ -31,7 +31,7 @@ def prepare_artifacts(bundle: Path, *, repacked_from_exact_source: bool = False)
     if not repacked_from_exact_source and archive_digest != ORIGINAL_BUNDLE_SHA256:
         raise ValueError("Private handoff outer SHA256 mismatch")
     expected_files = {
-        a["path"].split("/")[-1].replace("-b02ea10.tgz", ".tgz"): a
+        a["path"].split("/")[-1].replace("-68aba7c.tgz", ".tgz"): a
         for a in lock["control_first_npm_archives"]
     }
     wheel = lock["security_python_wheel"]

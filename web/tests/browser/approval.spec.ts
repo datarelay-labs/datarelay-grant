@@ -113,7 +113,7 @@ test('Foundation login and grouped Grant shell follow the DataRelay family layou
  await page.goto('/home');await expect(page.locator('[data-testid="gdc-login-centered"]')).toBeVisible();await expect(page.locator('.dr-control-reference')).toBeVisible();await expect(page.getByRole('heading',{name:'Welcome to DataRelay',exact:true})).toBeVisible();await expect(page.getByText('Please sign in to continue.',{exact:true})).toBeVisible();
  const password=page.getByLabel('Password',{exact:true});await expect(password).toHaveAttribute('type','password');await expect(page.getByRole('button',{name:'Show password',exact:true})).toBeVisible();await page.getByRole('button',{name:'Show password',exact:true}).click();await expect(password).toHaveAttribute('type','text');await page.getByRole('button',{name:'Hide password',exact:true}).click();await expect(password).toHaveAttribute('type','password');
  await page.getByLabel('Username',{exact:true}).fill('admin');await password.fill(fixture().password);await page.getByRole('button',{name:'Sign In',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.locator('.dr-control-shell')).toBeVisible();await expect(page.getByRole('button',{name:'Toggle color theme',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'User workspace',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Approval administration',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Good to see you, admin',exact:true})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.locator('.gdc-app-workspace')).toBeVisible();await expect(page.getByRole('navigation',{name:'Primary navigation'})).toBeVisible();await expect(page.getByRole('button',{name:'Toggle color theme',exact:true})).toBeVisible();await expect(page.getByText('User workspace',{exact:true})).toBeVisible();await expect(page.getByText('Approval administration',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Good to see you, admin',exact:true})).toBeVisible();
  await context.close();
 });
 
@@ -1893,4 +1893,63 @@ test('B4 policy workspace mobile 320/375 uses readable cards without horizontal 
   await expect(page.locator('table.grant-policy-table')).toBeVisible();
   await expect(page.getByRole('list',{name:'Approval policies mobile list'})).toBeHidden();
  }finally{await context.close();}
+});
+
+
+/** PF106 Grant native consumer: Chromium user journeys, not mocked capabilities.
+ * Disposable password-backed actors and local receiver only; no public preview.
+ */
+test('PF106 Control AppShell links real Grant routes and hides administrator tasks', async ({ browser }) => {
+ const adminContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+ const memberContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+ try {
+  const admin = await adminContext.newPage();
+  await login(admin, 'admin');
+  const nav = admin.getByRole('navigation', { name: 'Primary navigation' });
+  await expect(nav.getByRole('button', { name: 'System management' })).toBeVisible();
+  await expect(nav.getByRole('button', { name: 'My approvals' })).toBeVisible();
+  await expect(admin.getByLabel('Runtime status')).toHaveCount(0);
+  await expect(admin.getByRole('button', { name: 'Open operational alerts' })).toHaveCount(0);
+  await nav.getByRole('button', { name: 'My approvals' }).click();
+  await expect(admin).toHaveURL(/\/approvals$/);
+  await nav.getByRole('button', { name: 'System management' }).click();
+  await expect(admin).toHaveURL(/\/system$/);
+  await expect(admin.getByTestId('administration-hub-page')).toBeVisible();
+
+  const member = await memberContext.newPage();
+  await login(member, 'approver');
+  const memberNav = member.getByRole('navigation', { name: 'Primary navigation' });
+  await expect(memberNav.getByRole('button', { name: 'Account & security' })).toBeVisible();
+  for (const route of ['System management', 'Audit explorer', 'Approver groups', 'Notification templates', 'Operations']) {
+   await expect(memberNav.getByRole('button', { name: route, exact: true })).toHaveCount(0);
+  }
+  await memberNav.getByRole('button', { name: 'Account & security' }).click();
+  await expect(member).toHaveURL(/\/security$/);
+  await member.goto('/system');
+  await expect(member.getByText('Page unavailable', { exact: true })).toBeVisible();
+ } finally {
+  await adminContext.close();
+  await memberContext.close();
+ }
+});
+
+test('PF106 Control AppShell mobile drawer closes on Escape and restores keyboard focus', async ({ browser }) => {
+ const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+ try {
+  const page = await context.newPage();
+  await login(page, 'requester');
+  const toggle = page.getByTestId('shell-mobile-nav-toggle');
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('#primary-navigation')).toHaveAttribute('data-mobile-open', 'true');
+  await page.keyboard.press('Escape');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('#primary-navigation')).toHaveAttribute('data-mobile-open', 'false');
+  await expect(toggle).toBeFocused();
+  await expect(page.locator('#main-content')).toBeVisible();
+ } finally {
+  await context.close();
+ }
 });

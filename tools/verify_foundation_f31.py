@@ -17,9 +17,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "web/foundation-f31.lock.json"
-SOURCE_HEAD = "b02ea10e45abc51913b534ce1adef086c6d124b4"
+SOURCE_HEAD = "68aba7c4afba34b66822022cb418e35872077c4c"
 CONTROL_COMMIT = "fc89dadcb01a262ef7881a6bca94dd4989a8b496"
-ORIGINAL_BUNDLE_SHA256 = "28edfbd6358810be4ab9468872c5b52185e858e031e00c5d333096069e2fd119"
+ORIGINAL_BUNDLE_SHA256 = "2af634e67992d0c69be7adfe444ab9a614db66c80947a6cf33bfb50005b9e7c2"
 ORIGINAL_GRANT_WHEEL_SHA256 = "cfff22d3d24efb9bb7d6f5701515ac4616cb82029c62245494ae84bd1df81969"
 ALLOWED_PACKAGES = frozenset((
     "@datarelay-labs/control-clone",
@@ -76,7 +76,7 @@ def verify_metadata(lock: dict) -> None:
     npm = json.loads((ROOT / "web/package-lock.json").read_text())
     for artifact in lock["control_first_npm_archives"]:
         path = artifact["path"]
-        if not path.startswith(".foundation/packs/") or not path.endswith("-b02ea10.tgz"):
+        if not path.startswith(".foundation/packs/") or not path.endswith("-68aba7c.tgz"):
             raise ValueError("Private package path must be exact and ignored")
         alias = artifact.get("alias", artifact["name"])
         expected_ref = "file:../" + path
@@ -120,6 +120,7 @@ def verify_artifacts(lock: dict) -> None:
                     "ControlSecurityProvider",
                     "PlatformLoginPage",
                     "ControlAppShellLayout",
+                    "ControlConsumerAppShellLayout",
                 ):
                     if required not in exported:
                         raise ValueError("Missing qualified Control export " + required)

@@ -1,5 +1,13 @@
 # Grant PF-106 — Original Control Administration UI consumer
 
+**Later source checkpoint (2026-10-19):** This document records the original
+`b02ea10` Administration-only package qualification. The subsequent PF106
+private Foundation `68aba7c` adds a consumer-configurable AppShell, now mounted
+by the isolated Grant candidate; consult
+`FOUNDATION_PF106_CONTROL_APPSHELL_CONSUMER_20261019.md` and the exact current
+`web/foundation-f31.lock.json` for the new pin. Historical hashes and acceptance
+below are retained as stage-one evidence, not current package claims.
+
 **Date:** 2026-10-19
 **Status:** Isolated Grant candidate, source-only. Not deployed, not merged, not privileged host/auth-qualified.
 

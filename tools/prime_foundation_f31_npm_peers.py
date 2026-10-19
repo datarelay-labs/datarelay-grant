@@ -13,7 +13,7 @@ import re
 import subprocess
 from pathlib import Path
 
-SOURCE_HEAD = "b02ea10e45abc51913b534ce1adef086c6d124b4"
+SOURCE_HEAD = "68aba7c4afba34b66822022cb418e35872077c4c"
 NAME_RE = re.compile(r"(?:@[a-z0-9._-]+/)?[a-z0-9._-]+\Z")
 VERSION_RE = re.compile(r"[0-9]+(?:\.[0-9]+){2}(?:[-+][a-zA-Z0-9.-]+)?\Z")
 
