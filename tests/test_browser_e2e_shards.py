@@ -34,6 +34,7 @@ def test_shards_run_sequentially_with_independent_private_evidence(monkeypatch, 
         assert command[:5] == ["npm", "--prefix", "web", "run", "test:browser"]
         shard_id = command[-1]
         assert shard_id in ("--shard=1/2", "--shard=2/2")
+        assert "--fully-parallel" in command
         assert env["GRANT_E2E_PORT"] == "18301"
         assert env["GRANT_BROWSER_DISCOVERY"] == "0"
         result_dir = Path(env["GRANT_E2E_OUTPUT_DIR"])

@@ -25,9 +25,14 @@ Chromium→API→SQLite 6/6 PASS, Control presentation source parity and private
 handoff PASS. Grant pinned offline npm, Vite/TypeScript build,
 Web 768/768 PASS, and Python handoff/negative checks 12/12 PASS.
 The fresh isolated U8.05 Administration search browser case PASS.
-The B1 mobile scenario returned 404 while creating its fixture request
-*before* testing the search/mobile UI. Its disposition remains OPEN rather
-than incorrectly reporting a mobile UI PASS. The first full unsharded
+A separate signed-in, fixture-only 320px Chromium case for role-filtered mobile
+quick navigation, focus, Escape and the native My approvals route PASS (1/1).
+Foundation Engineering System exact-head CI #39182629052 SUCCESS.
+An earlier non-isolated B1 attempt returned PROFILE_NOT_FOUND (404) while
+creating its fixture request, before testing the mobile UI. Fresh disposable
+standalone and combined U8.05/B1 Chromium sessions with unique fixture files
+both showed B1 PASS. The original 404 was not reproduced; fixture collision
+is a hypothesis, not an established product defect. The first full unsharded
 browser run exhausted the disposable fixture's native login rate limit;
 its cascading failures are not proof of a product login defect. Native rate
 limits were not weakened. A separate manual API-diagnostic command was
@@ -152,10 +157,11 @@ synthetic source E2E, not the separate real-human/mailbox acceptance.
 
 **Browser rate-limit contract:** The original browser suite runs many valid
 admin logins sequentially against one temporary database, exceeding the
-unchanged native 15-logins-per-user/300-second guard. The entire 57-test suite
+unchanged native 15-logins-per-user/300-second guard. The updated 58-test suite
 must be evaluated using `python3 tools/run_browser_e2e_shards.py --shards 6`,
-which retains each shard's original auth behavior but starts a new private
-127.0.0.1-only, fresh disposable SQLite fixture for each shard. Evidence,
+which selects individual cases with Playwright `--fully-parallel` while
+keeping one worker per shard, retains every original auth/rate-limit check and
+starts a new private 127.0.0.1-only disposable SQLite fixture for each shard. Evidence,
 including per-shard JSON and fixture, stays in ignored `.e2e/browser-shards/`.
 No auth policy, login control, role, SMTP provider or rate-limit code is relaxed.
 Per-shard and exact-pushed-HEAD outcomes must be reported from actual execution

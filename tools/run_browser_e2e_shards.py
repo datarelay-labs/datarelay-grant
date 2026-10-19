@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
               flush=True)
         result = subprocess.run([
             "npm", "--prefix", "web", "run", "test:browser", "--",
-            f"--shard={index}/{args.shards}",
+            "--fully-parallel", f"--shard={index}/{args.shards}",
         ], cwd=ROOT, env=env, check=False)
         exit_codes.append(result.returncode)
         counts = results_for(shard / "browser-results.json")
