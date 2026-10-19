@@ -64,6 +64,7 @@ test('PF05 novice administrator discovers configuration chain and unsupported sy
     await expect(page.getByRole('heading', { name: 'Approver groups', level: 1 })).toBeVisible();
     await capture(page, '04-admin-approver-groups');
     await page.goto('/system');
+    await expect(page.getByText('System Health', { exact: true })).toBeVisible();
     await capture(page, '05-admin-system-tasks');
     for (const label of ['Management Access (ACL)', 'Roles & Permissions', 'Sessions']) {
       await expect(page.getByText(label, { exact: true })).toBeVisible();
@@ -92,6 +93,12 @@ test('PF05 novice requester and approver complete independently authenticated hu
     await capture(requester, '08-requester-review-before-confirm');
     await expect(requester.getByRole('button', { name: 'Confirm create request', exact: true })).toBeVisible();
     await requester.getByRole('button', { name: 'Confirm create request', exact: true }).click();
+    // The POST and client-side route transition are asynchronous. An early URL
+    // read can capture /requests/new even though the server accepted the
+    // request, sending the approver to the wrong screen.
+    await expect(requester).toHaveURL(/\/requests\/[0-9a-f-]{36}$/);
+    await expect(requester.getByText('Exact action requiring approval', { exact: true }))
+      .toBeVisible();
     await capture(requester, '09-requester-submitted');
     const detail = requester.url();
     await login(approver, 'approver');
@@ -99,6 +106,8 @@ test('PF05 novice requester and approver complete independently authenticated hu
     await approver.getByRole('button').filter({ hasText: 'Review assigned work' }).click();
     await capture(approver, '11-approver-inbox');
     await approver.goto(detail);
+    await expect(approver.getByRole('button', { name: 'Approve', exact: true }))
+      .toBeVisible();
     await capture(approver, '12-approver-request-detail');
     await approver.getByRole('button', { name: 'Approve', exact: true }).click();
     await capture(approver, '13-approver-before-confirm');
@@ -120,6 +129,7 @@ test('PF05 novice Grant mobile workflow avoids horizontal overflow at 390 and 32
   const page = await ctx.newPage();
   try {
     await page.goto('/home');
+    await expect(page.getByLabel('Username', { exact: true })).toBeVisible();
     await capture(page, '16-mobile-login-390');
     await login(page, 'requester');
     await capture(page, '17-mobile-requester-home-390');
