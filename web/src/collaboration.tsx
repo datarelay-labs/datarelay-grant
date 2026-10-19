@@ -196,7 +196,23 @@ export function RequestCollaboration({
     {row.collaboration_state === 'INFO_REQUESTED' && <Alert tone="warning" title="Waiting for requester information">
       Approval is paused until the original requester provides a response.</Alert>}
     {row.collaboration_state === 'CHANGES_REQUESTED' && <Alert tone="warning" title="Action changes requested">
-      Approval is blocked. The requester must cancel this request and submit a linked replacement for a fresh decision.</Alert>}
+      <p>Approval is blocked. The original action cannot be edited in place.</p>
+      {row.requester_id === user.id || user.role === 'admin' ? (
+        (row.state === 'CANCELLED' || row.state === 'EXPIRED') ? (
+          <p>The original request is no longer active.
+            {' '}<a href="#grant-replacement-action">Find Create replacement request</a>
+            {' '}under Exact action requiring approval above. Enter a corrected target, then Review and Confirm
+            a new request with its own approval history.</p>
+        ) : ['AWAITING', 'HELD'].includes(row.state) && !row.execution_id ? (
+          <p>Step 1: <a href="#grant-decision-actions">Go to Cancel request</a> above.
+            Review the cancellation and select Confirm cancelled; no action is executed.
+            Step 2: once cancellation is saved, then create a fresh linked replacement
+            using Create replacement request under Exact action requiring approval above.
+            Enter the corrected details and review the new request before confirming.</p>
+        ) : <p>Review the current request state before taking any new action.</p>
+      ) : <p>The original requester must cancel this request and create a new linked
+        replacement. Only a fresh reviewed request can receive approval.</p>}
+    </Alert>}
     <div className="grant-stack">
       {(row.comments ?? []).map((message) => <div key={message.id} className="grant-timeline">
         <strong>{caption[message.kind]}</strong>

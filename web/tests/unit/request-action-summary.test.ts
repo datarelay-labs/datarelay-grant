@@ -64,6 +64,7 @@ describe('Grant request detail explicit action-first evidence', () => {
     expect(output).toContain('View prior request');
     expect(output).not.toContain('>' + id + '</button>');
     expect(output).toContain('Create replacement request');
+    expect(output).toContain('id="grant-replacement-action"');
     expect(markup(sample())).not.toContain('View prior request');
     expect(markup(sample())).not.toContain('Create replacement request');
   });
