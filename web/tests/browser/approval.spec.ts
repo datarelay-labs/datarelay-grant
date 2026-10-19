@@ -1089,6 +1089,35 @@ test('AUR request inbox card headers stay readable on 390px mobile',async({brows
  }finally{await context.close();}
 });
 
+// PF106 optional shared AppShell: real isolated member login and mobile navigation.
+// This test never creates an approval request or exercises the separately gated
+// action/SMTP path. Role filtering is server-native and the UI is only a projection.
+test('PF106 member mobile quick navigation remains role-scoped and keyboard accessible', async ({browser})=>{
+ const context=await browser.newContext({viewport:{width:320,height:812}});
+ try{
+  const page=await context.newPage();
+  await login(page,'approver');
+  const toggle=page.getByRole('button',{name:'Search product navigation',exact:true});
+  await expect(toggle).toBeVisible();
+  await toggle.click();
+  const search=page.getByRole('search',{name:'Product navigation search'});
+  const input=search.getByRole('searchbox',{name:'Search pages'});
+  await expect(input).toBeFocused();
+  await input.fill('Audit');
+  await expect(search.getByText('No matching pages',{exact:true})).toBeVisible();
+  await input.fill('My approvals');
+  await expect(search.getByRole('button',{name:/My approvals/})).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(search).toHaveCount(0);
+  await expect(toggle).toBeVisible();
+  await toggle.click();
+  await search.getByRole('button',{name:/My approvals/}).click();
+  await expect(page).toHaveURL(/\/approvals$/);
+  await expect(search).toHaveCount(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+ }finally{await context.close();}
+});
+
 // B1 responsive/keyboard SOURCE qualification on loopback disposable fixture.
 // Two viewport sizes are tested; this is not two independent real people.
 test('B1 approver Inbox task-first mobile 320/375 and keyboard queue controls',async({browser})=>{
