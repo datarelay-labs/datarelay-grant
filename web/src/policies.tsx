@@ -668,6 +668,8 @@ export function Profiles() {
           enabledAccounts={users.filter((account) => account.status === 'enabled').length}
           enabledApproverGroups={groups.filter((group) => group.enabled).length}
           savedTemplateSets={templates.length}
+          publishedTemplateSets={templates.filter((template) => template.enabled
+            && (template.published_revision ?? 0) > 0).length}
           savedPolicies={rows.length}
           activePolicies={rows.filter((policy) => policy.lifecycle === 'ACTIVE'
             || (policy.active_version !== null && policy.active_version !== undefined)).length}
