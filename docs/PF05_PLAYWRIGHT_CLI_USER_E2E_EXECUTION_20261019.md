@@ -78,8 +78,70 @@ reviewed final Confirm can send the human decision. This is a targeted
 disposable browser accessibility regression, not independent real-mailbox
 Full User E2E.
 
+**PF05-TEST-003 — saved-template GET synchronization:** A new 70-case
+disposable Chromium run preserved a genuine red receipt for U6.06. The
+browser requested the saved row immediately after pressing Confirm create;
+the exact Playwright network trace established that the real create POST
+completed HTTP 201, but that first GET had not yet observed the new record.
+This was a browser-test timing defect, not an established product save failure.
+The test now explicitly awaits the single POST's HTTP 201 and polls the
+authoritative GET for the new record; it NEVER repeats the creation POST.
+The original red evidence remains under
+.e2e/browser-shards/20261019T073929Z-1605070/part-5/.
+A separate newly installed fixture executed the same three adjacent template
+workflows in order and yielded 3/3 PASS at
+.e2e/pf05-choice-links-20261019T073436Z-choice-links/u606-authoritative-reconciliation/.
+This focused proof does not replace the new whole-suite confirmation.
+
 All product UI changes are Grant-owned. Foundation source/host security and
 approval/mail semantics remain unchanged.
+
+## PF05-MAIL-001 — native browser/SMTP action-link fallback (2026-10-19)
+
+The actual mounted Grant Web/UI and its existing localhost SMTP fixture were
+exercised using a NEW independently authenticated requester browser context
+and a separate signed-out email-link browser context. This direct Playwright
+case verifies the original generated message, not a mocked link or a prebuilt
+preview; its tracked source is
+web/tests/browser/pf05-email-choice-links.spec.ts.
+
+- Mail with a real created request contained three distinct original issued
+  URLs labelled Approve, Hold and Deny and a four-digit PIN. Tests retained no
+  raw PIN/token in logs or Git.
+- All three link GET preflights returned only inert current issuance metadata;
+  before PIN verification the selected target remained hidden and the request
+  stayed AWAITING. Simply opening Hold emitted no POST or human decision.
+- Exact Hold issued URL in anonymous Chromium required PIN, exposed the bound
+  action only after verification, and required separate Confirm Hold. Actual
+  persisted request state changed to HELD, external execution NOT_STARTED.
+- Attempting the consumed Hold URL again returned an unavailable link; no
+  duplicate vote. The other original Approve URL remained eligible because
+  Hold is provisional. A second PIN verification and explicit Confirm Approve
+  recorded APPROVED, while actual execution still remained NOT_STARTED.
+- Direct test 1/1 PASS with new private fixture run and JSON report under
+  .e2e/pf05-choice-links-*. These observations support contract
+  FCS-010/011/012/018, U-002/004/005/006, E-002/003/004 and V-003/006,
+  but never upgrade independent real-user/mailbox acceptance to PASS.
+
+Boundary: The test SMTP receiver is local and disposable. No message was
+sent to ruda@ruda.ooo or another live mailbox, no Gmail contents were read,
+and no independently installed exact-HEAD public SMTP/HTTPS acceptance ran.
+Therefore the core FULL_USER_E2E remains BLOCKED_PREREQUISITES even though
+this source and disposable user workflow PASSED.
+
+**Fresh complete disposable same-source qualification after PF05-TEST-003:**
+Web Vitest 770/770 PASS; TypeScript/Vite and static checks PASS. A brand-new
+full native Playwright run, not a targeted retry, completed 70/70 PASS
+(failed=0, skipped=0, not_run=0). It used eight separate disposable SQLite
+browser shards and one independent real TOTP enrollment/recovery fixture,
+without changing identity/assurance/rate limits. The actual nine JSON reports
+are under .e2e/browser-shards/20261019T075038Z-1623935/. The complete
+wrapper log is the private .e2e/pf05-choice-links-20261019T073436Z-choice-links/
+20261019T075009Z-new-full-70/70-all-browser.log, SHA256
+844326bba550de4b42ba3cbee0e9c753adbcfc01665c9e9b78c14cd8de3270cc.
+The earlier U6.06 failed trace is retained rather than relabeled.
+This run is DISPOSABLE_PRODUCT_E2E only and does not qualify
+FULL_USER_E2E real two-inbox delivery or external product effects.
 
 ## Complete, conservatively classified scenario ledger
 

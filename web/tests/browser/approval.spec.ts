@@ -1286,8 +1286,22 @@ test('U6.06 saved revision test email reviews exact state and sends once',async(
   await page.getByRole('button',{name:'Create email template',exact:true}).click();
   await page.getByLabel('Template set name',{exact:true}).fill(title);
   await page.getByRole('button',{name:'Review draft save',exact:true}).click();
+  const createdResponse=page.waitForResponse(response=>
+    response.request().method()==='POST'
+      && new URL(response.url()).pathname==='/api/v1/notification-template-sets');
   await page.getByRole('button',{name:'Confirm template set creation',exact:true}).click();
+  const createdAcknowledgment=await createdResponse;
+  expect(createdAcknowledgment.status()).toBe(201);
   await expect(page.getByRole('button',{name:'Refresh saved template set',exact:true})).toBeVisible();
+  // The already-attempted POST may be racing the first direct GET.
+  // Reconcile ONLY authoritative saved rows; never repeat the POST to make
+  // the test green. A durable 201 response is distinct from the local UI
+  // entering its pending-reconciliation state.
+  await expect.poll(async()=>{
+    const response=await context.request.get('/api/v1/notification-template-sets');
+    expect(response.status()).toBe(200);
+    return (await response.json()).some((item:any)=>item.name===title);
+  }).toBe(true);
   const sets=await(await context.request.get('/api/v1/notification-template-sets')).json();
   const created=sets.find((item:any)=>item.name===title);
   expect(created).toBeTruthy();
