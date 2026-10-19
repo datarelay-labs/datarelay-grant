@@ -240,7 +240,7 @@ test('PF05 workflow title must remain readable against the dark Control-derived 
   const page = await ctx.newPage();
   try {
     await login(page, 'admin');
-    await page.getByRole('button', { name: /Administrator\\? Open workflow setup/ }).click();
+    await page.getByRole('button', { name: /Administrator\? Open workflow setup/ }).click();
     const title = page.locator('#grant-admin-workflow-title');
     await expect(title).toBeVisible();
     const colors = await title.evaluate(element => {
@@ -249,7 +249,15 @@ test('PF05 workflow title must remain readable against the dark Control-derived 
       const mainText = getComputedStyle(element).color;
       const referenceText = getComputedStyle(reference).color;
       const brightness = (css: string): number => {
-        const values = css.match(/[\\d.]+/g)?.slice(0, 3).map(Number) ?? [];
+        // Current Foundation tokens are OKLCH (computed CSS), not RGB.
+        // OKLCH neutral-lightness differs drastically between the text and
+        // the dark background; RGB-only parsing would silently miss the bug.
+        if (/^okl(ch|ab)\(/i.test(css)) {
+          const lightness = Number.parseFloat(css.slice(css.indexOf('(') + 1));
+          if (!Number.isFinite(lightness)) throw Error('INVALID_OKLCH_COLOR_' + css);
+          return lightness;
+        }
+        const values = css.match(/[\d.]+/g)?.slice(0, 3).map(Number) ?? [];
         if (values.length !== 3) throw Error('UNPARSABLE_COLOR_' + css);
         const normalized = values.map(channel => {
           const v = channel / 255;
@@ -266,7 +274,132 @@ test('PF05 workflow title must remain readable against the dark Control-derived 
     console.log('PF05_VISUAL_HEADER_COLOR', JSON.stringify(colors));
     expect(colors.luminanceDifference, 'Main workflow heading must be as readable as other main headings in the same theme')
       .toBeLessThan(0.28);
+    await capture(page, '24-admin-workflow-heading-dark-fixed');
   } finally {
     await ctx.close();
+  }
+});
+
+test('PF05 Grant main content gives readable text for novice home policy integration and operations', async ({ browser }) => {
+  test.setTimeout(120_000);
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await ctx.newPage();
+  const observed: { label: string; target: string; reference: string; gap: number }[] = [];
+  const check = async (url: string, selector: string, reference: string, label: string) => {
+    await page.goto(url);
+    const element = page.locator(selector).first();
+    await expect(element).toBeVisible();
+    const computed = await element.evaluate((el, referenceSelector) => {
+      const ref = document.querySelector<HTMLElement>(referenceSelector);
+      if (!ref) throw Error('MISSING_GRANT_READABLE_REFERENCE_' + referenceSelector);
+      const foreground = getComputedStyle(el).color;
+      const readable = getComputedStyle(ref).color;
+      const brightness = (css: string): number => {
+        if (/^okl(ch|ab)\(/i.test(css)) return Number.parseFloat(css.slice(css.indexOf('(') + 1));
+        const rgb = css.match(/[\d.]+/g)?.slice(0, 3).map(Number);
+        if (!rgb || rgb.length !== 3) throw Error('UNPARSEABLE_CSS_COLOR_' + css);
+        const srgb = rgb.map(channel => channel / 255);
+        return srgb[0]! * .2126 + srgb[1]! * .7152 + srgb[2]! * .0722;
+      };
+      return { foreground, readable, gap: Math.abs(brightness(foreground) - brightness(readable)) };
+    }, reference);
+    observed.push({ label, target: computed.foreground, reference: computed.readable, gap: computed.gap });
+    console.log('PF05_MAIN_COLOR_CONTRAST', JSON.stringify(observed[observed.length - 1]));
+    expect(computed.gap, 'Readable Grant primary text: ' + label).toBeLessThan(0.31);
+  };
+  try {
+    await login(page, 'admin');
+    await check('/profiles', '#grant-policies-title', '.grant-page-heading p:not(.grant-eyebrow)', 'policy title');
+    await check('/profiles', '#grant-admin-setup-title', '.grant-admin-setup-title p', 'policy onboarding title');
+    await check('/profiles', '.grant-admin-setup-step > strong', '.grant-admin-setup-title p', 'policy first-step title');
+    await check('/profiles', '.grant-admin-setup-step > a', '.grant-admin-setup-title p', 'policy first-step action');
+    await capture(page, '25-admin-policy-readable-text');
+    await check('/integrations', '.grant-page-heading h2', '.grant-page-heading p:not(.grant-eyebrow)', 'integration title');
+    await capture(page, '26-admin-integrations-readable-title');
+    await check('/operations', '.grant-page-heading h2', '.grant-page-heading p:not(.grant-eyebrow)', 'operations title');
+    await capture(page, '27-admin-operations-readable-title');
+    await check('/home', '.grant-guided-heading h3', '.grant-guided-description', 'home start guide');
+    await check('/home', '.grant-guided-card > strong', '.grant-guided-description', 'home primary action');
+    await capture(page, '28-home-readable-guidance');
+  } finally {
+    await ctx.close();
+  }
+});
+
+test('PF05 novice dark workspace text stays legible across Home, policies, Integrations and Operations', async ({ browser }) => {
+  test.setTimeout(120_000);
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await context.newPage();
+  try {
+    await login(page, 'admin');
+    const surfaces = [
+      {
+        route: '/home',
+        texts: [
+          '.grant-guided-heading h3',
+          '.grant-guided-card > strong',
+          '.grant-action-summary button strong',
+        ],
+      },
+      {
+        route: '/profiles',
+        texts: [
+          '.grant-page-heading h2',
+          '.grant-admin-setup-title h3',
+          '.grant-admin-setup-step > strong',
+          '.grant-admin-setup-step > a',
+        ],
+      },
+      { route: '/integrations', texts: ['.grant-page-heading h2'] },
+      { route: '/operations', texts: ['.grant-page-heading h2'] },
+    ];
+    const observed: { route: string; selector: string; lightness: number; color: string }[] = [];
+    for (const surface of surfaces) {
+      await page.goto(surface.route);
+      for (const selector of surface.texts) {
+        const loc = page.locator(selector).first();
+        await expect(loc).toBeVisible();
+        const color = await loc.evaluate(element => getComputedStyle(element).color);
+        const match = /^oklch\(\s*([\d.]+)/.exec(color);
+        if (!match) throw Error('Expected themed OKLCH text but got ' + color + ' on ' + surface.route);
+        const lightness = Number(match[1]);
+        observed.push({ route: surface.route, selector, lightness, color });
+      }
+    }
+    console.log('PF05_MULTI_SURFACE_DARK_THEME_COLORS', JSON.stringify(observed));
+    const lowContrast = observed.filter(row => row.lightness < 0.60);
+    expect(lowContrast, 'Dark theme Grant workspace labels must not be nearly black on black')
+      .toEqual([]);
+    await capture(page, '25-operations-dark-theme-workspace');
+  } finally {
+    await context.close();
+  }
+});
+
+test('PF05 Foundation dark and light themes retain legible Grant-owned task headings', async ({ browser }) => {
+  test.setTimeout(90_000);
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await context.newPage();
+  const luminance = async (selector: string): Promise<number> => {
+    const color = await page.locator(selector).first().evaluate(element => getComputedStyle(element).color);
+    const m = /^oklch\(\s*([\d.]+)/.exec(color);
+    if (!m) throw Error('UNEXPECTED_COMPUTED_THEME_COLOR_' + color);
+    return Number(m[1]);
+  };
+  try {
+    await login(page, 'admin');
+    const dark = await luminance('.grant-guided-heading h3');
+    await page.getByRole('button', { name: 'Toggle color theme', exact: true }).click();
+    await expect.poll(() => luminance('.grant-guided-heading h3')).not.toBe(dark);
+    const light = await luminance('.grant-guided-heading h3');
+    console.log('PF05_WORKSPACE_THEME_SWITCH', JSON.stringify({ dark, light }));
+    expect(dark).toBeGreaterThan(0.60);
+    expect(light).toBeLessThan(0.50);
+    await page.goto('/profiles');
+    await expect(page.getByRole('heading', { name: 'Approval policies', level: 2 })).toBeVisible();
+    const policyLight = await luminance('.grant-page-heading h2');
+    expect(policyLight).toBeLessThan(0.50);
+  } finally {
+    await context.close();
   }
 });

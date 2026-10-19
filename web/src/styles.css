@@ -1,4 +1,10 @@
 /* Product-domain layout only. Shared controls, semantics and shell stay in Foundation. */
+/* The original Control shell sets color on its own chrome, not the product
+   content slot. Bind Grant's text foreground to the consumer theme so h2/h3,
+   strong labels and inherited task links never render dark on dark. */
+#dr-main-content {
+  color: var(--dr-text-primary);
+}
 .grant-stack {
   width: min(100%, 1180px);
   margin-inline: auto;
@@ -155,6 +161,7 @@ pre {
 .grant-home-intro h2,
 .grant-admin-heading h2 {
   margin: 0;
+  color: var(--dr-text-primary);
   font-size: var(--dr-font-size-xl);
 }
 

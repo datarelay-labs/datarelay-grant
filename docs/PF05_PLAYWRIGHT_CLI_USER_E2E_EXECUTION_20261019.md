@@ -48,7 +48,24 @@ equivalent to an independently received approval email in a second mailbox.
 | PF05-UX-002 (P2) | Failed admin-user GET looked like zero users and left no direct recovery action. | Display an unable-to-verify status, guard account creation and offer a real Retry account directory button; verify failed→successful retry in Chromium. |
 | PF05-UX-003 (P3) | Failed/unavailable account action displayed Working even without active work. | Distinguish a disabled Form from busy work, including submit guard and disabled button state. |
 | PF05-UX-004 (P3) | Already active policies still showed Set up your first approval workflow. | Change to Manage existing approval workflows for loaded active policies; preserve first-use copy for new installations. |
+| PF05-UX-005 (P2) | Screenshot review found the main Workflow setup heading visually dark on the default dark shell. Direct Playwright sampled title and readable card text as oklch(0.145) versus oklch(0.97) with a 0.825 lightness gap; the contrast test failed RED. | Scope the main Grant intro heading color to var(--dr-text-primary) without editing Foundation shared styles and verify actual Chromium computed color GREEN. |
+| PF05-UX-006 (P2) | Full screenshot inspection found dark-on-dark primary content in Home guidance, Approver policy onboarding titles/action links, Integrations and Operations headings. Measured policy heading OKLCH lightness 0.145 versus accompanying readable description 0.708 (gap 0.563); Playwright RED. | Apply theme text foreground to Grant-owned #dr-main-content only; preserve existing semantic muted colors and unmodified Control shell. Verify Home/Policy/Integrations/Operations with real browser computed-color assertions and screenshots. |
 | PF05-TEST-001 (test isolation) | The real disposable MFA/TOTP enrollment changed the test admin identity; unrelated later login cases in the same DB could not use password-only login. | Run MFA on its own fresh disposable server/DB, preserve real MFA and login rate limits, and reconcile every discovered Playwright case exactly once. |
+
+**Final visual theme validation:** PF05-UX-006 was directly reproduced RED
+by native Chromium: the policy heading had text OKLCH lightness 0.145 while
+its adjacent readable description was 0.708 (gap 0.563). Actual private
+evidence: .e2e/novice-browser-20261019T051857Z-current-six/main-contrast-red/red.log
+and main-contrast-green/green.log. The precise Grant-owned fix binds
+#dr-main-content to var(--dr-text-primary); the originally verified specific
+intro-title rule also remains. Foundation shared shell/theme files are untouched.
+The resulting browser green run observed nine primary heading/card/action
+elements at 0.97 across Home, Approval policies, Integrations and Operations;
+toggling Foundation's theme changed Grant text from 0.97 (dark) to 0.21 (light).
+Three focused visual contracts cover relative contrast, absolute dark theme
+luminance, and light/dark switching. All findings reflect actually observed
+states; neither screenshots nor fixture-browser passes are represented as
+independent real-mailbox E2E.
 
 All product UI changes are Grant-owned. Foundation source/host security and
 approval/mail semantics remain unchanged.
