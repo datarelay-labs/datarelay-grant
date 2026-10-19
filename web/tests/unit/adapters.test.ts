@@ -30,7 +30,17 @@ describe('Grant HTTP adapter',()=>{
     expect(message).toContain(phrase);
   }
   expect(message).not.toContain('EMAIL_TEMPLATE_UNPUBLISHED');
-  expect(errorText(new ApiError(409,'POLICY_STALE'))).toContain('POLICY_STALE');
+ });
+ it('provides policy/template-specific stale-save recovery without suggesting a human vote',()=>{
+  const policy=errorText(new ApiError(409,'POLICY_STALE'));
+  for(const text of ['policy','saved version','reopen','No changes']) expect(policy).toContain(text);
+  expect(policy).not.toContain('POLICY_STALE');
+  expect(policy).not.toContain('Refresh before deciding');
+  const template=errorText(new ApiError(409,'EMAIL_TEMPLATE_STALE'));
+  for(const text of ['template','saved revision','Refresh','No changes']) expect(template).toContain(text);
+  expect(template).not.toContain('EMAIL_TEMPLATE_STALE');
+  const human=errorText(new ApiError(409,'STALE_OR_FINAL_DECISION'));
+  expect(human).toContain('Refresh before deciding');
  });
  it('does not echo arbitrary server response bodies',async()=>{
   fetchMock.mockResolvedValueOnce(new Response('<secret>do not display</secret>',{status:500}));
