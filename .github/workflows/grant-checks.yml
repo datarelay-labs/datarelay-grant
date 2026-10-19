@@ -81,7 +81,9 @@ jobs:
           # touching the existing Grant Python runtime or host credentials.
           uv venv --python python3 .dev/f31-extra-cache
           uv pip install --python .dev/f31-extra-cache/bin/python 'cryptography==50.0.2' 'uvicorn==0.54.0'
-          python3 tools/prepare_foundation_f31.py --source "$GITHUB_WORKSPACE/.dev/foundation-f31-source"
+          # Exact approved private Wheel was built with setuptools 84.0.0.
+          # Keep full Wheel member-content verification; never accept drift.
+          UV_BUILD_CONSTRAINT="$GITHUB_WORKSPACE/tools/foundation-f31-build-constraints.txt" python3 tools/prepare_foundation_f31.py --source "$GITHUB_WORKSPACE/.dev/foundation-f31-source"
           bash scripts/checks.sh setup-web
       - name: Reproduce pinned approval-email shells
         run: bash scripts/checks.sh renderer

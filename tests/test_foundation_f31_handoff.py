@@ -41,3 +41,20 @@ def test_legacy_grant_ui_not_swapped_for_incompatible_empty_wrapper():
     assert "datarelay_onprem_security" not in (ROOT / "grant/app.py").read_text(), (
         "Do not silently claim installed common session ownership through an undeclared adapter."
     )
+
+
+def test_ci_pins_wheel_build_backend_for_immutable_private_f31_content():
+    # The exact approved Wheel has Generator: setuptools (84.0.0). Later
+    # versions alter WHEEL/RECORD metadata despite 53 identical source members.
+    # Retain the complete immutable member-content check, do not weaken hashes.
+    constraints = ROOT / "tools/foundation-f31-build-constraints.txt"
+    assert constraints.read_text().strip().splitlines() == ["setuptools==84.0.0"]
+    ci = (ROOT / ".github/workflows/grant-checks.yml").read_text()
+    assert (
+        'UV_BUILD_CONSTRAINT="$GITHUB_WORKSPACE/tools/foundation-f31-build-constraints.txt" '
+        'python3 tools/prepare_foundation_f31.py --source'
+    ) in ci
+    pinned = json.loads((ROOT / "web/foundation-f31.lock.json").read_text())
+    assert pinned["security_python_wheel"]["content_sha256"] == (
+        "c56a6e0adf476b2bc2799bd088a7e2edf4c1990ba1893fe27fa853c109f68e3f"
+    )
