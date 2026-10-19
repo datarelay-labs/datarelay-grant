@@ -102,6 +102,7 @@ export function GrantConfigurationPortabilityTask() {
 
 export function Administration({ user }: { user: User }) {
   const [accounts, setAccounts] = useState<readonly AccountProjection[]>([]);
+  const [accountDirectoryLoaded, setAccountDirectoryLoaded] = useState(false);
   const [events, setEvents] = useState<readonly AuditEventProjection[]>([]);
   const [health, setHealth] = useState<HealthProjection>();
   const [operationalSecurity, setOperationalSecurity] = useState<OperationalSecurityReadiness | null>(null);
@@ -207,6 +208,7 @@ export function Administration({ user }: { user: User }) {
       api<OperationalSecurityReadiness>('/admin/operational-readiness').catch(() => null),
     ]);
     setAccounts(accountRows);
+    setAccountDirectoryLoaded(true);
     setEvents(auditRows);
     setHealth(currentHealth);
     setInfo(currentInfo);
@@ -467,18 +469,30 @@ export function Administration({ user }: { user: User }) {
           <Card title="Accounts">
             <p>Review the authoritative Grant account roster before changing access.
               Disabling an account revokes its sessions and may affect pending approval seats.</p>
-            <AccountList {...grantRc50AccountDiscovery} accounts={accounts} actions={(account) => (
-              user.role === 'admin' && account.status === 'enabled' && account.id !== user.id
-                ? <Button variant="danger"
-                    disabled={task.busy || accountDisableAttempts.includes(account.id)}
-                    onClick={() => {
-                      setReviewedCreation(null);
-                      setReviewedAccount(createAccountDisableReview(account, user));
-                    }}>
-                    Review disable {account.displayName}
-                  </Button>
-                : null
-            )} />
+            {!accountDirectoryLoaded ? (
+              <div className="grant-stack">
+                <p role="status">{task.error
+                  ? 'Account directory could not be verified. Retry before changing access.'
+                  : 'Loading verified account directory…'}</p>
+                {task.error && <Button variant="secondary" disabled={task.busy}
+                  onClick={() => void task.run(load)}>
+                  Retry account directory
+                </Button>}
+              </div>
+            ) : (
+              <AccountList {...grantRc50AccountDiscovery} accounts={accounts} actions={(account) => (
+                user.role === 'admin' && account.status === 'enabled' && account.id !== user.id
+                  ? <Button variant="danger"
+                      disabled={task.busy || accountDisableAttempts.includes(account.id)}
+                      onClick={() => {
+                        setReviewedCreation(null);
+                        setReviewedAccount(createAccountDisableReview(account, user));
+                      }}>
+                      Review disable {account.displayName}
+                    </Button>
+                  : null
+              )} />
+            )}
           </Card>
           {reviewedAccount && sectionRef.current === 'accounts' ? (
             <div ref={accountReviewRef} tabIndex={-1} className="grant-admin-account-review">
@@ -519,6 +533,7 @@ export function Administration({ user }: { user: User }) {
           >
             <Form
               busy={task.busy || accountCreateAttempted}
+              disabled={!accountDirectoryLoaded}
               label="Review account creation"
               onSubmit={() => {
                 if (accountCreateAttempted) return;

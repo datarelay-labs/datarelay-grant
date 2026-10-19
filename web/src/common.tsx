@@ -7,8 +7,8 @@ export function useTask() {
  async function run(task: () => Promise<void>) { if (busy) return; setBusy(true); setError(''); setNotice(''); try { await task(); } catch (e) { setError(errorText(e)); } finally { setBusy(false); } }
  return { busy, error, notice, setNotice, run, feedback: <>{error && <Alert tone="critical" title="Unable to complete">{error}</Alert>}{notice && <Alert tone="success">{notice}</Alert>}</> };
 }
-export function Form({ children, busy, onSubmit, label }: { children: ReactNode; busy: boolean; onSubmit: () => void; label: string }) {
- return <form className="grant-form" onSubmit={(e: FormEvent) => { e.preventDefault(); if (!busy) onSubmit(); }}><fieldset disabled={busy}>{children}</fieldset><Button type="submit" disabled={busy}>{busy ? 'Working…' : label}</Button></form>;
+export function Form({ children, busy, disabled = false, onSubmit, label }: { children: ReactNode; busy: boolean; disabled?: boolean; onSubmit: () => void; label: string }) {
+ return <form className="grant-form" onSubmit={(e: FormEvent) => { e.preventDefault(); if (!busy && !disabled) onSubmit(); }}><fieldset disabled={busy || disabled}>{children}</fieldset><Button type="submit" disabled={busy || disabled}>{busy ? 'Working…' : label}</Button></form>;
 }
 export function Select({ label, value, onChange, children, required = true }: { label: string; value: string; onChange: (value: string) => void; children: ReactNode; required?: boolean }) {
  const id = useId();

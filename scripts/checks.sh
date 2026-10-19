@@ -69,7 +69,30 @@ case "${1:-all}" in
     # the enforced per-user window and bounds disposable server lifetime.
     # All URLs and credentials stay in the local disposable browser fixture;
     # never modify live auth limits.
-    split -l 4 -d -a 2 "$batch_dir/all-tests.txt" "$batch_dir/batch-"
+    # The real MFA browser case enrolls the disposable admin; follow-up
+    # password-only admin sessions on that same fixture must not inherit it.
+    # Reuse the already-contracted isolated MFA selector, not auth/rate-limit
+    # bypasses. Reconcile every discovered test exactly once before execution.
+    python3 - "$batch_dir" <<'PYBATCH'
+from collections import Counter
+from pathlib import Path
+import sys
+from tools.run_browser_e2e_shards import MFA_LIFECYCLE_TEST
+
+root = Path(sys.argv[1])
+collected = (root / "all-tests.txt").read_text().splitlines()
+mfa = [line for line in collected if MFA_LIFECYCLE_TEST in line]
+if len(mfa) != 1:
+    raise SystemExit(f"BROWSER_MFA_SELECTOR_INVALID expected=1 actual={len(mfa)}")
+regular = [line for line in collected if MFA_LIFECYCLE_TEST not in line]
+groups = [regular[i:i+4] for i in range(0, len(regular), 4)]
+groups.append(mfa)
+if len(groups) > 99 or Counter(line for group in groups for line in group) != Counter(collected):
+    raise SystemExit("BROWSER_PARTITION_INCOMPLETE_OR_DUPLICATE")
+for i, group in enumerate(groups):
+    (root / f"batch-{i:02d}").write_text("\n".join(group) + "\n")
+print(f"BROWSER_MFA_ISOLATION=1/{len(collected)} batches={len(groups)}")
+PYBATCH
     evidence_dir="$(mktemp -d "$ROOT/.dev/grant-browser-evidence-XXXXXX")"
     verified=0
     batches=0

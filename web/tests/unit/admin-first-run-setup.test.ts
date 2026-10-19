@@ -41,6 +41,12 @@ describe('First-run Grant administrator guided setup without new permission',()=
   expect(html).not.toContain('All integrations verified');
   expect(html).not.toContain('External action completed');
  });
+ it('does not mislabel an established active workflow as first-time setup',()=>{
+  const html=render({registeredConnections:1,enabledAccounts:3,
+   savedPolicies:2,activePolicies:1});
+  expect(html).toContain('Manage existing approval workflows');
+  expect(html).not.toContain('Set up your first approval workflow');
+ });
  it('does not claim zero saved records while account and policy data are loading',()=>{
   const html=render({loaded:false});
   expect(html).toContain('Checking saved setup');

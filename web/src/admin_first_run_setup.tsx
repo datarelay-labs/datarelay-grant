@@ -20,7 +20,9 @@ export function AdminFirstRunSetup({
   return <section className="grant-admin-setup" aria-labelledby="grant-admin-setup-title">
     <div className="grant-admin-setup-title">
       <span className="grant-guided-eyebrow">Administrator first steps</span>
-      <h3 id="grant-admin-setup-title">Set up your first approval workflow</h3>
+      <h3 id="grant-admin-setup-title">{loaded && activePolicies > 0
+        ? 'Manage existing approval workflows'
+        : 'Set up your first approval workflow'}</h3>
       <p>Configure reusable approval controls first. Requesters use the active configuration
         without choosing approvers, mail templates or verification rules.</p>
     </div>
