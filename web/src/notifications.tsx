@@ -178,6 +178,8 @@ export function NotificationDeliveryHealth() {
   ):Promise<boolean>{
     readScope.current.select(query);
     const generation=deliveryGate.current.beginRead();
+    // An old page or reviewed resend is not current while its refresh is unverified.
+    setStoredPage(null);setPendingResend(null);
     setListBusy(true);setListError('');
     try{
       let adopted=false;
