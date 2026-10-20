@@ -82,10 +82,9 @@ export function AuditExplorer() {
     const updated={...draft};
     const query=filterQuery(updated,0,50);
     listGate.current.select(query);queryRef.current=query;
-    readGate.current.invalidateAll();
-    selectedRequestRef.current='';
-    setSelectedRequestId('');
-    setSelectedChain(null);setChainError('');setListError('');
+    readGate.current.invalidateList();
+    closeEvidence();
+    setListError('');
     setStoredPage(null);
     setOffset(0);
     setApplied(updated);
@@ -96,10 +95,9 @@ export function AuditExplorer() {
     const cleared={...emptyFilters};
     const query=filterQuery(cleared,0,50);
     listGate.current.select(query);queryRef.current=query;
-    readGate.current.invalidateAll();
-    selectedRequestRef.current='';
-    setSelectedRequestId('');
-    setSelectedChain(null);setChainError('');setListError('');
+    readGate.current.invalidateList();
+    closeEvidence();
+    setListError('');
     setStoredPage(null);
     setDraft(cleared);
     setApplied(cleared);
@@ -110,10 +108,9 @@ export function AuditExplorer() {
   function changePage(nextOffset: number) {
     const query=filterQuery(applied,nextOffset,50);
     listGate.current.select(query);queryRef.current=query;
-    readGate.current.invalidateAll();
-    selectedRequestRef.current='';
-    setSelectedRequestId('');
-    setSelectedChain(null);setChainError('');setListError('');
+    readGate.current.invalidateList();
+    closeEvidence();
+    setListError('');
     setStoredPage(null);
     setOffset(nextOffset);
   }
