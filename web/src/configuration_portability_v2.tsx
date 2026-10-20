@@ -134,17 +134,25 @@ export function ConfigurationPortabilityV2({ integrations }: { integrations: Int
         message:'Configuration bundle exceeds the 400 KB source limit.'});
       return;
     }
+    let sourceValidated = false;
     try {
       const accepted = await readCurrentConfigurationExport(scope.current, async () => {
         const source = acceptV2Bundle(JSON.parse(await file.text()));
+        sourceValidated = true;
         const destinations = await loadDestinations();
         return {source, destinations};
       }, ({source, destinations}) => publishSource(source, destinations));
       if (accepted) setFeedback({tone:'success', title:'Bundle loaded',
         message:'Bundle loaded locally. Select existing destinations before preview.'});
-    } catch {
-      setFeedback({tone:'critical', title:'Invalid configuration file',
-        message:'Invalid JSON or incomplete version-2 configuration bundle.'});
+    } catch (error) {
+      // The file can be valid even when existing destination choices are unavailable.
+      // Superseded failures have already been discarded by the generation guard.
+      setFeedback(sourceValidated
+        ? {tone:'critical', title:'Unable to load destinations',
+          message:'The configuration file was read successfully. ' + errorText(error) +
+            ' Select the same file again to retry.'}
+        : {tone:'critical', title:'Invalid configuration file',
+          message:'Invalid JSON or incomplete version-2 configuration bundle.'});
     }
   }
   function choose(group: keyof V2Mappings, sourceId: string, localId: string) {
