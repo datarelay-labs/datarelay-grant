@@ -146,6 +146,8 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
 
   async function loadManifest() {
     previewReadScope.current.invalidate();
+    // A failed or pending read must not leave the previous export downloadable.
+    setManifest(null);
     setConflictPreview(null);
     await readCurrentConfigurationExport(previewReadScope.current,
       ()=>api<ConfigurationManifest>('/integrations/configuration-export'),
