@@ -158,6 +158,23 @@ export function ApproverGroupDirectory({
   );
 }
 
+/** Keep the one-shot refresh lock truthful: a verified POST is not uncertain.
+ * An ambiguous transport outcome remains explicitly unconfirmed. */
+export function approverGroupReconciliationCopy(
+  confirmed: boolean, uncertain: boolean,
+): {title:string;message:string} {
+  if (confirmed) return {
+    title: 'Refresh after confirmed group save',
+    message: 'The server confirmed the group save. Refresh saved groups and inspect the current saved records before making another change. Existing request snapshots are unchanged.',
+  };
+  return {
+    title: 'Reconcile saved group before another change',
+    message: uncertain
+      ? 'A group save POST may already have succeeded. Do not automatically retry it. Refresh saved groups and inspect current records before making another change.'
+      : 'A group change was submitted. Refresh saved groups and inspect current records before making another change.',
+  };
+}
+
 export function Approvers() {
   const [groups, setGroups] = useState<ApproverGroup[]>([]);
   const [users, setUsers] = useState<AccountProjection[]>([]);
@@ -178,6 +195,7 @@ export function Approvers() {
   const [reviewed, setReviewed] = useState<ApproverGroupSaveReview | null>(null);
   const [reviewError, setReviewError] = useState('');
   const [saveOutcomeNeedsReconciliation, setSaveOutcomeNeedsReconciliation] = useState(false);
+  const [saveReceiptVerified, setSaveReceiptVerified] = useState(false);
   const saveGuard = useRef(createApproverGroupSaveGuard());
   const task = useTask();
 
@@ -309,6 +327,7 @@ export function Approvers() {
       );
       if (!result) return;
       verifyApproverGroupSaveReceipt(intent, result);
+      setSaveReceiptVerified(true);
     } catch (error) {
       if (!postStarted && error instanceof Error
         && error.message === 'APPROVER_GROUP_CHANGED_REVIEW_REQUIRED') {
@@ -335,6 +354,7 @@ export function Approvers() {
       throw new Error('APPROVER_GROUP_SAVE_STILL_IN_FLIGHT');
     }
     setSaveOutcomeNeedsReconciliation(false);
+    setSaveReceiptVerified(false);
     setReviewError('');
     task.setNotice('Current saved groups reloaded. Open a group and review any new change separately.');
   }
@@ -349,13 +369,12 @@ export function Approvers() {
     task.setNotice('Latest saved group loaded. Unsaved edits were discarded.');
   }
 
+  const reconciliation = approverGroupReconciliationCopy(saveReceiptVerified,saveOutcomeNeedsReconciliation);
   return <div className="grant-stack">
     {task.feedback}
     {saveGuard.current.blocked() && (
-      <Alert tone="warning" title="Reconcile saved group before another change">
-        {saveOutcomeNeedsReconciliation
-          ? 'A group save POST may already have succeeded. Do not automatically retry it.'
-          : 'A group change was submitted. Inspect the current saved group before starting another change.'}
+      <Alert tone="warning" title={reconciliation.title}>
+        {reconciliation.message}
         {' '}Only an explicit successful Refresh re-enables another group change.
         <Button variant="secondary" disabled={task.busy}
           onClick={() => void task.run(refreshGroups)}>Refresh saved groups</Button>
