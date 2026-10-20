@@ -286,11 +286,23 @@ class Core:
             approver_group_id=row["approver_group_id"],
             approvals_required=row["approvals_required"],
         )
-        if row["email_template_id"] and not conn.execute(
-            "SELECT id FROM email_templates WHERE id=? AND enabled=1",
-            (row["email_template_id"],),
-        ).fetchone():
-            raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
+        if row["email_template_id"]:
+            template = conn.execute(
+                "SELECT id,design_json,published_revision FROM email_templates "
+                "WHERE id=? AND enabled=1",
+                (row["email_template_id"],),
+            ).fetchone()
+            if not template:
+                raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
+            # Visual template drafts may be edited and previewed, but a new
+            # active policy must have an immutable published mail snapshot.
+            # Match _notification_snapshot's legacy text-only compatibility.
+            if template["design_json"] and not conn.execute(
+                "SELECT 1 FROM email_template_revisions "
+                "WHERE template_id=? AND revision=?",
+                (template["id"], template["published_revision"]),
+            ).fetchone():
+                raise GrantError("EMAIL_TEMPLATE_UNPUBLISHED", 409)
 
     @staticmethod
     def _branding(conn: sqlite3.Connection) -> dict[str, str]:
