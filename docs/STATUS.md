@@ -1,3 +1,19 @@
+## 2026-10-20 — PF05-INPUT-001 exact action parameters before review
+
+Request creation now checks original JSON tokens before showing Review/Confirm.
+Duplicate keys (including escaped and nested duplicates), non-finite numbers,
+underflow, unsafe integers and rounded fractional values cannot silently change
+the reviewed action. The existing API safe-integer and depth bounds remain the
+contract; equivalent integer notation and quoted numeric identifiers are preserved.
+Errors identify a bounded field path while retaining the original editor text.
+
+The actual pre-fix Chromium UI reproduced three lossy previews without creating
+a request. The new 25-case regression suite reproduced 17 failures before the fix;
+43 focused tests and the full 807-test Web suite now pass, together with TypeScript,
+production build and static checks. Exact committed-candidate browser and CI
+evidence is tracked in [Work Packet #67 Rev262](https://github.com/datarelay-labs/datarelay-grant/issues/67#issuecomment-6290548819).
+This source checkpoint does not qualify whole-contract Full User E2E or release.
+
 ## 2026-10-20 — B1 passive reads and immediate overdue truth
 
 Request list/detail and Operations reads no longer execute expiry, reminder or

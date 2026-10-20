@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Alert, Button } from '@datarelay-labs/foundation';
 import type { Profile, RequestRow } from './types';
+import { parseActionParameters } from './action_parameters';
 
 /** The Grant server still resolves the live policy and assigned approvers.
  * This preview reviews the exact requested action and source fields, not an
@@ -63,15 +64,7 @@ export function prepareRequestCreationReview(draft: NewRequestDraft): RequestCre
         && draft.predecessor.collaboration_state === 'CHANGES_REQUESTED')))) {
     throw new Error('The original request cannot be used for this replacement.');
   }
-  let params: unknown;
-  try {
-    params = JSON.parse(draft.parameters);
-  } catch {
-    throw new Error('Parameters must be a valid JSON object.');
-  }
-  if (params === null || typeof params !== 'object' || Array.isArray(params)) {
-    throw new Error('Parameters must be a JSON object.');
-  }
+  const params = parseActionParameters(draft.parameters);
   if (selected.tenant && draft.sourceTenant !== selected.tenant) {
     throw new Error('Tenant must match the integration scope.');
   }
@@ -94,7 +87,7 @@ export function prepareRequestCreationReview(draft: NewRequestDraft): RequestCre
       external_id: draft.external, profile_id: selected.id,
       title: draft.title,
       action: { kind: selected.action_kind, target: draft.target,
-        parameters: params as Record<string, unknown> },
+        parameters: params },
       reason: draft.reason,
       source,
       ...(draft.predecessorId ? { predecessor_id: draft.predecessorId } : {}),
