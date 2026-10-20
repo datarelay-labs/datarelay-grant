@@ -108,7 +108,10 @@ export function RequestEvidence({
                 <strong>{delivery.kind}</strong> · <State value={delivery.state} />
                 <small>{delivery.attempts} attempts {delivery.last_error ? '· ' + delivery.last_error : ''}</small>
               </div>
-              {isAdmin && ['FAILED', 'PENDING'].includes(delivery.state) && (
+              {isAdmin && delivery.state === 'PENDING' && (
+                <small>Already queued for transport. No manual resend needed.</small>
+              )}
+              {isAdmin && delivery.state === 'FAILED' && (
                 blockedResendIds.includes(delivery.id) ? (
                   <small role="status">A resend was requested or attempted. Refresh the request before another review.</small>
                 ) : (
