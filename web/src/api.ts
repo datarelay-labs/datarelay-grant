@@ -36,5 +36,11 @@ export function errorText(error: unknown): string {
   if (error.status === 409) return 'The request changed or is no longer actionable. Refresh before deciding. (' + error.code + ')';
   return error.code.replaceAll('_', ' ');
  }
+ if (error instanceof Error && error.message === 'TEMPLATE_SAVE_SOURCE_CHANGED') {
+  return 'The saved template changed since your draft was opened. No save request was sent from this attempt. Copy any unsaved edits, return to Email Templates, reopen the current saved template, and review your changes again.';
+ }
+ if (error instanceof Error && error.message === 'TEMPLATE_SAVE_NAME_EXISTS') {
+  return 'A saved email template already uses this name. No new set was created. Choose another template name and review the draft save again.';
+ }
  return 'The service could not be reached. Check the current request before retrying.';
 }

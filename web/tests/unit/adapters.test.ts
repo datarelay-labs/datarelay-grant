@@ -42,6 +42,19 @@ describe('Grant HTTP adapter',()=>{
   const human=errorText(new ApiError(409,'STALE_OR_FINAL_DECISION'));
   expect(human).toContain('Refresh before deciding');
  });
+ it('explains an independently rejected stale template preflight without inventing a network outage',()=>{
+  const message=errorText(new Error('TEMPLATE_SAVE_SOURCE_CHANGED'));
+  for(const term of ['saved template','No save request was sent','unsaved edits','reopen','review']) {
+    expect(message).toContain(term);
+  }
+  expect(message).not.toContain('service could not be reached');
+  expect(message).not.toContain('TEMPLATE_SAVE_SOURCE_CHANGED');
+  const name=errorText(new Error('TEMPLATE_SAVE_NAME_EXISTS'));
+  for(const term of ['template','already uses this name','No new set was created']) {
+    expect(name).toContain(term);
+  }
+  expect(name).not.toContain('service could not be reached');
+ });
  it('does not echo arbitrary server response bodies',async()=>{
   fetchMock.mockResolvedValueOnce(new Response('<secret>do not display</secret>',{status:500}));
   await expect(api('/requests')).rejects.toMatchObject({message:'REQUEST_FAILED'});
