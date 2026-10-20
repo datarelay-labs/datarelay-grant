@@ -577,6 +577,9 @@ export function Profiles() {
   async function confirmPolicyTransition() {
     const staged = pendingTransition;
     if (!staged) return;
+    // Consume the reviewed intent before fetching current authority: a failed
+    // read must never leave its previous confirmation actionable.
+    setPendingTransition(null);
     // Recheck the unchanged draft as well as live authority and version after
     // review. A local edit during confirmation cannot commit old saved values.
     const latest = await currentStoredPolicy();
