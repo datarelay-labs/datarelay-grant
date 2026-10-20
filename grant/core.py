@@ -1835,15 +1835,15 @@ class Core:
     def get(
         self, actor: Principal, ident: str, *, required_scope: str = ""
     ) -> dict:
-        with self.db.transaction() as conn:
+        # Reads expose persisted state; maintenance and final POST transactions
+        # own lifecycle transitions, including expiry and notification enqueueing.
+        with self.db.transaction(write=False) as conn:
             require_current_authority(conn, actor, required_scope)
             row = self._load(conn, ident, actor)
             now = time.time()
-            self._expire(conn, row, now)
-            current = self._load(conn, ident)
             return {
-                **self._project(conn, current),
-                **self._viewer_assignment(conn, current, actor, now),
+                **self._project(conn, row),
+                **self._viewer_assignment(conn, row, actor, now),
             }
 
     def compare_replacement(self, actor: Principal, ident: str) -> dict:
@@ -2032,13 +2032,12 @@ class Core:
         if actor.kind not in ("human", "integration"):
             raise GrantError("AUTHENTICATION_REQUIRED", 401)
 
-        # Maintenance may expire approvals and schedule notifications.
-        # Reject a revoked/demoted principal before these side effects.
+        # Navigation is read-only. Lifecycle work belongs to the worker or
+        # final mutation transactions, never to a request-list refresh.
         with self.db.transaction(write=False) as conn:
             require_current_authority(
                 conn, actor, "request:read" if actor.kind == "integration" else ""
             )
-        self.maintenance()
         now = time.time()
         clauses: list[str] = []
         args: list[Any] = []
@@ -2794,10 +2793,13 @@ class Core:
             if escalation
             else None
         )
+        now = time.time()
         out["overdue"] = bool(
-            escalation
-            and row["state"] in ("AWAITING", "HELD")
-            and escalation["due_at"] <= time.time()
+            row["state"] in ("AWAITING", "HELD")
+            and (
+                (row["decision"] is None and row["deadline"] <= now)
+                or (escalation and escalation["due_at"] <= now)
+            )
         )
         deliveries = [
             dict(r)

@@ -143,6 +143,9 @@ def test_current_delegate_keeps_only_assigned_expired_approval_work(env):
             (now - 5, row["id"]),
         )
 
+    # The fixture disables the worker; advance lifecycle explicitly.
+    env.core.maintenance()
+
     delegated = env.human("stranger").get(
         "/api/v1/requests", params={"view": "approval_overdue"}
     )

@@ -324,6 +324,8 @@ def test_failed_email_delivery_and_expired_deadline_are_projected_separately(env
             (time.time()-10, item["id"]),
         )
 
+    # The fixture disables the worker; advance lifecycle explicitly.
+    env.core.maintenance()
     listed = env.human("approver").get("/api/v1/requests")
     assert listed.status_code == 200, listed.text
     current = next(value for value in listed.json() if value["id"] == item["id"])

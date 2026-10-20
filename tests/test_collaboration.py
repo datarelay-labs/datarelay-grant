@@ -234,6 +234,8 @@ def test_expired_requested_changes_preserve_linked_resubmission(env):
         conn.execute(
             "UPDATE requests SET deadline=? WHERE id=?", (time.time() - 5, row["id"])
         )
+    # The fixture disables the worker; advance lifecycle explicitly.
+    env.core.maintenance()
     expired = env.human("requester").get(f"/api/v1/requests/{row['id']}")
     assert expired.status_code == 200
     assert expired.json()["state"] == "EXPIRED"

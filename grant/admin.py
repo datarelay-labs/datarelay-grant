@@ -223,11 +223,10 @@ def register_admin(app, actor):
     def operations(request: Request):
         principal = actor(request)
         principal.require_admin()
-        # Maintenance can transition expired requests and schedule notifications.
-        # Revalidate the current session before allowing those side effects.
+        # Operations reads the authorized persisted snapshot. Lifecycle
+        # maintenance must not be triggered by opening this summary.
         with app.state.db.transaction(write=False) as conn:
             require_current_authority(conn, principal)
-        app.state.core.maintenance()
         return operations_summary(app.state.db, principal)
 
     @app.get("/api/v1/admin/notification-destinations")

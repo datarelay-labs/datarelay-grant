@@ -11,13 +11,14 @@ const render=(row:RequestRow)=>renderToStaticMarkup(createElement(InboxDeadlineT
 describe('B1 server-authored approval deadline is not external execution expiry',()=>{
   it('does not infer overdue from a past date when the server did not mark overdue',()=>{
     const html=render({...example,deadline:1000,overdue:false});
-    expect(html).not.toContain('Escalation due');
-    expect(html).not.toContain('Overdue approval');
+    expect(html).not.toContain('Approval overdue');
+    expect(html).not.toContain('Approval overdue');
   });
-  it('shows server-projected escalated pending/held truth without calculating a new overdue state',()=>{
+  it('shows server-projected pending/held overdue truth without calculating a new overdue state',()=>{
     for(const state of ['AWAITING','HELD']){
       const html=render({...example,state,overdue:true});
-      expect(html).toContain('Escalation due');
+      expect(html).toContain('Approval overdue');
+      expect(html).not.toContain('Escalation due');
       expect(html).toContain('Decision deadline');
     }
   });
@@ -26,13 +27,13 @@ describe('B1 server-authored approval deadline is not external execution expiry'
     expect(undecided).toContain('Approval expired without a decision');
     const expiredGrant=render({...example,state:'EXPIRED',decision:'APPROVED'});
     expect(expiredGrant).toContain('Grant expired after approval');
-    expect(expiredGrant).not.toContain('Overdue approval');
-    expect(expiredGrant).not.toContain('Escalation due');
+    expect(expiredGrant).not.toContain('Approval overdue');
+    expect(expiredGrant).not.toContain('Approval overdue');
   });
   it('approved request does not become pending again because its old approval deadline passed',()=>{
     const html=render({...example,state:'APPROVED',decision:'APPROVED',deadline:1000});
     expect(html).toContain('Human decision complete');
-    expect(html).not.toContain('Escalation due');
+    expect(html).not.toContain('Approval overdue');
   });
   it('reports unavailable decision deadline without creating a fabricated date',()=>{
     for(const deadline of [0,Number.NaN,Number.POSITIVE_INFINITY]){
@@ -46,6 +47,6 @@ describe('B1 server-authored approval deadline is not external execution expiry'
       escalation:{target_user_id:null,target_group_id:null,target_members:[],
         due_at:1500,fired_at:1510}});
     expect(html).toContain('Escalation recorded');
-    expect(html).not.toContain('Escalation due');
+    expect(html).not.toContain('Approval overdue');
   });
 });

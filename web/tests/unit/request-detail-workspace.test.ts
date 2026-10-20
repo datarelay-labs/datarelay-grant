@@ -86,10 +86,10 @@ describe('P0 ServiceNow/Jira inspired RequestDetail exact-action-first presentat
     expect(output).not.toContain('Execute</button>');
   });
 
-  it('shows the server-confirmed pending escalation next to the decision deadline', () => {
+  it('shows the server-confirmed overdue approval next to the decision deadline', () => {
     const output = html({ state: 'AWAITING', decision: null, overdue: true, deadline: 1000 });
     expect(output).toContain('Decision deadline and authoritative approval status');
-    expect(output).toContain('Escalation due — human decision still outstanding');
+    expect(output).toContain('Approval overdue — human decision still outstanding');
     expect(output).toContain('Approval deadline');
     expect(output).not.toContain('Execute</button>');
   });
@@ -97,13 +97,13 @@ describe('P0 ServiceNow/Jira inspired RequestDetail exact-action-first presentat
   it('does not turn an expired, previously approved grant into an overdue human task', () => {
     const output = html({ state: 'EXPIRED', decision: 'APPROVED', overdue: true, deadline: 1000 });
     expect(output).toContain('Grant expired after approval — not an overdue approval');
-    expect(output).not.toContain('Escalation due — human decision still outstanding');
+    expect(output).not.toContain('Approval overdue — human decision still outstanding');
   });
 
   it('does not invent a deadline when the server projection is unavailable', () => {
     const output = html({ state: 'HELD', overdue: false, deadline: 0 });
     expect(output).toContain('Decision deadline unavailable');
-    expect(output).not.toContain('Escalation due — human decision still outstanding');
+    expect(output).not.toContain('Approval overdue — human decision still outstanding');
   });
 
   it('escapes user-controlled title, action target and reason in business-first layout', () => {

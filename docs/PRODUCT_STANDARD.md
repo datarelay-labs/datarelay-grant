@@ -895,6 +895,13 @@ continues to cover all requests. Home's assigned-overdue count and its Inbox
 destination must agree, and a grant that expired **after APPROVED** is not an
 outstanding human approval.
 
+Before scheduled maintenance persists expiry, a pending/held request with an
+elapsed server-side approval deadline is already included in the same overdue
+projection and Operations count. This derived flag does not rewrite stored state
+or revision and must not append lifecycle evidence during a read. The UI calls
+this approval overdue; it must not claim that an escalation is due solely because
+the approval deadline elapsed.
+
 ### 11.3 Requester view
 
 Requesters can see:

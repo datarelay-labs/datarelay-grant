@@ -1,3 +1,17 @@
+## 2026-10-20 — B1 passive reads and immediate overdue truth
+
+Request list/detail and Operations reads no longer execute expiry, reminder or
+escalation maintenance. The existing worker and final POST deadline guards retain
+lifecycle ownership. A server-derived overdue flag/count includes elapsed
+undecided deadlines before the next maintenance cycle, without changing persisted
+state or revision; the UI says approval overdue rather than claiming escalation.
+Six focused lifecycle regression cases and the affected API batch (53/53), native
+Web checks and static validation passed. Seven worker-disabled expiry fixtures now
+advance maintenance explicitly. No schema, account/config, transport-worker mode,
+external effect or release boundary changed. Exact candidate/browser/CI evidence
+is tracked in active Work Packet #67 Rev259; this checkpoint is not whole-contract
+Full User E2E acceptance.
+
 **2026-10-19 PF-02 Control-source UI adoption stage:** isolated Grant candidate
 consumes the actual shared Foundation #106 original-Control Administration
 task/card/header module with product-owned task/actor/target projections,
