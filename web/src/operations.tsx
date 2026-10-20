@@ -226,6 +226,9 @@ export function Operations({ navigate }: { navigate: (next: string) => void }) {
   const [destinations, setDestinations] = useState<readonly NotificationDestinationProjection[] | null>(null);
   const task = useTask();
   async function load() {
+    // Old snapshot and destination readiness are not current during a new read.
+    setSnapshot(null);
+    setDestinations(null);
     setSnapshot(await api<OperationsSummary>('/admin/operations'));
     // Optional read must never conceal already-loaded operational truth.
     // The server authorizes the same admin actor and supplies no secrets.
