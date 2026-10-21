@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Approvers, ApproverGroupDirectory, filterApproverGroups, approverGroupReconciliationCopy } from '../../src/approvers';
+import { Approvers, ApproverGroupDirectory, filterApproverGroups, approverGroupReconciliationCopy, isApproverGroupDraftDirty } from '../../src/approvers';
 import type { ApproverGroup } from '../../src/types';
 
 const onCall = () => undefined;
@@ -20,6 +20,18 @@ function directory(items = groups, search = '') {
 }
 
 describe('P0 competitor-derived approver group list-to-detail administration', () => {
+  it('guards only genuinely changed names, saved memberships or approval order', () => {
+    expect(isApproverGroupDraftDirty(false,null,'',[])).toBe(false);
+    expect(isApproverGroupDraftDirty(false,null,' ',[])).toBe(true);
+    expect(isApproverGroupDraftDirty(false,null,'',['one'])).toBe(true);
+    expect(isApproverGroupDraftDirty(true,groups[0]!,'Production Reviewers',['one','two'])).toBe(false);
+    expect(isApproverGroupDraftDirty(true,groups[0]!,'Revised Reviewers',['one','two'])).toBe(true);
+    expect(isApproverGroupDraftDirty(true,groups[0]!,'Production Reviewers',['two','one'])).toBe(true);
+    expect(isApproverGroupDraftDirty(true,groups[0]!,'Production Reviewers',['one'])).toBe(true);
+    expect(isApproverGroupDraftDirty(true,null,'any',[])).toBe(true);
+  });
+
+
   it('distinguishes a verified saved group from an uncertain in-flight POST', () => {
     const confirmed = approverGroupReconciliationCopy(true, false);
     expect(confirmed.title).toContain('confirmed');
