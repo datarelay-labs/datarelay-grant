@@ -1,7 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AdminFirstRunSetup } from './admin_first_run_setup';
 import { Alert, Button, Card, TextField, type AccountProjection } from '@datarelay-labs/foundation';
 import { api } from './api';
+import {registerGrantNavigationBlocker,type GrantNavigationIntent} from './grant_navigation';
 import { PolicyCloneConfirmation, createPolicyCloneReview, submitReviewedPolicyClone, type PolicyCloneIntent } from './policy_clone_review';
 import { Form, Select, TextArea, useTask, when } from './common';
 import { PolicyApprovalSummary } from './policy_approval_summary';
@@ -368,6 +369,10 @@ export function Profiles() {
   const [editingBaseline, setEditingBaseline] = useState<Profile | null>(null);
   const [pendingTransition, setPendingTransition] = useState<PolicyTransitionIntent | null>(null);
   const [pendingExitReview, setPendingExitReview] = useState(false);
+  const [pendingShellExit, setPendingShellExit] = useState(false);
+  const shellNavigationIntent = useRef<GrantNavigationIntent | null>(null);
+  const shellExitOrigin = useRef<HTMLElement | null>(null);
+  const shellExitPrompt = useRef<HTMLDivElement | null>(null);
   const [pendingClone, setPendingClone] = useState<PolicyCloneIntent | null>(null);
   const [name, setName] = useState('');
   const [integration, setIntegration] = useState('');
@@ -414,6 +419,9 @@ export function Profiles() {
   }, []);
 
   function resetEditor() {
+    shellNavigationIntent.current?.cancel();
+    shellNavigationIntent.current = null;
+    setPendingShellExit(false);
     setPendingExitReview(false);
     setPendingClone(null);
     setPendingTransition(null);
@@ -442,6 +450,9 @@ export function Profiles() {
   }
 
   function edit(row: Profile) {
+    shellNavigationIntent.current?.cancel();
+    shellNavigationIntent.current = null;
+    setPendingShellExit(false);
     setPendingExitReview(false);
     setPendingClone(null);
     setPendingTransition(null);
@@ -664,6 +675,61 @@ export function Profiles() {
   const unsavedExistingPolicy = Boolean(editing && !editorUnchanged);
   const hasUnsavedDraft = editing ? !editorUnchanged :
     !isNewPolicyDraftUntouched(editorDraft);
+
+  // The existing Grant navigation contract already protects notification
+  // drafts. Register the same boundary only while an actual policy form is
+  // dirty; no Foundation shell/router patch or backend permission change.
+  useEffect(() => {
+    if (view !== 'details' || !hasUnsavedDraft) return;
+    return registerGrantNavigationBlocker((intent) => {
+      if (task.busy) {
+        task.setNotice('Complete the current policy operation before leaving. Your draft is retained.');
+        return true;
+      }
+      shellExitOrigin.current = document.activeElement as HTMLElement | null;
+      shellNavigationIntent.current = intent;
+      setPendingExitReview(false);
+      setPendingShellExit(true);
+      return true;
+    });
+  }, [view, hasUnsavedDraft, task.busy]);
+
+  // A browser reload is also a destructive exit from a local unsaved form.
+  useEffect(() => {
+    if (view !== 'details' || !hasUnsavedDraft) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [view, hasUnsavedDraft]);
+
+  useEffect(() => {
+    if (pendingShellExit) {
+      shellExitPrompt.current
+        ?.querySelector<HTMLButtonElement>('[data-policy-keep-editing]')
+        ?.focus();
+    }
+  }, [pendingShellExit]);
+
+  function keepShellEditing() {
+    shellNavigationIntent.current?.cancel();
+    shellNavigationIntent.current = null;
+    setPendingShellExit(false);
+    requestAnimationFrame(() => shellExitOrigin.current?.focus());
+  }
+
+  function discardShellExit() {
+    if (!pendingShellExit || task.busy) return;
+    const intent = shellNavigationIntent.current;
+    shellNavigationIntent.current = null;
+    setPendingShellExit(false);
+    resetEditor();
+    // This is the specific navigation previously reviewed by the operator;
+    // never synthesize another click, route or server write.
+    intent?.proceed();
+  }
 
   function backToPolicies() {
     if (hasUnsavedDraft) {
@@ -939,6 +1005,27 @@ export function Profiles() {
         ) : null}
       </section>
 
+      {pendingShellExit ? <div
+        ref={shellExitPrompt} role="alertdialog"
+        aria-label="Discard unsaved policy changes?"
+        onKeyDown={event => {
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            keepShellEditing();
+          }
+        }}>
+        <Alert tone="warning" title="Discard unsaved policy changes?">
+          <p>Your unsaved policy will be lost if you leave this page. Keep editing,
+            or explicitly discard it. No policy will be saved, activated or executed.</p>
+          <div className="grant-actions">
+            <Button type="button" variant="secondary" data-policy-keep-editing
+              onClick={keepShellEditing}>Keep editing</Button>
+            <Button type="button" disabled={task.busy}
+              onClick={discardShellExit}>Discard and leave</Button>
+          </div>
+        </Alert>
+      </div> : null}
+
       {pendingExitReview ? <Alert tone="warning"
         title="Discard unsaved policy changes?">
         <p>
@@ -1012,7 +1099,13 @@ export function Profiles() {
             </Alert>
           ) : null}
           {decisionSecurity.contractAvailable ? (
-          <div onChangeCapture={() => { setPendingTransition(null); setPendingExitReview(false); }}>
+          <div onChangeCapture={() => {
+            setPendingTransition(null);
+            setPendingExitReview(false);
+            shellNavigationIntent.current?.cancel();
+            shellNavigationIntent.current = null;
+            setPendingShellExit(false);
+          }}>
           <Form
             busy={task.busy}
             onSubmit={() => void task.run(save)}
