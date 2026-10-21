@@ -152,6 +152,23 @@ export type PolicyEditorDraft = {
   decisionSecurity: DecisionSecurityDraft;
 };
 
+// Compare every new-policy field with its untouched editor default, including
+// verification assurance. Invalid or partially edited values remain dirty.
+export function isNewPolicyDraftUntouched(draft: PolicyEditorDraft): boolean {
+  return draft.name === '' && draft.integration === '' &&
+    draft.approver === '' && draft.approvalMode === 'SINGLE' &&
+    draft.approverGroup === '' && draft.approvalsRequired === '2' &&
+    draft.action === '' && draft.template === '' &&
+    draft.deadline === '86400' && draft.reminder === '3600' &&
+    draft.count === '3' && draft.validity === '900' &&
+    draft.tenant === '' && draft.environment === '' &&
+    draft.severity === '' && draft.risk === '' &&
+    draft.decisionSecurity.denialReasonRequired === false &&
+    draft.decisionSecurity.verificationMode === 'INHERIT' &&
+    draft.decisionSecurity.linkTtlInput === '' &&
+    draft.decisionSecurity.contractAvailable === true;
+}
+
 function boundedPolicyNumber(raw: string, min: number, max: number): number {
   const normalized = raw.trim();
   const value = Number(normalized);
@@ -350,6 +367,7 @@ export function Profiles() {
   const [editing, setEditing] = useState('');
   const [editingBaseline, setEditingBaseline] = useState<Profile | null>(null);
   const [pendingTransition, setPendingTransition] = useState<PolicyTransitionIntent | null>(null);
+  const [pendingExitReview, setPendingExitReview] = useState(false);
   const [pendingClone, setPendingClone] = useState<PolicyCloneIntent | null>(null);
   const [name, setName] = useState('');
   const [integration, setIntegration] = useState('');
@@ -396,6 +414,7 @@ export function Profiles() {
   }, []);
 
   function resetEditor() {
+    setPendingExitReview(false);
     setPendingClone(null);
     setPendingTransition(null);
     setEditingBaseline(null);
@@ -423,6 +442,7 @@ export function Profiles() {
   }
 
   function edit(row: Profile) {
+    setPendingExitReview(false);
     setPendingClone(null);
     setPendingTransition(null);
     setEditingBaseline({ ...row });
@@ -642,6 +662,25 @@ export function Profiles() {
   };
   const editorUnchanged = isPolicyEditorUnchanged(selected, editingBaseline, editorDraft);
   const unsavedExistingPolicy = Boolean(editing && !editorUnchanged);
+  const hasUnsavedDraft = editing ? !editorUnchanged :
+    !isNewPolicyDraftUntouched(editorDraft);
+
+  function backToPolicies() {
+    if (hasUnsavedDraft) {
+      setPendingExitReview(true);
+      return;
+    }
+    setPendingClone(null);
+    setPendingTransition(null);
+    setView('list');
+  }
+
+  function discardAndReturnToPolicies() {
+    // Only an explicit, reviewed local discard can lose unsaved editor text.
+    // There is no backend mutation or implicit policy save.
+    resetEditor();
+    setView('list');
+  }
 
   if (view === 'list') {
     const visibleRows = filterPolicyList(rows, integrations, users, {
@@ -850,11 +889,7 @@ export function Profiles() {
       {task.feedback}
       <section className="grant-detail-header" aria-label="Policy workspace">
         <div>
-          <Button variant="ghost" onClick={() => {
-            setPendingClone(null);
-            setPendingTransition(null);
-            setView('list');
-          }}>
+          <Button variant="ghost" disabled={task.busy} onClick={backToPolicies}>
             ← Back to policies
           </Button>
           <p className="grant-eyebrow">Approval policy</p>
@@ -903,6 +938,20 @@ export function Profiles() {
           </div>
         ) : null}
       </section>
+
+      {pendingExitReview ? <Alert tone="warning"
+        title="Discard unsaved policy changes?">
+        <p>
+          Your unsaved draft will be lost if you leave this policy. Keep editing,
+          or explicitly discard your changes to return to the policy list.
+        </p>
+        <div className="grant-actions">
+          <Button variant="secondary" disabled={task.busy}
+            onClick={() => setPendingExitReview(false)}>Keep editing</Button>
+          <Button disabled={task.busy}
+            onClick={discardAndReturnToPolicies}>Discard and return to policies</Button>
+        </div>
+      </Alert> : null}
 
       {unsavedExistingPolicy ? <PolicyUnsavedNotice
         busy={task.busy}
@@ -963,7 +1012,7 @@ export function Profiles() {
             </Alert>
           ) : null}
           {decisionSecurity.contractAvailable ? (
-          <div onChangeCapture={() => setPendingTransition(null)}>
+          <div onChangeCapture={() => { setPendingTransition(null); setPendingExitReview(false); }}>
           <Form
             busy={task.busy}
             onSubmit={() => void task.run(save)}

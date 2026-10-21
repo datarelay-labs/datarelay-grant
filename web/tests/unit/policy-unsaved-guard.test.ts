@@ -5,6 +5,7 @@ import {
   isPolicyEditorUnchanged,
   policyEditorPayload,
   policyReviewedSavePayload,
+  isNewPolicyDraftUntouched,
   PolicyUnsavedNotice,
   PolicyLifecycleConfirmation,
   type PolicyEditorDraft,
@@ -151,5 +152,40 @@ describe('G1 saved policy vs in-memory draft lifecycle guard', () => {
     expect(warning).toContain('Unsaved policy changes');
     expect(warning).toContain('Discard edits');
     expect(warning).toContain('Save draft');
+  });
+});
+
+describe('G1 new policy unsaved exit detection', () => {
+  const untouched: PolicyEditorDraft = {
+    name: '', integration: '', approver: '', approvalMode: 'SINGLE',
+    approverGroup: '', approvalsRequired: '2', action: '', template: '',
+    deadline: '86400', reminder: '3600', count: '3', validity: '900',
+    tenant: '', environment: '', severity: '', risk: '',
+    decisionSecurity: readDecisionSecurity(),
+  };
+  it('accepts the untouched new-policy editor', () => {
+    expect(isNewPolicyDraftUntouched(untouched)).toBe(true);
+  });
+  it.each([
+    ['name', {name: 'New policy'}],
+    ['integration', {integration: 'destination'}],
+    ['quorum', {approvalMode: 'N_OF_M'}],
+    ['timing', {reminder: 'unknown'}],
+    ['action', {action: 'system.restart'}],
+    ['tenant', {tenant: 'scope'}],
+  ])('protects changed new Draft %s', (_label, values) => {
+    expect(isNewPolicyDraftUntouched({...untouched,...values})).toBe(false);
+  });
+  it('protects unsaved MFA, reason, TTL and unavailable verification contract', () => {
+    for (const value of [
+      {denialReasonRequired: true},
+      {verificationMode: 'EMAIL_PIN_PLUS_MFA' as const},
+      {linkTtlInput: '900'},
+      {contractAvailable: false},
+    ]) {
+      expect(isNewPolicyDraftUntouched({
+        ...untouched, decisionSecurity:{...untouched.decisionSecurity,...value},
+      })).toBe(false);
+    }
   });
 });
