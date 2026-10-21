@@ -60,7 +60,10 @@ test('PF05 novice administrator discovers configuration chain and unsupported sy
     await expect(page.getByRole('heading', { name: 'User Management', level: 2 })).toBeVisible();
     await capture(page, '03-admin-account-setup');
     await page.goBack();
-    await page.getByRole('button', { name: /Manage approver groups/ }).click();
+    await expect(page.getByRole('heading', {
+      name: 'Configure once, reuse on every request', exact: true,
+    })).toBeVisible();
+    await page.getByRole('link', { name: /Manage approver groups/ }).click();
     await expect(page.getByRole('heading', { name: 'Approver groups', level: 1 })).toBeVisible();
     await capture(page, '04-admin-approver-groups');
     await page.goto('/system');

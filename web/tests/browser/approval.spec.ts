@@ -994,7 +994,14 @@ test('U8.01 role-guided Home routes requester approver and administrator to the 
   try{
    await login(page,role);await page.goto('/home');
    await expect(page.getByRole('heading',{name:'What would you like to do?',exact:true})).toBeVisible();
-   await expect(page.getByRole('button').filter({hasText:'Create approval request'})).toBeVisible();
+   if(role==='admin'){
+    // Administrator setup is the first role-guided action. Requesters use
+    // the active configuration; don't require a member's CTA for an admin.
+    await expect(page.getByRole('button').filter({hasText:'Configure approval workflow'})).toBeVisible();
+    await expect(page.getByRole('button').filter({hasText:'Create approval request'})).toHaveCount(0);
+   }else{
+    await expect(page.getByRole('button').filter({hasText:'Create approval request'})).toBeVisible();
+   }
    await expect(page.getByRole('button').filter({hasText:'Review assigned work'})).toBeVisible();
    await expect(page.getByRole('button').filter({hasText:'Track my requests'})).toBeVisible();
    if(role==='requester'){

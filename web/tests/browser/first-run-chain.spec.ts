@@ -45,7 +45,7 @@ test('first-run admin setup publishes a reusable approval request for another ac
     await expect(admin.getByRole('heading', {
       name: 'Configure once, reuse on every request',
     })).toBeVisible();
-    await expect(admin.getByText('Saved drafts alone cannot pass policy testing.', { exact: false })).toBeVisible();
+    await expect(admin.getByText('A saved draft is not published.', { exact: false })).toBeVisible();
 
     // The first user-management destination must be discoverable, not guessed.
     await admin.getByRole('link', { name: /Open user management/ }).click();
@@ -56,7 +56,7 @@ test('first-run admin setup publishes a reusable approval request for another ac
     })).toBeVisible();
 
     // Create one reusable group through the actual review/confirm workflow.
-    await admin.getByRole('button', { name: /Manage approver groups/ }).click();
+    await admin.getByRole('link', { name: /Manage approver groups/ }).click();
     await admin.getByRole('button', { name: 'Create approver group', exact: true }).click();
     await admin.getByLabel('Group name', { exact: true }).fill(groupName);
     await admin.locator('label.grant-checkbox').filter({ hasText: 'approver' })
@@ -67,7 +67,7 @@ test('first-run admin setup publishes a reusable approval request for another ac
     await expect(admin.getByRole('row').filter({ hasText: groupName })).toBeVisible();
 
     await admin.goto('/admin/setup');
-    await admin.getByRole('button', { name: /Open integrations/ }).click();
+    await admin.getByRole('link', { name: /Open integrations/ }).click();
     const integrationTasks = admin.getByRole('navigation', { name: 'Integration tasks' });
     await integrationTasks.getByRole('button', { name: 'Add connection', exact: true }).click();
     await admin.getByLabel('Integration name', { exact: true }).fill(integrationName);
@@ -81,7 +81,7 @@ test('first-run admin setup publishes a reusable approval request for another ac
 
     // Create a saved nine-event template; Review alone must not save.
     await admin.goto('/admin/setup');
-    await admin.getByRole('button', { name: /Manage notification templates/ }).click();
+    await admin.getByRole('link', { name: /Manage notification templates/ }).click();
     await admin.getByRole('button', { name: 'Create email template', exact: true }).click();
     await admin.getByLabel('Template set name', { exact: true }).fill(templateName);
     await admin.getByRole('navigation', { name: 'Email blocks' })
