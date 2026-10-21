@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, TextField } from '@datarelay-labs/foundation';
 import { api, errorText } from './api';
+import {registerGrantNavigationBlocker,type GrantNavigationIntent} from './grant_navigation';
 import { RequestAdminControls } from './request_admin';
 export { RequestList } from './request_inbox';
 export type { Filters } from './request_inbox';
@@ -54,12 +55,71 @@ export function NewRequest({ navigate, predecessorId, isAdmin = false }: { navig
  const createGuard=useRef(createRequestCreationAttemptGuard());
  const [createOutcomeUnknown,setCreateOutcomeUnknown]=useState(false);
  const [reviewError,setReviewError]=useState('');
+ const [draftInteracted,setDraftInteracted]=useState(false);
+ const [pendingShellExit,setPendingShellExit]=useState(false);
+ const shellNavigationIntent=useRef<GrantNavigationIntent|null>(null);
+ const shellExitOrigin=useRef<HTMLElement|null>(null);
+ const shellExitPrompt=useRef<HTMLDivElement|null>(null);
+ // A verified request-create receipt or explicit reconcile action must be
+ // able to leave after a POST without a fake destructive-intent confirmation.
+ const allowedOutcomeNavigation=useRef<string|null>(null);
  const availableProfiles=eligibleIntakeProfiles(profiles);
  const selected=availableProfiles.find(p=>p.id===profile);
  const draft:NewRequestDraft={
   profile:selected??null,predecessor,predecessorId,title,target,parameters,
   reason,external,sourceTenant,environment,severity,riskLevel,
  };
+ // Input handlers are the only cause of an unsaved draft. In particular an
+ // automatically generated external ID or an asynchronously prefilled previous
+ // request must not manufacture a false 'dirty' form on first load.
+ const protectsUnsubmittedDraft=(draftInteracted || reviewed!==null) && !createOutcomeUnknown;
+ useEffect(()=>{
+  if(!protectsUnsubmittedDraft)return;
+  return registerGrantNavigationBlocker((intent)=>{
+   if(allowedOutcomeNavigation.current===intent.next){
+    allowedOutcomeNavigation.current=null;
+    return false;
+   }
+   if(task.busy || createGuard.current.blocked()){
+    task.setNotice('Reconcile the current request creation outcome before leaving. Do not submit again.');
+    return true;
+   }
+   shellExitOrigin.current=document.activeElement as HTMLElement|null;
+   shellNavigationIntent.current=intent;
+   setPendingShellExit(true);
+   return true;
+  });
+ },[protectsUnsubmittedDraft,task.busy]);
+ useEffect(()=>{
+  if(!protectsUnsubmittedDraft)return;
+  const preventLoss=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue='';};
+  window.addEventListener('beforeunload',preventLoss);
+  return()=>window.removeEventListener('beforeunload',preventLoss);
+ },[protectsUnsubmittedDraft]);
+ useEffect(()=>{
+  if(pendingShellExit){
+   shellExitPrompt.current?.querySelector<HTMLButtonElement>('[data-intake-keep-editing]')?.focus();
+  }
+ },[pendingShellExit]);
+ function keepIntakeEditing(){
+  shellNavigationIntent.current?.cancel();
+  shellNavigationIntent.current=null;
+  setPendingShellExit(false);
+  requestAnimationFrame(()=>shellExitOrigin.current?.focus());
+ }
+ function discardAndLeaveIntake(){
+  if(!pendingShellExit||task.busy||createGuard.current.blocked())return;
+  const intent=shellNavigationIntent.current;
+  shellNavigationIntent.current=null;
+  setPendingShellExit(false);
+  intent?.proceed();
+ }
+ function intakeFieldChanged(){
+  setDraftInteracted(true);
+  shellNavigationIntent.current?.cancel();
+  shellNavigationIntent.current=null;
+  setPendingShellExit(false);
+ }
  function resetReview(){
   setReviewed(null);setReviewError('');task.setNotice('');
  }
@@ -76,6 +136,11 @@ export function NewRequest({ navigate, predecessorId, isAdmin = false }: { navig
  }
  useEffect(()=>{
   intakeGate.current.selectContext(predecessorId);
+  shellNavigationIntent.current?.cancel();
+  shellNavigationIntent.current=null;
+  allowedOutcomeNavigation.current=null;
+  setPendingShellExit(false);
+  setDraftInteracted(false);
   resetReview();
   setLoadedContext(null);
   setProfile('');setTitle('');setTarget('');setParameters('{}');
@@ -172,7 +237,9 @@ export function NewRequest({ navigate, predecessorId, isAdmin = false }: { navig
    // server projection qualifies for navigation; mismatches are not retried.
    const confirmed = verifyCreatedRequestReceipt(reviewedNow, row);
    if (intakeGate.current.isActive(creationContext)) {
-     navigate('/requests/'+encodeURIComponent(confirmed.id));
+     const destination='/requests/'+encodeURIComponent(confirmed.id);
+     allowedOutcomeNavigation.current=destination;
+     navigate(destination);
    }
   } catch(error) {
    // A failed read-only policy check is safely re-reviewable. A POST that
@@ -190,10 +257,33 @@ export function NewRequest({ navigate, predecessorId, isAdmin = false }: { navig
   {predecessorId && !currentContext && !reviewError &&
     <p role="status">Loading original request before editing replacement details…</p>}
   {createOutcomeUnknown && (
-    <RequestCreationReconciliationNotice openMyRequests={() => navigate('/my-requests')} />
+    <RequestCreationReconciliationNotice openMyRequests={()=>{
+      // An attempted POST is reconciled in My requests; never retry it via
+      // this edited intake form merely because the transport timed out.
+      allowedOutcomeNavigation.current='/my-requests';
+      navigate('/my-requests');
+    }} />
   )}
+  {pendingShellExit && <div ref={shellExitPrompt} role="alertdialog"
+    aria-label="Discard unsaved request?"
+    onKeyDown={event=>{
+      if(event.key==='Escape'){event.preventDefault();keepIntakeEditing();}
+    }}>
+    <Alert tone="warning" title="Discard unsaved request?">
+      <p>This request has not been submitted. Keep editing to preserve the local
+        form, or explicitly discard it and leave. Discard does not create,
+        approve or execute a request.</p>
+      <div className="grant-actions">
+        <Button type="button" variant="secondary" data-intake-keep-editing
+          onClick={keepIntakeEditing}>Keep editing</Button>
+        <Button type="button" disabled={task.busy||createGuard.current.blocked()}
+          onClick={discardAndLeaveIntake}>Discard and leave</Button>
+      </div>
+    </Alert>
+  </div>}
   {predecessor && <p>Replacement for cancelled request <code>{predecessor.id}</code>.
     A new explicit approval is required.</p>}
+  <div onChangeCapture={intakeFieldChanged}>
   <Form busy={task.busy || createOutcomeUnknown} disabled={!currentContext}
     onSubmit={reviewRequest} label="Review request">
    <section className="grant-intake-section" aria-label="Choose active request type" id="grant-policy-choice">
@@ -241,6 +331,7 @@ export function NewRequest({ navigate, predecessorId, isAdmin = false }: { navig
     <p className="grant-intake-review-note">Select <strong>Review request</strong> below to check the request type, assigned approval plan, action and target. Review does not submit anything. A separate confirmation appears below the form; read it before selecting <strong>Confirm create request</strong>.</p>
    </section>
   </Form>
+  </div>
   {reviewError && <Alert tone="warning" title="Review required">{reviewError}</Alert>}
   <RequestCreationConfirmation reviewed={createOutcomeUnknown ? null : reviewed} draft={draft} busy={task.busy || createOutcomeUnknown || !currentContext}
     onConfirm={()=>void task.run(submit)} onBack={()=>setReviewed(null)} />
