@@ -197,6 +197,17 @@ export function Delegations({ user }: { user: User }) {
       );
       if (!result) return;
       verifyDelegationChangeReceipt(reviewed,result);
+      if (reviewed.kind==='create') {
+        // The exact create intent is now durably saved. Its local selection is
+        // no longer an unsent draft: leave a fresh empty form, not a misleading
+        // discard warning or a prefilled duplicate submission.
+        const fresh={starts:localDateTime(0),ends:localDateTime(8)};
+        initialWindow.current=fresh;
+        setSubstitute('');
+        setStarts(fresh.starts);
+        setEnds(fresh.ends);
+      }
+      // A verified revoke does NOT discard a separately edited create draft.
       setConfirmedChange(true);
     } catch(error){
       // A failed pre-POST read can be reviewed again. A possible
