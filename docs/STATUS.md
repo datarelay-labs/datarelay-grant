@@ -1,3 +1,41 @@
+## 2026-10-20 — PF05-INPUT-001 exact action parameters before review
+
+Request creation now checks original JSON tokens before showing Review/Confirm.
+Duplicate keys (including escaped and nested duplicates), non-finite numbers,
+underflow, unsafe integers and rounded fractional values cannot silently change
+the reviewed action. The existing API safe-integer and depth bounds remain the
+contract; equivalent integer notation and quoted numeric identifiers are preserved.
+Errors identify a bounded field path while retaining the original editor text.
+
+The actual pre-fix Chromium UI reproduced three lossy previews without creating
+a request. The new 25-case regression suite reproduced 17 failures before the fix;
+43 focused tests and the full 807-test Web suite now pass, together with TypeScript,
+production build and static checks. Exact committed-candidate browser and CI
+evidence is tracked in [Work Packet #67 Rev262](https://github.com/datarelay-labs/datarelay-grant/issues/67#issuecomment-6290548819).
+This source checkpoint does not qualify whole-contract Full User E2E or release.
+
+## 2026-10-20 — B1 passive reads and immediate overdue truth
+
+Request list/detail and Operations reads no longer execute expiry, reminder or
+escalation maintenance. The existing worker and final POST deadline guards retain
+lifecycle ownership. A server-derived overdue flag/count includes elapsed
+undecided deadlines before the next maintenance cycle, without changing persisted
+state or revision; the UI says approval overdue rather than claiming escalation.
+Six focused lifecycle regression cases and the affected API batch (53/53), native
+Web checks and static validation passed. Seven worker-disabled expiry fixtures now
+advance maintenance explicitly. No schema, account/config, transport-worker mode,
+external effect or release boundary changed. Exact candidate/browser/CI evidence
+is tracked in active Work Packet #67 Rev259; this checkpoint is not whole-contract
+Full User E2E acceptance.
+
+**2026-10-19 PF-02 Control-source UI adoption stage:** isolated Grant candidate
+consumes the actual shared Foundation #106 original-Control Administration
+task/card/header module with product-owned task/actor/target projections,
+inert uninstalled functions and unchanged native Grant authorization
+boundaries. It does not adopt the Control dataflow shell, privileged
+MFA/RBAC/ACL/host effects, or grant release acceptance.
+See `docs/FOUNDATION_PF106_CONTROL_ADMIN_CONSUMER_20261019.md`.
+
 **2026-10-19 PF-04 native read-only source stage:** The actual administrator-only Grant operational-readiness projection now appears in the existing System Management Network and Backup & Import details. Strict backend schema validation fails closed for missing/malformed evidence, without exposing privileged firewall, SSL, retention, restore or host security effects. Isolated authenticated browser and negative unit tests verify read-only truth. Native host/restore proof and installed multi-user Full User E2E remain NOT qualified.
 
 **2026-10-19 PF-02 bounded administration task routing:** Original Control F31 AdministrationHubPage/AppShellLayout hardcode Control navigation/role/native host semantics, so direct Grant mounting is not qualified. Grant now uses a small verified product-owned fail-closed task ID/target/access/role adapter with existing shared RC50 hub; new MFA/ACL/Roles/Sessions/host effects remain unavailable. This is not full Control 1:1 shell adoption.

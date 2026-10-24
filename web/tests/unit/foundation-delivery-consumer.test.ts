@@ -21,6 +21,14 @@ describe('Grant RC50 Foundation notification adoption', () => {
     expect(html).not.toContain('Send test');
     expect(html).not.toContain('business effect verified');
   });
+  it('does not call an in-flight destination read a server failure', () => {
+    const html = renderToStaticMarkup(createElement(GrantNotificationDeliveryReadout,
+      { destinations: null, loading: true }));
+    expect(html).toContain('Checking current notification destinations');
+    expect(html).toContain('role="status"');
+    expect(html).not.toContain('Delivery readiness unavailable');
+    expect(html).not.toContain('No notification destinations');
+  });
   it('keeps unavailable transport snapshots distinct from a fabricated empty-success state', () => {
     const html = renderToStaticMarkup(createElement(GrantNotificationDeliveryReadout, { destinations: null }));
     expect(html).toContain('Delivery readiness unavailable');

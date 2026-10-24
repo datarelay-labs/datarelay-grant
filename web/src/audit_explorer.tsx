@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, TextField } from '@datarelay-labs/foundation';
 import { api, errorText } from './api';
-import { useTask, when } from './common';
+import { when } from './common';
 import { createAuditReadGate, verifyAuditChainIdentity } from './audit_read_guard';
 import { AuditEvidenceChain, AuditEventTable, type AuditChainReport } from './audit_chain_summary';
 import {
@@ -33,7 +33,7 @@ export function AuditExplorer() {
   const [chainBusy,setChainBusy]=useState(false);
   const listGate=useRef(createAuditWorklistScope());
   const readGate = useRef(createAuditReadGate());
-  const task = useTask();
+  const [filterError, setFilterError] = useState('');
   const currentQuery=filterQuery(applied,offset,50);
   const queryRef=useRef(currentQuery);
   const page=currentAuditPageProjection(storedPage,currentQuery);
@@ -74,7 +74,7 @@ export function AuditExplorer() {
       // Invalid calendar days must never silently disappear from the query.
       filterQuery(draft, 0, 50);
     } catch (error) {
-      task.setNotice(error instanceof Error && error.message === 'AUDIT_DATE_RANGE_INVALID'
+      setFilterError(error instanceof Error && error.message === 'AUDIT_DATE_RANGE_INVALID'
         ? 'The start date must not be after the end date.'
         : 'Enter valid calendar dates before searching evidence.');
       return;
@@ -82,38 +82,35 @@ export function AuditExplorer() {
     const updated={...draft};
     const query=filterQuery(updated,0,50);
     listGate.current.select(query);queryRef.current=query;
-    readGate.current.invalidateAll();
-    selectedRequestRef.current='';
-    setSelectedRequestId('');
-    setSelectedChain(null);setChainError('');setListError('');
+    readGate.current.invalidateList();
+    closeEvidence();
+    setListError('');
     setStoredPage(null);
     setOffset(0);
     setApplied(updated);
-    task.setNotice('');
+    setFilterError('');
   }
 
   function reset() {
     const cleared={...emptyFilters};
     const query=filterQuery(cleared,0,50);
     listGate.current.select(query);queryRef.current=query;
-    readGate.current.invalidateAll();
-    selectedRequestRef.current='';
-    setSelectedRequestId('');
-    setSelectedChain(null);setChainError('');setListError('');
+    readGate.current.invalidateList();
+    closeEvidence();
+    setListError('');
     setStoredPage(null);
     setDraft(cleared);
     setApplied(cleared);
     setOffset(0);
-    task.setNotice('');
+    setFilterError('');
   }
 
   function changePage(nextOffset: number) {
     const query=filterQuery(applied,nextOffset,50);
     listGate.current.select(query);queryRef.current=query;
-    readGate.current.invalidateAll();
-    selectedRequestRef.current='';
-    setSelectedRequestId('');
-    setSelectedChain(null);setChainError('');setListError('');
+    readGate.current.invalidateList();
+    closeEvidence();
+    setListError('');
     setStoredPage(null);
     setOffset(nextOffset);
   }
@@ -166,7 +163,7 @@ export function AuditExplorer() {
   }
 
   return <div className="grant-stack">
-    {task.feedback}
+    {filterError&&<Alert tone="critical" title="Invalid audit date range">{filterError}</Alert>}
     <Card title="Audit evidence explorer" description="Search recorded approval and administration events. Only typed evidence references are exported; arbitrary note text is excluded.">
       <div className="grant-grid">
         <TextField label="Search audit events" value={draft.search} maxLength={100}

@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { Approvers, ApproverGroupDirectory, filterApproverGroups } from '../../src/approvers';
+import { Approvers, ApproverGroupDirectory, filterApproverGroups, approverGroupReconciliationCopy, isApproverGroupDraftDirty } from '../../src/approvers';
 import type { ApproverGroup } from '../../src/types';
 
 const onCall = () => undefined;
@@ -20,6 +20,33 @@ function directory(items = groups, search = '') {
 }
 
 describe('P0 competitor-derived approver group list-to-detail administration', () => {
+  it('guards only genuinely changed names, saved memberships or approval order', () => {
+    expect(isApproverGroupDraftDirty(false,null,'',[])).toBe(false);
+    expect(isApproverGroupDraftDirty(false,null,' ',[])).toBe(true);
+    expect(isApproverGroupDraftDirty(false,null,'',['one'])).toBe(true);
+    expect(isApproverGroupDraftDirty(true,groups[0]!,'Production Reviewers',['one','two'])).toBe(false);
+    expect(isApproverGroupDraftDirty(true,groups[0]!,'Revised Reviewers',['one','two'])).toBe(true);
+    expect(isApproverGroupDraftDirty(true,groups[0]!,'Production Reviewers',['two','one'])).toBe(true);
+    expect(isApproverGroupDraftDirty(true,groups[0]!,'Production Reviewers',['one'])).toBe(true);
+    expect(isApproverGroupDraftDirty(true,null,'any',[])).toBe(true);
+  });
+
+
+  it('distinguishes a verified saved group from an uncertain in-flight POST', () => {
+    const confirmed = approverGroupReconciliationCopy(true, false);
+    expect(confirmed.title).toContain('confirmed');
+    expect(confirmed.message).toContain('server confirmed');
+    expect(confirmed.message).toContain('Refresh saved groups');
+    expect(confirmed.message).not.toContain('may already have succeeded');
+    expect(confirmed.message).not.toContain('was submitted');
+    const uncertain = approverGroupReconciliationCopy(false, true);
+    expect(uncertain.title).toContain('Reconcile');
+    expect(uncertain.message).toContain('may already have succeeded');
+    const submitted = approverGroupReconciliationCopy(false, false);
+    expect(submitted.message).toContain('was submitted');
+    expect(submitted.message).not.toContain('server confirmed');
+  });
+
   it('does not present an unrelated new-group editor on the default group list', () => {
     const html = renderToStaticMarkup(createElement(Approvers));
     expect(html).toContain('Approver groups');

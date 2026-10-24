@@ -113,7 +113,7 @@ test('Foundation login and grouped Grant shell follow the DataRelay family layou
  await page.goto('/home');await expect(page.locator('[data-testid="gdc-login-centered"]')).toBeVisible();await expect(page.locator('.dr-control-reference')).toBeVisible();await expect(page.getByRole('heading',{name:'Welcome to DataRelay',exact:true})).toBeVisible();await expect(page.getByText('Please sign in to continue.',{exact:true})).toBeVisible();
  const password=page.getByLabel('Password',{exact:true});await expect(password).toHaveAttribute('type','password');await expect(page.getByRole('button',{name:'Show password',exact:true})).toBeVisible();await page.getByRole('button',{name:'Show password',exact:true}).click();await expect(password).toHaveAttribute('type','text');await page.getByRole('button',{name:'Hide password',exact:true}).click();await expect(password).toHaveAttribute('type','password');
  await page.getByLabel('Username',{exact:true}).fill('admin');await password.fill(fixture().password);await page.getByRole('button',{name:'Sign In',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.locator('.dr-control-shell')).toBeVisible();await expect(page.getByRole('button',{name:'Toggle color theme',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'User workspace',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Approval administration',exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Good to see you, admin',exact:true})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Home',exact:true})).toBeVisible();await expect(page.locator('.gdc-app-workspace')).toBeVisible();await expect(page.getByRole('navigation',{name:'Primary navigation'})).toBeVisible();await expect(page.getByRole('button',{name:'Toggle color theme',exact:true})).toBeVisible();await expect(page.getByText('User workspace',{exact:true})).toBeVisible();await expect(page.getByText('Approval administration',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Account & security',exact:true})).toBeVisible();await expect(page.getByRole('heading',{name:'Good to see you, admin',exact:true})).toBeVisible();
  await context.close();
 });
 
@@ -135,7 +135,7 @@ test('Foundation member account action reaches personal security, not Administra
 
 test('Foundation administration and mobile approval page are real adapters',async({browser})=>{
  const context=await browser.newContext({viewport:{width:390,height:844}});const page=await context.newPage();await login(page,'admin');
- await page.goto('/system');await expect(page.getByText('System Health',{exact:true})).toBeVisible();await expect(page.getByText('User Management',{exact:true})).toBeVisible();for(const label of ['Management Access (ACL)','Multi-Factor Authentication','Roles & Permissions','Sessions']) await expect(page.getByText(label,{exact:true})).toBeVisible();await page.getByRole('button',{name:'View System Health',exact:true}).click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
+ await page.goto('/system');await expect(page.getByText('System Health',{exact:true})).toBeVisible();await expect(page.getByText('User Management',{exact:true})).toBeVisible();for(const label of ['Management Access (ACL)','Multi-Factor Authentication','Roles & Permissions','Sessions']) await expect(page.getByText(label,{exact:true})).toBeVisible();await page.getByTestId('core.health').getByRole('button', { name: 'View', exact: true }).click();await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
  await page.goto('/integrations');await expect(page.getByRole('list',{name:'Registered connections mobile list'}).getByText('Isolated DataRelay fixture',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Review connection test',exact:true}).click();
  await expect(page.getByRole('button',{name:'Confirm connection test',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'Confirm connection test',exact:true}).click();
@@ -156,23 +156,23 @@ test('Grant Foundation Administration shortcuts and selected task focus work on 
   await page.goto('/system');
   await expect(page.getByRole('button',{name:'My account & MFA',exact:true})).toBeVisible();
   await expect(page.getByRole('button',{name:'Configuration preview',exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:'View HTTPS',exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:'View Password Management',exact:true})).toBeVisible();
-  await expect(page.getByRole('button',{name:'View Network',exact:true})).toBeVisible();
-  await page.getByRole('button',{name:'View HTTPS',exact:true}).click();
+  await expect(page.getByTestId('core.https').getByRole('button', { name: 'View', exact: true })).toBeVisible();
+  await expect(page.getByTestId('core.password').getByRole('button', { name: 'View', exact: true })).toBeVisible();
+  await expect(page.getByTestId('core.network').getByRole('button', { name: 'View', exact: true })).toBeVisible();
+  await page.getByTestId('core.https').getByRole('button', { name: 'View', exact: true }).click();
   await expect(page.getByTestId('grant-admin-selected-detail')).toBeFocused();
   await expect(page.getByText('Configured HTTPS surface',{exact:true})).toBeVisible();
   await expect(page.getByText('Deployment operator',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Back to administration tasks',exact:true}).click();
-  await page.getByRole('button',{name:'View Network',exact:true}).click();
+  await page.getByTestId('core.network').getByRole('button', { name: 'View', exact: true }).click();
   await expect(page.getByTestId('grant-admin-selected-detail')).toBeFocused();
   await expect(page.getByText('Configured network surface',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Back to administration tasks',exact:true}).click();
-  await page.getByRole('button',{name:'View Password Management',exact:true}).click();
+  await page.getByTestId('core.password').getByRole('button', { name: 'View', exact: true }).click();
   await expect(page).toHaveURL(/\/security$/);
   await expect(page.getByText('Change password',{exact:true})).toBeVisible();
   await page.goto('/system');
-  await page.getByRole('button',{name:'View System Health',exact:true}).click();
+  await page.getByTestId('core.health').getByRole('button', { name: 'View', exact: true }).click();
   await expect(page.getByTestId('grant-admin-selected-detail')).toBeFocused();
   await expect(page.getByText('Approval database',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'My account & MFA',exact:true}).click();
@@ -189,7 +189,7 @@ test('SM-2 display timezone default and personal override require review and per
  try{
   await login(page,'admin');
   await page.goto('/system');
-  await page.getByRole('button',{name:'Manage Display timezone',exact:true}).click();
+  await page.getByTestId('core.timezone').getByRole('button', { name: 'Manage', exact: true }).click();
   await expect(page.getByText('Platform display timezone',{exact:true})).toBeVisible();
   await expect(page.getByText('UTC',{exact:true}).first()).toBeVisible();
   await page.getByLabel('Default IANA timezone',{exact:true}).fill('Asia/Seoul');
@@ -215,7 +215,7 @@ test('SM-2 display timezone default and personal override require review and per
   await page.getByRole('button',{name:'Confirm timezone change',exact:true}).click();
   await expect(page.getByText('Use platform default',{exact:true})).toBeVisible();
   await page.goto('/system');
-  await page.getByRole('button',{name:'Manage Display timezone',exact:true}).click();
+  await page.getByTestId('core.timezone').getByRole('button', { name: 'Manage', exact: true }).click();
   await page.getByLabel('Default IANA timezone',{exact:true}).fill('UTC');
   await page.getByRole('button',{name:'Review default timezone',exact:true}).click();
   await page.getByRole('button',{name:'Confirm default timezone',exact:true}).click();
@@ -332,7 +332,7 @@ test('administrator configures accounts/profile and explicitly revokes a scoped 
  });
  const page=await context.newPage();
  await login(page,'admin');await page.goto('/system');
- await page.getByRole('button',{name:'Manage User Management',exact:true}).click();
+ await page.getByTestId('core.users').getByRole('button', { name: 'Manage', exact: true }).click();
  await page.getByLabel('New username',{exact:true}).fill('browser-member');
  await page.getByLabel('New user email',{exact:true}).fill('browser-member@example.invalid');
  await page.getByLabel('Initial password',{exact:true}).fill(f.password);
@@ -994,7 +994,14 @@ test('U8.01 role-guided Home routes requester approver and administrator to the 
   try{
    await login(page,role);await page.goto('/home');
    await expect(page.getByRole('heading',{name:'What would you like to do?',exact:true})).toBeVisible();
-   await expect(page.getByRole('button').filter({hasText:'Create approval request'})).toBeVisible();
+   if(role==='admin'){
+    // Administrator setup is the first role-guided action. Requesters use
+    // the active configuration; don't require a member's CTA for an admin.
+    await expect(page.getByRole('button').filter({hasText:'Configure approval workflow'})).toBeVisible();
+    await expect(page.getByRole('button').filter({hasText:'Create approval request'})).toHaveCount(0);
+   }else{
+    await expect(page.getByRole('button').filter({hasText:'Create approval request'})).toBeVisible();
+   }
    await expect(page.getByRole('button').filter({hasText:'Review assigned work'})).toBeVisible();
    await expect(page.getByRole('button').filter({hasText:'Track my requests'})).toBeVisible();
    if(role==='requester'){
@@ -1086,6 +1093,35 @@ test('AUR request inbox card headers stay readable on 390px mobile',async({brows
    expect(geometry.actionsTop).toBeGreaterThanOrEqual(geometry.headingBottom);
    expect(geometry.overflow).toBeFalsy();
   }
+ }finally{await context.close();}
+});
+
+// PF106 optional shared AppShell: real isolated member login and mobile navigation.
+// This test never creates an approval request or exercises the separately gated
+// action/SMTP path. Role filtering is server-native and the UI is only a projection.
+test('PF106 member mobile quick navigation remains role-scoped and keyboard accessible', async ({browser})=>{
+ const context=await browser.newContext({viewport:{width:320,height:812}});
+ try{
+  const page=await context.newPage();
+  await login(page,'approver');
+  const toggle=page.getByRole('button',{name:'Search product navigation',exact:true});
+  await expect(toggle).toBeVisible();
+  await toggle.click();
+  const search=page.getByRole('search',{name:'Product navigation search'});
+  const input=search.getByRole('searchbox',{name:'Search pages'});
+  await expect(input).toBeFocused();
+  await input.fill('Audit');
+  await expect(search.getByText('No matching pages',{exact:true})).toBeVisible();
+  await input.fill('My approvals');
+  await expect(search.getByRole('button',{name:/My approvals/})).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(search).toHaveCount(0);
+  await expect(toggle).toBeVisible();
+  await toggle.click();
+  await search.getByRole('button',{name:/My approvals/}).click();
+  await expect(page).toHaveURL(/\/approvals$/);
+  await expect(search).toHaveCount(0);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
  }finally{await context.close();}
 });
 
@@ -1257,8 +1293,22 @@ test('U6.06 saved revision test email reviews exact state and sends once',async(
   await page.getByRole('button',{name:'Create email template',exact:true}).click();
   await page.getByLabel('Template set name',{exact:true}).fill(title);
   await page.getByRole('button',{name:'Review draft save',exact:true}).click();
+  const createdResponse=page.waitForResponse(response=>
+    response.request().method()==='POST'
+      && new URL(response.url()).pathname==='/api/v1/notification-template-sets');
   await page.getByRole('button',{name:'Confirm template set creation',exact:true}).click();
+  const createdAcknowledgment=await createdResponse;
+  expect(createdAcknowledgment.status()).toBe(201);
   await expect(page.getByRole('button',{name:'Refresh saved template set',exact:true})).toBeVisible();
+  // The already-attempted POST may be racing the first direct GET.
+  // Reconcile ONLY authoritative saved rows; never repeat the POST to make
+  // the test green. A durable 201 response is distinct from the local UI
+  // entering its pending-reconciliation state.
+  await expect.poll(async()=>{
+    const response=await context.request.get('/api/v1/notification-template-sets');
+    expect(response.status()).toBe(200);
+    return (await response.json()).some((item:any)=>item.name===title);
+  }).toBe(true);
   const sets=await(await context.request.get('/api/v1/notification-template-sets')).json();
   const created=sets.find((item:any)=>item.name===title);
   expect(created).toBeTruthy();
@@ -1442,7 +1492,7 @@ test('B3 Administration mail-test requires exact Review then one Confirm',async(
  try{
   await login(page,'admin');
   await page.goto('/system');
-  await page.getByRole('button',{name:'Manage Mail delivery test',exact:true}).click();
+  await page.getByTestId('grant.smtp.test').getByRole('button', { name: 'Manage', exact: true }).click();
   await expect(page.getByText('Mail delivery test',{exact:true}).first()).toBeVisible();
   const before=await(await context.request.get(f.receiver)).json();
   const previous=before.mail.length;
@@ -1893,4 +1943,63 @@ test('B4 policy workspace mobile 320/375 uses readable cards without horizontal 
   await expect(page.locator('table.grant-policy-table')).toBeVisible();
   await expect(page.getByRole('list',{name:'Approval policies mobile list'})).toBeHidden();
  }finally{await context.close();}
+});
+
+
+/** PF106 Grant native consumer: Chromium user journeys, not mocked capabilities.
+ * Disposable password-backed actors and local receiver only; no public preview.
+ */
+test('PF106 Control AppShell links real Grant routes and hides administrator tasks', async ({ browser }) => {
+ const adminContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+ const memberContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+ try {
+  const admin = await adminContext.newPage();
+  await login(admin, 'admin');
+  const nav = admin.getByRole('navigation', { name: 'Primary navigation' });
+  await expect(nav.getByRole('button', { name: 'System management' })).toBeVisible();
+  await expect(nav.getByRole('button', { name: 'My approvals' })).toBeVisible();
+  await expect(admin.getByLabel('Runtime status')).toHaveCount(0);
+  await expect(admin.getByRole('button', { name: 'Open operational alerts' })).toHaveCount(0);
+  await nav.getByRole('button', { name: 'My approvals' }).click();
+  await expect(admin).toHaveURL(/\/approvals$/);
+  await nav.getByRole('button', { name: 'System management' }).click();
+  await expect(admin).toHaveURL(/\/system$/);
+  await expect(admin.getByTestId('administration-hub-page')).toBeVisible();
+
+  const member = await memberContext.newPage();
+  await login(member, 'approver');
+  const memberNav = member.getByRole('navigation', { name: 'Primary navigation' });
+  await expect(memberNav.getByRole('button', { name: 'Account & security' })).toBeVisible();
+  for (const route of ['System management', 'Audit explorer', 'Approver groups', 'Notification templates', 'Operations']) {
+   await expect(memberNav.getByRole('button', { name: route, exact: true })).toHaveCount(0);
+  }
+  await memberNav.getByRole('button', { name: 'Account & security' }).click();
+  await expect(member).toHaveURL(/\/security$/);
+  await member.goto('/system');
+  await expect(member.getByText('Page unavailable', { exact: true })).toBeVisible();
+ } finally {
+  await adminContext.close();
+  await memberContext.close();
+ }
+});
+
+test('PF106 Control AppShell mobile drawer closes on Escape and restores keyboard focus', async ({ browser }) => {
+ const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+ try {
+  const page = await context.newPage();
+  await login(page, 'requester');
+  const toggle = page.getByTestId('shell-mobile-nav-toggle');
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('#primary-navigation')).toHaveAttribute('data-mobile-open', 'true');
+  await page.keyboard.press('Escape');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.locator('#primary-navigation')).toHaveAttribute('data-mobile-open', 'false');
+  await expect(toggle).toBeFocused();
+  await expect(page.locator('#main-content')).toBeVisible();
+ } finally {
+  await context.close();
+ }
 });

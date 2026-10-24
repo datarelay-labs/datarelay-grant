@@ -23,7 +23,7 @@ def operations_summary(db: Database, actor: Principal) -> dict:
                 SUM(CASE WHEN r.state='EXPIRED' THEN 1 ELSE 0 END) AS expired,
                 SUM(CASE WHEN r.state='CANCELLED' THEN 1 ELSE 0 END) AS cancelled,
                 SUM(CASE WHEN
-                    (r.state='EXPIRED' AND r.decision IS NULL AND r.deadline<=?)
+                    (r.state IN ('AWAITING','HELD','EXPIRED') AND r.decision IS NULL AND r.deadline<=?)
                     OR (r.state IN ('AWAITING','HELD') AND e.due_at<=?)
                     THEN 1 ELSE 0 END) AS overdue,
                 SUM(CASE WHEN r.state='APPROVED' AND r.execution_state='NOT_STARTED'

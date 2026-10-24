@@ -203,9 +203,13 @@ const states: Metric[] = [
 ];
 
 /** Real Grant outbox status only, never a test-send or execution path. */
-export function GrantNotificationDeliveryReadout({ destinations }: {
+export function GrantNotificationDeliveryReadout({ destinations, loading = false }: {
   destinations: readonly NotificationDestinationProjection[] | null;
+  loading?: boolean;
 }) {
+  if (loading) {
+    return <p role="status">Checking current notification destinations…</p>;
+  }
   if (!destinations) {
     return <Alert tone="warning" title="Delivery readiness unavailable">
       Grant could not read the current, administrator-authorized destination snapshot.
@@ -224,16 +228,28 @@ export function GrantNotificationDeliveryReadout({ destinations }: {
 export function Operations({ navigate }: { navigate: (next: string) => void }) {
   const [snapshot, setSnapshot] = useState<OperationsSummary | null>(null);
   const [destinations, setDestinations] = useState<readonly NotificationDestinationProjection[] | null>(null);
+  const [destinationsLoading, setDestinationsLoading] = useState(true);
   const task = useTask();
   async function load() {
-    setSnapshot(await api<OperationsSummary>('/admin/operations'));
-    // Optional read must never conceal already-loaded operational truth.
-    // The server authorizes the same admin actor and supplies no secrets.
+    // An unresolved GET is not a failed GET. Clear stale rows on every refresh,
+    // then expose unavailable only after the actual read fails or is malformed.
+    setSnapshot(null);
+    setDestinations(null);
+    setDestinationsLoading(true);
     try {
-      const rows = await api<NotificationDestinationProjection[]>('/admin/notification-destinations');
-      setDestinations(Array.isArray(rows) ? rows : null);
-    } catch {
-      setDestinations(null);
+      setSnapshot(await api<OperationsSummary>('/admin/operations'));
+      // Optional read must never conceal already-loaded operational truth.
+      // The server authorizes the same admin actor and supplies no secrets.
+      try {
+        const rows = await api<NotificationDestinationProjection[]>('/admin/notification-destinations');
+        setDestinations(Array.isArray(rows) ? rows : null);
+      } catch {
+        setDestinations(null);
+      }
+    } finally {
+      // Also settle a failed primary operations GET instead of leaving an
+      // indefinite checking label after useTask reports the error.
+      setDestinationsLoading(false);
     }
   }
   useEffect(() => { void task.run(load); }, []);
@@ -280,7 +296,8 @@ export function Operations({ navigate }: { navigate: (next: string) => void }) {
       onOpen={key=>navigate('/operations/queue/'+key)}/>
     {snapshot && <DecisionEmailSecurityPanel summary={snapshot.decision_email_security} />}
     {section('Request and delivery states', states, 'Each count represents distinct requests, never the number of delivery attempts.')}
-    <GrantNotificationDeliveryReadout destinations={destinations} />
+    <GrantNotificationDeliveryReadout destinations={destinations}
+      loading={destinationsLoading} />
     <Card title="Integration delivery health" description="Last callback is HTTP transport acceptance only, not target execution or receipt verification.">
       <div className="grant-table-scroll grant-operations-desktop-table"><table className="grant-table">
         <thead><tr>

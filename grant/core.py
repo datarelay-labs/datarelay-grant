@@ -286,11 +286,23 @@ class Core:
             approver_group_id=row["approver_group_id"],
             approvals_required=row["approvals_required"],
         )
-        if row["email_template_id"] and not conn.execute(
-            "SELECT id FROM email_templates WHERE id=? AND enabled=1",
-            (row["email_template_id"],),
-        ).fetchone():
-            raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
+        if row["email_template_id"]:
+            template = conn.execute(
+                "SELECT id,design_json,published_revision FROM email_templates "
+                "WHERE id=? AND enabled=1",
+                (row["email_template_id"],),
+            ).fetchone()
+            if not template:
+                raise GrantError("EMAIL_TEMPLATE_NOT_FOUND", 404)
+            # Visual template drafts may be edited and previewed, but a new
+            # active policy must have an immutable published mail snapshot.
+            # Match _notification_snapshot's legacy text-only compatibility.
+            if template["design_json"] and not conn.execute(
+                "SELECT 1 FROM email_template_revisions "
+                "WHERE template_id=? AND revision=?",
+                (template["id"], template["published_revision"]),
+            ).fetchone():
+                raise GrantError("EMAIL_TEMPLATE_UNPUBLISHED", 409)
 
     @staticmethod
     def _branding(conn: sqlite3.Connection) -> dict[str, str]:
@@ -1823,15 +1835,15 @@ class Core:
     def get(
         self, actor: Principal, ident: str, *, required_scope: str = ""
     ) -> dict:
-        with self.db.transaction() as conn:
+        # Reads expose persisted state; maintenance and final POST transactions
+        # own lifecycle transitions, including expiry and notification enqueueing.
+        with self.db.transaction(write=False) as conn:
             require_current_authority(conn, actor, required_scope)
             row = self._load(conn, ident, actor)
             now = time.time()
-            self._expire(conn, row, now)
-            current = self._load(conn, ident)
             return {
-                **self._project(conn, current),
-                **self._viewer_assignment(conn, current, actor, now),
+                **self._project(conn, row),
+                **self._viewer_assignment(conn, row, actor, now),
             }
 
     def compare_replacement(self, actor: Principal, ident: str) -> dict:
@@ -2020,13 +2032,12 @@ class Core:
         if actor.kind not in ("human", "integration"):
             raise GrantError("AUTHENTICATION_REQUIRED", 401)
 
-        # Maintenance may expire approvals and schedule notifications.
-        # Reject a revoked/demoted principal before these side effects.
+        # Navigation is read-only. Lifecycle work belongs to the worker or
+        # final mutation transactions, never to a request-list refresh.
         with self.db.transaction(write=False) as conn:
             require_current_authority(
                 conn, actor, "request:read" if actor.kind == "integration" else ""
             )
-        self.maintenance()
         now = time.time()
         clauses: list[str] = []
         args: list[Any] = []
@@ -2782,10 +2793,13 @@ class Core:
             if escalation
             else None
         )
+        now = time.time()
         out["overdue"] = bool(
-            escalation
-            and row["state"] in ("AWAITING", "HELD")
-            and escalation["due_at"] <= time.time()
+            row["state"] in ("AWAITING", "HELD")
+            and (
+                (row["decision"] is None and row["deadline"] <= now)
+                or (escalation and escalation["due_at"] <= now)
+            )
         )
         deliveries = [
             dict(r)

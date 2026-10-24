@@ -53,7 +53,10 @@ export function createDeliveryResendAttemptGuard() {
 export function createRequestDeliveryResendReview(
   row: RequestRow, item: Delivery,
 ): RequestDeliveryResendIntent {
-  if (!['FAILED', 'PENDING'].includes(item.state)
+  // Already-queued PENDING notifications are not failed deliveries.
+  // Keep the detail view consistent with Admin Delivery Health: only FAILED
+  // is eligible for an explicit user-reviewed resend affordance.
+  if (item.state !== 'FAILED'
       || !row.deliveries?.some((delivery) => delivery.id === item.id)) {
     throw new Error('DELIVERY_NOT_ELIGIBLE_FOR_RESEND');
   }

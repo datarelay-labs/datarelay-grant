@@ -30,9 +30,17 @@ export function errorText(error: unknown): string {
  if (error instanceof ApiError) {
   if (error.status === 401) return 'Sign in again or complete MFA. No action was retried.';
   if (error.status === 409 && error.code === 'APPROVER_GROUP_STALE') return 'Another administrator changed this group. Review and reload the saved group before retrying.';
+  if (error.status === 409 && error.code === 'POLICY_STALE') return 'This policy has a newer saved version. Return to Policies, reopen the latest saved version, then review your edits before saving again. No changes from this attempt were saved.';
+  if (error.status === 409 && error.code === 'EMAIL_TEMPLATE_STALE') return 'A newer template saved revision exists. Select Refresh saved template set, review the latest revision, then retry the save. No changes from this attempt were saved.';
   if (error.status === 409 && error.code === 'EMAIL_TEMPLATE_UNPUBLISHED') return 'The selected custom email template is saved but not published. In Notification templates, open the saved set, verify its current preview, then select Review & publish and Confirm publication. Return to the policy and run its isolated test again. No policy activation occurred.';
   if (error.status === 409) return 'The request changed or is no longer actionable. Refresh before deciding. (' + error.code + ')';
   return error.code.replaceAll('_', ' ');
+ }
+ if (error instanceof Error && error.message === 'TEMPLATE_SAVE_SOURCE_CHANGED') {
+  return 'The saved template changed since your draft was opened. No save request was sent from this attempt. Copy any unsaved edits, return to Email Templates, reopen the current saved template, and review your changes again.';
+ }
+ if (error instanceof Error && error.message === 'TEMPLATE_SAVE_NAME_EXISTS') {
+  return 'A saved email template already uses this name. No new set was created. Choose another template name and review the draft save again.';
  }
  return 'The service could not be reached. Check the current request before retrying.';
 }

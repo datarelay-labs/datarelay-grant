@@ -1,7 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AdminFirstRunSetup } from './admin_first_run_setup';
 import { Alert, Button, Card, TextField, type AccountProjection } from '@datarelay-labs/foundation';
 import { api } from './api';
+import {registerGrantNavigationBlocker,type GrantNavigationIntent} from './grant_navigation';
 import { PolicyCloneConfirmation, createPolicyCloneReview, submitReviewedPolicyClone, type PolicyCloneIntent } from './policy_clone_review';
 import { Form, Select, TextArea, useTask, when } from './common';
 import { PolicyApprovalSummary } from './policy_approval_summary';
@@ -151,6 +152,23 @@ export type PolicyEditorDraft = {
   risk: string;
   decisionSecurity: DecisionSecurityDraft;
 };
+
+// Compare every new-policy field with its untouched editor default, including
+// verification assurance. Invalid or partially edited values remain dirty.
+export function isNewPolicyDraftUntouched(draft: PolicyEditorDraft): boolean {
+  return draft.name === '' && draft.integration === '' &&
+    draft.approver === '' && draft.approvalMode === 'SINGLE' &&
+    draft.approverGroup === '' && draft.approvalsRequired === '2' &&
+    draft.action === '' && draft.template === '' &&
+    draft.deadline === '86400' && draft.reminder === '3600' &&
+    draft.count === '3' && draft.validity === '900' &&
+    draft.tenant === '' && draft.environment === '' &&
+    draft.severity === '' && draft.risk === '' &&
+    draft.decisionSecurity.denialReasonRequired === false &&
+    draft.decisionSecurity.verificationMode === 'INHERIT' &&
+    draft.decisionSecurity.linkTtlInput === '' &&
+    draft.decisionSecurity.contractAvailable === true;
+}
 
 function boundedPolicyNumber(raw: string, min: number, max: number): number {
   const normalized = raw.trim();
@@ -350,6 +368,11 @@ export function Profiles() {
   const [editing, setEditing] = useState('');
   const [editingBaseline, setEditingBaseline] = useState<Profile | null>(null);
   const [pendingTransition, setPendingTransition] = useState<PolicyTransitionIntent | null>(null);
+  const [pendingExitReview, setPendingExitReview] = useState(false);
+  const [pendingShellExit, setPendingShellExit] = useState(false);
+  const shellNavigationIntent = useRef<GrantNavigationIntent | null>(null);
+  const shellExitOrigin = useRef<HTMLElement | null>(null);
+  const shellExitPrompt = useRef<HTMLDivElement | null>(null);
   const [pendingClone, setPendingClone] = useState<PolicyCloneIntent | null>(null);
   const [name, setName] = useState('');
   const [integration, setIntegration] = useState('');
@@ -396,6 +419,10 @@ export function Profiles() {
   }, []);
 
   function resetEditor() {
+    shellNavigationIntent.current?.cancel();
+    shellNavigationIntent.current = null;
+    setPendingShellExit(false);
+    setPendingExitReview(false);
     setPendingClone(null);
     setPendingTransition(null);
     setEditingBaseline(null);
@@ -423,6 +450,10 @@ export function Profiles() {
   }
 
   function edit(row: Profile) {
+    shellNavigationIntent.current?.cancel();
+    shellNavigationIntent.current = null;
+    setPendingShellExit(false);
+    setPendingExitReview(false);
     setPendingClone(null);
     setPendingTransition(null);
     setEditingBaseline({ ...row });
@@ -577,6 +608,9 @@ export function Profiles() {
   async function confirmPolicyTransition() {
     const staged = pendingTransition;
     if (!staged) return;
+    // Consume the reviewed intent before fetching current authority: a failed
+    // read must never leave its previous confirmation actionable.
+    setPendingTransition(null);
     // Recheck the unchanged draft as well as live authority and version after
     // review. A local edit during confirmation cannot commit old saved values.
     const latest = await currentStoredPolicy();
@@ -639,6 +673,80 @@ export function Profiles() {
   };
   const editorUnchanged = isPolicyEditorUnchanged(selected, editingBaseline, editorDraft);
   const unsavedExistingPolicy = Boolean(editing && !editorUnchanged);
+  const hasUnsavedDraft = editing ? !editorUnchanged :
+    !isNewPolicyDraftUntouched(editorDraft);
+
+  // The existing Grant navigation contract already protects notification
+  // drafts. Register the same boundary only while an actual policy form is
+  // dirty; no Foundation shell/router patch or backend permission change.
+  useEffect(() => {
+    if (view !== 'details' || !hasUnsavedDraft) return;
+    return registerGrantNavigationBlocker((intent) => {
+      if (task.busy) {
+        task.setNotice('Complete the current policy operation before leaving. Your draft is retained.');
+        return true;
+      }
+      shellExitOrigin.current = document.activeElement as HTMLElement | null;
+      shellNavigationIntent.current = intent;
+      setPendingExitReview(false);
+      setPendingShellExit(true);
+      return true;
+    });
+  }, [view, hasUnsavedDraft, task.busy]);
+
+  // A browser reload is also a destructive exit from a local unsaved form.
+  useEffect(() => {
+    if (view !== 'details' || !hasUnsavedDraft) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [view, hasUnsavedDraft]);
+
+  useEffect(() => {
+    if (pendingShellExit) {
+      shellExitPrompt.current
+        ?.querySelector<HTMLButtonElement>('[data-policy-keep-editing]')
+        ?.focus();
+    }
+  }, [pendingShellExit]);
+
+  function keepShellEditing() {
+    shellNavigationIntent.current?.cancel();
+    shellNavigationIntent.current = null;
+    setPendingShellExit(false);
+    requestAnimationFrame(() => shellExitOrigin.current?.focus());
+  }
+
+  function discardShellExit() {
+    if (!pendingShellExit || task.busy) return;
+    const intent = shellNavigationIntent.current;
+    shellNavigationIntent.current = null;
+    setPendingShellExit(false);
+    resetEditor();
+    // This is the specific navigation previously reviewed by the operator;
+    // never synthesize another click, route or server write.
+    intent?.proceed();
+  }
+
+  function backToPolicies() {
+    if (hasUnsavedDraft) {
+      setPendingExitReview(true);
+      return;
+    }
+    setPendingClone(null);
+    setPendingTransition(null);
+    setView('list');
+  }
+
+  function discardAndReturnToPolicies() {
+    // Only an explicit, reviewed local discard can lose unsaved editor text.
+    // There is no backend mutation or implicit policy save.
+    resetEditor();
+    setView('list');
+  }
 
   if (view === 'list') {
     const visibleRows = filterPolicyList(rows, integrations, users, {
@@ -668,6 +776,8 @@ export function Profiles() {
           enabledAccounts={users.filter((account) => account.status === 'enabled').length}
           enabledApproverGroups={groups.filter((group) => group.enabled).length}
           savedTemplateSets={templates.length}
+          publishedTemplateSets={templates.filter((template) => template.enabled
+            && (template.published_revision ?? 0) > 0).length}
           savedPolicies={rows.length}
           activePolicies={rows.filter((policy) => policy.lifecycle === 'ACTIVE'
             || (policy.active_version !== null && policy.active_version !== undefined)).length}
@@ -845,11 +955,7 @@ export function Profiles() {
       {task.feedback}
       <section className="grant-detail-header" aria-label="Policy workspace">
         <div>
-          <Button variant="ghost" onClick={() => {
-            setPendingClone(null);
-            setPendingTransition(null);
-            setView('list');
-          }}>
+          <Button variant="ghost" disabled={task.busy} onClick={backToPolicies}>
             ← Back to policies
           </Button>
           <p className="grant-eyebrow">Approval policy</p>
@@ -898,6 +1004,41 @@ export function Profiles() {
           </div>
         ) : null}
       </section>
+
+      {pendingShellExit ? <div
+        ref={shellExitPrompt} role="alertdialog"
+        aria-label="Discard unsaved policy changes?"
+        onKeyDown={event => {
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            keepShellEditing();
+          }
+        }}>
+        <Alert tone="warning" title="Discard unsaved policy changes?">
+          <p>Your unsaved policy will be lost if you leave this page. Keep editing,
+            or explicitly discard it. No policy will be saved, activated or executed.</p>
+          <div className="grant-actions">
+            <Button type="button" variant="secondary" data-policy-keep-editing
+              onClick={keepShellEditing}>Keep editing</Button>
+            <Button type="button" disabled={task.busy}
+              onClick={discardShellExit}>Discard and leave</Button>
+          </div>
+        </Alert>
+      </div> : null}
+
+      {pendingExitReview ? <Alert tone="warning"
+        title="Discard unsaved policy changes?">
+        <p>
+          Your unsaved draft will be lost if you leave this policy. Keep editing,
+          or explicitly discard your changes to return to the policy list.
+        </p>
+        <div className="grant-actions">
+          <Button variant="secondary" disabled={task.busy}
+            onClick={() => setPendingExitReview(false)}>Keep editing</Button>
+          <Button disabled={task.busy}
+            onClick={discardAndReturnToPolicies}>Discard and return to policies</Button>
+        </div>
+      </Alert> : null}
 
       {unsavedExistingPolicy ? <PolicyUnsavedNotice
         busy={task.busy}
@@ -958,7 +1099,13 @@ export function Profiles() {
             </Alert>
           ) : null}
           {decisionSecurity.contractAvailable ? (
-          <div onChangeCapture={() => setPendingTransition(null)}>
+          <div onChangeCapture={() => {
+            setPendingTransition(null);
+            setPendingExitReview(false);
+            shellNavigationIntent.current?.cancel();
+            shellNavigationIntent.current = null;
+            setPendingShellExit(false);
+          }}>
           <Form
             busy={task.busy}
             onSubmit={() => void task.run(save)}

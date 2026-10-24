@@ -196,6 +196,16 @@ describe('RequestDetail explicit human decision reviewed intent', () => {
     expect(prepareRequestDecisionReview({ ...row, state: 'CANCELLED' }, reviewer, 'DENIED', '', now)).toBeNull();
   });
 
+  it('renders a named, programmatically focusable review region without submitting the decision', () => {
+    const html = confirmMarkup(request(), reviewer, '');
+    expect(html).toContain('role="region"');
+    expect(html).toContain('aria-label="Review exact human decision"');
+    expect(html).toContain('tabindex="-1"');
+    expect(html).toContain('Confirm approved');
+    expect(html).not.toContain('type="submit"');
+    expect(confirmMarkup(request(), reviewer, '', null)).toBe('');
+  });
+
   it('renders a visible immutable review with explicit confirmation and no execution CTA', () => {
     const html = confirmMarkup(request(), reviewer, 'Maintenance window');
     for (const item of ['Confirm: APPROVED', 'Operation', 'service.deploy',

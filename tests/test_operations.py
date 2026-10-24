@@ -96,6 +96,8 @@ def test_operations_metrics_match_actionable_exception_queues(env):
         )
         conn.execute("UPDATE outbox SET state='FAILED' WHERE id='failed-webhook'")
 
+    # The fixture disables the worker; advance lifecycle explicitly.
+    env.core.maintenance()
     response = admin.get("/api/v1/admin/operations")
     assert response.status_code == 200, response.text
     counts = response.json()["counts"]
@@ -184,6 +186,8 @@ def test_approved_grant_expiry_is_not_misclassified_as_overdue_approval(env):
             (time.time() - 10, time.time() - 3, row["id"]),
         )
     admin = env.human("admin")
+    # The fixture disables the worker; advance lifecycle explicitly.
+    env.core.maintenance()
     body = admin.get("/api/v1/admin/operations")
     assert body.status_code == 200, body.text
     assert body.json()["counts"]["expired"] == 1
@@ -209,6 +213,8 @@ def test_true_unapproved_expired_request_remains_in_human_overdue_queue(env):
             "UPDATE requests SET deadline=? WHERE id=?",
             (time.time() - 5, pending["id"]),
         )
+    # The fixture disables the worker; advance lifecycle explicitly.
+    env.core.maintenance()
     for actor in ("approver", "requester"):
         listing = env.human(actor).get(
             "/api/v1/requests", params={"view": "overdue"}
@@ -228,6 +234,9 @@ def test_approver_overdue_queue_does_not_include_requester_only_work(env):
             "UPDATE requests SET deadline=? WHERE id=?",
             (time.time() - 5, row["id"]),
         )
+
+    # The fixture disables the worker; advance lifecycle explicitly.
+    env.core.maintenance()
 
     def queue(actor, view):
         response = env.human(actor).get(

@@ -1,45 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card } from '@datarelay-labs/foundation';
-import { api } from './api';
-import { Select, useTask } from './common';
+import { api, errorText } from './api';
+import { Select } from './common';
 import type { Integration } from './types';
+import { createConfigurationPreviewReadScope, readCurrentConfigurationExport } from './integration_configuration_preview_guard';
+import {
+  acceptV2Bundle, acceptV2Preview, reviewV2Identity, canCommitReviewedV2,
+  type V2Bundle, type V2Mappings, type V2Preview,
+} from './configuration_portability_v2_guard';
 
-type V2Policy = {
-  id: string;
-  source_lifecycle: string;
-  config: {
-    name: string;
-    approver_id: string;
-    integration_id: string;
-    approver_group_id: string | null;
-    approval_mode: string;
-  };
-};
-type V2Bundle = {
-  schema_version: 2;
-  format: 'grant.configuration';
-  credential_material_included: false;
-  integrations: { id: string; name: string; kind: string; tenant: string }[];
-  policies: V2Policy[];
-  templates: {
-    id: string; name: string; templates: Record<string, { subject: string; body: string }>;
-  }[];
-};
-type V2Mappings = {
-  integrations: Record<string, string>;
-  approvers: Record<string, string>;
-  groups: Record<string, string>;
-};
-type V2Preview = {
-  schema_version: 2;
-  preview_only: true;
-  can_import_drafts: boolean;
-  will_activate: false;
-  preview_digest: string;
-  summary: { integrations: number; policies: number; templates: number };
-  conflicts: { kind: string; name: string; reason: string }[];
-  warnings: string[];
-};
 type ImportedDrafts = {
   imported: { policies: number; templates: number };
   policy_ids: string[];
@@ -51,21 +20,7 @@ type LocalUser = {
   id: string; displayName: string; status: string; role: { value: string; label: string };
 };
 type LocalGroup = { id: string; name: string; enabled: boolean; member_ids: string[] };
-
 const EMPTY_MAPPINGS: V2Mappings = { integrations: {}, approvers: {}, groups: {} };
-
-function safeBundle(value: unknown): V2Bundle {
-  if (value === null || typeof value !== 'object') throw Error('Provide a v2 configuration bundle.');
-  const v = value as Record<string, unknown>;
-  if (
-    v.schema_version !== 2 || v.format !== 'grant.configuration' ||
-    v.credential_material_included !== false ||
-    !Array.isArray(v.integrations) || !Array.isArray(v.policies) ||
-    !Array.isArray(v.templates)
-  ) throw Error('Only complete v2 Grant configuration bundles are supported.');
-  // Structural and security validation is ALWAYS performed by the server.
-  return value as V2Bundle;
-}
 
 export function ConfigurationV2Preview({ preview }: { preview: V2Preview }) {
   return <div className="grant-stack" data-testid="grant-v2-preview">
@@ -83,132 +38,211 @@ export function ConfigurationV2Preview({ preview }: { preview: V2Preview }) {
   </div>;
 }
 
+/** User-visible receipt with exact committed counts, not an activation claim.
+ * Keep spacing and singular/plural grammar unambiguous for one-item imports.
+ */
+export function ImportedDraftsNotice({ imported }: { imported: ImportedDrafts }) {
+  const policies = imported.imported.policies;
+  const templates = imported.imported.templates;
+  return <Alert tone="success" title="Disabled Draft import recorded">
+    Created {policies} Draft {policies === 1 ? 'policy' : 'policies'} and{' '}
+    {templates} notification {templates === 1 ? 'set' : 'sets'}.
+    {' '}No policy was activated. Review under Approval policies,
+    run policy Testing and activate separately as administrator.
+  </Alert>;
+}
+
 /** Deliberate two-step reviewer UI. This never imports schema-v1 metadata. */
 export function ConfigurationPortabilityV2({ integrations }: { integrations: Integration[] }) {
-  const task = useTask();
+  const scope = useRef(createConfigurationPreviewReadScope());
+  useEffect(() => () => scope.current.invalidate(), []);
   const [bundle, setBundle] = useState<V2Bundle | null>(null);
   const [mapping, setMapping] = useState<V2Mappings>(EMPTY_MAPPINGS);
   const [users, setUsers] = useState<LocalUser[]>([]);
   const [groups, setGroups] = useState<LocalGroup[]>([]);
-  const [preview, setPreview] = useState<V2Preview | null>(null);
+  const [reviewed, setReviewed] = useState<{preview: V2Preview; identity: string} | null>(null);
   const [confirmation, setConfirmation] = useState('');
   const [imported, setImported] = useState<ImportedDrafts | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const importingRef = useRef(false);
+  const [feedback, setFeedback] = useState<{
+    tone: 'critical' | 'success'; title: string; message: string;
+  } | null>(null);
 
+  const identity = bundle ? reviewV2Identity(bundle, mapping) : '';
+  const preview = reviewed?.identity === identity ? reviewed.preview : null;
   const approverIds = [
     ...new Set((bundle?.policies ?? []).map((item) => item.config.approver_id)),
   ];
   const groupIds = [
     ...new Set((bundle?.policies ?? [])
-      .filter((item) => item.config.approval_mode !== 'SINGLE')
+      .filter((item) => (item.config.approval_mode ?? 'SINGLE') !== 'SINGLE')
       .map((item) => item.config.approver_group_id)
       .filter((id): id is string => Boolean(id))),
   ];
+  const readyToImport = canCommitReviewedV2(
+    reviewed?.identity ?? '', identity, Boolean(preview?.can_import_drafts),
+    preview?.preview_digest ?? '', confirmation,
+  );
 
-  function resetReview(next: V2Bundle) {
+  function invalidateReview() {
+    scope.current.invalidate();
+    setReviewed(null);
+    setConfirmation('');
+    setImported(null);
+    setReviewBusy(false);
+    setFeedback(null);
+  }
+  function startNewSource() {
+    invalidateReview();
+    setBundle(null);
+    setMapping({ integrations: {}, approvers: {}, groups: {} });
+    setUsers([]);
+    setGroups([]);
+  }
+  async function loadDestinations(): Promise<{users: LocalUser[]; groups: LocalGroup[]}> {
+    const [accountRows, groupRows] = await Promise.all([
+      api<LocalUser[]>('/admin/users'), api<LocalGroup[]>('/approver-groups'),
+    ]);
+    return {
+      users: accountRows.filter((u) => u.status === 'enabled'),
+      groups: groupRows.filter((g) => g.enabled && g.member_ids.length > 0),
+    };
+  }
+  function publishSource(next: V2Bundle, destinations: {users: LocalUser[]; groups: LocalGroup[]}) {
     setBundle(next);
     setMapping({ integrations: {}, approvers: {}, groups: {} });
-    setPreview(null);
-    setConfirmation('');
-    setImported(null);
+    setUsers(destinations.users);
+    setGroups(destinations.groups);
   }
-
-  async function loadDestinations() {
-    const [accountRows, groupRows] = await Promise.all([
-      api<LocalUser[]>('/admin/users'),
-      api<LocalGroup[]>('/approver-groups'),
-    ]);
-    setUsers(accountRows.filter((u) => u.status === 'enabled'));
-    setGroups(groupRows.filter((g) => g.enabled && g.member_ids.length > 0));
-  }
-
   async function downloadV2() {
-    const exportPayload = safeBundle(await api<unknown>('/admin/configuration/export-v2'));
-    const data = new Blob([JSON.stringify(exportPayload, null, 2)], {
-      type: 'application/json',
-    });
-    const href = URL.createObjectURL(data);
-    const anchor = document.createElement('a');
-    anchor.href = href;
-    anchor.download = 'grant-configuration-v2.json';
-    anchor.click();
-    URL.revokeObjectURL(href);
-    await loadDestinations();
-    resetReview(exportPayload);
-    task.setNotice('Complete v2 export generated. Review message bodies as sensitive before sharing.');
+    if (importingRef.current) return;
+    startNewSource();
+    try {
+      const accepted = await readCurrentConfigurationExport(scope.current, async () => {
+        const source = acceptV2Bundle(await api<unknown>('/admin/configuration/export-v2'));
+        const destinations = await loadDestinations();
+        return {source, destinations};
+      }, ({source, destinations}) => {
+        const data = new Blob([JSON.stringify(source, null, 2)], {type: 'application/json'});
+        const url = URL.createObjectURL(data);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = 'grant-configuration-v2.json';
+        anchor.click();
+        URL.revokeObjectURL(url);
+        publishSource(source, destinations);
+      });
+      if (accepted) setFeedback({tone:'success', title:'Export ready',
+        message:'Complete v2 export generated. Review message bodies as sensitive before sharing.'});
+    } catch (error) {
+      setFeedback({tone:'critical', title:'Export unavailable', message:errorText(error)});
+    }
   }
-
   async function openFile(file: File | undefined) {
-    if (!file) return;
+    if (!file || importingRef.current) return; // Canceled chooser is a no-op.
+    startNewSource(); // Invalidate the previous review BEFORE async file parsing.
     if (file.size > 400_000) {
-      task.setNotice('Configuration bundle exceeds the 400 KB source limit.');
+      setFeedback({tone:'critical', title:'Invalid configuration file',
+        message:'Configuration bundle exceeds the 400 KB source limit.'});
       return;
     }
+    let sourceValidated = false;
     try {
-      const parsed = safeBundle(JSON.parse(await file.text()));
-      await loadDestinations();
-      resetReview(parsed);
-      task.setNotice('Bundle loaded locally. Select existing destinations before preview.');
-    } catch {
-      task.setNotice('Invalid JSON or incomplete version-2 configuration bundle.');
+      const accepted = await readCurrentConfigurationExport(scope.current, async () => {
+        const source = acceptV2Bundle(JSON.parse(await file.text()));
+        sourceValidated = true;
+        const destinations = await loadDestinations();
+        return {source, destinations};
+      }, ({source, destinations}) => publishSource(source, destinations));
+      if (accepted) setFeedback({tone:'success', title:'Bundle loaded',
+        message:'Bundle loaded locally. Select existing destinations before preview.'});
+    } catch (error) {
+      // The file can be valid even when existing destination choices are unavailable.
+      // Superseded failures have already been discarded by the generation guard.
+      setFeedback(sourceValidated
+        ? {tone:'critical', title:'Unable to load destinations',
+          message:'The configuration file was read successfully. ' + errorText(error) +
+            ' Select the same file again to retry.'}
+        : {tone:'critical', title:'Invalid configuration file',
+          message:'Invalid JSON or incomplete version-2 configuration bundle.'});
     }
   }
-
   function choose(group: keyof V2Mappings, sourceId: string, localId: string) {
+    if (importingRef.current) return;
+    invalidateReview();
     setMapping((value) => ({
-      ...value,
-      [group]: { ...value[group], [sourceId]: localId },
+      ...value, [group]: {...value[group], [sourceId]: localId},
     }));
-    setPreview(null);
-    setImported(null);
-    setConfirmation('');
   }
-
   async function review() {
-    if (!bundle) return;
-    const result = await api<V2Preview>('/admin/configuration/preview-v2', 'POST', {
-      bundle, mappings: mapping,
-    });
-    setPreview(result);
+    if (!bundle || importingRef.current) return;
+    setReviewed(null);
     setConfirmation('');
     setImported(null);
-    task.setNotice(result.can_import_drafts
-      ? 'Mapping and target records checked. Explicit confirmation is still required.'
-      : 'Resolve all blocking mappings and name conflicts before import.');
+    setFeedback(null);
+    setReviewBusy(true);
+    const requestedIdentity = reviewV2Identity(bundle, mapping);
+    try {
+      const accepted = await readCurrentConfigurationExport(scope.current, async () =>
+        acceptV2Preview(await api<unknown>('/admin/configuration/preview-v2', 'POST', {
+          bundle, mappings: mapping,
+        })), (result) => {
+          setReviewed({preview:result, identity:requestedIdentity});
+          setFeedback({tone:'success', title:'Preview checked',
+            message:result.can_import_drafts
+              ? 'Mapping and target records checked. Explicit confirmation is still required.'
+              : 'Resolve all blocking mappings and name conflicts before import.'});
+        });
+      if (accepted) setReviewBusy(false);
+    } catch (error) {
+      setReviewBusy(false);
+      setFeedback({tone:'critical', title:'Preview unavailable', message:errorText(error)});
+    }
   }
-
   async function commitDrafts() {
-    if (!bundle || !preview?.can_import_drafts ||
-        confirmation !== 'IMPORT_DRAFTS_ONLY') return;
-    const result = await api<ImportedDrafts>('/admin/configuration/import-v2', 'POST', {
-      bundle, mappings: mapping,
-      preview_digest: preview.preview_digest,
-      confirmation: 'IMPORT_DRAFTS_ONLY',
-    });
-    setImported(result);
-    setPreview(null);
-    setConfirmation('');
-    task.setNotice('Draft policies created. Verify each policy in Testing before a separate activation.');
+    if (importingRef.current || !bundle || !preview || !readyToImport) return;
+    importingRef.current = true;
+    setImporting(true);
+    setFeedback(null);
+    try {
+      const result = await api<ImportedDrafts>('/admin/configuration/import-v2', 'POST', {
+        bundle, mappings: mapping, preview_digest: preview.preview_digest,
+        confirmation: 'IMPORT_DRAFTS_ONLY',
+      });
+      setImported(result);
+      setReviewed(null);
+      setConfirmation('');
+      setFeedback({tone:'success', title:'Drafts imported',
+        message:'Draft policies created. Verify each policy in Testing before a separate activation.'});
+    } catch (error) {
+      setFeedback({tone:'critical', title:'Draft import failed', message:errorText(error)});
+    } finally {
+      importingRef.current = false;
+      setImporting(false);
+    }
   }
 
   return <Card title="Version-2 configuration portability"
     description="Administrator-reviewed import of COMPLETE approval policies and notification event templates. All imported policies start as disabled Drafts.">
     <div className="grant-stack" data-testid="grant-v2-import-workspace">
-      {task.feedback}
+      {feedback ? <Alert tone={feedback.tone} title={feedback.title}>{feedback.message}</Alert> : null}
       <Alert tone="warning" title="Administrator review required">
         Export includes actual notification message text and source approval identifiers.
         Review it before sharing. Passwords, API keys, callback destinations and
         external integration credentials are NOT included or transferred.
       </Alert>
       <div className="grant-actions">
-        <Button variant="secondary" disabled={task.busy}
-          onClick={() => void task.run(downloadV2)}>
+        <Button variant="secondary" disabled={importing}
+          onClick={() => void downloadV2()}>
           Export complete v2 JSON
         </Button>
         <label>
           Open a v2 JSON file
           <input type="file" accept=".json,application/json"
-            data-testid="grant-v2-json-file" disabled={task.busy}
-            onChange={(e) => void task.run(() => openFile(e.target.files?.[0]))} />
+            data-testid="grant-v2-json-file" disabled={importing}
+            onChange={(e) => { const file=e.currentTarget.files?.[0]; e.currentTarget.value=''; void openFile(file); }} />
         </label>
       </div>
       {bundle ? <>
@@ -223,7 +257,7 @@ export function ConfigurationPortabilityV2({ integrations }: { integrations: Int
             onChange={(v) => choose('integrations', source.id, v)}>
             <option value="">Choose an existing integration</option>
             {integrations.filter((row) => row.enabled && row.kind === source.kind &&
-                row.tenant === source.tenant).map((row) =>
+                row.tenant === (source.tenant ?? '')).map((row) =>
               <option key={row.id} value={row.id}>{row.name}</option>)}
           </Select>)}
         {approverIds.map((sourceId) =>
@@ -241,8 +275,7 @@ export function ConfigurationPortabilityV2({ integrations }: { integrations: Int
             {groups.map((group) =>
               <option key={group.id} value={group.id}>{group.name}</option>)}
           </Select>)}
-        <Button disabled={task.busy} onClick={() => void task.run(review)}>
-          Validate Draft-only import
+        <Button disabled={importing} onClick={() => void review()}>{reviewBusy ? 'Checking Draft-only import…' : 'Validate Draft-only import'}
         </Button>
         {preview ? <>
           <ConfigurationV2Preview preview={preview} />
@@ -267,18 +300,14 @@ export function ConfigurationPortabilityV2({ integrations }: { integrations: Int
                 onChange={(e) => setConfirmation(e.target.value)}
                 maxLength={18} />
             </label>
-            <Button disabled={task.busy || confirmation !== 'IMPORT_DRAFTS_ONLY'}
-              onClick={() => void task.run(commitDrafts)}>
+            <Button disabled={importing || !readyToImport}
+              onClick={() => void commitDrafts()}>
               Create reviewed Drafts only
             </Button>
           </> : null}
         </> : null}
       </> : null}
-      {imported ? <Alert tone="success" title="Disabled Draft import recorded">
-        Created {imported.imported.policies} Draft policies and {imported.imported.templates}
-        notification sets. No policy was activated. Review under Approval policies,
-        run policy Testing and activate separately as administrator.
-      </Alert> : null}
+      {imported ? <ImportedDraftsNotice imported={imported} /> : null}
     </div>
   </Card>;
 }

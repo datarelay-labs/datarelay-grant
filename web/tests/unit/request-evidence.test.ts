@@ -93,19 +93,30 @@ describe('Grant progressive evidence and resend boundary', () => {
     expect(html).not.toContain('Review resend webhook');
   });
 
-  it('only exposes admin resend for FAILED or PENDING, never successful deliveries', () => {
+  it('exposes admin resend only for FAILED; PENDING is already queued', () => {
     const html = markup(request(), true);
     expect(html).toContain('Review resend email');
-    expect(html).toContain('Review resend webhook');
+    expect(html).not.toContain('Review resend webhook');
+    expect(html).toContain('Already queued for transport');
     expect(html.match(/Review resend email/g)).toHaveLength(1);
-    expect(html.match(/Review resend webhook/g)).toHaveLength(1);
+    const failedWebhook = markup(request({ deliveries: [
+      { id: 'failed-webhook', kind: 'webhook', state: 'FAILED', attempts: 1,
+        last_error: 'Callback unavailable', revision: 1 },
+    ] }), true);
+    expect(failedWebhook).toContain('Review resend webhook');
+    const pendingOnly = markup(request({ deliveries: [
+      { id: 'pending-mail', kind: 'email', state: 'PENDING', attempts: 0,
+        last_error: null, revision: 1 },
+    ] }), true);
+    expect(pendingOnly).not.toContain('Review resend email');
+    expect(pendingOnly).toContain('Already queued for transport');
   });
 
-  it('uses the exact existing busy guard on resend controls', () => {
+  it('uses the existing busy guard on eligible FAILED resend controls only', () => {
     const html = markup(request(), true, true);
     expect(html).toContain('Review resend email');
     expect(html).toContain('disabled=""');
-    expect(html).toContain('Review resend webhook');
+    expect(html).not.toContain('Review resend webhook');
   });
 
   it('suppresses repeated delivery review until explicit refreshed evidence', () => {
@@ -113,7 +124,8 @@ describe('Grant progressive evidence and resend boundary', () => {
     expect(html).not.toContain('Review resend email');
     expect(html).toContain('A resend was requested or attempted');
     expect(html).toContain('Refresh the request before another review');
-    expect(html).toContain('Review resend webhook');
+    expect(html).not.toContain('Review resend webhook');
+    expect(html).toContain('Already queued for transport');
   });
 
   it('renders the explicit confirmation inside Delivery history next to the review action', () => {

@@ -219,10 +219,20 @@ A cached human authorization does not survive account role demotion, disabled
 account status or an ended browser session. Admin read/search/export requests
 revalidate current session and role in the database transaction. Request
 list searches revalidate integration credential status/current request-read
-scope both before maintenance and while reading the filtered source records.
+scope while reading the filtered source records.
 Grant consumption remains separately bound to its actual execution privilege,
 durable execution ID and immutable action fingerprint. A report or request
 read never commits a business operation.
+
+Request list/detail and Operations GETs project persisted lifecycle state without
+running maintenance or enqueueing notifications. The existing worker advances
+expiry, reminders and escalations independently of browser traffic. Disabling
+the worker also disables that scheduled advancement; disposable worker-disabled
+fixtures must invoke maintenance explicitly before asserting persisted expiry.
+Final decision, cancellation and grant-consume transactions still enforce elapsed
+deadlines, even before the next worker cycle. Server-derived overdue views/counts
+already include those elapsed undecided deadlines while stored state and revision
+remain unchanged until maintenance or a final mutation records expiry.
 
 The audit exporter allows only typed reference fields, drops nonfinite or
 out-of-bounds legacy audit numbers, redacts arbitrary note/reason values and

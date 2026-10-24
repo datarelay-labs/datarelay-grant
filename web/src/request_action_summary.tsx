@@ -57,9 +57,11 @@ export function RequestActionSummary({
       </details>
       <p>Action content cannot be edited. Cancel this request and submit a new linked request when the action changes.</p>
       {canReplace ? (
-        <Button variant="secondary" onClick={() => navigate('/requests/' + row.id + '/replace')}>
-          Create replacement request
-        </Button>
+        <div id="grant-replacement-action">
+          <Button variant="secondary" onClick={() => navigate('/requests/' + row.id + '/replace')}>
+            Create replacement request
+          </Button>
+        </div>
       ) : null}
     </Card>
   );

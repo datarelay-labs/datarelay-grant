@@ -7,7 +7,7 @@ import {Profiles} from '../../src/policies';
 function render(props:Partial<Parameters<typeof AdminFirstRunSetup>[0]>={}) {
  return renderToStaticMarkup(createElement(AdminFirstRunSetup,{
    loaded:true, registeredConnections:0,enabledAccounts:0,enabledApproverGroups:0,
-   savedTemplateSets:0,savedPolicies:0,activePolicies:0,onCreatePolicy:vi.fn(),...props,
+   savedTemplateSets:0,publishedTemplateSets:0,savedPolicies:0,activePolicies:0,onCreatePolicy:vi.fn(),...props,
  }));
 }
 
@@ -35,17 +35,30 @@ describe('First-run Grant administrator guided setup without new permission',()=
  });
  it('does not invent successful connection or approval readiness from record counts',()=>{
   const html=render({registeredConnections:2,enabledAccounts:3,enabledApproverGroups:1,
-    savedTemplateSets:2,savedPolicies:4,activePolicies:1});
+    savedTemplateSets:2,publishedTemplateSets:1,savedPolicies:4,activePolicies:1});
   for(const phrase of ['2 registered records','3 enabled accounts','1 enabled approver group',
-   '2 template sets','4 saved policies','1 active policy','not a verified connection']) expect(html).toContain(phrase);
+   '2 template sets','1 enabled published template set','4 saved policies','1 active policy','not a verified connection']) expect(html).toContain(phrase);
   expect(html).not.toContain('All integrations verified');
   expect(html).not.toContain('External action completed');
+ });
+ it('supports the standalone administrator setup links without changing policy-list anchors',()=>{
+  const html=render({createPolicyActionLabel:'Open approval policies',policyListHref:'/profiles'});
+  expect(html).toContain('href="/profiles"');
+  expect(html).toContain('Open approval policies');
+  expect(html).not.toContain('href="#grant-policy-list"');
+ });
+ it('does not mislabel an established active workflow as first-time setup',()=>{
+  const html=render({registeredConnections:1,enabledAccounts:3,
+   savedPolicies:2,activePolicies:1});
+  expect(html).toContain('Manage existing approval workflows');
+  expect(html).not.toContain('Set up your first approval workflow');
  });
  it('does not claim zero saved records while account and policy data are loading',()=>{
   const html=render({loaded:false});
   expect(html).toContain('Checking saved setup');
   expect(html).not.toContain('0 registered records');
   expect(html).not.toContain('0 active policies');
+  expect(html).not.toContain('Checking saved setup · Checking saved setup');
  });
  it('is mounted inside the actual Approval Policies list, preserving original save lifecycle',()=>{
   const html=renderToStaticMarkup(createElement(Profiles));

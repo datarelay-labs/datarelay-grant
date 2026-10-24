@@ -36,11 +36,19 @@ export function HomeWorkspaceContent({
         <div>
           <p className="grant-eyebrow">Your approval workspace</p>
           <h2 id="grant-home-title">Good to see you, {user.username}</h2>
-          <p>Review work assigned to you and track requests you submitted.
-            Approval, notification delivery and external execution are separate.</p>
+          <p>{admin
+            ? 'Configure reusable approval workflows, then review requests and operational exceptions.'
+            : 'Review work assigned to you and track requests you submitted.'}
+            {' '}Approval, notification delivery and external execution are separate.</p>
         </div>
         <div className="grant-actions">
-          <Button onClick={() => navigate('/requests/new')}>New request</Button>
+          {admin ? <>
+            <Button onClick={() => navigate('/admin/setup')}>Workflow setup</Button>
+            <Button variant="secondary" onClick={() => navigate('/requests/new')}>New request</Button>
+          </> : view.decisions.length ? <>
+            <Button onClick={() => navigate('/approvals')}>My approvals</Button>
+            <Button variant="secondary" onClick={() => navigate('/requests/new')}>New request</Button>
+          </> : <Button onClick={() => navigate('/requests/new')}>New request</Button>}
           <Button variant="secondary" disabled={busy} onClick={refresh}>Refresh</Button>
         </div>
       </section>

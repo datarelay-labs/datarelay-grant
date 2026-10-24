@@ -178,6 +178,8 @@ export function NotificationDeliveryHealth() {
   ):Promise<boolean>{
     readScope.current.select(query);
     const generation=deliveryGate.current.beginRead();
+    // An old page or reviewed resend is not current while its refresh is unverified.
+    setStoredPage(null);setPendingResend(null);
     setListBusy(true);setListError('');
     try{
       let adopted=false;
@@ -423,6 +425,7 @@ export function Notifications() {
   const [view, setView] = useState<NotificationView>('templates');
   const activeViewRef=useRef<NotificationView>('templates');
   const [reviewedBranding,setReviewedBranding]=useState<BrandingReview|null>(null);
+  const [brandingError,setBrandingError]=useState('');
   const [brandingNeedsRefresh,setBrandingNeedsRefresh]=useState(false);
   const brandingSaveGuard=useRef(createBrandingSaveGuard());
   const [templateView, setTemplateView] = useState<TemplateView>('list');
@@ -508,6 +511,7 @@ export function Notifications() {
     if(next!=='list'){
       activeViewRef.current=next;
       setReviewedBranding(null);
+      setBrandingError('');
       setView(next);
     }
   }
@@ -542,14 +546,15 @@ export function Notifications() {
     }
     activeViewRef.current=next;
     setReviewedBranding(null);
+    setBrandingError('');
     setReviewedTemplateSave(null);
     setView(next);
   }
   function editBrandName(value:string){
-    setBrandName(value);setReviewedBranding(null);
+    setBrandName(value);setReviewedBranding(null);setBrandingError('');
   }
   function editSenderName(value:string){
-    setSenderName(value);setReviewedBranding(null);
+    setSenderName(value);setReviewedBranding(null);setBrandingError('');
   }
 
   function invalidatePreview() {
@@ -837,18 +842,19 @@ export function Notifications() {
   }
 
   function reviewBranding(){
-    if(brandingSaveGuard.current.blocked())return;
+    if(!templatesLoaded||brandingSaveGuard.current.blocked())return;
     try{
       setReviewedBranding(prepareBrandingReview(branding,brandingDraft));
+      setBrandingError('');
     }catch{
       setReviewedBranding(null);
-      task.setNotice('Choose different, non-empty single-line branding and sender names (up to 100 characters each). Refresh saved branding if another administrator changed it.');
+      setBrandingError('Choose different, non-empty single-line branding and sender names (up to 100 characters each). Refresh saved branding if another administrator changed it.');
     }
   }
 
   async function confirmBranding(){
     const intent=reviewedBranding;
-    if(!intent||!isCurrentBrandingReview(intent,branding,brandingDraft)
+    if(!templatesLoaded||!intent||!isCurrentBrandingReview(intent,branding,brandingDraft)
       ||activeViewRef.current!=='branding'){
       setReviewedBranding(null);
       throw Error('BRANDING_CURRENT_CHANGED');
@@ -883,6 +889,7 @@ export function Notifications() {
     setBrandName(current.brand_name);
     setSenderName(current.sender_display_name);
     setReviewedBranding(null);
+    setBrandingError('');
     if(brandingSaveGuard.current.readSucceeded())setBrandingNeedsRefresh(false);
     task.setNotice('Current role-scoped saved branding refreshed. Review again before any separate change.');
   }
@@ -1151,6 +1158,16 @@ export function Notifications() {
           title="Branding"
           description="System-owned product identity applies to future notification snapshots; templates can change text but not approval authority."
         >
+          {/* Initial metadata commits atomically only after saved branding is read.
+              Never present hard-coded bootstrap values as the saved identity. */}
+          {!templatesLoaded ? <div>
+            {task.error ? <Alert tone="critical" title="Saved branding unavailable">
+              Saved brand and sender values have not been loaded. Retry before reviewing a change.
+              <Button variant="secondary" disabled={task.busy}
+                onClick={() => void task.run(load)}>Retry loading saved branding</Button>
+            </Alert> : <p role="status">Loading saved notification branding…</p>}
+          </div> : <>
+          {brandingError&&<Alert tone="critical" title="Branding review required">{brandingError}</Alert>}
           <Form
             busy={task.busy||brandingSaveGuard.current.blocked()}
             onSubmit={reviewBranding}
@@ -1191,6 +1208,7 @@ export function Notifications() {
           <p>
             System logo: <code>{branding.logo_asset}</code>
           </p>
+          </>}
         </Card>
       ) : null}
     </div>

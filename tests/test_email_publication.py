@@ -66,6 +66,46 @@ def test_publish_and_rollback_append_immutable_versions_and_preserve_request_byt
     assert versions[0]["snapshot_hash"] == versions[2]["snapshot_hash"]
 
 
+def test_unpublished_visual_draft_cannot_activate_until_publish(env):
+    """An isolated policy test failure must not be bypassed by Activate."""
+    admin = env.human("admin")
+    saved = template(admin)
+    assert saved["published_revision"] is None
+    created = admin.post(
+        "/api/v1/profiles", json=policy_payload(env, saved["id"],
+                                                name="Unpublished gate policy"),
+    )
+    assert created.status_code == 201, created.text
+    ident = created.json()["id"]
+    testing = admin.post(f"/api/v1/profiles/{ident}/test")
+    assert testing.status_code == 200, testing.text
+    assert testing.json()["lifecycle"] == "TESTING"
+
+    guarded_tables = ("profiles", "profile_versions", "requests", "outbox", "audit")
+    with env.db.transaction(write=False) as conn:
+        before = {
+            name: [tuple(row) for row in conn.execute("SELECT * FROM " + name + " ORDER BY 1")]
+            for name in guarded_tables
+        }
+    blocked = admin.post(f"/api/v1/profiles/{ident}/activate")
+    assert blocked.status_code == 409, blocked.text
+    assert blocked.json()["error"]["code"] == "EMAIL_TEMPLATE_UNPUBLISHED"
+    with env.db.transaction(write=False) as conn:
+        after = {
+            name: [tuple(row) for row in conn.execute("SELECT * FROM " + name + " ORDER BY 1")]
+            for name in guarded_tables
+        }
+    assert after == before, "Rejected activation must not mutate approval or audit state"
+    current = next(row for row in admin.get("/api/v1/profiles").json()
+                   if row["id"] == ident)
+    assert current["lifecycle"] == "TESTING"
+
+    assert publish(admin, saved["id"]).status_code == 200
+    activated = admin.post(f"/api/v1/profiles/{ident}/activate")
+    assert activated.status_code == 200, activated.text
+    assert activated.json()["lifecycle"] == "ACTIVE"
+
+
 def test_publication_review_is_readonly_and_stale_cas_is_rejected(env):
     admin = env.human("admin")
     saved = template(admin)

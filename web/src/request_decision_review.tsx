@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Alert, Button } from '@datarelay-labs/foundation';
 import type { Outcome, RequestRow, User } from './types';
 
@@ -95,10 +96,18 @@ export function RequestDecisionConfirmation({
   onConfirm: () => void;
   onBack: () => void;
 }) {
+  const reviewRegion = useRef<HTMLDivElement>(null);
+  // Choosing a human vote opens a new review stage, not the committed POST.
+  // Move focus to its named region so keyboard and screen-reader reviewers
+  // can inspect the exact current seat/action before the separate Confirm.
+  useEffect(() => {
+    if (reviewed) reviewRegion.current?.focus();
+  }, [reviewed]);
   if (!reviewed || !isCurrentRequestDecisionReview(
     reviewed, row, user, reason, nowSeconds,
   )) return null;
   return (
+    <div ref={reviewRegion} role="region" aria-label="Review exact human decision" tabIndex={-1}>
     <Alert tone="warning" title={'Confirm: ' + reviewed.choice}>
       <p>Review the exact human decision before recording it. No external action is executed by this confirmation.</p>
       <dl className="grant-facts">
@@ -121,5 +130,6 @@ export function RequestDecisionConfirmation({
       </Button>
       <Button variant="ghost" disabled={busy} onClick={onBack}>Go back</Button>
     </Alert>
+    </div>
   );
 }

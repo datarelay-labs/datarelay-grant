@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, TextField } from '@datarelay-labs/foundation';
 import { api, errorText } from './api';
+import { registerGrantNavigationBlocker,type GrantNavigationIntent } from './grant_navigation';
 import { IntegrationDiagnostics } from './integration_diagnostics';
 import { IntegrationVerificationManagement } from './integration_verification';
 import { Form, Select, TextArea, useTask } from './common';
@@ -46,6 +47,16 @@ export function readIntegrationsInitialView(search: string): 'connections' | 'di
    ? 'diagnostics' : 'connections';
 }
 
+/** Never confuse an untouched registration form with a draft. In particular,
+ * a hidden Stellar tenant remains local input if the operator changes type. */
+export function isIntegrationRegistrationDraftDirty(
+  draft:IntegrationRegistrationDraft,rawTenant:string,hasReview:boolean,
+):boolean {
+  return draft.name!=='' || draft.kind!=='datarelay' || rawTenant!==''
+    || draft.callbackUrl!=='' || draft.headers!=='{}' || draft.hmacSecret!==''
+    || draft.decisionMinimum!=='' || draft.eventFormat!=='LEGACY' || hasReview;
+}
+
 export function Integrations() {
  const initialView = typeof window === 'undefined'
    ? 'connections' : readIntegrationsInitialView(window.location.search);
@@ -70,11 +81,74 @@ export function Integrations() {
  const [reviewedCreation,setReviewedCreation]=useState<IntegrationCreationReview|null>(null);
  const [creationNeedsRefresh,setCreationNeedsRefresh]=useState(false);
  const creationGate=useRef(createIntegrationCreationGuard());
+ const [pendingShellExit,setPendingShellExit]=useState(false);
+ const shellNavigationIntent=useRef<GrantNavigationIntent|null>(null);
+ const exitOrigin=useRef<HTMLElement|null>(null);
+ const exitPrompt=useRef<HTMLDivElement|null>(null);
  const draft:IntegrationRegistrationDraft={
    name,kind,tenant:kind==='stellar'?tenant:'',callbackUrl:url,
    headers,hmacSecret:hmac,decisionMinimum,eventFormat,
  };
  const task=useTask();
+ const registrationDirty=isIntegrationRegistrationDraftDirty(
+   draft,tenant,reviewedCreation!==null,
+ );
+ const effectNeedsReconciliation=creationGate.current.blocked()
+   || testGate.current.blocked() || issueGate.current.blocked()
+   || creationNeedsRefresh || testNeedsRefresh || issueNeedsRefresh;
+ useEffect(()=>{
+   return registerGrantNavigationBlocker(intent=>{
+     // Never discard a one-shot registration/test/credential receipt while
+     // its server outcome is in flight or still requires readback.
+     if(effectNeedsReconciliation){
+       task.setNotice('Refresh and reconcile the current integration change before leaving. Do not submit again.');
+       return true;
+     }
+     if(task.busy&&registrationDirty){
+       task.setNotice('Complete the current operation before leaving this unsaved registration draft.');
+       return true;
+     }
+     if(!registrationDirty)return false;
+     exitOrigin.current=document.activeElement as HTMLElement|null;
+     shellNavigationIntent.current=intent;
+     setPendingShellExit(true);
+     return true;
+   });
+ },[registrationDirty,effectNeedsReconciliation,task.busy]);
+ useEffect(()=>{
+   if(!(registrationDirty||effectNeedsReconciliation))return;
+   const warn=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue='';};
+   window.addEventListener('beforeunload',warn);
+   return()=>window.removeEventListener('beforeunload',warn);
+ },[registrationDirty,effectNeedsReconciliation]);
+ useEffect(()=>{
+   if(pendingShellExit){
+     exitPrompt.current?.querySelector<HTMLButtonElement>('[data-integration-keep-editing]')?.focus();
+   }
+ },[pendingShellExit]);
+ function cancelPendingShellExit(){
+   shellNavigationIntent.current?.cancel();
+   shellNavigationIntent.current=null;
+   setPendingShellExit(false);
+ }
+ function keepIntegrationEditing(){
+   cancelPendingShellExit();
+   requestAnimationFrame(()=>exitOrigin.current?.focus());
+ }
+ function discardIntegrationAndLeave(){
+   if(!pendingShellExit||task.busy||effectNeedsReconciliation)return;
+   const intent=shellNavigationIntent.current;
+   shellNavigationIntent.current=null;
+   setPendingShellExit(false);
+   setReviewedCreation(null);
+   setName('');setKind('datarelay');setUrl('');setTenant('');
+   setHeaders('{}');setHmac('');setDecisionMinimum('');setEventFormat('LEGACY');
+   intent?.proceed();
+ }
+ function editRegistration(){
+   if(pendingShellExit)cancelPendingShellExit();
+   setReviewedCreation(null);
+ }
  const load=async()=>setRows(await api<Integration[]>('/integrations'));
  async function refreshConnections() {
    await load();
@@ -84,6 +158,7 @@ export function Integrations() {
    setReviewedCreation(null);
  }
  function openTask(next: 'connections'|'create'|'security'|'diagnostics') {
+   if(pendingShellExit)cancelPendingShellExit();
    credentialViewRef.current=next;
    setReviewedTest(null);
    setReviewedCreation(null);
@@ -263,6 +338,24 @@ export function Integrations() {
  }
  return <div className="grant-stack">
  {task.feedback}
+ {pendingShellExit && <div ref={exitPrompt} role="alertdialog"
+   aria-label="Discard unsaved integration changes?"
+   onKeyDown={event=>{
+     if(event.key==='Escape'){event.preventDefault();keepIntegrationEditing();}
+   }}>
+   <Alert tone="warning" title="Discard unsaved integration changes?">
+     <p>The unsubmitted Add connection draft will be lost if you leave,
+       including its callback settings, verification choice and any entered secret.
+       Keep editing, or explicitly discard the local draft.
+       No integration will be registered, tested or authorized by either choice.</p>
+     <div className="grant-actions">
+       <Button type="button" variant="secondary" data-integration-keep-editing
+         onClick={keepIntegrationEditing}>Keep editing</Button>
+       <Button type="button" disabled={task.busy||effectNeedsReconciliation}
+         onClick={discardIntegrationAndLeave}>Discard and leave</Button>
+     </div>
+   </Alert>
+ </div>}
  <section className="grant-page-heading" aria-labelledby="grant-integrations-title">
   <div>
    <p className="grant-eyebrow">Configuration</p>
@@ -319,24 +412,24 @@ export function Integrations() {
     <Form busy={task.busy || creationGate.current.blocked()} onSubmit={reviewCreation}
       label="Review connection registration">
       <TextField label="Integration name" required maxLength={100} value={name}
-        onChange={(e)=>{setName(e.target.value);setReviewedCreation(null);}}/>
+        onChange={(e)=>{setName(e.target.value);editRegistration();}}/>
       <Select label="Integration type" value={kind}
-        onChange={(value)=>{setKind(value);setReviewedCreation(null);}}>
+        onChange={(value)=>{setKind(value);editRegistration();}}>
         <option value="datarelay">DataRelay</option>
         <option value="stellar">Stellar Cyber</option>
       </Select>
       {kind==='stellar' && <TextField label="Allowed Stellar tenant ID"
         required maxLength={200} value={tenant}
-        onChange={(e)=>{setTenant(e.target.value);setReviewedCreation(null);}}/>}
+        onChange={(e)=>{setTenant(e.target.value);editRegistration();}}/>}
       <Select label="Decision verification minimum" value={decisionMinimum}
-        onChange={(value)=>{setDecisionMinimum(value);setReviewedCreation(null);}}>
+        onChange={(value)=>{setDecisionMinimum(value);editRegistration();}}>
         <option value="">Choose required approval verification</option>
         <option value="EMAIL_PIN">Email link + PIN (mailbox possession)</option>
         <option value="EMAIL_PIN_PLUS_OTP">Email PIN + same-mailbox OTP (not MFA)</option>
         <option value="EMAIL_PIN_PLUS_MFA">Email PIN + fresh independent Grant TOTP</option>
       </Select>
       <Select label="Outbound callback format" value={eventFormat}
-        onChange={(value)=>{setEventFormat(value);setReviewedCreation(null);}}>
+        onChange={(value)=>{setEventFormat(value);editRegistration();}}>
         <option value="LEGACY">Legacy Grant JSON (existing receivers)</option>
         <option value="CLOUDEVENTS">CloudEvents 1.0 structured JSON (receiver opt-in)</option>
       </Select>
@@ -345,13 +438,13 @@ export function Integrations() {
         their original format. This does not change execution authorization.</p>
       <TextField label="Registered callback URL" type="url" required
         maxLength={2048} value={url}
-        onChange={(e)=>{setUrl(e.target.value);setReviewedCreation(null);}}
+        onChange={(e)=>{setUrl(e.target.value);editRegistration();}}
         hint="The server enforces installation-approved destinations. HTTPS outside loopback development."/>
       <TextArea label="Callback headers (JSON; stored encrypted)" value={headers}
-        onChange={(value)=>{setHeaders(value);setReviewedCreation(null);}}/>
+        onChange={(value)=>{setHeaders(value);editRegistration();}}/>
       <TextField label="Optional callback HMAC secret" type="password"
         autoComplete="off" value={hmac} maxLength={256}
-        onChange={(e)=>{setHmac(e.target.value);setReviewedCreation(null);}}/>
+        onChange={(e)=>{setHmac(e.target.value);editRegistration();}}/>
     </Form>
     <IntegrationCreationConfirmation reviewed={reviewedCreation}
       valid={isCurrentIntegrationCreationReview(reviewedCreation,draft)}

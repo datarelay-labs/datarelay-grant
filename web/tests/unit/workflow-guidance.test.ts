@@ -22,6 +22,41 @@ describe('Guided Grant workflow for a first-time user',()=>{
   expect(html).not.toContain('Approve now');
   expect(navigate).not.toHaveBeenCalled();
  });
+ it('makes administrator setup the first prominent action, while members still start with requests',()=>{
+  const adminHtml=renderToStaticMarkup(createElement(HomeGettingStarted,{
+    user:{...user,role:'admin'},view,navigate:vi.fn(),
+  }));
+  expect(adminHtml).toContain('Configure approval workflow');
+  expect(adminHtml).toContain('Open workflow setup');
+  expect(adminHtml).toContain('Create approver accounts and groups');
+  expect(adminHtml.indexOf('Configure approval workflow'))
+    .toBeLessThan(adminHtml.indexOf('Review assigned work'));
+  expect(adminHtml).not.toContain('Create approval request');
+  const memberHtml=renderToStaticMarkup(createElement(HomeGettingStarted,{
+    user,view,navigate:vi.fn(),
+  }));
+  expect(memberHtml).toContain('Create approval request');
+  expect(memberHtml).not.toContain('Configure approval workflow');
+ });
+ it('prioritizes an actual waiting approver task without changing empty-inbox or admin starts',()=>{
+  const assigned={...view,decisions:[row]};
+  const memberWithWork=renderToStaticMarkup(createElement(HomeGettingStarted,{
+    user,view:assigned,navigate:vi.fn(),
+  }));
+  expect(memberWithWork.indexOf('Review assigned work'))
+    .toBeLessThan(memberWithWork.indexOf('Create approval request'));
+  expect(memberWithWork).toContain('1 approval needs your decision');
+  const adminWithWork=renderToStaticMarkup(createElement(HomeGettingStarted,{
+    user:{...user,role:'admin'},view:assigned,navigate:vi.fn(),
+  }));
+  expect(adminWithWork.indexOf('Configure approval workflow'))
+    .toBeLessThan(adminWithWork.indexOf('Review assigned work'));
+  const emptyMember=renderToStaticMarkup(createElement(HomeGettingStarted,{
+    user,view,navigate:vi.fn(),
+  }));
+  expect(emptyMember.indexOf('Create approval request'))
+    .toBeLessThan(emptyMember.indexOf('Review assigned work'));
+ });
  it('does not claim exact approval totals when Home loaded only a bounded subset',()=>{
   const html=renderToStaticMarkup(createElement(HomeGettingStarted,{
     user,view:{...view,decisions:[row],submitted:[row]},summaryComplete:false,navigate:vi.fn(),
@@ -43,6 +78,15 @@ describe('Guided Grant workflow for a first-time user',()=>{
   expect(html).toContain('not proof of execution');
   expect(html).not.toContain('Execution verified');
   expect(html).not.toContain('Execute</button>');
+ });
+ it('blocks replacement edits until original request and policy data finish loading',()=>{
+  const replacement=renderToStaticMarkup(createElement(NewRequest,{
+    navigate:vi.fn(),predecessorId:'cancelled-request-id',
+  }));
+  expect(replacement).toContain('Loading original request before editing replacement details');
+  expect(replacement).toMatch(/<fieldset[^>]*disabled/);
+  const fresh=renderToStaticMarkup(createElement(NewRequest,{navigate:vi.fn()}));
+  expect(fresh).toMatch(/<fieldset[^>]*disabled/);
  });
  it('keeps advanced JSON and auto-generated identifiers available but closed by default',()=>{
   const html=renderToStaticMarkup(createElement(NewRequest,{navigate:vi.fn()}));

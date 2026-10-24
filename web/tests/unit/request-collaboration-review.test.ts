@@ -109,6 +109,32 @@ describe('Grant collaboration explicit review of exact pending request', () => {
     )).toBe(false);
   });
 
+  it('guides the requester through a separately reviewed cancellation then replacement', () => {
+    const pending=request({
+      collaboration_state:'CHANGES_REQUESTED',viewer_can_decide:false,
+    });
+    const before=renderToStaticMarkup(createElement(RequestCollaboration,{
+      row:pending,user:requester,onRecorded:()=>undefined,
+    }));
+    expect(before).toContain('Go to Cancel request');
+    expect(before).toContain('href="#grant-decision-actions"');
+    expect(before).toContain('Confirm cancelled');
+    expect(before).toContain('then create a fresh linked replacement');
+    expect(before).not.toContain('Confirm approved');
+    const cancelled=renderToStaticMarkup(createElement(RequestCollaboration,{
+      row:{...pending,state:'CANCELLED'},user:requester,onRecorded:()=>undefined,
+    }));
+    expect(cancelled).toContain('Find Create replacement request');
+    expect(cancelled).toContain('href="#grant-replacement-action"');
+    expect(cancelled).not.toContain('Go to Cancel request');
+    const reviewer=renderToStaticMarkup(createElement(RequestCollaboration,{
+      row:pending,user:approver,onRecorded:()=>undefined,
+    }));
+    expect(reviewer).toContain('original requester must');
+    expect(reviewer).not.toContain('href="#grant-decision-actions"');
+    expect(reviewer).not.toContain('href="#grant-replacement-action"');
+  });
+
   it('maintains React escaping of existing collaboration evidence', () => {
     const html = renderToStaticMarkup(createElement(RequestCollaboration, {
       row: request({

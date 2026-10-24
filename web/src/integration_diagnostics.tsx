@@ -124,6 +124,7 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
   const [manifest, setManifest] = useState<ConfigurationManifest | null>(null);
   const [pastedManifest, setPastedManifest] = useState('');
   const [conflictPreview, setConflictPreview] = useState<DryRunPreview | null>(null);
+  const [manifestError, setManifestError] = useState('');
   const previewReadScope=useRef(createConfigurationPreviewReadScope());
 
   function inspect(id: string) {
@@ -145,6 +146,8 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
 
   async function loadManifest() {
     previewReadScope.current.invalidate();
+    // A failed or pending read must not leave the previous export downloadable.
+    setManifest(null);
     setConflictPreview(null);
     await readCurrentConfigurationExport(previewReadScope.current,
       ()=>api<ConfigurationManifest>('/integrations/configuration-export'),
@@ -152,16 +155,17 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
   }
 
   async function dryRunImport() {
+    setManifestError('');
     const source = pastedManifest.trim() || (manifest ? JSON.stringify(manifest) : '');
     if (!source || source.length > 64000) {
-      task.setNotice('Provide a bounded G8 metadata manifest before previewing conflicts.');
+      setManifestError('Provide a bounded G8 metadata manifest before previewing conflicts.');
       return;
     }
     let candidate: unknown;
     try {
       candidate = JSON.parse(source);
     } catch {
-      task.setNotice('Manifest must be valid JSON metadata; no credentials or secrets.');
+      setManifestError('Manifest must be valid JSON metadata; no credentials or secrets.');
       return;
     }
     const current=await readCurrentConfigurationPreview(previewReadScope.current,
@@ -254,7 +258,9 @@ export function IntegrationDiagnostics({ integrations }: { integrations: Integra
           // read must never be presented as the new source's results.
           previewReadScope.current.invalidate();
           setPastedManifest(value);setConflictPreview(null);
+          setManifestError('');task.setNotice('');
         }} />
+      {manifestError && <Alert tone="critical" title="Invalid metadata manifest">{manifestError}</Alert>}
       <div className="grant-actions">
         <Button disabled={task.busy} onClick={() => void task.run(dryRunImport)}>Preview import conflicts</Button>
       </div>

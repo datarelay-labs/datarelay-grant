@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AccountList,
-  AdministrationHub,
   createStandardAdministrationTasks,
   AuditList,
   Alert,
@@ -48,10 +47,11 @@ import {
 } from './foundation.config';
 import {
   grantRc50AccountDiscovery,
-  grantRc50AdministrationDiscovery,
   grantRc50SessionDiscovery,
 } from './foundation_rc50';
 import { resolveGrantAdministrationSelection, type GrantAdminDetail } from './grant_control_administration_contract';
+import { ControlConsumerAdministrationHubPage, type ControlConsumerAdminTask } from '@datarelay-labs/control-clone';
+import { grantControlConsumerAdministration } from './grant_control_consumer_composition';
 import { Form, Select, useTask } from './common';
 import type { User } from './types';
 import { NativeIngressReadback, NativeLifecycleReadback, OperationalSecurityReadinessReadout, type OperationalSecurityReadiness } from './operational_security_readiness';
@@ -102,6 +102,7 @@ export function GrantConfigurationPortabilityTask() {
 
 export function Administration({ user }: { user: User }) {
   const [accounts, setAccounts] = useState<readonly AccountProjection[]>([]);
+  const [accountDirectoryLoaded, setAccountDirectoryLoaded] = useState(false);
   const [events, setEvents] = useState<readonly AuditEventProjection[]>([]);
   const [health, setHealth] = useState<HealthProjection>();
   const [operationalSecurity, setOperationalSecurity] = useState<OperationalSecurityReadiness | null>(null);
@@ -178,6 +179,26 @@ export function Administration({ user }: { user: User }) {
     [user],
   );
 
+  const controlConsumer = useMemo(
+    () => grantControlConsumerAdministration(user, tasks, extensionGroups),
+    [user, tasks, extensionGroups],
+  );
+
+  function openConsumerTask(selected: ControlConsumerAdminTask) {
+    // Foundation supplies presentation, not Grant's execution authority.
+    // Preserve both the source-specific task target and native Grant allowlist.
+    const native = [...tasks, ...extensionGroups.flatMap(group => group.tasks)]
+      .find(task => task.id === selected.id);
+    if (!native || !native.target || !selected.target) return;
+    const original = native.target.kind === 'path'
+      ? { kind: 'route', path: native.target.path }
+      : { kind: 'action', actionId: native.target.actionId };
+    if (JSON.stringify(original) !== JSON.stringify(selected.target) ||
+        native.access !== selected.access ||
+        native.availability !== selected.availability) return;
+    openTask(native);
+  }
+
   async function load() {
     const [accountRows, auditRows, currentHealth, currentInfo, securityFacts] = await Promise.all([
       accountsAdapter.list(),
@@ -187,6 +208,7 @@ export function Administration({ user }: { user: User }) {
       api<OperationalSecurityReadiness>('/admin/operational-readiness').catch(() => null),
     ]);
     setAccounts(accountRows);
+    setAccountDirectoryLoaded(true);
     setEvents(auditRows);
     setHealth(currentHealth);
     setInfo(currentInfo);
@@ -382,33 +404,28 @@ export function Administration({ user }: { user: User }) {
       {task.feedback}
       {!section || !directLanding ? (
         <div className="grant-admin-task-navigation" ref={taskNavigationRef} tabIndex={-1}>
-          <AdministrationHub
-            {...grantRc50AdministrationDiscovery}
-            productId="grant"
-            showHeader={false}
-            tasks={tasks}
-            extensionGroups={extensionGroups}
+          <div className="grant-admin-heading">
+            <p>Shared Control-source Administration is provided by DataRelay Product Foundation.
+              Unsupported Grant operations cannot be opened.</p>
+            <div className="grant-admin-shortcuts" aria-label="Administration task shortcuts">
+              <Button variant="secondary" onClick={() => window.location.assign('/security')}>
+                My account & MFA
+              </Button>
+              {availability(user, 'grant.integrations.manage') === 'supported' ? (
+                <Button variant="secondary" onClick={() => window.location.assign('/integrations')}>
+                  Configuration preview
+                </Button>
+              ) : null}
+              <Button variant="secondary" disabled={task.busy} onClick={() => void task.run(load)}>
+                Refresh
+              </Button>
+            </div>
+          </div>
+          <ControlConsumerAdministrationHubPage
+            consumer={controlConsumer}
+            searchable
             showUnavailable
-            intro={
-              <div className="grant-admin-heading">
-                <p>Shared system administration is provided by DataRelay Product Foundation.
-                  Unsupported Grant operations have no active Configure action.</p>
-                <div className="grant-admin-shortcuts" aria-label="Administration task shortcuts">
-                  <Button variant="secondary" onClick={() => window.location.assign('/security')}>
-                    My account & MFA
-                  </Button>
-                  {availability(user, 'grant.integrations.manage') === 'supported' ? (
-                    <Button variant="secondary" onClick={() => window.location.assign('/integrations')}>
-                      Configuration preview
-                    </Button>
-                  ) : null}
-                  <Button variant="secondary" disabled={task.busy} onClick={() => void task.run(load)}>
-                    Refresh
-                  </Button>
-                </div>
-              </div>
-            }
-            onOpen={openTask}
+            onOpen={openConsumerTask}
           />
         </div>
       ) : null}
@@ -452,18 +469,30 @@ export function Administration({ user }: { user: User }) {
           <Card title="Accounts">
             <p>Review the authoritative Grant account roster before changing access.
               Disabling an account revokes its sessions and may affect pending approval seats.</p>
-            <AccountList {...grantRc50AccountDiscovery} accounts={accounts} actions={(account) => (
-              user.role === 'admin' && account.status === 'enabled' && account.id !== user.id
-                ? <Button variant="danger"
-                    disabled={task.busy || accountDisableAttempts.includes(account.id)}
-                    onClick={() => {
-                      setReviewedCreation(null);
-                      setReviewedAccount(createAccountDisableReview(account, user));
-                    }}>
-                    Review disable {account.displayName}
-                  </Button>
-                : null
-            )} />
+            {!accountDirectoryLoaded ? (
+              <div className="grant-stack">
+                <p role="status">{task.error
+                  ? 'Account directory could not be verified. Retry before changing access.'
+                  : 'Loading verified account directory…'}</p>
+                {task.error && <Button variant="secondary" disabled={task.busy}
+                  onClick={() => void task.run(load)}>
+                  Retry account directory
+                </Button>}
+              </div>
+            ) : (
+              <AccountList {...grantRc50AccountDiscovery} accounts={accounts} actions={(account) => (
+                user.role === 'admin' && account.status === 'enabled' && account.id !== user.id
+                  ? <Button variant="danger"
+                      disabled={task.busy || accountDisableAttempts.includes(account.id)}
+                      onClick={() => {
+                        setReviewedCreation(null);
+                        setReviewedAccount(createAccountDisableReview(account, user));
+                      }}>
+                      Review disable {account.displayName}
+                    </Button>
+                  : null
+              )} />
+            )}
           </Card>
           {reviewedAccount && sectionRef.current === 'accounts' ? (
             <div ref={accountReviewRef} tabIndex={-1} className="grant-admin-account-review">
@@ -504,6 +533,7 @@ export function Administration({ user }: { user: User }) {
           >
             <Form
               busy={task.busy || accountCreateAttempted}
+              disabled={!accountDirectoryLoaded}
               label="Review account creation"
               onSubmit={() => {
                 if (accountCreateAttempted) return;

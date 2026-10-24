@@ -190,6 +190,7 @@ export function RequestList({
     useState<{key:string;rows:RequestRow[]}|null>(null);
   const [listBusy,setListBusy]=useState(false);
   const [listError,setListError]=useState('');
+  const [filterError,setFilterError]=useState('');
   const readScope=useRef(createInboxReadScope());
   // Query identity is computed during render. An old filter/page projection
   // is hidden BEFORE the effect can request the new role-scoped worklist.
@@ -263,9 +264,10 @@ export function RequestList({
     try {
       queryFor(draft, 0);
     } catch {
-      task.setNotice('Enter a valid UTC date range. The start date must not follow the end date.');
+      setFilterError('Enter a valid UTC date range. The start date must not follow the end date.');
       return;
     }
+    setFilterError('');
     setOffset(0);
     setApplied({ ...draft });
   }
@@ -276,6 +278,7 @@ export function RequestList({
       window.history.replaceState(window.history.state, '', '/approvals');
     }
     const defaults = initial();
+    setFilterError('');
     setDraft(defaults);
     setOffset(0);
     setApplied(defaults);
@@ -289,6 +292,7 @@ export function RequestList({
       window.history.replaceState(window.history.state, '', '/approvals');
     }
     const next = approvalQuickViewFilters(view);
+    setFilterError('');
     setDraft(next);
     setApplied(next);
     setOffset(0);
@@ -307,6 +311,7 @@ export function RequestList({
 
   return <div className="grant-stack">
     {task.feedback}
+    {filterError&&<Alert tone="critical" title="Invalid date range">{filterError}</Alert>}
     {listError&&<Alert tone="critical" title="Unable to refresh current worklist">
       {listError}
     </Alert>}

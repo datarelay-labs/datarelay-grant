@@ -1,5 +1,58 @@
 # DataRelay Grant 1.0 — unified execution roadmap
 
+## 2026-10-20 — PF05-INPUT-001 exact action parameters before review
+
+Request creation now checks original JSON tokens before showing Review/Confirm.
+Duplicate keys (including escaped and nested duplicates), non-finite numbers,
+underflow, unsafe integers and rounded fractional values cannot silently change
+the reviewed action. The existing API safe-integer and depth bounds remain the
+contract; equivalent integer notation and quoted numeric identifiers are preserved.
+Errors identify a bounded field path while retaining the original editor text.
+
+The actual pre-fix Chromium UI reproduced three lossy previews without creating
+a request. The new 25-case regression suite reproduced 17 failures before the fix;
+43 focused tests and the full 807-test Web suite now pass, together with TypeScript,
+production build and static checks. Exact committed-candidate browser and CI
+evidence is tracked in [Work Packet #67 Rev262](https://github.com/datarelay-labs/datarelay-grant/issues/67#issuecomment-6290548819).
+This source checkpoint does not qualify whole-contract Full User E2E or release.
+
+## 2026-10-20 — B1 passive reads and immediate overdue truth
+
+Request list/detail and Operations reads no longer execute expiry, reminder or
+escalation maintenance. The existing worker and final POST deadline guards retain
+lifecycle ownership. A server-derived overdue flag/count includes elapsed
+undecided deadlines before the next maintenance cycle, without changing persisted
+state or revision; the UI says approval overdue rather than claiming escalation.
+Six focused lifecycle regression cases and the affected API batch (53/53), native
+Web checks and static validation passed. Seven worker-disabled expiry fixtures now
+advance maintenance explicitly. No schema, account/config, transport-worker mode,
+external effect or release boundary changed. Exact candidate/browser/CI evidence
+is tracked in active Work Packet #67 Rev259; this checkpoint is not whole-contract
+Full User E2E acceptance.
+
+## 2026-10-19 — Foundation PF-106 real Control Administration UI consumer (Grant)
+
+On a *new isolated candidate*, the shared original-Control visual Admin
+`ControlConsumerAdministrationHubPage` from Foundation Draft PR #107
+(`b02ea10e45abc51913b534ce1adef086c6d124b4`) is mounted by
+Grant-owned authoritative task bindings in the existing `/system` route.
+This replaces the **Administration catalog presentation only**, not Grant's
+navigation shell, account/session/approval backend, host permissions or
+native authority. Original RC50 domain adapters remain for existing supported
+task details. Unsupported Control ACL/Roles/admin Sessions, native host and
+uninstalled backup operations are shown as inert cards. The Grant-owned
+task target/access allowlist still guards every navigation.
+
+New private Foundation npm/Wheel handoff is pinned by digest, installed
+in ignored developer cache and qualified in source-only CI. Grant's original
+same-version security Wheel remains unchanged. Old Draft PRs #100/#101,
+all G12 changes and the original localhost Gmail/PIN E2E LAB are preserved.
+Full original Control Shell/navigation replacement, native host/security,
+authentic installed-persona Full User E2E and release are **OPEN**, not PASS.
+
+Source contract, rollback, tests and exact adoption evidence:
+`docs/FOUNDATION_PF106_CONTROL_ADMIN_CONSUMER_20261019.md`.
+
 ## 2026-10-19 — Private Product Foundation a8b633 Grant consumer adoption
 
 Owner-directed GRANT-PF-01 isolated candidate work pins the exact private F31

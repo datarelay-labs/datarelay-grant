@@ -4,6 +4,7 @@ import { api } from './api';
 import './approvers-mobile.css';
 import { Form, Select, useTask, when } from './common';
 import type { ApproverGroup } from './types';
+import { registerGrantNavigationBlocker,type GrantNavigationIntent } from './grant_navigation';
 import {
   ApproverGroupAccountCoverage,assessSavedGroupAccountCoverage,createApproverDirectoryReadScope,
   readCurrentApproverDirectory,type GroupAccountProjection,
@@ -29,6 +30,18 @@ export function prepareApproverGroupUpdate(
     throw new Error('APPROVER_GROUP_VERSION_UNAVAILABLE');
   }
   return { name, member_ids: [...members], expected_updated_at: baseline.updated_at };
+}
+
+/** Compare the exact saved identity and ordered members. Empty new forms are clean,
+ * while a changed member order is an unsaved approval-plan edit. */
+export function isApproverGroupDraftDirty(
+  editing: boolean,baseline: ApproverGroup | null,
+  name: string,members: readonly string[],
+): boolean {
+  if (!editing) return name !== '' || members.length > 0;
+  return !baseline || name !== baseline.name
+    || members.length !== baseline.member_ids.length
+    || members.some((member,index) => member !== baseline.member_ids[index]);
 }
 
 export type ApproverGroupView = 'all' | 'enabled' | 'disabled' | 'attention' | 'unverified';
@@ -158,6 +171,23 @@ export function ApproverGroupDirectory({
   );
 }
 
+/** Keep the one-shot refresh lock truthful: a verified POST is not uncertain.
+ * An ambiguous transport outcome remains explicitly unconfirmed. */
+export function approverGroupReconciliationCopy(
+  confirmed: boolean, uncertain: boolean,
+): {title:string;message:string} {
+  if (confirmed) return {
+    title: 'Refresh after confirmed group save',
+    message: 'The server confirmed the group save. Refresh saved groups and inspect the current saved records before making another change. Existing request snapshots are unchanged.',
+  };
+  return {
+    title: 'Reconcile saved group before another change',
+    message: uncertain
+      ? 'A group save POST may already have succeeded. Do not automatically retry it. Refresh saved groups and inspect current records before making another change.'
+      : 'A group change was submitted. Refresh saved groups and inspect current records before making another change.',
+  };
+}
+
 export function Approvers() {
   const [groups, setGroups] = useState<ApproverGroup[]>([]);
   const [users, setUsers] = useState<AccountProjection[]>([]);
@@ -177,9 +207,44 @@ export function Approvers() {
   const [members, setMembers] = useState<string[]>([]);
   const [reviewed, setReviewed] = useState<ApproverGroupSaveReview | null>(null);
   const [reviewError, setReviewError] = useState('');
+  const [pendingGroupExit,setPendingGroupExit]=useState<'shell'|'list'|null>(null);
+  const shellNavigationIntent=useRef<GrantNavigationIntent|null>(null);
+  const groupExitOrigin=useRef<HTMLElement|null>(null);
+  const groupExitPrompt=useRef<HTMLDivElement|null>(null);
   const [saveOutcomeNeedsReconciliation, setSaveOutcomeNeedsReconciliation] = useState(false);
+  const [saveReceiptVerified, setSaveReceiptVerified] = useState(false);
   const saveGuard = useRef(createApproverGroupSaveGuard());
   const task = useTask();
+  const draftDirty = view==='editor' && (
+    isApproverGroupDraftDirty(Boolean(editing),editingBaseline,name,members)
+    || reviewed!==null
+  );
+  useEffect(()=>{
+    if(view!=='editor')return;
+    return registerGrantNavigationBlocker(intent=>{
+      if(task.busy||saveGuard.current.blocked()){
+        task.setNotice('Reconcile the current group save before leaving. Do not submit again.');
+        return true;
+      }
+      if(!draftDirty)return false;
+      groupExitOrigin.current=document.activeElement as HTMLElement|null;
+      shellNavigationIntent.current=intent;
+      setPendingGroupExit('shell');
+      return true;
+    });
+  },[view,draftDirty,task.busy]);
+  useEffect(()=>{
+    if(view!=='editor'||!(draftDirty||task.busy||saveOutcomeNeedsReconciliation))return;
+    const warn=(event:BeforeUnloadEvent)=>{event.preventDefault();event.returnValue='';};
+    window.addEventListener('beforeunload',warn);
+    return()=>window.removeEventListener('beforeunload',warn);
+  },[view,draftDirty,task.busy,saveOutcomeNeedsReconciliation]);
+  useEffect(()=>{
+    if(pendingGroupExit!==null){
+      groupExitPrompt.current
+        ?.querySelector<HTMLButtonElement>('[data-group-keep-editing]')?.focus();
+    }
+  },[pendingGroupExit]);
 
   async function load():Promise<boolean> {
     setDirectoryLoaded(false);
@@ -224,8 +289,39 @@ export function Approvers() {
     }
   }, [view]);
 
+  function cancelPendingGroupExit(){
+    shellNavigationIntent.current?.cancel();
+    shellNavigationIntent.current=null;
+    setPendingGroupExit(null);
+  }
+  function keepGroupEditing(){
+    cancelPendingGroupExit();
+    requestAnimationFrame(()=>groupExitOrigin.current?.focus());
+  }
+  function discardGroupAndLeave(){
+    if(!pendingGroupExit||task.busy||saveGuard.current.blocked())return;
+    const intent=shellNavigationIntent.current;
+    const exit=pendingGroupExit;
+    shellNavigationIntent.current=null;
+    reset();
+    if(exit==='shell')intent?.proceed();
+  }
+  function requestGroupListExit(){
+    if(task.busy||saveGuard.current.blocked()){
+      task.setNotice('Reconcile the current group save before leaving. Do not submit again.');
+      return;
+    }
+    if(!draftDirty){reset();return;}
+    groupExitOrigin.current=document.activeElement as HTMLElement|null;
+    setPendingGroupExit('list');
+  }
+  function invalidatePendingGroupExit(){
+    if(pendingGroupExit!==null)cancelPendingGroupExit();
+  }
+
   function edit(group: ApproverGroup) {
     if (saveGuard.current.blocked()) return;
+    cancelPendingGroupExit();
     setReviewed(null);
     setReviewError('');
     setEditing(group.id);
@@ -236,6 +332,7 @@ export function Approvers() {
   }
 
   function reset() {
+    cancelPendingGroupExit();
     setReviewed(null);
     setReviewError('');
     setEditing('');
@@ -252,6 +349,7 @@ export function Approvers() {
   }
 
   function changeMembers(next: string[]) {
+    invalidatePendingGroupExit();
     setMembers(next);
     setReviewed(null);
     setReviewError('');
@@ -259,6 +357,7 @@ export function Approvers() {
 
   function reviewGroupChanges() {
     if (saveGuard.current.blocked()) return;
+    invalidatePendingGroupExit();
     try {
       setReviewed(prepareApproverGroupReview(editingBaseline, name, members));
       setReviewError('');
@@ -309,6 +408,7 @@ export function Approvers() {
       );
       if (!result) return;
       verifyApproverGroupSaveReceipt(intent, result);
+      setSaveReceiptVerified(true);
     } catch (error) {
       if (!postStarted && error instanceof Error
         && error.message === 'APPROVER_GROUP_CHANGED_REVIEW_REQUIRED') {
@@ -335,6 +435,7 @@ export function Approvers() {
       throw new Error('APPROVER_GROUP_SAVE_STILL_IN_FLIGHT');
     }
     setSaveOutcomeNeedsReconciliation(false);
+    setSaveReceiptVerified(false);
     setReviewError('');
     task.setNotice('Current saved groups reloaded. Open a group and review any new change separately.');
   }
@@ -349,13 +450,29 @@ export function Approvers() {
     task.setNotice('Latest saved group loaded. Unsaved edits were discarded.');
   }
 
+  const reconciliation = approverGroupReconciliationCopy(saveReceiptVerified,saveOutcomeNeedsReconciliation);
   return <div className="grant-stack">
     {task.feedback}
+    {pendingGroupExit!==null && <div ref={groupExitPrompt} role="alertdialog"
+      aria-label="Discard unsaved approver group changes?"
+      onKeyDown={event=>{
+        if(event.key==='Escape'){event.preventDefault();keepGroupEditing();}
+      }}>
+      <Alert tone="warning" title="Discard unsaved approver group changes?">
+        <p>Your unsubmitted group name, member selection and approval order will be
+          lost if you leave. Keep editing, or explicitly discard the local draft.
+          No group will be created, updated or used for a human decision.</p>
+        <div className="grant-actions">
+          <Button type="button" variant="secondary" data-group-keep-editing
+            onClick={keepGroupEditing}>Keep editing</Button>
+          <Button type="button" disabled={task.busy||saveGuard.current.blocked()}
+            onClick={discardGroupAndLeave}>Discard and leave</Button>
+        </div>
+      </Alert>
+    </div>}
     {saveGuard.current.blocked() && (
-      <Alert tone="warning" title="Reconcile saved group before another change">
-        {saveOutcomeNeedsReconciliation
-          ? 'A group save POST may already have succeeded. Do not automatically retry it.'
-          : 'A group change was submitted. Inspect the current saved group before starting another change.'}
+      <Alert tone="warning" title={reconciliation.title}>
+        {reconciliation.message}
         {' '}Only an explicit successful Refresh re-enables another group change.
         <Button variant="secondary" disabled={task.busy}
           onClick={() => void task.run(refreshGroups)}>Refresh saved groups</Button>
@@ -377,7 +494,7 @@ export function Approvers() {
       <div ref={editorFocus} className="grant-approver-groups-editor"
         aria-label="Selected approver group editor" tabIndex={-1}>
         <div className="grant-actions">
-          <Button variant="ghost" disabled={task.busy} onClick={reset}>
+          <Button variant="ghost" disabled={task.busy} onClick={requestGroupListExit}>
             ← Back to approver groups
           </Button>
         </div>
@@ -390,7 +507,10 @@ export function Approvers() {
           <Form busy={task.busy || saveGuard.current.blocked()} onSubmit={reviewGroupChanges}
             label={editing ? 'Review group changes' : 'Review group creation'}>
             <TextField label="Group name" required maxLength={100} value={name}
-              onChange={(event) => { setName(event.target.value); setReviewed(null); setReviewError(''); }} />
+              onChange={(event) => {
+                invalidatePendingGroupExit();
+                setName(event.target.value);setReviewed(null);setReviewError('');
+              }} />
             <fieldset>
               <legend>Selected members and approval order</legend>
               <p>The order of members affects SEQUENTIAL approval policies.
@@ -445,7 +565,7 @@ export function Approvers() {
               </>
             )}
             <Button type="button" variant="ghost" disabled={task.busy}
-              onClick={reset}>Cancel</Button>
+              onClick={requestGroupListExit}>Cancel</Button>
           </Form>
           {reviewError && (
             <Alert tone="warning" title="Group review required">{reviewError}</Alert>

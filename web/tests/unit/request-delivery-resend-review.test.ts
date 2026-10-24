@@ -53,11 +53,15 @@ describe('B1 RequestDetail admin delivery resend must be explicitly reviewed', (
     expect(canConfirmRequestDeliveryResend(intent, row, true)).toBe(true);
   });
 
-  it('preserves existing FAILED and PENDING eligibility but refuses delivered', () => {
-    const row = request({ deliveries: [delivery({ state: 'PENDING', kind: 'webhook' })] });
-    const pending = createRequestDeliveryResendReview(row, row.deliveries![0]);
-    expect(canConfirmRequestDeliveryResend(pending, row, true)).toBe(true);
-    expect(pending.deliveryKind).toBe('webhook');
+  it('offers an explicit resend review for FAILED only, never already queued PENDING', () => {
+    const pending = request({ deliveries: [delivery({ state: 'PENDING', kind: 'webhook' })] });
+    expect(() => createRequestDeliveryResendReview(
+      pending, pending.deliveries![0],
+    )).toThrow('DELIVERY_NOT_ELIGIBLE_FOR_RESEND');
+    const failedWebhook = request({ deliveries: [delivery({ state: 'FAILED', kind: 'webhook' })] });
+    expect(createRequestDeliveryResendReview(
+      failedWebhook, failedWebhook.deliveries![0],
+    ).deliveryKind).toBe('webhook');
     expect(() => createRequestDeliveryResendReview(
       request(), delivery({ state: 'DELIVERED' }),
     )).toThrow('DELIVERY_NOT_ELIGIBLE_FOR_RESEND');
