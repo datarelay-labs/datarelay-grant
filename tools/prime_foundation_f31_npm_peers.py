@@ -61,7 +61,7 @@ def public_tarball_requests(root: dict, packages: dict) -> list[str]:
     for package in [root, *(packages["node_modules/" + n] for n in pinned_names)]:
         dependencies = package.get("dependencies", {})
         if not isinstance(dependencies, dict):
-            raise ValueError("Invalid pinned public npm dependencies")
+            raise TypeError("Invalid pinned public npm dependencies")
         for name, version_range in dependencies.items():
             if name not in pinned_names or not isinstance(version_range, str) or (
                 not PUBLIC_RANGE_RE.fullmatch(version_range)
@@ -138,7 +138,7 @@ def main() -> None:
     print("FOUNDATION_F31_EXACT_PUBLIC_NPM_PEER_METADATA_PASS count=" + str(len(peers)))
     # Never loosen or patch the immutable private Foundation stager. Verify the
     # actual public packages it may select from a new dependency resolution.
-    prime_public_tarballs(requests, ROOT / ".dev")
+    prime_public_tarballs(requests, source.parent)
 
 
 if __name__ == "__main__":
