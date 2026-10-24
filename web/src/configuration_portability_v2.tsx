@@ -38,6 +38,20 @@ export function ConfigurationV2Preview({ preview }: { preview: V2Preview }) {
   </div>;
 }
 
+/** User-visible receipt with exact committed counts, not an activation claim.
+ * Keep spacing and singular/plural grammar unambiguous for one-item imports.
+ */
+export function ImportedDraftsNotice({ imported }: { imported: ImportedDrafts }) {
+  const policies = imported.imported.policies;
+  const templates = imported.imported.templates;
+  return <Alert tone="success" title="Disabled Draft import recorded">
+    Created {policies} Draft {policies === 1 ? 'policy' : 'policies'} and{' '}
+    {templates} notification {templates === 1 ? 'set' : 'sets'}.
+    {' '}No policy was activated. Review under Approval policies,
+    run policy Testing and activate separately as administrator.
+  </Alert>;
+}
+
 /** Deliberate two-step reviewer UI. This never imports schema-v1 metadata. */
 export function ConfigurationPortabilityV2({ integrations }: { integrations: Integration[] }) {
   const scope = useRef(createConfigurationPreviewReadScope());
@@ -293,11 +307,7 @@ export function ConfigurationPortabilityV2({ integrations }: { integrations: Int
           </> : null}
         </> : null}
       </> : null}
-      {imported ? <Alert tone="success" title="Disabled Draft import recorded">
-        Created {imported.imported.policies} Draft policies and {imported.imported.templates}
-        notification sets. No policy was activated. Review under Approval policies,
-        run policy Testing and activate separately as administrator.
-      </Alert> : null}
+      {imported ? <ImportedDraftsNotice imported={imported} /> : null}
     </div>
   </Card>;
 }

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ConfigurationPortabilityV2,
   ConfigurationV2Preview,
+  ImportedDraftsNotice,
 } from '../../src/configuration_portability_v2';
 
 describe('Grant v2 configuration imports require deliberate user review', () => {
@@ -19,6 +20,24 @@ describe('Grant v2 configuration imports require deliberate user review', () => 
     expect(html).not.toContain('Create reviewed Drafts only');
     expect(html).not.toContain('Activate imported policy');
     expect(html).not.toContain('Apply configuration');
+  });
+
+  it('renders human-readable post-import receipt for one and multiple Draft records', () => {
+    const receipt = (policies: number, templates: number) =>
+      renderToStaticMarkup(createElement(ImportedDraftsNotice, {
+        imported: {
+          imported: { policies, templates },
+          policy_ids: [], template_ids: [],
+          all_policies_draft: true as const, activated: false as const,
+        },
+      }));
+    const one = receipt(1, 1);
+    expect(one).toContain('Created 1 Draft policy and 1 notification set.');
+    expect(one).toContain('No policy was activated.');
+    expect(one).not.toContain('1notification');
+    const several = receipt(2, 3);
+    expect(several).toContain('Created 2 Draft policies and 3 notification sets.');
+    expect(several).not.toContain('Activate imported policy');
   });
 
   it('clearly distinguishes reviewable Drafts from blocked mappings', () => {
