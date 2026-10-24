@@ -115,3 +115,95 @@ def test_f31_public_npm_peer_closure_rejects_nonspecific_versions() -> None:
             {"dependencies": {"clsx": "2.1.1"}},
             {"node_modules/clsx": {"version": "^2.1.1"}},
         )
+
+
+def test_f31_public_npm_tarball_requests_include_transitive_semver_ranges() -> None:
+    """A pinned lock does not prevent npm's fresh offline smoke from picking a
+    newer *range-compatible* package. Prime those tarballs, not metadata only.
+    """
+    root = {"dependencies": {"react-router-dom": "7.15.0"}}
+    packages = {
+        "node_modules/react-router-dom": {
+            "version": "7.15.0", "dependencies": {"react-router": "7.15.0"},
+        },
+        "node_modules/react-router": {
+            "version": "7.15.0", "dependencies": {
+                "cookie": "^1.0.1", "set-cookie-parser": "^2.6.0",
+            },
+        },
+        "node_modules/cookie": {"version": "1.1.1"},
+        "node_modules/set-cookie-parser": {"version": "2.7.2"},
+        "node_modules/react": {"version": "19.3.0"},
+        "node_modules/react-dom": {
+            "version": "19.3.0", "dependencies": {"scheduler": "^0.28.0"},
+        },
+        "node_modules/scheduler": {"version": "0.28.0"},
+    }
+    requests = prime.public_tarball_requests(root, packages)
+    assert "set-cookie-parser@2.7.2" in requests
+    assert "set-cookie-parser@^2.6.0" in requests
+    assert "cookie@^1.0.1" in requests
+    assert "scheduler@^0.28.0" in requests
+    assert "react@19.3.0" in requests
+    assert len(requests) == len(set(requests))
+
+
+def test_f31_public_npm_tarball_requests_reject_unbounded_or_external_ranges() -> None:
+    root = {"dependencies": {"router": "1.0.0"}}
+    packages = {
+        "node_modules/router": {
+            "version": "1.0.0", "dependencies": {"dep": "file:/tmp/override"},
+        },
+        "node_modules/dep": {"version": "1.0.0"},
+        "node_modules/react": {"version": "19.3.0"},
+        "node_modules/react-dom": {"version": "19.3.0"},
+    }
+    with pytest.raises(ValueError, match="Unsafe public npm dependency request"):
+        prime.public_tarball_requests(root, packages)
+
+
+def test_f31_public_npm_artifact_is_both_cached_online_and_packable_offline(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """No npm or external connection is made in this test."""
+    calls: list[tuple[str, ...]] = []
+
+    def fake_npm(cmd: list[str], *, text: bool, timeout: int) -> str:
+        assert text is True
+        calls.append(tuple(cmd))
+        assert cmd[0] == "npm"
+        if cmd[1:3] == ["cache", "add"]:
+            return ""
+        if cmd[1] == "pack":
+            assert "--offline" in cmd and "--ignore-scripts" in cmd
+            directory = Path(cmd[cmd.index("--pack-destination") + 1])
+            (directory / "public-peer-2.7.3.tgz").write_bytes(b"public npm fixture")
+            return "public-peer-2.7.3.tgz\n"
+        raise AssertionError(cmd)
+
+    monkeypatch.setattr(prime.subprocess, "check_output", fake_npm)
+    prime.prime_public_tarballs(["set-cookie-parser@^2.6.0"], tmp_path)
+    assert len(calls) == 2
+    assert calls[0][1:3] == ("cache", "add")
+    assert "set-cookie-parser@^2.6.0" in calls[0]
+    assert calls[1][1] == "pack"
+    assert "--offline" in calls[1]
+    assert calls[1][-1] == "set-cookie-parser@^2.6.0"
+    assert not list(tmp_path.glob("*.tgz"))
+
+
+def test_f31_public_npm_artifact_missing_offline_fails_closed(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    """An npm pack name without a real cached tgz cannot be a green preflight."""
+    def fake_npm(cmd: list[str], *, text: bool, timeout: int) -> str:
+        if cmd[1:3] == ["cache", "add"]:
+            return ""
+        if cmd[1] == "pack":
+            return "absent-public-peer-2.7.3.tgz\n"
+        raise AssertionError(cmd)
+
+    monkeypatch.setattr(prime.subprocess, "check_output", fake_npm)
+    with pytest.raises(ValueError, match="not available offline"):
+        prime.prime_public_tarballs(["set-cookie-parser@^2.6.0"], tmp_path)
